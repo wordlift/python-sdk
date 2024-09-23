@@ -5,11 +5,11 @@ class Entity:
         self._props = props
 
     @property
-    def iri(self):
+    def iri(self) -> str:
         return self._props['iri']
 
     @property
-    def url(self):
+    def url(self) -> str:
         return self._props['url']
 
     @staticmethod
