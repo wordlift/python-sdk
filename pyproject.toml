@@ -4,6 +4,7 @@ version = "0.1.0"
 description = ""
 authors = ["David Riccitelli <david@wordlift.io>"]
 readme = "README.md"
+packages = [{include = "wordlift_sdk/"}]
 
 [tool.poetry.dependencies]
 python = "^3.11"
