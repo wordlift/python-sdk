@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "python-sdk"
+name = "wordlift-sdk"
 version = "0.1.0"
 description = ""
 authors = ["David Riccitelli <david@wordlift.io>"]
