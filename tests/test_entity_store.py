@@ -1,13 +1,11 @@
-import asyncio
 from typing import List
 
+import pandas as pd
 import pytest
 from gql import Client
 
 from wordlift_sdk.graphql import GraphQLClientFactory
 from wordlift_sdk.kg import EntityStore, EntityStoreFactory
-
-import pandas as pd
 
 
 @pytest.fixture(scope="session")

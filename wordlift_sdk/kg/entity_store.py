@@ -1,12 +1,12 @@
 import logging
-from typing import List, AsyncGenerator, TypedDict
+from typing import List, AsyncGenerator
 
+import pandas as pd
 from gql import Client, gql
 from pandas.core.interchange.dataframe_protocol import DataFrame
 from tenacity import AsyncRetrying, stop_after_attempt, wait_fixed, RetryError
 
 from wordlift_sdk.kg import Entity
-import pandas as pd
 
 logger = logging.getLogger(__name__)
 
