@@ -1,3 +1,4 @@
+import asyncio
 from typing import List
 
 import pytest
@@ -5,6 +6,8 @@ from gql import Client
 
 from wordlift_sdk.graphql import GraphQLClientFactory
 from wordlift_sdk.kg import EntityStore, EntityStoreFactory
+
+import pandas as pd
 
 
 @pytest.fixture(scope="session")
@@ -34,9 +37,18 @@ def url_list() -> List[str]:
 
 
 @pytest.mark.asyncio()
-async def test(entity_store: EntityStore, url_list: List[str]) -> None:
+async def test_generator(entity_store: EntityStore, url_list: List[str]) -> None:
     count = 0
-    async for _ in entity_store.uri_to_id(url_list):
+    async for _ in entity_store.url_id(url_list):
         count += 1
 
     assert 4741 == count
+
+
+@pytest.mark.asyncio()
+async def test_dataframe(entity_store: EntityStore, url_list: List[str]) -> None:
+    df = pd.DataFrame.from_records(data=[(entity.url, entity.id) async for entity in entity_store.url_id(url_list)],
+                                   columns=("url", "id"))
+    # async for entity in entity_store.uri_to_id(url_list):
+    #     df.append(entity)
+    assert 4741 == len(df)

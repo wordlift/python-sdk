@@ -2,9 +2,11 @@ import logging
 from typing import List, AsyncGenerator, TypedDict
 
 from gql import Client, gql
+from pandas.core.interchange.dataframe_protocol import DataFrame
 from tenacity import AsyncRetrying, stop_after_attempt, wait_fixed, RetryError
 
 from wordlift_sdk.kg import Entity
+import pandas as pd
 
 logger = logging.getLogger(__name__)
 
@@ -15,14 +17,14 @@ class EntityStore:
     def __init__(self, gql_client: Client):
         self._gql_client = gql_client
 
-    async def uri_to_id(self, url_list: List[str] = None) -> AsyncGenerator[Entity, None]:
+    async def url_id(self, url_list: List[str] = None) -> AsyncGenerator[Entity, None]:
         # the query.
         query = gql(
             """
-            query entities_iri_url($urls: [String]!) {
+            query entities_url_id($urls: [String]!) {
                 entities(query: { urlConstraint: { in: $urls } } ) {
-                    iri
                     url: string(name:"schema:url")
+                    id: iri
                 }
             }
             """
@@ -41,3 +43,14 @@ class EntityStore:
                         yield Entity(item)
         except RetryError as e:
             logger.error('Error loading data from GraphQL', exc_info=True)
+
+    async def url_id_as_dataframe(self, url_list: List[str] = None) -> DataFrame:
+        """
+        Get the Entity URL ID maps as a Pandas dataframe.
+
+        :param url_list:
+        :return:
+        """
+        return pd.DataFrame.from_records(
+            data=[(entity.url, entity.id) async for entity in self.url_id(url_list)],
+            columns=("url", "id"))
