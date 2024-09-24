@@ -2,7 +2,7 @@ from rdflib import Graph, URIRef, Literal
 import wordlift_client
 
 
-def create_entity_patch_request(resource: URIRef, prop: URIRef, value: Literal):
+def create_entity_patch_request(resource: URIRef, prop: URIRef, value: Literal) -> EntityPatchRequest:
     g = Graph()
     g.bind('schema', 'http://schema.org/')
     g.add((resource, prop, value))
