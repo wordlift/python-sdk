@@ -2,7 +2,7 @@ import gspread
 import pandas as pd
 
 
-def create_dataframe_from_google_sheet(creds, url: str, sheet: str) -> pd.DataFrame:
+def create_dataframe_from_google_sheets(creds, url: str, sheet: str) -> pd.DataFrame:
     gc = gspread.authorize(creds)
 
     sheet = gc.open_by_url(url).worksheet(sheet)
