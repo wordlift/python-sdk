@@ -1,3 +1,6 @@
+import wordlift_client
+
+
 class ClientConfigurationFactory:
     _api_url: str
     _key: str
