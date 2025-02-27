@@ -12,11 +12,14 @@ class GraphQLClientFactory:
 
     def create(self):
         # Select your transport with a defined url endpoint
-        transport = AIOHTTPTransport(url=self._api_url,
-                                     headers={
-                                         'Authorization': f'Key {self._key}',
-                                         'X-include-Private': 'true'
-                                     }, )
+        transport = AIOHTTPTransport(
+            url=self._api_url,
+            ssl=True,
+            headers={
+                'Authorization': f'Key {self._key}',
+                'X-include-Private': 'true'
+            },
+        )
 
         # Create a GraphQL client using the defined transport
-        return Client(transport=transport, fetch_schema_from_transport=False, execute_timeout=60, ssl=True)
+        return Client(transport=transport, fetch_schema_from_transport=False, execute_timeout=60)
