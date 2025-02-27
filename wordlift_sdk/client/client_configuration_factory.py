@@ -22,3 +22,5 @@ class ClientConfigurationFactory:
         # Configure API key authorization: ApiKey
         configuration.api_key['ApiKey'] = self._key
         configuration.api_key_prefix['ApiKey'] = 'Key'
+
+        return configuration
