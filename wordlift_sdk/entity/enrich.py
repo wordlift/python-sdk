@@ -12,7 +12,7 @@ from .patch import patch
     stop=stop_after_attempt(5),  # Retry up to 5 times
     wait=wait_fixed(2)  # Wait 2 seconds between retries
 )
-async def enrich(configuration: Configuration, callback: Callable[[str, str], Awaitable[list[EntityPatchRequest]]]) -> \
+def enrich(configuration: Configuration, callback: Callable[[str, str], Awaitable[list[EntityPatchRequest]]]) -> \
         Callable[
             [Series], Coroutine[None, None, None]]:
     async def fetch(session: ClientSession, url: str) -> str:
