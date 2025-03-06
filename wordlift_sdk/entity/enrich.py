@@ -25,6 +25,6 @@ def enrich(configuration: Configuration, callback: Callable[[str, str], Awaitabl
             entity_id = row['id']
             html = await fetch(session, entity_url)
             payloads = await callback(entity_id, html)
-            await patch(configuration, entity_url, payloads)
+            await patch(configuration, entity_id, payloads)
 
     return process
