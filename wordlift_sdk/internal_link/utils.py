@@ -1,15 +1,18 @@
+import logging
 import re
 from typing import Callable, Awaitable
 from urllib.parse import quote
 
 import wordlift_client
 from pandas import Series
-from rdflib import Graph, URIRef, RDF, Literal
+from rdflib import Graph, URIRef, RDF, Literal, XSD
 from tenacity import retry, stop_after_attempt, wait_fixed
 from wordlift_client import InternalLinkRequest, InternalLink, InternalLinksApi, AnchorText, Item, \
     VectorSearchQueryRequest, EntityPatchRequest, Configuration
 
 from wordlift_sdk import entity
+
+logger = logging.getLogger(__name__)
 
 
 async def create_internal_link_request_default_filter(row: Series, request: InternalLinkRequest) -> InternalLinkRequest:
