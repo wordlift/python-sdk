@@ -160,7 +160,6 @@ async def create_internal_link_data(internal_link: InternalLink, group_id: str) 
     source_graph.bind("seovoc", "https://w3id.org/seovoc/")
 
     # Define namespaces
-    link_group_graph.bind("schema", "http://schema.org/")
     link_group_graph.bind("seovoc", "https://w3id.org/seovoc/")
     link_group_graph.bind("xsd", "http://www.w3.org/2001/XMLSchema#")
 
@@ -176,8 +175,8 @@ async def create_internal_link_data(internal_link: InternalLink, group_id: str) 
     source_graph.add((source_resource, has_link_group, link_group))
 
     link_group_graph.add((link_group, RDF.type, URIRef("https://w3id.org/seovoc/LinkGroup")))
-    link_group_graph.add((link_group, URIRef("http://schema.org/identifier"), Literal(group_id)))
-    link_group_graph.add((link_group, URIRef("http://schema.org/name"), Literal("Related Links")))
+    link_group_graph.add((link_group, URIRef("https://w3id.org/seovoc/identifier"), Literal(group_id)))
+    link_group_graph.add((link_group, URIRef("https://w3id.org/seovoc/name"), Literal("Related Links")))
     link_group_graph.add((link_group, URIRef("https://w3id.org/seovoc/isLinkGroupOf"), source_resource))
 
     # Add destinations as links
@@ -189,8 +188,8 @@ async def create_internal_link_data(internal_link: InternalLink, group_id: str) 
 
         # Add link properties
         link_group_graph.add(
-            (link_resource, URIRef("http://schema.org/position"), Literal(dest.position, datatype=XSD.integer)))
-        link_group_graph.add((link_resource, URIRef("http://schema.org/name"), Literal(dest.name)))
+            (link_resource, URIRef("https://w3id.org/seovoc/position"), Literal(dest.position, datatype=XSD.integer)))
+        link_group_graph.add((link_resource, URIRef("https://w3id.org/seovoc/name"), Literal(dest.name)))
         link_group_graph.add((link_resource, URIRef("https://w3id.org/seovoc/anchorText"), Literal(dest.name)))
         link_group_graph.add((link_resource, URIRef("https://w3id.org/seovoc/anchorValue"), URIRef(dest.url)))
         link_group_graph.add((link_resource, URIRef("https://w3id.org/seovoc/anchorResource"), URIRef(dest.id)))
