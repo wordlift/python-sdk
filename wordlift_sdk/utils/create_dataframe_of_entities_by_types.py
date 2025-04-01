@@ -20,6 +20,7 @@ async def create_dataframe_of_entities_by_types(key: str, types: set[str]) -> pd
         root_element="entities",
         columns=['iri', 'keywords', 'url'],
         variable_values={
-            "types": types
+            # `set` cannot be serialized in Python, so we convert to `list`
+            "types": list(types)
         }
     )
