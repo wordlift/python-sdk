@@ -28,7 +28,7 @@ async def create_or_update_kg_using_sitemap(
 ) -> None:
     # Set the default callback.
     if import_url_callback is None:
-        import_url_callback = import_url_factory(configuration=configuration, types=types)
+        import_url_callback = await import_url_factory(configuration=configuration, types=types)
 
     # Get the list of URLs from the sitemap (`loc` column)
     sitemap_df = adv.sitemap_to_df(sitemap_url)
