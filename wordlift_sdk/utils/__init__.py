@@ -11,7 +11,7 @@ __all__ = [
     "create_dataframe_of_entities_by_types",
     "create_dataframe_of_entities_with_embedding_vectors",
     "create_dataframe_of_url_id",
-    "create_entity_patch_request"
+    "create_entity_patch_request",
     "create_or_update_kg_using_sitemap",
     "delayed"
 ]
