@@ -45,7 +45,7 @@ async def test_generator(entity_store: EntityStore, url_list: List[str]) -> None
 
 @pytest.mark.asyncio()
 async def test_dataframe(entity_store: EntityStore, url_list: List[str]) -> None:
-    df = pd.DataFrame.from_records(data=[(entity.url, entity.id) async for entity in entity_store.url_id(url_list)],
+    df = pd.DataFrame.from_records(data=[(entity.url, entity.iri) async for entity in entity_store.url_id(url_list)],
                                    columns=("url", "id"))
     # async for entity in entity_store.uri_to_id(url_list):
     #     df.append(entity)

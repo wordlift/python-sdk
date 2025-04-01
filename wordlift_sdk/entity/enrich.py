@@ -22,7 +22,7 @@ def enrich(configuration: Configuration, callback: Callable[[str, str], Awaitabl
     async def process(row: Series) -> None:
         async with ClientSession() as session:
             entity_url = row['url']
-            entity_id = row['id']
+            entity_id = row['iri']
             html = await fetch(session, entity_url)
             payloads = await callback(entity_id, html)
             await patch(configuration, entity_id, payloads)

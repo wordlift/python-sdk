@@ -5,8 +5,8 @@ class Entity:
         self._props = props
 
     @property
-    def id(self) -> str:
-        return self._props['id']
+    def iri(self) -> str:
+        return self._props['iri']
 
     @property
     def url(self) -> str:

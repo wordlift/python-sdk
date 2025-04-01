@@ -52,5 +52,5 @@ class EntityStore:
         :return:
         """
         return pd.DataFrame.from_records(
-            data=[(entity.url, entity.id) async for entity in self.url_id(url_list)],
+            data=[(entity.url, entity.iri) async for entity in self.url_id(url_list)],
             columns=("url", "id"))
