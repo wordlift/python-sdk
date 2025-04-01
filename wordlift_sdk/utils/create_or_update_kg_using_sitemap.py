@@ -6,6 +6,9 @@ from wordlift_client import EntityPatchRequest, Configuration
 from .create_dataframe_of_entities_by_types import create_dataframe_of_entities_by_types
 from .import_url import import_url_factory
 from .delayed import delayed
+import advertools as adv
+
+from .. import entity
 
 logger = logging.getLogger(__name__)
 
