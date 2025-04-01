@@ -20,7 +20,7 @@ async def create_or_update_kg_using_sitemap(
         sitemap_url: str,
         types: set[str],
         concurrency: int = cpu_count(),
-        import_url_callback: Callable[[list[str]], Awaitable[None]] = None,
+        import_url_callback: Callable[[set[str]], Awaitable[None]] = None,
         parse_html_callback: Callable[[str, str], Awaitable[list[EntityPatchRequest]]] = no_op
 ) -> None:
     # Set the default callback.
