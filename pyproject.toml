@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "wordlift-sdk"
-version = "0.19.0"
+version = "0.20.0"
 description = ""
 authors = ["David Riccitelli <david@wordlift.io>"]
 readme = "README.md"
@@ -17,6 +17,7 @@ rdflib = "^7.0.0"
 wordlift-client = "^1.52.0"
 gspread = "^6.1.2"
 google-auth = "^2.35.0"
+tqdm = "^4.67.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.3"
