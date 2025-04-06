@@ -1,4 +1,4 @@
-from typing import Callable, Awaitable, Coroutine
+from typing import Callable, Awaitable, Coroutine, Optional
 
 from aiohttp import ClientSession
 from pandas import Series
@@ -12,7 +12,7 @@ from .patch import patch
     stop=stop_after_attempt(5),  # Retry up to 5 times
     wait=wait_fixed(2)  # Wait 2 seconds between retries
 )
-def enrich(configuration: Configuration, callback: Callable[[str, str], Awaitable[list[EntityPatchRequest]]]) -> \
+def enrich(configuration: Configuration, callback: Callable[[str, str, str], Awaitable[list[EntityPatchRequest]]]) -> \
         Callable[
             [Series], Coroutine[None, None, None]]:
     async def fetch(session: ClientSession, url: str) -> str:
@@ -24,7 +24,7 @@ def enrich(configuration: Configuration, callback: Callable[[str, str], Awaitabl
             entity_url = row['url']
             entity_id = row['iri']
             html = await fetch(session, entity_url)
-            payloads = await callback(entity_id, html)
+            payloads = await callback(entity_id, html, entity_url)
             await patch(configuration, entity_id, payloads)
 
     return process
