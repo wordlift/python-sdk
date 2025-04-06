@@ -1,6 +1,6 @@
 import logging
 from os import cpu_count
-from typing import Callable, Awaitable, Optional
+from typing import Callable, Awaitable
 
 import advertools as adv
 from tqdm.asyncio import tqdm
@@ -10,6 +10,7 @@ from .create_dataframe_of_entities_by_types import create_dataframe_of_entities_
 from .delayed import delayed
 from .import_url import import_url_factory
 from .. import entity
+from ..entity.enrich import EnrichCallback
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +26,7 @@ async def create_or_update_kg_using_urls(
         types: set[str],
         concurrency: int = cpu_count(),
         import_url_callback: Callable[[set[str]], Awaitable[None]] = None,
-        parse_html_callback: Callable[[str, str, str], Awaitable[list[EntityPatchRequest]]] = no_op
+        parse_html_callback: EnrichCallback = no_op
 ) -> None:
     # Set the default callback.
     if import_url_callback is None:
@@ -64,7 +65,7 @@ async def create_or_update_kg_using_sitemap(
         types: set[str],
         concurrency: int = cpu_count(),
         import_url_callback: Callable[[set[str]], Awaitable[None]] = None,
-        parse_html_callback: Callable[[str, str], Awaitable[list[EntityPatchRequest]]] = no_op
+        parse_html_callback: EnrichCallback = no_op
 ) -> None:
     # Get the list of URLs from the sitemap (`loc` column)
     sitemap_df = adv.sitemap_to_df(sitemap_url)
