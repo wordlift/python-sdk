@@ -15,7 +15,7 @@ from ..entity.enrich import EnrichCallback
 logger = logging.getLogger(__name__)
 
 
-async def no_op(entity_id: str, html: str) -> list[EntityPatchRequest]:
+async def no_op(*args, **kwargs) -> list[EntityPatchRequest]:
     return list()
 
 
