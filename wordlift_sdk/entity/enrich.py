@@ -19,6 +19,16 @@ class EnrichInput:
 
 EnrichCallback = Callable[[EnrichInput], Awaitable[list[EntityPatchRequest]]]
 
+headers = {
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/123.0.0.0 Safari/537.36"
+    ),
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.5",
+}
+
 
 @retry(
     stop=stop_after_attempt(5),  # Retry up to 5 times
@@ -26,7 +36,8 @@ EnrichCallback = Callable[[EnrichInput], Awaitable[list[EntityPatchRequest]]]
 )
 def enrich(configuration: Configuration, callback: EnrichCallback) -> Callable[[Series], Coroutine[None, None, None]]:
     async def fetch(session: ClientSession, url: str) -> str:
-        async with session.get(url) as response:
+        async with session.get(url, headers=headers) as response:
+            response.raise_for_status()  # Optional: raise exception on HTTP errors
             return await response.text()
 
     async def process(row: Series) -> None:
