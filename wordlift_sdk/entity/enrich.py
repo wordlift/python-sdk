@@ -30,16 +30,16 @@ headers = {
 }
 
 
-@retry(
-    stop=stop_after_attempt(5),  # Retry up to 5 times
-    wait=wait_fixed(2)  # Wait 2 seconds between retries
-)
 def enrich(configuration: Configuration, callback: EnrichCallback) -> Callable[[Series], Coroutine[None, None, None]]:
     async def fetch(session: ClientSession, url: str) -> str:
         async with session.get(url, headers=headers) as response:
             response.raise_for_status()  # Optional: raise exception on HTTP errors
             return await response.text()
 
+    @retry(
+        stop=stop_after_attempt(5),  # Retry up to 5 times
+        wait=wait_fixed(2)  # Wait 2 seconds between retries
+    )
     async def process(row: Series) -> None:
         async with ClientSession() as session:
             entity_url = row['url']
