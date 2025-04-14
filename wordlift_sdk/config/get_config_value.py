@@ -11,7 +11,7 @@ def load_config_py(filepath="config.py"):
     return {k: getattr(module, k) for k in dir(module) if not k.startswith("_")}
 
 
-def get_config_value(key, config_py_path="config.py"):
+def get_config_value(key, config_py_path=None, default=None):
     # 1. Check globals
     if key in globals():
         return globals()[key]
@@ -22,6 +22,7 @@ def get_config_value(key, config_py_path="config.py"):
         return config[key]
 
     # 3. Check environment variables
+    import os
     if key in os.environ:
         return os.environ[key]
 
@@ -34,4 +35,5 @@ def get_config_value(key, config_py_path="config.py"):
     except ImportError:
         pass  # Not running in Google Colab
 
-    return None  # or raise an exception if required
+    # 5. Return default if provided
+    return default
