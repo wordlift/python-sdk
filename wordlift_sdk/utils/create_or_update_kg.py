@@ -26,17 +26,22 @@ async def create_or_update_kg_using_urls(
         types: set[str],
         concurrency: int = cpu_count(),
         import_url_callback: Callable[[set[str]], Awaitable[None]] = None,
-        parse_html_callback: EnrichCallback = no_op
+        parse_html_callback: EnrichCallback = no_op,
+        overwrite: bool = False,
 ) -> None:
     # Set the default callback.
     if import_url_callback is None:
         import_url_callback = await import_url_factory(configuration=configuration, types=types)
 
-    # Get the data from the KG to determine which URLs are already imported and which not.
-    kg_df = await create_dataframe_of_entities_by_types(key=key, types=types)
+    # Determine which URLs are missing from the KG.
+    if overwrite:
+        missing_url_list = list(urls)
+    else:
+        # Get the data from the KG to determine which URLs are already imported and which not.
+        kg_df = await create_dataframe_of_entities_by_types(key=key, types=types)
 
-    # Get the list of missing URLs, these are the URLs we'll import.
-    missing_url_list = list(urls - set(kg_df['url']))
+        # Get the list of missing URLs, these are the URLs we'll import.
+        missing_url_list = list(urls - set(kg_df['url']))
 
     logger.info('Importing %d entities...', len(missing_url_list))
 
