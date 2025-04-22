@@ -6,6 +6,7 @@ import advertools as adv
 from tqdm.asyncio import tqdm
 from wordlift_client import EntityPatchRequest, Configuration
 
+from . import create_dataframe_of_url_iri
 from .create_dataframe_of_entities_by_types import create_dataframe_of_entities_by_types
 from .delayed import delayed
 from .import_url import import_url_factory
@@ -49,9 +50,7 @@ async def create_or_update_kg_using_urls(
     await tqdm.gather(*[delayed(import_url_callback, concurrency)([url]) for url in missing_url_list],
                       total=len(missing_url_list))
 
-    # Reload the Kg after the import to get the list of URLs that are missing the `keywords` field.
-    # @@TODO we can call a different graphql query that filters already by keywords not present or empty instead of filtering client-side.
-    kg_df = await create_dataframe_of_entities_by_types(key=key, types=types)
+    kg_df = await create_dataframe_of_url_iri(key=key, url_list=missing_url_list)
 
     logger.info('Enriching %d entities...', len(kg_df))
 
