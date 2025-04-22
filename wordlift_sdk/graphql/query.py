@@ -5,7 +5,7 @@ import pandas as pd
 from .graphql_client_factory import GraphQLClientFactory
 
 
-async def query(key: str, query_string: str, root_element: str, columns: [str],
+async def query(key: str, query_string: str, root_element: str, columns: list[str],
                 variable_values: Optional[Dict[str, Any]] = None) -> pd.DataFrame:
     from gql import gql
 
