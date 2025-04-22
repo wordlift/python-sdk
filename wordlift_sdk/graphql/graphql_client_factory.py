@@ -22,4 +22,4 @@ class GraphQLClientFactory:
         )
 
         # Create a GraphQL client using the defined transport
-        return Client(transport=transport, fetch_schema_from_transport=False, execute_timeout=60)
+        return Client(transport=transport, fetch_schema_from_transport=False, execute_timeout=120)
