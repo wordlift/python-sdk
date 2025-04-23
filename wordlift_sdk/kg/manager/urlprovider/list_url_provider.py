@@ -16,7 +16,7 @@ class ListUrlProvider(UrlProvider):
         Args:
             urls: A list of URL strings to be provided.
         """
-        self.urls = urls
+        self._url_list = urls
 
     async def urls(self) -> AsyncGenerator[Url, None]:
         """Asynchronously yield Url objects from the predefined list.
@@ -24,5 +24,5 @@ class ListUrlProvider(UrlProvider):
         Yields:
             Url: A Url object for each URL string in the list.
         """
-        for url in self.urls:
+        for url in self._url_list:
             yield Url(value=url)
