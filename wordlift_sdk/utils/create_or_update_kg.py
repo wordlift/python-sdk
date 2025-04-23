@@ -12,6 +12,9 @@ from .delayed import delayed
 from .import_url import import_url_factory
 from .. import entity
 from ..entity.enrich import EnrichCallback
+from ..kg.manager.urlprovider.url_provider import UrlProvider
+from ..kg.manager.urlprovider.list_url_provider import ListUrlProvider
+from ..kg.manager.urlprovider.sitemap_url_provider import SitemapUrlProvider
 
 logger = logging.getLogger(__name__)
 
@@ -30,6 +33,37 @@ async def create_or_update_kg_using_urls(
         parse_html_callback: EnrichCallback = no_op,
         overwrite: bool = False,
 ) -> None:
+    # Create a ListUrlProvider
+    url_provider = ListUrlProvider(list(urls))
+
+    # Use the new method with the provider
+    await create_or_update_kg_using_url_provider(
+        configuration=configuration,
+        key=key,
+        url_provider=url_provider,
+        types=types,
+        concurrency=concurrency,
+        import_url_callback=import_url_callback,
+        parse_html_callback=parse_html_callback,
+        overwrite=overwrite
+    )
+
+
+async def create_or_update_kg_using_url_provider(
+        configuration: Configuration,
+        key: str,
+        url_provider: UrlProvider,
+        types: set[str],
+        concurrency: int = cpu_count(),
+        import_url_callback: Callable[[set[str]], Awaitable[None]] = None,
+        parse_html_callback: EnrichCallback = no_op,
+        overwrite: bool = False,
+) -> None:
+    # Collect URLs from the provider
+    urls = set()
+    async for url in url_provider.urls():
+        urls.add(url.value)
+
     # Set the default callback.
     if import_url_callback is None:
         import_url_callback = await import_url_factory(configuration=configuration, types=types)
@@ -71,14 +105,14 @@ async def create_or_update_kg_using_sitemap(
         import_url_callback: Callable[[set[str]], Awaitable[None]] = None,
         parse_html_callback: EnrichCallback = no_op
 ) -> None:
-    # Get the list of URLs from the sitemap (`loc` column)
-    sitemap_df = adv.sitemap_to_df(sitemap_url)
-    urls = set(sitemap_df['loc'])
+    # Create a SitemapUrlProvider
+    url_provider = SitemapUrlProvider(sitemap_url)
 
-    await create_or_update_kg_using_urls(
+    # Use the new method with the provider
+    await create_or_update_kg_using_url_provider(
         configuration=configuration,
         key=key,
-        urls=urls,
+        url_provider=url_provider,
         types=types,
         concurrency=concurrency,
         import_url_callback=import_url_callback,
