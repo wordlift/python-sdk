@@ -1,6 +1,8 @@
 from dataclasses import dataclass, field
 from typing import Optional
 
+import pandas as pd
+
 
 @dataclass
 class EntityTopQuery:
@@ -42,3 +44,13 @@ class EntityTopQuery:
             top_query_clicks=top_query_clicks,
             top_query_date_created=top_query_date_created
         )
+
+    def to_dataframe(self) -> pd.DataFrame:
+        entities_with_top_query_df = pd.DataFrame(self)
+        entities_with_top_query_df['calc_name'] = entities_with_top_query_df[
+                                                      ['name', 'headline', 'title', 'url']].bfill(
+            axis=1).iloc[:, 0]
+        entities_with_top_query_df['top_query_date_created'] = pd.to_datetime(
+            entities_with_top_query_df['top_query_date_created'], errors='coerce')
+
+        return entities_with_top_query_df

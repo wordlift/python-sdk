@@ -19,10 +19,4 @@ async def create_entities_with_top_query_dataframe(key: str, url_list: list[str]
         total=len(url_list)
     )
 
-    entities_with_top_query_df = pd.DataFrame(entities_with_top_query)
-    entities_with_top_query_df['calc_name'] = entities_with_top_query_df[['name', 'headline', 'title', 'url']].bfill(
-        axis=1).iloc[:, 0]
-    entities_with_top_query_df['top_query_date_created'] = pd.to_datetime(
-        entities_with_top_query_df['top_query_date_created'], errors='coerce')
-
-    return entities_with_top_query_df
+    return entities_with_top_query.to_dataframe()
