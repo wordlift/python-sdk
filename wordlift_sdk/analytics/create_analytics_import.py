@@ -1,12 +1,15 @@
 import logging
 from datetime import datetime, timedelta
+from typing import Callable, Awaitable
 
+import wordlift_client
+from pandas import Series
 from pycountry import countries
+from tenacity import retry, wait_fixed, stop_after_attempt
 from tqdm.asyncio import tqdm
 from twisted.mail.scripts.mailmail import Configuration
-from wordlift_client import AccountInfo
+from wordlift_client import AccountInfo, AnalyticsImportRequest
 
-from . import import_url_analytics_factory
 from .create_entity_gaps import append_entity_gaps_response_to_row_factory, create_entity_gaps_factory
 from ..utils import delayed
 from ..utils.create_entities_with_top_query_dataframe import create_entities_with_top_query_dataframe
@@ -52,3 +55,18 @@ async def create_analytics_import(configuration: Configuration, key: str, accoun
           entities_with_top_query_df.iterrows()],
         total=len(entities_with_top_query_df)
     )
+
+
+async def import_url_analytics_factory(configuration: Configuration) -> Callable[[Series], Awaitable[None]]:
+    @retry(
+        stop=stop_after_attempt(5),
+        wait=wait_fixed(2)
+    )
+    async def import_url_analytics(row: Series) -> None:
+        url = row['url']
+        async with wordlift_client.ApiClient(configuration) as api_client:
+            api_instance = wordlift_client.AnalyticsImportsApi(api_client)
+            request = AnalyticsImportRequest(urls=[url])
+            await api_instance.create_analytics_import(request)
+
+    return import_url_analytics
