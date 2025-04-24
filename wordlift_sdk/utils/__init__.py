@@ -6,6 +6,7 @@ from .create_dataframe_of_url_iri import create_dataframe_of_url_iri
 from .create_entity_patch_request import create_entity_patch_request
 from .create_or_update_kg import create_or_update_kg_using_sitemap, create_or_update_kg_using_urls
 from .delayed import delayed
+from .get_me import get_me
 
 __all__ = [
     "create_dataframe_from_google_sheets",
@@ -16,5 +17,6 @@ __all__ = [
     "create_entity_patch_request",
     "create_or_update_kg_using_sitemap",
     "create_or_update_kg_using_urls",
-    "delayed"
+    "delayed",
+    "get_me"
 ]
