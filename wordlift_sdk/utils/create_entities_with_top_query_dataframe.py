@@ -19,4 +19,8 @@ async def create_entities_with_top_query_dataframe(key: str, url_list: list[str]
         total=len(url_list)
     )
 
-    return entities_with_top_query.to_dataframe()
+    # Get a list of dataframes.
+    dataframes = [obj.to_dataframe() for obj in entities_with_top_query if obj is not None]
+
+    # Concat them together, with a new index.
+    return pd.concat(dataframes, ignore_index=True)
