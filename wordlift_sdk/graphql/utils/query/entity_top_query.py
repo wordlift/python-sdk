@@ -46,7 +46,7 @@ class EntityTopQuery:
         )
 
     def to_dataframe(self) -> pd.DataFrame:
-        entities_with_top_query_df = pd.DataFrame(asdict(self))
+        entities_with_top_query_df = pd.DataFrame([asdict(self)])
         entities_with_top_query_df['calc_name'] = entities_with_top_query_df[
                                                       ['name', 'headline', 'title', 'url']].bfill(
             axis=1).iloc[:, 0]
