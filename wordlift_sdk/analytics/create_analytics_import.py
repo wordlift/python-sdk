@@ -40,7 +40,7 @@ async def create_analytics_import(configuration: Configuration, key: str, accoun
             total=len(entities_with_stale_data_df)
         )
 
-        entities_with_top_query_df = await create_entities_with_top_query_dataframe(url_list=url_list)
+        entities_with_top_query_df = await create_entities_with_top_query_dataframe(key=key, url_list=url_list)
 
     country = countries.get(alpha_2=account.country_code.upper())
     await tqdm.gather(
