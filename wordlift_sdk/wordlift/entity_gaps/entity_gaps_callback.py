@@ -7,13 +7,13 @@ from twisted.mail.scripts.mailmail import Configuration
 from wordlift_client import AnalysesResponse, EntityGapsApi, EntityGapRequest
 
 
-async def create_entity_gaps_factory(configuration: Configuration, query_location_name: str) -> Callable[
+async def entity_gaps_callback_factory(configuration: Configuration, query_location_name: str) -> Callable[
     [Series], Awaitable[Optional[AnalysesResponse]]]:
     @retry(
         stop=stop_after_attempt(10),
         wait=wait_fixed(2)
     )
-    async def create_entity_gaps(row: Series) -> Optional[AnalysesResponse]:
+    async def entity_gaps_callback(row: Series) -> Optional[AnalysesResponse]:
         url = row['url']
         query = row['top_query_name']
         if query is None:
@@ -29,15 +29,4 @@ async def create_entity_gaps_factory(configuration: Configuration, query_locatio
                 )
             )
 
-    return create_entity_gaps
-
-
-async def append_entity_gaps_response_to_row_factory(
-        create_entity_gaps: Callable[[Series], Awaitable[Optional[AnalysesResponse]]]) -> Callable[
-    [Series], Awaitable[Series]]:
-    async def append_entity_gaps_response_to_row(row: Series) -> Series:
-        response = await create_entity_gaps(row)
-        if response: row['entity_gaps'] = response.items
-        return row
-
-    return append_entity_gaps_response_to_row
+    return entity_gaps_callback
