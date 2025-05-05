@@ -18,7 +18,6 @@ logger = logging.getLogger(__name__)
 
 async def create_google_search_console_data_import(
         configuration: Configuration, key: str,
-        account: AccountInfo,
         url_list: list[str]
 ) -> None:
     # Get the entities data with the top query.
