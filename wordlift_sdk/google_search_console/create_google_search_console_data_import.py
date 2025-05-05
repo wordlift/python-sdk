@@ -7,9 +7,8 @@ from pandas import Series
 from tenacity import retry, wait_fixed, stop_after_attempt
 from tqdm.asyncio import tqdm
 from twisted.mail.scripts.mailmail import Configuration
-from wordlift_client import AccountInfo, AnalyticsImportRequest
+from wordlift_client import AnalyticsImportRequest
 
-from wordlift_sdk.wordlift.entity_gaps.entity_gaps_callback import append_entity_gaps_response_to_row_factory
 from ..utils import delayed
 from ..utils.create_entities_with_top_query_dataframe import create_entities_with_top_query_dataframe
 
