@@ -6,7 +6,7 @@ from wordlift_client import Configuration
 from wordlift_sdk.kg.manager.urlprovider.url_provider import UrlProvider, Url
 from wordlift_sdk.kg.manager.urlprovider.list_url_provider import ListUrlProvider
 from wordlift_sdk.kg.manager.urlprovider.sitemap_url_provider import SitemapUrlProvider
-from wordlift_sdk.utils.create_or_update_kg import (
+from wordlift_sdk.wordlift.sitemap_import.create_or_update_kg import (
     create_or_update_kg_using_url_provider,
     create_or_update_kg_using_urls,
     create_or_update_kg_using_sitemap

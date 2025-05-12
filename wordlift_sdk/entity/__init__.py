@@ -1,4 +1,4 @@
-from .enrich import enrich, EnrichInput, EnrichCallback
+from .enrich import enrich, EnrichInput, ParseHtmlCallback
 from .patch import patch
 
-__all__ = ['enrich', 'EnrichCallback', 'EnrichInput', 'patch']
+__all__ = ['enrich', 'ParseHtmlCallback', 'EnrichInput', 'patch']

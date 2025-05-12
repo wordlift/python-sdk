@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from typing import Callable, Awaitable, Coroutine
 
 from aiohttp import ClientSession
@@ -7,17 +6,9 @@ from tenacity import retry, stop_after_attempt, wait_fixed
 from wordlift_client import EntityPatchRequest, Configuration
 
 from .patch import patch
+from ..wordlift.sitemap_import.protocol.parse_html_protocol_interface import ParseHtmlInput
 
-
-@dataclass
-class EnrichInput:
-    entity_id: str
-    entity_url: str
-    html: str
-    row: Series
-
-
-EnrichCallback = Callable[[EnrichInput], Awaitable[list[EntityPatchRequest]]]
+ParseHtmlCallback = Callable[[ParseHtmlInput], Awaitable[list[EntityPatchRequest]]]
 
 headers = {
     "User-Agent": (
@@ -30,7 +21,7 @@ headers = {
 }
 
 
-def enrich(configuration: Configuration, callback: EnrichCallback) -> Callable[[Series], Coroutine[None, None, None]]:
+def enrich(configuration: Configuration, callback: ParseHtmlCallback) -> Callable[[Series], Coroutine[None, None, None]]:
     async def fetch(session: ClientSession, url: str) -> str:
         async with session.get(url, headers=headers) as response:
             response.raise_for_status()  # Optional: raise exception on HTTP errors
@@ -45,7 +36,7 @@ def enrich(configuration: Configuration, callback: EnrichCallback) -> Callable[[
             entity_url = row['url']
             entity_id = row['iri']
             html = await fetch(session, entity_url)
-            enrich_input = EnrichInput(
+            enrich_input = ParseHtmlInput(
                 entity_id=entity_id,
                 entity_url=entity_url,
                 html=html,
