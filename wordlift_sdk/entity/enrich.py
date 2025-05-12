@@ -36,13 +36,13 @@ def enrich(configuration: Configuration, callback: ParseHtmlCallback) -> Callabl
             entity_url = row['url']
             entity_id = row['iri']
             html = await fetch(session, entity_url)
-            enrich_input = ParseHtmlInput(
+            parse_html_input = ParseHtmlInput(
                 entity_id=entity_id,
                 entity_url=entity_url,
                 html=html,
                 row=row
             )
-            payloads = await callback(enrich_input)
+            payloads = await callback(parse_html_input)
             await patch(configuration, entity_id, payloads)
 
     return process

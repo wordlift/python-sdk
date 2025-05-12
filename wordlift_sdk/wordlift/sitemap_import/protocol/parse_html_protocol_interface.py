@@ -23,5 +23,5 @@ class ParseHtmlProtocolInterface(Protocol):
         self.context = context
 
     @abstractmethod
-    async def parse_html(self, enrich_input: ParseHtmlInput) -> list[EntityPatchRequest]:
+    async def parse_html(self, parse_html_input: ParseHtmlInput) -> list[EntityPatchRequest]:
         ...
