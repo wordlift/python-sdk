@@ -3,9 +3,14 @@ import unicodedata
 from urllib.parse import urljoin
 
 from wordlift_sdk.id_generator.id_generator_interface import IdGeneratorInterface
+from wordlift_client import AccountInfo
 
 
 class IdGenerator(IdGeneratorInterface):
+    account: AccountInfo
+
+    def __init__(self, account: AccountInfo):
+        self.account = account
 
     def slugify(self, input_string: str) -> str:
         if not isinstance(input_string, str):
@@ -27,8 +32,8 @@ class IdGenerator(IdGeneratorInterface):
 
         return slug
 
-    def create(self, base_uri: str, *args):
-        full_url = base_uri
+    def create(self, *args):
+        full_url = self.account.dataset_uri
         for arg in args:
             full_url = full_url + '/' + self.slugify(arg)
 
