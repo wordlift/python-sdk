@@ -35,6 +35,6 @@ class IdGenerator(IdGeneratorInterface):
     def create(self, *args):
         full_url = self.account.dataset_uri
         for arg in args:
-            full_url = full_url + '/' + self.slugify(arg)
+            full_url = full_url.rstrip('/') + '/' + self.slugify(arg)
 
         return full_url
