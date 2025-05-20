@@ -3,7 +3,8 @@ from typing import Callable, Awaitable, Coroutine
 from aiohttp import ClientSession
 from pandas import Series
 from tenacity import retry, stop_after_attempt, wait_fixed
-from wordlift_client import EntityPatchRequest, Configuration
+from wordlift_client import EntityPatchRequest, Configuration, WebPagesApi
+import wordlift_client
 
 from .patch import patch
 from ..wordlift.sitemap_import.protocol.parse_html_protocol_interface import ParseHtmlInput
@@ -21,21 +22,20 @@ headers = {
 }
 
 
-def enrich(configuration: Configuration, callback: ParseHtmlCallback) -> Callable[[Series], Coroutine[None, None, None]]:
-    async def fetch(session: ClientSession, url: str) -> str:
-        async with session.get(url, headers=headers) as response:
-            response.raise_for_status()  # Optional: raise exception on HTTP errors
-            return await response.text()
-
+def enrich(configuration: Configuration, callback: ParseHtmlCallback) -> Callable[
+    [Series], Coroutine[None, None, None]]:
     @retry(
         stop=stop_after_attempt(5),  # Retry up to 5 times
         wait=wait_fixed(2)  # Wait 2 seconds between retries
     )
     async def process(row: Series) -> None:
-        async with ClientSession() as session:
-            entity_url = row['url']
-            entity_id = row['iri']
-            html = await fetch(session, entity_url)
+        entity_url = row['url']
+        entity_id = row['iri']
+
+        async with wordlift_client.ApiClient(configuration) as api_client:
+            api_instance = WebPagesApi(api_client=api_client)
+            web_page = await api_instance.get_web_page(entity_url)
+            html = web_page.html
             parse_html_input = ParseHtmlInput(
                 entity_id=entity_id,
                 entity_url=entity_url,
