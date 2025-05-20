@@ -1,8 +1,8 @@
-from rdflib import Graph, URIRef, Literal
+from rdflib import Graph, URIRef, Node
 import wordlift_client
 from wordlift_client.models.entity_patch_request import EntityPatchRequest
 
-def create_entity_patch_request(resource: URIRef, prop: URIRef, value: Literal) -> EntityPatchRequest:
+def create_entity_patch_request(resource: URIRef, prop: URIRef, value: Node) -> EntityPatchRequest:
     g = Graph()
     g.bind('schema', 'http://schema.org/')
     g.add((resource, prop, value))
