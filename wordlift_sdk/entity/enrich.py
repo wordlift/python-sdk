@@ -1,3 +1,4 @@
+import logging
 from typing import Callable, Awaitable, Coroutine
 
 from aiohttp import ClientSession
@@ -8,6 +9,8 @@ import wordlift_client
 
 from .patch import patch
 from ..wordlift.sitemap_import.protocol.parse_html_protocol_interface import ParseHtmlInput
+
+logger = logging.getLogger(__name__)
 
 ParseHtmlCallback = Callable[[ParseHtmlInput], Awaitable[list[EntityPatchRequest]]]
 
@@ -33,16 +36,19 @@ def enrich(configuration: Configuration, callback: ParseHtmlCallback) -> Callabl
         entity_id = row['iri']
 
         async with wordlift_client.ApiClient(configuration) as api_client:
-            api_instance = WebPagesApi(api_client=api_client)
-            web_page = await api_instance.get_web_page(entity_url)
-            html = web_page.html
-            parse_html_input = ParseHtmlInput(
-                entity_id=entity_id,
-                entity_url=entity_url,
-                html=html,
-                row=row
-            )
-            payloads = await callback(parse_html_input)
-            await patch(configuration, entity_id, payloads)
+            try:
+                api_instance = WebPagesApi(api_client=api_client)
+                web_page = await api_instance.get_web_page(entity_url)
+                html = web_page.html
+                parse_html_input = ParseHtmlInput(
+                    entity_id=entity_id,
+                    entity_url=entity_url,
+                    html=html,
+                    row=row
+                )
+                payloads = await callback(parse_html_input)
+                await patch(configuration, entity_id, payloads)
+            except Exception as e:
+                logger.error("Error %s occurred while processing entity %s with url %s" % (e, entity_id, entity_url))
 
     return process
