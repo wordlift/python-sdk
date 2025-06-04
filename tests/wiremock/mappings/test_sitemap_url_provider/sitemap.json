@@ -1,0 +1,13 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPath": "/test_sitemap_url_provider/MakaleSiteMap.xml"
+  },
+  "response": {
+    "status": 200,
+    "bodyFileName": "test_sitemap_url_provider/sitemap.xml",
+    "headers": {
+      "Content-Type": "text/xml"
+    }
+  }
+}

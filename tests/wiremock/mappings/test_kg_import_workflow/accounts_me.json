@@ -1,0 +1,18 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPath": "/test_kg_import_workflow/accounts/me",
+    "headers": {
+      "Authorization": {
+        "equalTo": "Key key388966881976561"
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "bodyFileName": "test_kg_import_workflow/account_me_1.json",
+    "headers": {
+      "Content-Type": "application/vnd.wordlift.account-info.v2+json"
+    }
+  }
+}

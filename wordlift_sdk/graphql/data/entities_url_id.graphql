@@ -1,0 +1,6 @@
+query entities_url_id($urls: [String]!) {
+    entities(query: { urlConstraint: { in: $urls } } ) {
+        url: string(name:"schema:url")
+        id: iri
+    }
+}

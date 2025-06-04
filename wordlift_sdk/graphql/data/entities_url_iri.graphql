@@ -1,0 +1,7 @@
+query entities_url_id($urls: [String]!) {
+    entities(query: { urlConstraint: { in: $urls } } ) {
+        iri
+        url: string(name: "schema:url")
+        date_imported: dateTime(name: "seovoc:dateImported")
+    }
+}

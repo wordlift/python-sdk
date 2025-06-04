@@ -5,21 +5,24 @@ from rdflib import Graph
 from liquid import Environment, CachingFileSystemLoader
 
 from wordlift_sdk.wordlift.sitemap_import.protocol import ProtocolContext
+from ..graph_provider import GraphProvider
+from ..graph_bag import GraphBag
 
 logger = logging.getLogger(__name__)
 
 
-class TtlLiquidGraphFactory:
+class TtlLiquidGraphFactory(GraphProvider):
+    path: Path
     context: ProtocolContext
 
-    def __init__(self, context: ProtocolContext):
+    def __init__(self, context: ProtocolContext, path: Path):
         self.context = context
+        self.path = path
 
-    async def graphs(self, path: str) -> AsyncGenerator[Graph, None]:
-        folder = Path(path)
-        templates = list(folder.rglob("*.ttl.liquid"))
+    async def graphs(self) -> AsyncGenerator[GraphBag, None]:
+        templates = list(self.path.rglob("*.ttl.liquid"))
         env = Environment(
-            loader=CachingFileSystemLoader(path),
+            loader=CachingFileSystemLoader(self.path),
         )
 
         for template in templates:
@@ -35,6 +38,6 @@ class TtlLiquidGraphFactory:
 
                 logger.info(f"Successfully loaded {template} graph with {len(graph)} triples")
 
-                yield graph
+                yield GraphBag(graph)
             except Exception as e:
                 logger.error(f"Error loading contact points graph: {e}")

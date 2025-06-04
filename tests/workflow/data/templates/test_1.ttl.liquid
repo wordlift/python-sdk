@@ -1,0 +1,14 @@
+@prefix schema: <http://schema.org/> .
+
+<{{ account.dataset_uri }}entity/organization/example> a schema:Organization ;
+    schema:logo <{{ account.dataset_uri }}entity/organization/example/logo> ;
+    schema:name "Herkes Için Güzellik" ;
+    schema:sameAs <https://facebook.com/examplecom>,
+        <https://instagram.com/examplecom>,
+        <https://www.tiktok.com/@examplecom> ;
+    schema:url <https://www.example.com/> .
+
+<{{ account.dataset_uri }}entity/organization/example/logo> a schema:ImageObject ;
+    schema:height 61 ;
+    schema:url "https://www.example.com/assets/images/hig-logo-colored.png" ;
+    schema:width 398 .

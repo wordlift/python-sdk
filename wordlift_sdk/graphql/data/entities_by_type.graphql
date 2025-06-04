@@ -1,0 +1,9 @@
+query entities_by_type($types: [String]!) {
+    entities(
+        query: { typeConstraint: { in: $types } }
+    ) {
+        iri
+        keywords: string(name: "schema:keywords")
+        url: string(name: "schema:url")
+    }
+}

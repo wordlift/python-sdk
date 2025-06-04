@@ -1,40 +1,29 @@
-from typing import AsyncGenerator
+import re
+from typing import AsyncGenerator, Optional
 
 import advertools as adv
+import pandas as pd
 
 from .url_provider import UrlProvider, Url
 
 
 class SitemapUrlProvider(UrlProvider):
-    """
-    A URL provider that extracts URLs from a sitemap.
+    sitemap_url: str
+    pattern: re.Pattern | None
 
-    This class implements the UrlProvider interface to provide URLs from a sitemap file.
-    It uses the advertools library to parse the sitemap and extract the URLs from the 'loc' column.
-    """
-
-    def __init__(self, sitemap_url: str):
-        """
-        Initialize the SitemapUrlProvider with a sitemap URL.
-
-        Args:
-            sitemap_url (str): The URL of the sitemap to extract URLs from.
-        """
+    def __init__(self, sitemap_url: str, pattern: Optional[re.Pattern] = None):
+        self.pattern = pattern
         self.sitemap_url = sitemap_url
 
     async def urls(self) -> AsyncGenerator[Url, None]:
-        """
-        Asynchronously yield URLs from the sitemap.
+        sitemap_df = adv.sitemaps.sitemap_to_df(sitemap_url=self.sitemap_url)
+        sitemap_df['lastmod_as_datetime'] = pd.to_datetime(sitemap_df['lastmod'], errors='coerce')
 
-        This method fetches the sitemap from the provided URL, extracts all URLs from the 'loc' column,
-        and yields them one by one as Url objects.
-
-        Returns:
-            AsyncGenerator[Url, None]: An asynchronous generator that yields Url objects.
-        """
-        # Get the list of URLs from the sitemap (`loc` column)
-        sitemap_df = adv.sitemap_to_df(self.sitemap_url)
-        urls = set(sitemap_df['loc'])
-
-        for url in urls:
-            yield Url(value=url)
+        for _, row in sitemap_df.iterrows():
+            url = row['loc']
+            last_mod_as_datetime = row['lastmod_as_datetime']
+            if self.pattern is None or self.pattern.search(url):
+                yield Url(
+                    value=url,
+                    date_modified=None if pd.isna(last_mod_as_datetime) else last_mod_as_datetime.to_pydatetime()
+                )

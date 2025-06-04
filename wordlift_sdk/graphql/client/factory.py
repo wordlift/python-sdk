@@ -1,8 +1,10 @@
 from gql import Client
 from gql.transport.aiohttp import AIOHTTPTransport
 
+from .client import GraphQlClient
 
-class GraphQLClientFactory:
+
+class GraphQlClientFactory:
     _api_url: str
     _key: str
 
@@ -10,7 +12,11 @@ class GraphQLClientFactory:
         self._api_url = api_url
         self._key = key
 
-    def create(self):
+    def create(self) -> GraphQlClient:
+        client = self.create_gql_client()
+        return GraphQlClient(client)
+
+    def create_gql_client(self) -> Client:
         # Select your transport with a defined url endpoint
         transport = AIOHTTPTransport(
             url=self._api_url,

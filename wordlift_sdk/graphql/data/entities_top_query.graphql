@@ -1,0 +1,20 @@
+query entities_top_query($url: String!) {
+    entities(query: { urlConstraint: { in: [$url] } }) {
+        iri
+        url: string(name: "schema:url")
+        name: string(name: "schema:name")
+        headline: string(name: "schema:headline")
+        title: string(name: "schema:title")
+        top_query: topN(
+            name: "seovoc:hasQuery"
+            sort: { field: "seovoc:impressions3Months", direction: DESC }
+            limit: 1
+        ) {
+            iri
+            name: string(name: "seovoc:name")
+            impressions: int(name: "seovoc:impressions3Months")
+            clicks: int(name: "seovoc:clicks3Months")
+            date_created: date(name: "seovoc:dateCreated")
+        }
+    }
+}

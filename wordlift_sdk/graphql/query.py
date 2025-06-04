@@ -1,8 +1,7 @@
 from typing import Dict, Optional, Any
+from ..graphql.client import GraphQlClientFactory
 
 import pandas as pd
-
-from .graphql_client_factory import GraphQLClientFactory
 
 
 async def query(key: str, query_string: str, root_element: str, columns: list[str],
@@ -10,7 +9,7 @@ async def query(key: str, query_string: str, root_element: str, columns: list[st
     from gql import gql
 
     # Create a GraphQL client using the defined transport
-    client = GraphQLClientFactory(key=key).create()
+    client = GraphQlClientFactory(key=key).create_gql_client()
 
     # Define the GraphQL query
     gql_query = gql(query_string)
