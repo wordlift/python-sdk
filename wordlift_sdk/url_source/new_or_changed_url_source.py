@@ -3,15 +3,15 @@ from typing import AsyncGenerator
 
 import pandas as pd
 
-from .url_provider import UrlProvider, Url
+from . import UrlSource, Url
 from ..graphql.client import GraphQlClient
 
 
-class NewOrChangedUrlProvider(UrlProvider):
+class NewOrChangedUrlSource(UrlSource):
     graphql_client: GraphQlClient
-    url_provider: UrlProvider
+    url_provider: UrlSource
 
-    def __init__(self, url_provider: UrlProvider, graphql_client: GraphQlClient):
+    def __init__(self, url_provider: UrlSource, graphql_client: GraphQlClient):
         self.graphql_client = graphql_client
         self.url_provider = url_provider
 

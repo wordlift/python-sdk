@@ -8,8 +8,8 @@ from wordlift_client import AccountInfo
 import wordlift_sdk.client
 from wordlift_sdk.graphql.client import GraphQlClient, GraphQlClientFactory
 from wordlift_sdk.protocol import Context
-from wordlift_sdk.url_provider import UrlProvider, SitemapUrlProvider
-from wordlift_sdk.url_provider.new_or_changed_url_provider import NewOrChangedUrlProvider
+from wordlift_sdk.url_source import UrlSource, SitemapUrlSource
+from wordlift_sdk.url_source.new_or_changed_url_source import NewOrChangedUrlSource
 from wordlift_sdk.utils.delayed import create_delayed
 from wordlift_sdk.workflow.kg_import_workflow import KgImportWorkflow
 
@@ -38,9 +38,9 @@ def graphql_client(test_key: str, test_api_url: str) -> GraphQlClient:
 
 
 @pytest.fixture
-def url_provider(graphql_client: GraphQlClient) -> UrlProvider:
-    return NewOrChangedUrlProvider(
-        url_provider=SitemapUrlProvider(
+def url_provider(graphql_client: GraphQlClient) -> UrlSource:
+    return NewOrChangedUrlSource(
+        url_provider=SitemapUrlSource(
             sitemap_url='https://www.herkesicinguzellik.com/MakaleSiteMap.xml',
             pattern=re.compile(r'^https://www.herkesicinguzellik.com/makale/.*$'),
         ),
@@ -59,7 +59,7 @@ def context(account: AccountInfo, client_configuration: wordlift_client.Configur
 
 
 @pytest.fixture
-def kg_import_workflow(context: Context, url_provider: UrlProvider, ) -> KgImportWorkflow:
+def kg_import_workflow(context: Context, url_provider: UrlSource, ) -> KgImportWorkflow:
     return KgImportWorkflow(
         context=context,
         url_provider=url_provider,

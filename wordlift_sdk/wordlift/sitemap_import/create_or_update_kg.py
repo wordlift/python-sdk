@@ -4,17 +4,15 @@ from os import cpu_count
 from tqdm.asyncio import tqdm
 from wordlift_client import Configuration
 
-from wordlift_sdk import entity
-from wordlift_sdk.kg.manager.urlprovider.list_url_provider import ListUrlProvider
-from wordlift_sdk.kg.manager.urlprovider.sitemap_url_provider import SitemapUrlProvider
-from wordlift_sdk.kg.manager.urlprovider.url_provider import UrlProvider
-from wordlift_sdk.utils import create_dataframe_of_url_iri, create_delayed
-from wordlift_sdk.utils.create_dataframe_of_entities_by_types import create_dataframe_of_entities_by_types
-from wordlift_sdk.wordlift.sitemap_import.protocol.default import DefaultImportUrlProtocol, DefaultParseHtmlProtocol
-from wordlift_sdk.wordlift.sitemap_import.protocol.import_url_protocol_interface import ImportUrlProtocolInterface, \
+from .protocol.default import DefaultImportUrlProtocol, DefaultParseHtmlProtocol
+from .protocol.import_url_protocol_interface import ImportUrlProtocolInterface, \
     ImportUrlInput
-from wordlift_sdk.wordlift.sitemap_import.protocol.parse_html_protocol_interface import ParseHtmlProtocolInterface
-from wordlift_sdk.wordlift.sitemap_import.protocol.protocol_context import ProtocolContext
+from .protocol.parse_html_protocol_interface import ParseHtmlProtocolInterface
+from .protocol.protocol_context import ProtocolContext
+from ... import entity
+from ...url_source import ListUrlSource, UrlSource, SitemapUrlSource
+from ...utils import create_dataframe_of_url_iri, create_delayed
+from ...utils.create_dataframe_of_entities_by_types import create_dataframe_of_entities_by_types
 
 logger = logging.getLogger(__name__)
 
@@ -29,8 +27,8 @@ async def create_or_update_kg_using_urls(
         parse_html_protocol: ParseHtmlProtocolInterface = None,
         overwrite: bool = False,
 ) -> None:
-    # Create a ListUrlProvider
-    url_provider = ListUrlProvider(list(urls))
+    # Create a ListUrlSource
+    url_provider = ListUrlSource(list(urls))
 
     # Use the new method with the provider
     await create_or_update_kg_using_url_provider(
@@ -48,7 +46,7 @@ async def create_or_update_kg_using_urls(
 async def create_or_update_kg_using_url_provider(
         configuration: Configuration,
         key: str,
-        url_provider: UrlProvider,
+        url_provider: UrlSource,
         types: set[str],
         concurrency: int = cpu_count(),
         import_url_protocol: ImportUrlProtocolInterface = None,
@@ -81,8 +79,11 @@ async def create_or_update_kg_using_url_provider(
     logger.info('Importing %d entities...', len(missing_url_list))
 
     # Import the URLs by calling the `import_url` method. We use `delayed` to parallelize work.
+    delayed = create_delayed(
+        import_url_protocol.import_url, concurrency
+    )
     await tqdm.gather(
-        *[delayed(import_url_protocol.import_url, concurrency)(ImportUrlInput(url_list=[url])) for url in
+        *[delayed(ImportUrlInput(url_list=[url])) for url in
           missing_url_list],
         total=len(missing_url_list))
 
@@ -105,7 +106,7 @@ async def create_or_update_kg_using_sitemap(
         parse_html_protocol: ParseHtmlProtocolInterface = None
 ) -> None:
     # Create a SitemapUrlProvider
-    url_provider = SitemapUrlProvider(sitemap_url)
+    url_provider = SitemapUrlSource(sitemap_url)
 
     # Use the new method with the provider
     await create_or_update_kg_using_url_provider(

@@ -4,10 +4,10 @@ from typing import AsyncGenerator, Optional
 import advertools as adv
 import pandas as pd
 
-from .url_provider import UrlProvider, Url
+from .url_source import UrlSource, Url
 
 
-class SitemapUrlProvider(UrlProvider):
+class SitemapUrlSource(UrlSource):
     sitemap_url: str
     pattern: re.Pattern | None
 

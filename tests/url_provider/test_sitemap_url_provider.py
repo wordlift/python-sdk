@@ -3,7 +3,7 @@ import re
 
 import pytest
 
-from wordlift_sdk.kg.manager.urlprovider import UrlProvider, SitemapUrlProvider
+from wordlift_sdk.url_source import UrlSource, SitemapUrlSource
 
 logger = logging.getLogger(__name__)
 
@@ -14,15 +14,15 @@ def test_wiremock_url(wiremock_url: str) -> str:
 
 
 @pytest.fixture
-def sitemap_url_provider(test_wiremock_url: str) -> UrlProvider:
-    return SitemapUrlProvider(
+def sitemap_url_provider(test_wiremock_url: str) -> UrlSource:
+    return SitemapUrlSource(
         sitemap_url=test_wiremock_url + '/MakaleSiteMap.xml',
         pattern=re.compile(r'^https://www.herkesicinguzellik.com/makale/.*$'),
     )
 
 
 @pytest.mark.asyncio
-async def test(sitemap_url_provider: UrlProvider) -> None:
+async def test(sitemap_url_provider: UrlSource) -> None:
     urls = []
     async for url in sitemap_url_provider.urls():
         urls.append(url)

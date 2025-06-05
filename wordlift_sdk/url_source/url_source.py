@@ -11,7 +11,7 @@ class Url:
     date_modified: datetime | None = None
 
 
-class UrlProvider(ABC):
+class UrlSource(ABC):
     @abstractmethod
     async def urls(self) -> AsyncGenerator[Url, None]:
         """Asynchronously yields Url objects."""

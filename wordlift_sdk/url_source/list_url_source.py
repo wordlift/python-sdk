@@ -1,9 +1,9 @@
 from typing import AsyncGenerator
 
-from .url_provider import UrlProvider, Url
+from .url_source import UrlSource, Url
 
 
-class ListUrlProvider(UrlProvider):
+class ListUrlSource(UrlSource):
     """A URL provider that yields URLs from a predefined list.
 
     This provider takes a list of URL strings and provides them one by one

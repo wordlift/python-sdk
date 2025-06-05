@@ -4,11 +4,11 @@ import pandas as pd
 from google.auth.credentials import Credentials
 from gspread import Client
 
-from wordlift_sdk.utils.create_dataframe_from_google_sheets import create_dataframe_from_google_sheets
-from .url_provider import UrlProvider, Url
+from .url_source import UrlSource, Url
+from ..utils.create_dataframe_from_google_sheets import create_dataframe_from_google_sheets
 
 
-class GoogleSheetsUrlProvider(UrlProvider):
+class GoogleSheetsUrlSource(UrlSource):
     """
     A URL provider that extracts URLs from a Google Sheet.
 

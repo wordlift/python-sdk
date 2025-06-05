@@ -1,23 +1,22 @@
-import unittest
 import asyncio
+import unittest
 from typing import List
 
-from wordlift_sdk.kg.manager.urlprovider import ListUrlProvider
-from wordlift_sdk.kg.manager.urlprovider.url_provider import Url
+from wordlift_sdk.url_source import ListUrlSource, Url
 
 
-class TestListUrlProvider(unittest.TestCase):
+class TestListUrlSource(unittest.TestCase):
     def test_init(self):
-        """Test that the ListUrlProvider is initialized correctly with a list of URLs."""
+        """Test that the ListUrlSource is initialized correctly with a list of URLs."""
         url_list = ["https://example.com/page1", "https://example.com/page2"]
-        provider = ListUrlProvider(url_list)
+        provider = ListUrlSource(url_list)
 
         self.assertEqual(provider._url_list, url_list)
 
     def test_urls_method(self):
         """Test that the urls method yields Url objects for each URL in the list."""
         url_list = ["https://example.com/page1", "https://example.com/page2"]
-        provider = ListUrlProvider(url_list)
+        provider = ListUrlSource(url_list)
 
         # Run the async generator and collect the results
         result_urls = asyncio.run(self._collect_urls(provider))
@@ -32,7 +31,7 @@ class TestListUrlProvider(unittest.TestCase):
 
     def test_empty_list(self):
         """Test that the urls method works correctly with an empty list."""
-        provider = ListUrlProvider([])
+        provider = ListUrlSource([])
 
         # Run the async generator and collect the results
         result_urls = asyncio.run(self._collect_urls(provider))
@@ -40,7 +39,7 @@ class TestListUrlProvider(unittest.TestCase):
         # Check that we got an empty list
         self.assertEqual(len(result_urls), 0)
 
-    async def _collect_urls(self, provider: ListUrlProvider) -> List[Url]:
+    async def _collect_urls(self, provider: ListUrlSource) -> List[Url]:
         """Helper method to collect URLs from the async generator."""
         result_urls = []
         async for url in provider.urls():

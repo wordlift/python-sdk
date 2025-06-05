@@ -3,9 +3,7 @@ from unittest.mock import patch, MagicMock, AsyncMock
 
 from wordlift_client import Configuration
 
-from wordlift_sdk.kg.manager.urlprovider.url_provider import UrlProvider, Url
-from wordlift_sdk.kg.manager.urlprovider.list_url_provider import ListUrlProvider
-from wordlift_sdk.kg.manager.urlprovider.sitemap_url_provider import SitemapUrlProvider
+from wordlift_sdk.url_source import UrlSource, Url, ListUrlSource, SitemapUrlSource
 from wordlift_sdk.wordlift.sitemap_import.create_or_update_kg import (
     create_or_update_kg_using_url_provider,
     create_or_update_kg_using_urls,
@@ -28,11 +26,11 @@ class TestCreateOrUpdateKg(unittest.TestCase):
     @patch('wordlift_sdk.utils.create_or_update_kg.tqdm.gather')
     @patch('wordlift_sdk.utils.create_or_update_kg.entity.enrich')
     async def test_create_or_update_kg_using_url_provider(
-        self, mock_enrich, mock_gather, mock_import_url_factory, 
-        mock_create_dataframe_of_url_iri, mock_create_dataframe_of_entities_by_types
+            self, mock_enrich, mock_gather, mock_import_url_factory,
+            mock_create_dataframe_of_url_iri, mock_create_dataframe_of_entities_by_types
     ):
-        # Create a mock UrlProvider
-        mock_url_provider = MagicMock(spec=UrlProvider)
+        # Create a mock UrlSource
+        mock_url_provider = MagicMock(spec=UrlSource)
         mock_url_provider.urls = AsyncMock()
         mock_url_provider.urls.return_value.__aiter__.return_value = [
             Url(value="https://example.com/page1"),
@@ -91,8 +89,8 @@ class TestCreateOrUpdateKg(unittest.TestCase):
         mock_create_or_update_kg_using_url_provider.assert_called_once()
         args, kwargs = mock_create_or_update_kg_using_url_provider.call_args
 
-        # Check that the url_provider is a ListUrlProvider with the correct URLs
-        self.assertIsInstance(kwargs['url_provider'], ListUrlProvider)
+        # Check that the url_provider is a ListUrlSource with the correct URLs
+        self.assertIsInstance(kwargs['url_provider'], ListUrlSource)
         self.assertEqual(set(kwargs['url_provider']._url_list), self.urls)
 
         # Check other parameters
@@ -104,7 +102,7 @@ class TestCreateOrUpdateKg(unittest.TestCase):
     @patch('wordlift_sdk.utils.create_or_update_kg.adv.sitemap_to_df')
     @patch('wordlift_sdk.utils.create_or_update_kg.create_or_update_kg_using_url_provider')
     async def test_create_or_update_kg_using_sitemap(
-        self, mock_create_or_update_kg_using_url_provider, mock_sitemap_to_df
+            self, mock_create_or_update_kg_using_url_provider, mock_sitemap_to_df
     ):
         # Set up the mock as an AsyncMock
         mock_create_or_update_kg_using_url_provider.side_effect = AsyncMock()
@@ -127,8 +125,8 @@ class TestCreateOrUpdateKg(unittest.TestCase):
         mock_create_or_update_kg_using_url_provider.assert_called_once()
         args, kwargs = mock_create_or_update_kg_using_url_provider.call_args
 
-        # Check that the url_provider is a SitemapUrlProvider with the correct sitemap URL
-        self.assertIsInstance(kwargs['url_provider'], SitemapUrlProvider)
+        # Check that the url_provider is a SitemapUrlSource with the correct sitemap URL
+        self.assertIsInstance(kwargs['url_provider'], SitemapUrlSource)
         self.assertEqual(kwargs['url_provider'].sitemap_url, self.sitemap_url)
 
         # Check other parameters
