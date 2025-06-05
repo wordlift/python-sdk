@@ -62,7 +62,7 @@ def context(account: AccountInfo, client_configuration: wordlift_client.Configur
 def kg_import_workflow(context: Context, url_provider: UrlSource, ) -> KgImportWorkflow:
     return KgImportWorkflow(
         context=context,
-        url_provider=url_provider,
+        url_source=url_provider,
         concurrency=5
     )
 

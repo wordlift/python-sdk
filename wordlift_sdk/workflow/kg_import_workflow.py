@@ -7,7 +7,7 @@ from tqdm.asyncio import tqdm
 from wordlift_client import EmbeddingRequest, ApiClient, WebPagesImportsApi, WebPageImportRequest
 
 from ..protocol import WebPageImportProtocolInterface, load_override_class, DefaultWebPageImportProtocol, Context
-from ..url_source import UrlSource, Url
+from ..url_source import UrlSource, Url, UrlSourceProvider
 from ..utils import create_delayed
 
 logger = logging.getLogger(__name__)
@@ -17,21 +17,21 @@ class KgImportWorkflow:
     context: Context
     concurrency: int
     embedding_request: EmbeddingRequest
-    url_provider: UrlSource
+    url_source: UrlSource
     web_page_import_callback: WebPageImportProtocolInterface
     web_page_types: list[str]
 
     def __init__(
             self,
             context: Context,
-            url_provider: UrlSource,
+            url_source: UrlSource,
             embedding_properties: list[str] | None = None,
             web_page_types: list[str] | None = None,
             web_page_import_callback: WebPageImportProtocolInterface | None = None,
             concurrency: int = min(cpu_count(), 4),
     ) -> None:
         self.context = context
-        self.url_provider = url_provider
+        self.url_source = url_source
         self.embedding_request = EmbeddingRequest(
             properties=
             [
@@ -55,7 +55,7 @@ class KgImportWorkflow:
 
     async def run(self):
         list_url = []
-        async for url in self.url_provider.urls():
+        async for url in self.url_source.urls():
             list_url.append(url)
 
         @retry(
