@@ -1,143 +1,91 @@
+import asyncio
 import logging
-from dataclasses import dataclass, field
 from os import cpu_count
-from pathlib import Path
-from typing import Optional
 
-import gspread
+from tenacity import retry, retry_if_exception_type, wait_fixed, before_log
 from tqdm.asyncio import tqdm
-from wordlift_client import AccountInfo, Configuration
+from wordlift_client import EmbeddingRequest, ApiClient, WebPagesImportsApi, WebPageImportRequest
 
-from wordlift_sdk.graph import GraphQueue
-from wordlift_sdk.graph.ttl_liquid import TtlLiquidGraphFactory
-from wordlift_sdk.graphql.client import GraphQlClient, GraphQlClientFactory
-from wordlift_sdk.id_generator import IdGenerator
-from wordlift_sdk.kg.manager.urlprovider import UrlProviderFactory, UrlProviderFactoryInput, UrlProvider
-from wordlift_sdk.utils import get_me, create_dataframe_of_entities_by_types, delayed
-from wordlift_sdk.wordlift.sitemap_import.create_or_update_kg import create_or_update_kg_using_url_provider
-from wordlift_sdk.wordlift.sitemap_import.protocol import ProtocolContext, load_override_class, \
-    DefaultImportUrlProtocol, DefaultParseHtmlProtocol, ImportUrlProtocolInterface, ParseHtmlProtocolInterface, \
-    ImportUrlInput
+from ..protocol import WebPageImportProtocolInterface, load_override_class, DefaultWebPageImportProtocol, Context
+from ..url_provider import UrlProvider, Url
+from ..utils import create_delayed
 
 logger = logging.getLogger(__name__)
 
 
-@dataclass
-class KgImportWorkflowConfiguration:
-    client_configuration: Configuration
-    key: str
-    sitemap_url: Optional[str] = None
-    sheets_url: Optional[str] = None
-    sheets_name: Optional[str] = None
-    sheets_service_account: Optional[str] = None
-    urls: Optional[list[str]] = None
-    output_types: list[str] = field(default_factory=lambda: ['http://schema.org/Article'])
-    templates_path: Path = Path("data/templates")
+class KgImportWorkflow:
+    context: Context
+    concurrency: int
+    embedding_request: EmbeddingRequest
+    url_provider: UrlProvider
+    web_page_import_callback: WebPageImportProtocolInterface
+    web_page_types: list[str]
 
-    def __post_init__(self):
-        has_sitemap = self.sitemap_url is not None
+    def __init__(
+            self,
+            context: Context,
+            url_provider: UrlProvider,
+            embedding_properties: list[str] | None = None,
+            web_page_types: list[str] | None = None,
+            web_page_import_callback: WebPageImportProtocolInterface | None = None,
+            concurrency: int = min(cpu_count(), 4),
+    ) -> None:
+        self.context = context
+        self.url_provider = url_provider
+        self.embedding_request = EmbeddingRequest(
+            properties=
+            [
+                'http://schema.org/headline',
+                'http://schema.org/abstract',
+                'http://schema.org/text'
+            ] if embedding_properties is None else embedding_properties
+        )
+        self.web_page_types = ['http://schema.org/Article'] if web_page_types is None else web_page_types
 
-        has_sheets = all([
-            self.sheets_url,
-            self.sheets_name,
-            self.sheets_service_account,
-        ])
-
-        has_urls = bool(self.urls)
-
-        mode_count = sum([has_sitemap, has_sheets, has_urls])
-        if mode_count != 1:
-            raise ValueError(
-                "You must set exactly one of the following:\n"
-                "- sitemap_url\n"
-                "- all of sheets_url, sheets_name, and sheets_service_account\n"
-                "- urls (non-empty list)"
+        if web_page_import_callback is None:
+            self.web_page_import_callback = load_override_class(
+                name="web_page_import_protocol",
+                class_name="WebPageImportProtocolInterface",
+                # Default class to use in case of missing override.
+                default_class=DefaultWebPageImportProtocol,
+                context=context,
             )
 
+        self.concurrency = concurrency
 
-class KgImportWorkflow:
-    account: AccountInfo
-    configuration: KgImportWorkflowConfiguration
-    context: ProtocolContext
-    graphql_client: GraphQlClient
-    import_url_protocol: ImportUrlProtocolInterface
-    parse_html_protocol: ParseHtmlProtocolInterface
-    ttl_liquid_graph_factory: TtlLiquidGraphFactory
-    url_provider: UrlProvider
-
-    def __init__(self,
-                 account: AccountInfo,
-                 configuration: KgImportWorkflowConfiguration,
-                 context: ProtocolContext,
-                 graphql_client: GraphQlClient,
-                 import_url_protocol: ImportUrlProtocolInterface,
-                 parse_html_protocol: ParseHtmlProtocolInterface,
-                 ttl_liquid_graph_factory: TtlLiquidGraphFactory,
-                 url_provider: UrlProvider
-                 ):
-        self.account = account
-        self.configuration = configuration
-        self.context = context
-        self.graphql_client = graphql_client
-        self.import_url_protocol = import_url_protocol
-        self.parse_html_protocol = parse_html_protocol
-        self.ttl_liquid_graph_factory = ttl_liquid_graph_factory
-        self.url_provider = url_provider
-
-    async def start(self):
-        # Take all the graphs from the local graphs folder, by default, it's `data/templates`. These are liquid
-        # templates.
-        async for graph in self.ttl_liquid_graph_factory.graphs(self.configuration.templates_path.resolve()):
-            self.context.graph_queue.put(graph)
-
-        # Import URLs.
-        logger.info("Importing...")
-        await self.create_or_update_kg_using_url_provider(
-            configuration=self.configuration.client_configuration,
-            key=self.configuration.key,
-            types=set(self.configuration.output_types),
-            concurrency=1,
-        )
-
-    async def create_or_update_kg_using_url_provider(
-            self,
-            configuration: Configuration,
-            key: str,
-            types: set[str],
-            concurrency: int = cpu_count(),
-            overwrite: bool = False,
-    ) -> None:
-        # Collect URLs from the provider
-        urls = set()
+    async def run(self):
+        list_url = []
         async for url in self.url_provider.urls():
-            urls.add(url.value)
+            list_url.append(url)
 
-        if overwrite:
-            missing_url_list = list(urls)
-        else:
-            # Get the data from the KG to determine which URLs are already imported and which not.
-            kg_df = await create_dataframe_of_entities_by_types(key=key, types=types)
+        @retry(
+            # stop=stop_after_attempt(5),  # Retry up to 5 times
+            retry=retry_if_exception_type(asyncio.TimeoutError),
+            wait=wait_fixed(2),  # Wait 2 seconds between retries
+            before=before_log(logger, logging.DEBUG)
 
-            # Get the list of missing URLs, these are the URLs we'll import.
-            missing_url_list = list(urls - set(kg_df['url']))
+        )
+        async def url_handler(url: Url) -> None:
+            async with ApiClient(self.context.client_configuration) as client:
+                api_instance = WebPagesImportsApi(client)
 
-        logger.info('Importing %d entities...', len(missing_url_list))
+                request = WebPageImportRequest(
+                    url=url.value,
+                    id=None if url.iri is None else url.iri,
+                    embedding=self.embedding_request,
+                    output_types=self.web_page_types,
+                    id_generator="headline-with-url-hash",
+                )
 
-        # Import the URLs by calling the `import_url` method. We use `delayed` to parallelize work.
-        await tqdm.gather(
-            *[delayed(self.import_url_protocol.import_url, concurrency)(ImportUrlInput(url_list=[url])) for url in
-              missing_url_list],
-            total=len(missing_url_list))
+                response = await api_instance.create_web_page_imports(
+                    web_page_import_request=request,
+                    _request_timeout=60.0
+                )
+                await self.web_page_import_callback.callback(response)
 
-        kg_df = await create_dataframe_of_url_iri(key=key, url_list=missing_url_list)
-
-        logger.info('Enriching %d entities...', len(kg_df))
-
-        # Enrich the Graph, notice that here we pass our callback `parse_html` which will return Patch requests, no need to deal with the actual API. We're polite and not making more than 2 concurrent reqs.
-        await tqdm.gather(
-            *[delayed(entity.enrich(configuration, parse_html_protocol.parse_html), concurrency)(
-                row
-            ) for index, row in
-                kg_df.iterrows()],
-            total=len(kg_df)
+        delayed = create_delayed(url_handler, self.concurrency)
+        results = await tqdm.gather(
+            *[delayed()(url) for url in list(list_url)],
+            total=len(list_url),
+            dynamic_ncols=True
         )

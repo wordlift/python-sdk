@@ -8,9 +8,8 @@ from wordlift_sdk import entity
 from wordlift_sdk.kg.manager.urlprovider.list_url_provider import ListUrlProvider
 from wordlift_sdk.kg.manager.urlprovider.sitemap_url_provider import SitemapUrlProvider
 from wordlift_sdk.kg.manager.urlprovider.url_provider import UrlProvider
-from wordlift_sdk.utils import create_dataframe_of_url_iri
+from wordlift_sdk.utils import create_dataframe_of_url_iri, create_delayed
 from wordlift_sdk.utils.create_dataframe_of_entities_by_types import create_dataframe_of_entities_by_types
-from wordlift_sdk.utils.delayed import delayed
 from wordlift_sdk.wordlift.sitemap_import.protocol.default import DefaultImportUrlProtocol, DefaultParseHtmlProtocol
 from wordlift_sdk.wordlift.sitemap_import.protocol.import_url_protocol_interface import ImportUrlProtocolInterface, \
     ImportUrlInput
@@ -92,13 +91,8 @@ async def create_or_update_kg_using_url_provider(
     logger.info('Enriching %d entities...', len(kg_df))
 
     # Enrich the Graph, notice that here we pass our callback `parse_html` which will return Patch requests, no need to deal with the actual API. We're polite and not making more than 2 concurrent reqs.
-    await tqdm.gather(
-        *[delayed(entity.enrich(configuration, parse_html_protocol.parse_html), concurrency)(
-            row
-        ) for index, row in
-            kg_df.iterrows()],
-        total=len(kg_df)
-    )
+    delayed = create_delayed(entity.enrich(configuration, parse_html_protocol.parse_html), concurrency)
+    await tqdm.gather(*[delayed(row) for index, row in kg_df.iterrows()], total=len(kg_df))
 
 
 async def create_or_update_kg_using_sitemap(

@@ -3,9 +3,8 @@ from typing import AsyncGenerator
 
 import pandas as pd
 
-from wordlift_sdk.graphql.client import GraphQlClient
-from wordlift_sdk.kg.manager.urlprovider import UrlProvider
-from wordlift_sdk.kg.manager.urlprovider.url_provider import Url
+from .url_provider import UrlProvider, Url
+from ..graphql.client import GraphQlClient
 
 
 class NewOrChangedUrlProvider(UrlProvider):
@@ -25,13 +24,13 @@ class NewOrChangedUrlProvider(UrlProvider):
             data=[record for record in list_records],
             columns=("url", "iri", "date_imported"))
         graphql_df["date_imported"] = pd.to_datetime(graphql_df["date_imported"], errors="coerce")
-        merged_df = pd.merge(url_df, graphql_df, left_on="value", right_on="url", how="left")
+        merged_df = pd.merge(url_df, graphql_df, left_on="value", right_on="url", how="left", suffixes=("", "_graphql"))
         filtered_df = merged_df[
             merged_df["date_imported"].isna() | (merged_df["date_imported"] < merged_df["date_modified"])
             ]
-        for row in filtered_df.itertuples(index=False):
+        for _, row in filtered_df.iterrows():
             yield Url(
-                value=row.value,
-                iri=None if pd.isna(row.iri) else row.iri,
-                date_modified=None if pd.isna(row.date_modified) else row.date_modified
+                value=row['value'],
+                iri=None if pd.isna(row['iri_graphql']) else row['iri_graphql'],
+                date_modified=None if pd.isna(row['date_modified']) else row['date_modified']
             )
