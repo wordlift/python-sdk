@@ -2,12 +2,13 @@ import asyncio
 import logging
 from os import cpu_count
 
+import aiohttp
 from tenacity import retry, retry_if_exception_type, wait_fixed, before_log
 from tqdm.asyncio import tqdm
 from wordlift_client import EmbeddingRequest, ApiClient, WebPagesImportsApi, WebPageImportRequest
 
 from ..protocol import WebPageImportProtocolInterface, load_override_class, DefaultWebPageImportProtocol, Context
-from ..url_source import UrlSource, Url, UrlSourceProvider
+from ..url_source import UrlSource, Url
 from ..utils import create_delayed
 
 logger = logging.getLogger(__name__)
@@ -45,7 +46,7 @@ class KgImportWorkflow:
         if web_page_import_callback is None:
             self.web_page_import_callback = load_override_class(
                 name="web_page_import_protocol",
-                class_name="WebPageImportProtocolInterface",
+                class_name="WebPageImportProtocol",
                 # Default class to use in case of missing override.
                 default_class=DefaultWebPageImportProtocol,
                 context=context,
@@ -60,7 +61,7 @@ class KgImportWorkflow:
 
         @retry(
             # stop=stop_after_attempt(5),  # Retry up to 5 times
-            retry=retry_if_exception_type(asyncio.TimeoutError),
+            retry=retry_if_exception_type(asyncio.TimeoutError | aiohttp.client_exceptions.ServerDisconnectedError | aiohttp.client_exceptions.ClientConnectorError | aiohttp.client_exceptions.ClientPayloadError),
             wait=wait_fixed(2),  # Wait 2 seconds between retries
             before=before_log(logger, logging.DEBUG)
 

@@ -6,6 +6,8 @@ import wordlift_client
 from wordlift_client import AccountInfo
 
 import wordlift_sdk.client
+from wordlift_sdk.configuration import ConfigurationProvider
+from wordlift_sdk.container.application_container import ApplicationContainer
 from wordlift_sdk.graphql.client import GraphQlClient, GraphQlClientFactory
 from wordlift_sdk.protocol import Context
 from wordlift_sdk.url_source import UrlSource, SitemapUrlSource
@@ -28,6 +30,16 @@ def test_api_url(wiremock_url: str) -> str:
 
 
 @pytest.fixture
+def test_sitemap_url(test_api_url: str) -> str:
+    return test_api_url + '/MakaleSiteMap.xml'
+
+
+@pytest.fixture
+def test_sitemap_url_pattern() -> str:
+    return r'^https://www.herkesicinguzellik.com/makale/.*$'
+
+
+@pytest.fixture
 def client_configuration(wiremock_url: str, test_key: str, test_api_url: str) -> wordlift_client.Configuration:
     return wordlift_sdk.client.ClientConfigurationFactory(key=test_key, api_url=test_api_url).create()
 
@@ -38,11 +50,11 @@ def graphql_client(test_key: str, test_api_url: str) -> GraphQlClient:
 
 
 @pytest.fixture
-def url_provider(graphql_client: GraphQlClient) -> UrlSource:
+def url_provider(graphql_client: GraphQlClient, test_sitemap_url: str, test_sitemap_url_pattern: str) -> UrlSource:
     return NewOrChangedUrlSource(
         url_provider=SitemapUrlSource(
-            sitemap_url='https://www.herkesicinguzellik.com/MakaleSiteMap.xml',
-            pattern=re.compile(r'^https://www.herkesicinguzellik.com/makale/.*$'),
+            sitemap_url=test_sitemap_url,
+            pattern=re.compile(test_sitemap_url_pattern),
         ),
         graphql_client=graphql_client
     )
@@ -59,7 +71,7 @@ def context(account: AccountInfo, client_configuration: wordlift_client.Configur
 
 
 @pytest.fixture
-def kg_import_workflow(context: Context, url_provider: UrlSource, ) -> KgImportWorkflow:
+def kg_import_workflow(context: Context, url_provider: UrlSource) -> KgImportWorkflow:
     return KgImportWorkflow(
         context=context,
         url_source=url_provider,
@@ -69,4 +81,27 @@ def kg_import_workflow(context: Context, url_provider: UrlSource, ) -> KgImportW
 
 @pytest.mark.asyncio
 async def test_playground(kg_import_workflow: KgImportWorkflow) -> None:
+    await kg_import_workflow.run()
+
+
+@pytest.fixture
+def application_container(
+        test_api_url: str,
+        test_sitemap_url: str,
+        test_key: str,
+        test_sitemap_url_pattern: str,
+        monkeypatch
+) -> ApplicationContainer:
+    monkeypatch.setenv('API_URL', test_api_url)
+    monkeypatch.setenv('SITEMAP_URL', test_sitemap_url)
+    monkeypatch.setenv('SITEMAP_URL_PATTERN', test_sitemap_url_pattern)
+    monkeypatch.setenv('WORDLIFT_KEY', test_key)
+    return ApplicationContainer(
+        configuration_provider=ConfigurationProvider.create()
+    )
+
+
+@pytest.mark.asyncio
+async def test_create_kg_import_workflow(application_container: ApplicationContainer):
+    kg_import_workflow = await application_container.create_kg_import_workflow()
     await kg_import_workflow.run()
