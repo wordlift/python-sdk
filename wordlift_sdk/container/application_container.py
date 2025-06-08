@@ -61,12 +61,13 @@ class ApplicationContainer:
             client_configuration=self._client_configuration,
         )
 
-    async def create_kg_import_workflow(self) -> KgImportWorkflow:
+    async def create_kg_import_workflow(self, web_page_types: list[str] | None = None) -> KgImportWorkflow:
         concurrency = self._configuration_provider.get_value('CONCURRENCY', min(cpu_count(), 4))
         return KgImportWorkflow(
             context=await self.create_context(),
             url_source=await self.create_new_or_changed_source(),
-            web_page_types=self._configuration_provider.get_value('WEB_PAGE_TYPES', ['http://schema.org/Article']),
+            web_page_types=web_page_types if web_page_types else self._configuration_provider.get_value(
+                'WEB_PAGE_TYPES', ['http://schema.org/Article']),
             concurrency=concurrency
         )
 
