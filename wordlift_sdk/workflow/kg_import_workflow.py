@@ -5,9 +5,19 @@ from os import cpu_count
 import aiohttp
 from tenacity import retry, retry_if_exception_type, wait_fixed, before_log
 from tqdm.asyncio import tqdm
-from wordlift_client import EmbeddingRequest, ApiClient, WebPagesImportsApi, WebPageImportRequest
+from wordlift_client import (
+    EmbeddingRequest,
+    ApiClient,
+    WebPagesImportsApi,
+    WebPageImportRequest,
+)
 
-from ..protocol import WebPageImportProtocolInterface, load_override_class, DefaultWebPageImportProtocol, Context
+from ..protocol import (
+    WebPageImportProtocolInterface,
+    load_override_class,
+    DefaultWebPageImportProtocol,
+    Context,
+)
 from ..url_source import UrlSource, Url
 from ..utils import create_delayed
 
@@ -23,25 +33,28 @@ class KgImportWorkflow:
     web_page_types: list[str]
 
     def __init__(
-            self,
-            context: Context,
-            url_source: UrlSource,
-            embedding_properties: list[str] | None = None,
-            web_page_types: list[str] | None = None,
-            web_page_import_callback: WebPageImportProtocolInterface | None = None,
-            concurrency: int = min(cpu_count(), 4),
+        self,
+        context: Context,
+        url_source: UrlSource,
+        embedding_properties: list[str] | None = None,
+        web_page_types: list[str] | None = None,
+        web_page_import_callback: WebPageImportProtocolInterface | None = None,
+        concurrency: int = min(cpu_count(), 4),
     ) -> None:
         self.context = context
         self.url_source = url_source
         self.embedding_request = EmbeddingRequest(
-            properties=
-            [
-                'http://schema.org/headline',
-                'http://schema.org/abstract',
-                'http://schema.org/text'
-            ] if embedding_properties is None else embedding_properties
+            properties=[
+                "http://schema.org/headline",
+                "http://schema.org/abstract",
+                "http://schema.org/text",
+            ]
+            if embedding_properties is None
+            else embedding_properties
         )
-        self.web_page_types = ['http://schema.org/Article'] if web_page_types is None else web_page_types
+        self.web_page_types = (
+            ["http://schema.org/Article"] if web_page_types is None else web_page_types
+        )
 
         if web_page_import_callback is None:
             self.web_page_import_callback = load_override_class(
@@ -61,10 +74,14 @@ class KgImportWorkflow:
 
         @retry(
             # stop=stop_after_attempt(5),  # Retry up to 5 times
-            retry=retry_if_exception_type(asyncio.TimeoutError | aiohttp.client_exceptions.ServerDisconnectedError | aiohttp.client_exceptions.ClientConnectorError | aiohttp.client_exceptions.ClientPayloadError),
+            retry=retry_if_exception_type(
+                asyncio.TimeoutError
+                | aiohttp.client_exceptions.ServerDisconnectedError
+                | aiohttp.client_exceptions.ClientConnectorError
+                | aiohttp.client_exceptions.ClientPayloadError
+            ),
             wait=wait_fixed(2),  # Wait 2 seconds between retries
-            before=before_log(logger, logging.DEBUG)
-
+            before=before_log(logger, logging.WARNING),
         )
         async def url_handler(url: Url) -> None:
             async with ApiClient(self.context.client_configuration) as client:
@@ -79,14 +96,13 @@ class KgImportWorkflow:
                 )
 
                 response = await api_instance.create_web_page_imports(
-                    web_page_import_request=request,
-                    _request_timeout=60.0
+                    web_page_import_request=request, _request_timeout=60.0
                 )
                 await self.web_page_import_callback.callback(response)
 
         delayed = create_delayed(url_handler, self.concurrency)
-        results = await tqdm.gather(
+        await tqdm.gather(
             *[delayed()(url) for url in list(list_url)],
             total=len(list_url),
-            dynamic_ncols=True
+            dynamic_ncols=True,
         )
