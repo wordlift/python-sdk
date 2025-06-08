@@ -3,7 +3,7 @@ import logging
 from os import cpu_count
 
 import aiohttp
-from tenacity import retry, retry_if_exception_type, wait_fixed, before_log
+from tenacity import retry, retry_if_exception_type, wait_fixed, after_log
 from tqdm.asyncio import tqdm
 from wordlift_client import (
     EmbeddingRequest,
@@ -81,7 +81,8 @@ class KgImportWorkflow:
                 | aiohttp.client_exceptions.ClientPayloadError
             ),
             wait=wait_fixed(2),  # Wait 2 seconds between retries
-            before=before_log(logger, logging.WARNING),
+            after=after_log(logger, logging.WARNING),
+            reraise=True,
         )
         async def url_handler(url: Url) -> None:
             async with ApiClient(self.context.client_configuration) as client:
