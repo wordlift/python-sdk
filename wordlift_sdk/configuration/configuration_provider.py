@@ -6,8 +6,8 @@ class ConfigurationProvider:
     _config: dict
 
     @staticmethod
-    def create() -> "ConfigurationProvider":
-        return ConfigurationProvider(filepath='config/default.py')
+    def create(filepath: str = "config/default.py") -> "ConfigurationProvider":
+        return ConfigurationProvider(filepath=filepath)
 
     def __init__(self, filepath: str):
         if not os.path.exists(filepath):
