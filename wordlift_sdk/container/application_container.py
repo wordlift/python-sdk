@@ -41,8 +41,8 @@ class ApplicationContainer:
     _client_configuration: Configuration
     _key: str
 
-    def __init__(self, configuration_provider: ConfigurationProvider):
-        self._configuration_provider = configuration_provider
+    def __init__(self, configuration_provider: ConfigurationProvider | None = None):
+        self._configuration_provider = configuration_provider or ConfigurationProvider.create()
         self._api_url = self._configuration_provider.get_value('API_URL', 'https://api.wordlift.io')
         self._key = self._configuration_provider.get_value('WORDLIFT_KEY')
         self._client_configuration = ClientConfigurationFactory(
