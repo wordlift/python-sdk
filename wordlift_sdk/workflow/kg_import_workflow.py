@@ -12,6 +12,8 @@ from wordlift_client import (
     WebPageImportRequest,
 )
 
+from .create_or_update_entities_factory import create_or_update_entities_factory
+from .patch_entities_factory import patch_entities_factory
 from ..protocol import (
     WebPageImportProtocolInterface,
     load_override_class,
@@ -68,6 +70,11 @@ class KgImportWorkflow:
         self.concurrency = concurrency
 
     async def run(self):
+        await self._run_url_import()
+        await self._run_graph_queue()
+        await self._run_entity_patch_queue()
+
+    async def _run_url_import(self):
         list_url = []
         async for url in self.url_source.urls():
             list_url.append(url)
@@ -101,9 +108,41 @@ class KgImportWorkflow:
                 )
                 await self.web_page_import_callback.callback(response)
 
+        logger.info("Applying %d URL import request(s)" % len(list_url))
+
         delayed = create_delayed(url_handler, self.concurrency)
         await tqdm.gather(
             *[delayed()(url) for url in list(list_url)],
             total=len(list_url),
             dynamic_ncols=True,
         )
+
+    async def _run_graph_queue(self):
+        queue = self.context.graph_queue
+
+        logger.info("Applying %d graph request(s)" % len(queue))
+
+        delayed = create_delayed(
+            await create_or_update_entities_factory(
+                configuration=self.context.client_configuration
+            ),
+            self.concurrency,
+        )
+
+        # Run all the queued graphs.
+        await tqdm.gather(*[delayed(queue.get()) for _ in range(len(queue))])
+
+    async def _run_entity_patch_queue(self):
+        queue = self.context.entity_patch_queue
+
+        logger.info("Applying %d entity patch request(s)" % len(queue))
+
+        delayed = create_delayed(
+            await patch_entities_factory(
+                configuration=self.context.client_configuration
+            ),
+            self.concurrency,
+        )
+
+        # Run all the queued graphs.
+        await tqdm.gather(*[delayed(queue.get()) for _ in range(len(queue))])

@@ -7,7 +7,7 @@ from wordlift_sdk.url_source import UrlSource, Url, ListUrlSource, SitemapUrlSou
 from wordlift_sdk.wordlift.sitemap_import.create_or_update_kg import (
     create_or_update_kg_using_url_provider,
     create_or_update_kg_using_urls,
-    create_or_update_kg_using_sitemap
+    create_or_update_kg_using_sitemap,
 )
 
 
@@ -20,21 +20,27 @@ class TestCreateOrUpdateKg(unittest.TestCase):
         self.urls = {"https://example.com/page1", "https://example.com/page2"}
         self.sitemap_url = "https://example.com/sitemap.xml"
 
-    @patch('wordlift_sdk.utils.create_or_update_kg.create_dataframe_of_entities_by_types')
-    @patch('wordlift_sdk.utils.create_or_update_kg.create_dataframe_of_url_iri')
-    @patch('wordlift_sdk.utils.create_or_update_kg.import_url_factory')
-    @patch('wordlift_sdk.utils.create_or_update_kg.tqdm.gather')
-    @patch('wordlift_sdk.utils.create_or_update_kg.entity.enrich')
+    @patch(
+        "wordlift_sdk.utils.create_or_update_kg.create_dataframe_of_entities_by_types"
+    )
+    @patch("wordlift_sdk.utils.create_or_update_kg.create_dataframe_of_url_iri")
+    @patch("wordlift_sdk.utils.create_or_update_kg.import_url_factory")
+    @patch("wordlift_sdk.utils.create_or_update_kg.tqdm.gather")
+    @patch("wordlift_sdk.utils.create_or_update_kg.entity.enrich")
     async def test_create_or_update_kg_using_url_provider(
-            self, mock_enrich, mock_gather, mock_import_url_factory,
-            mock_create_dataframe_of_url_iri, mock_create_dataframe_of_entities_by_types
-    ):
+        self,
+        mock_enrich,
+        mock_gather,
+        mock_import_url_factory,
+        mock_create_dataframe_of_url_iri,
+        mock_create_dataframe_of_entities_by_types,
+    ) -> None:
         # Create a mock UrlSource
         mock_url_provider = MagicMock(spec=UrlSource)
         mock_url_provider.urls = AsyncMock()
         mock_url_provider.urls.return_value.__aiter__.return_value = [
             Url(value="https://example.com/page1"),
-            Url(value="https://example.com/page2")
+            Url(value="https://example.com/page2"),
         ]
 
         # Mock the dataframe returned by create_dataframe_of_entities_by_types
@@ -52,7 +58,7 @@ class TestCreateOrUpdateKg(unittest.TestCase):
             key=self.key,
             url_provider=mock_url_provider,
             types=self.types,
-            concurrency=self.concurrency
+            concurrency=self.concurrency,
         )
 
         # Verify that the url_provider.urls method was called
@@ -71,8 +77,12 @@ class TestCreateOrUpdateKg(unittest.TestCase):
         # Verify that gather was called for importing URLs
         mock_gather.assert_called()
 
-    @patch('wordlift_sdk.utils.create_or_update_kg.create_or_update_kg_using_url_provider')
-    async def test_create_or_update_kg_using_urls(self, mock_create_or_update_kg_using_url_provider):
+    @patch(
+        "wordlift_sdk.utils.create_or_update_kg.create_or_update_kg_using_url_provider"
+    )
+    async def test_create_or_update_kg_using_urls(
+        self, mock_create_or_update_kg_using_url_provider
+    ) -> None:
         # Set up the mock as an AsyncMock
         mock_create_or_update_kg_using_url_provider.side_effect = AsyncMock()
 
@@ -82,7 +92,7 @@ class TestCreateOrUpdateKg(unittest.TestCase):
             key=self.key,
             urls=self.urls,
             types=self.types,
-            concurrency=self.concurrency
+            concurrency=self.concurrency,
         )
 
         # Verify that create_or_update_kg_using_url_provider was called with the correct parameters
@@ -90,20 +100,22 @@ class TestCreateOrUpdateKg(unittest.TestCase):
         args, kwargs = mock_create_or_update_kg_using_url_provider.call_args
 
         # Check that the url_provider is a ListUrlSource with the correct URLs
-        self.assertIsInstance(kwargs['url_provider'], ListUrlSource)
-        self.assertEqual(set(kwargs['url_provider']._url_list), self.urls)
+        self.assertIsInstance(kwargs["url_provider"], ListUrlSource)
+        self.assertEqual(set(kwargs["url_provider"]._url_list), self.urls)
 
         # Check other parameters
-        self.assertEqual(kwargs['configuration'], self.configuration)
-        self.assertEqual(kwargs['key'], self.key)
-        self.assertEqual(kwargs['types'], self.types)
-        self.assertEqual(kwargs['concurrency'], self.concurrency)
+        self.assertEqual(kwargs["configuration"], self.configuration)
+        self.assertEqual(kwargs["key"], self.key)
+        self.assertEqual(kwargs["types"], self.types)
+        self.assertEqual(kwargs["concurrency"], self.concurrency)
 
-    @patch('wordlift_sdk.utils.create_or_update_kg.adv.sitemap_to_df')
-    @patch('wordlift_sdk.utils.create_or_update_kg.create_or_update_kg_using_url_provider')
+    @patch("wordlift_sdk.utils.create_or_update_kg.adv.sitemap_to_df")
+    @patch(
+        "wordlift_sdk.utils.create_or_update_kg.create_or_update_kg_using_url_provider"
+    )
     async def test_create_or_update_kg_using_sitemap(
-            self, mock_create_or_update_kg_using_url_provider, mock_sitemap_to_df
-    ):
+        self, mock_create_or_update_kg_using_url_provider, mock_sitemap_to_df
+    ) -> None:
         # Set up the mock as an AsyncMock
         mock_create_or_update_kg_using_url_provider.side_effect = AsyncMock()
 
@@ -118,7 +130,7 @@ class TestCreateOrUpdateKg(unittest.TestCase):
             key=self.key,
             sitemap_url=self.sitemap_url,
             types=self.types,
-            concurrency=self.concurrency
+            concurrency=self.concurrency,
         )
 
         # Verify that create_or_update_kg_using_url_provider was called with the correct parameters
@@ -126,14 +138,14 @@ class TestCreateOrUpdateKg(unittest.TestCase):
         args, kwargs = mock_create_or_update_kg_using_url_provider.call_args
 
         # Check that the url_provider is a SitemapUrlSource with the correct sitemap URL
-        self.assertIsInstance(kwargs['url_provider'], SitemapUrlSource)
-        self.assertEqual(kwargs['url_provider'].sitemap_url, self.sitemap_url)
+        self.assertIsInstance(kwargs["url_provider"], SitemapUrlSource)
+        self.assertEqual(kwargs["url_provider"].sitemap_url, self.sitemap_url)
 
         # Check other parameters
-        self.assertEqual(kwargs['configuration'], self.configuration)
-        self.assertEqual(kwargs['key'], self.key)
-        self.assertEqual(kwargs['types'], self.types)
-        self.assertEqual(kwargs['concurrency'], self.concurrency)
+        self.assertEqual(kwargs["configuration"], self.configuration)
+        self.assertEqual(kwargs["key"], self.key)
+        self.assertEqual(kwargs["types"], self.types)
+        self.assertEqual(kwargs["concurrency"], self.concurrency)
 
 
 if __name__ == "__main__":

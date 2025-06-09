@@ -1,3 +1,3 @@
 from .graph_queue import GraphQueue
 
-__all__ = ['GraphQueue']
+__all__ = ["GraphQueue"]
