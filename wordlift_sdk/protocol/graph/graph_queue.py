@@ -1,36 +1,32 @@
 import hashlib
-from queue import Queue
-from typing import Optional
 
+import wordlift_client
 from rdflib import Graph
 from rdflib.compare import to_isomorphic
+from wordlift_client import Configuration
 
 
 class GraphQueue:
-    queue: Queue[Graph]
+    client_configuration: Configuration
     hashes: set[str]
 
-    def __init__(self):
-        self.queue = Queue()
+    def __init__(self, client_configuration: Configuration):
+        self.client_configuration = client_configuration
         self.hashes = set()
 
-    def put(self, graph: Graph) -> None:
+    async def put(self, graph: Graph) -> None:
         hash = GraphQueue.hash_graph(graph)
         if hash not in self.hashes:
-            self.queue.put(graph)
             self.hashes.add(hash)
 
-    def get(self) -> Optional[Graph]:
-        if not self.queue.empty():
-            graph = self.queue.get()
-            hash = GraphQueue.hash_graph(graph)
-            self.hashes.remove(hash)
-            return graph
-
-        return None
-
-    def __len__(self) -> int:
-        return self.queue.qsize()
+            async with wordlift_client.ApiClient(
+                configuration=self.client_configuration
+            ) as api_client:
+                api_instance = wordlift_client.EntitiesApi(api_client)
+                await api_instance.create_or_update_entities(
+                    graph.serialize(format="turtle"),
+                    _content_type="text/turtle",
+                )
 
     @staticmethod
     def hash_graph(graph: Graph) -> str:

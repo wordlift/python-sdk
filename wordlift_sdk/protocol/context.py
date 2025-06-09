@@ -14,5 +14,5 @@ class Context:
     id_generator: IdGenerator
 
     # Queues where clients can append data to be written to the graph.
-    graph_queue: GraphQueue = GraphQueue()
-    entity_patch_queue: EntityPatchQueue = EntityPatchQueue()
+    graph_queue: GraphQueue
+    entity_patch_queue: EntityPatchQueue

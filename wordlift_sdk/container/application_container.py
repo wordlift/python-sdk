@@ -13,6 +13,8 @@ from ..configuration import ConfigurationProvider
 from ..graphql.client import GraphQlClientFactory, GraphQlClient
 from ..id_generator import IdGenerator
 from ..protocol import Context
+from ..protocol.entity_patch import EntityPatchQueue
+from ..protocol.graph import GraphQueue
 from ..url_source import (
     SitemapUrlSource,
     GoogleSheetsUrlSource,
@@ -69,6 +71,10 @@ class ApplicationContainer:
             account=account,
             client_configuration=self._client_configuration,
             id_generator=IdGenerator(account=account),
+            graph_queue=GraphQueue(client_configuration=self._client_configuration),
+            entity_patch_queue=EntityPatchQueue(
+                client_configuration=self._client_configuration
+            ),
         )
 
     async def create_kg_import_workflow(

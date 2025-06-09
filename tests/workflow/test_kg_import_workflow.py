@@ -6,13 +6,15 @@ import pytest
 import pytest_asyncio
 import wordlift_client
 from wordlift_client import AccountInfo
-
+import wordlift_sdk.utils
 import wordlift_sdk.client
 from wordlift_sdk.configuration import ConfigurationProvider
 from wordlift_sdk.container.application_container import ApplicationContainer
 from wordlift_sdk.graphql.client import GraphQlClient, GraphQlClientFactory
 from wordlift_sdk.id_generator import IdGenerator
 from wordlift_sdk.protocol import Context
+from wordlift_sdk.protocol.entity_patch import EntityPatchQueue
+from wordlift_sdk.protocol.graph import GraphQueue
 from wordlift_sdk.url_source import UrlSource, SitemapUrlSource
 from wordlift_sdk.url_source.new_or_changed_url_source import NewOrChangedUrlSource
 from wordlift_sdk.workflow.kg_import_workflow import KgImportWorkflow
@@ -83,6 +85,8 @@ def context(
         account=account,
         client_configuration=client_configuration,
         id_generator=IdGenerator(account=account),
+        graph_queue=GraphQueue(client_configuration=client_configuration),
+        entity_patch_queue=EntityPatchQueue(client_configuration=client_configuration),
     )
 
 

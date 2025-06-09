@@ -38,6 +38,6 @@ class TtlLiquidGraphFactory:
                     f"Successfully loaded {template} graph with {len(graph)} triples"
                 )
 
-                self.context.graph_queue.put(graph)
+                await self.context.graph_queue.put(graph)
             except Exception as e:
                 logger.error(f"Error loading contact points graph: {e}")
