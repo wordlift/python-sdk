@@ -24,7 +24,7 @@ class TtlLiquidGraphFactory:
         )
 
         for template in templates:
-            template = env.get_template(str(template))
+            template = env.get_template(str(template.absolute()))
             turtle = template.render(account=self.context.account.__dict__)
 
             try:
