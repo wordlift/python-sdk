@@ -117,7 +117,7 @@ class KgImportWorkflow:
 
         delayed = create_delayed(url_handler, self.concurrency)
         await tqdm.gather(
-            *[delayed()(url) for url in list(list_url)],
+            *[delayed(url) for url in list(list_url)],
             total=len(list_url),
         )
 
