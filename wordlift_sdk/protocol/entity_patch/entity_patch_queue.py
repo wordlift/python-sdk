@@ -36,7 +36,7 @@ class EntityPatchQueue:
 
             try:
                 await api_instance.patch_entities(
-                    id=entity_patch.iri, entity=entity_patch.requests
+                    id=entity_patch.iri, entity_patch_request=entity_patch.requests
                 )
             except Exception as e:
                 logger.error("Error patching entities", exc_info=e)
