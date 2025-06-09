@@ -104,10 +104,14 @@ class KgImportWorkflow:
                     id_generator="headline-with-url-hash",
                 )
 
-                response = await api_instance.create_web_page_imports(
-                    web_page_import_request=request, _request_timeout=60.0
-                )
-                await self.web_page_import_callback.callback(response)
+                try:
+                    response = await api_instance.create_web_page_imports(
+                        web_page_import_request=request, _request_timeout=60.0
+                    )
+                    await self.web_page_import_callback.callback(response)
+                except Exception as e:
+                    logger.error("Error importing Web Page %s" % url.value, exc_info=e)
+                    raise e
 
         logger.info("Applying %d URL import request(s)" % len(list_url))
 
