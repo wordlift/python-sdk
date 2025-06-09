@@ -1,7 +1,6 @@
 import re
 from dataclasses import dataclass
 from os import cpu_count
-from re import Pattern
 from typing import Optional, Union
 
 import gspread
@@ -12,8 +11,14 @@ from wordlift_client import Configuration, AccountInfo
 from ..client.client_configuration_factory import ClientConfigurationFactory
 from ..configuration import ConfigurationProvider
 from ..graphql.client import GraphQlClientFactory, GraphQlClient
+from ..id_generator import IdGenerator
 from ..protocol import Context
-from ..url_source import SitemapUrlSource, GoogleSheetsUrlSource, ListUrlSource, UrlSource
+from ..url_source import (
+    SitemapUrlSource,
+    GoogleSheetsUrlSource,
+    ListUrlSource,
+    UrlSource,
+)
 from ..url_source.new_or_changed_url_source import NewOrChangedUrlSource
 from ..utils import get_me
 from ..workflow.kg_import_workflow import KgImportWorkflow
@@ -27,6 +32,7 @@ class UrlSourceInput:
     This class holds all possible parameters needed to create any of the supported URL providers.
     The factory will use these parameters to determine which provider to create based on availability.
     """
+
     sitemap_url: Optional[str] = None
     sitemap_url_pattern: Optional[str] = None
     sheets_url: Optional[str] = None
@@ -42,48 +48,67 @@ class ApplicationContainer:
     _key: str
 
     def __init__(self, configuration_provider: ConfigurationProvider | None = None):
-        self._configuration_provider = configuration_provider or ConfigurationProvider.create()
-        self._api_url = self._configuration_provider.get_value('API_URL', 'https://api.wordlift.io')
-        self._key = self._configuration_provider.get_value('WORDLIFT_KEY')
+        self._configuration_provider = (
+            configuration_provider or ConfigurationProvider.create()
+        )
+        self._api_url = self._configuration_provider.get_value(
+            "API_URL", "https://api.wordlift.io"
+        )
+        self._key = self._configuration_provider.get_value("WORDLIFT_KEY")
         self._client_configuration = ClientConfigurationFactory(
             key=self._key,
             api_url=self._api_url,
         ).create()
 
     async def get_account(self) -> AccountInfo:
-        return await get_me(
-            configuration=self._client_configuration
-        )
+        return await get_me(configuration=self._client_configuration)
 
     async def create_context(self) -> Context:
+        account = await self.get_account()
         return Context(
-            account=await self.get_account(),
+            account=account,
             client_configuration=self._client_configuration,
+            id_generator=IdGenerator(account=account),
         )
 
-    async def create_kg_import_workflow(self, web_page_types: list[str] | None = None) -> KgImportWorkflow:
-        concurrency = self._configuration_provider.get_value('CONCURRENCY', min(cpu_count(), 4))
+    async def create_kg_import_workflow(
+        self, web_page_types: list[str] | None = None
+    ) -> KgImportWorkflow:
+        concurrency = self._configuration_provider.get_value(
+            "CONCURRENCY", min(cpu_count(), 4)
+        )
         return KgImportWorkflow(
             context=await self.create_context(),
             url_source=await self.create_new_or_changed_source(),
-            web_page_types=web_page_types if web_page_types else self._configuration_provider.get_value(
-                'WEB_PAGE_TYPES', ['http://schema.org/Article']),
-            concurrency=concurrency
+            web_page_types=web_page_types
+            if web_page_types
+            else self._configuration_provider.get_value(
+                "WEB_PAGE_TYPES", ["http://schema.org/Article"]
+            ),
+            concurrency=concurrency,
         )
 
     async def create_url_source(self) -> UrlSource:
         # Try to read the configuration from the `config/default.py` file.
         sitemap_url = self._configuration_provider.get_value("SITEMAP_URL")
-        sitemap_url_pattern = self._configuration_provider.get_value("SITEMAP_URL_PATTERN", None)
+        sitemap_url_pattern = self._configuration_provider.get_value(
+            "SITEMAP_URL_PATTERN", None
+        )
         sheets_url = self._configuration_provider.get_value("SHEETS_URL")
         sheets_name = self._configuration_provider.get_value("SHEETS_NAME")
-        sheets_service_account = self._configuration_provider.get_value("SHEETS_SERVICE_ACCOUNT")
+        sheets_service_account = self._configuration_provider.get_value(
+            "SHEETS_SERVICE_ACCOUNT"
+        )
         urls = self._configuration_provider.get_value("URLS")
 
         if (
-                sitemap_url is None
-                and urls is None
-                and (sheets_url is None or sheets_name is None or sheets_service_account is None)
+            sitemap_url is None
+            and urls is None
+            and (
+                sheets_url is None
+                or sheets_name is None
+                or sheets_service_account is None
+            )
         ):
             raise ValueError(
                 "One of `sitemap_url` or `sheets_url`/`sheets_name`/`sheets_service_account` is required."
@@ -106,17 +131,21 @@ class ApplicationContainer:
         if input_params.sitemap_url:
             return SitemapUrlSource(
                 input_params.sitemap_url,
-                re.compile(input_params.sitemap_url_pattern) if input_params.sitemap_url_pattern else None,
+                re.compile(input_params.sitemap_url_pattern)
+                if input_params.sitemap_url_pattern
+                else None,
             )
 
         # Try to create a GoogleSheetsUrlProvider if all required sheets parameters are provided
-        if (input_params.sheets_url and
-                input_params.sheets_name and
-                input_params.sheets_creds_or_client):
+        if (
+            input_params.sheets_url
+            and input_params.sheets_name
+            and input_params.sheets_creds_or_client
+        ):
             return GoogleSheetsUrlSource(
                 input_params.sheets_creds_or_client,
                 input_params.sheets_url,
-                input_params.sheets_name
+                input_params.sheets_name,
             )
 
         # Try to create a ListUrlProvider if urls is provided
@@ -131,7 +160,9 @@ class ApplicationContainer:
         )
 
     async def create_graphql_client(self) -> GraphQlClient:
-        return GraphQlClientFactory(key=self._key, api_url=self._api_url + '/graphql').create()
+        return GraphQlClientFactory(
+            key=self._key, api_url=self._api_url + "/graphql"
+        ).create()
 
     async def create_new_or_changed_source(self) -> UrlSource:
         return NewOrChangedUrlSource(
