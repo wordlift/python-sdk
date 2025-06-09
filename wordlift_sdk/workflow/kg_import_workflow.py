@@ -1,6 +1,7 @@
 import asyncio
 import logging
 from os import cpu_count
+from pathlib import Path
 
 import aiohttp
 from tenacity import retry, retry_if_exception_type, wait_fixed, after_log
@@ -14,6 +15,7 @@ from wordlift_client import (
 
 from .create_or_update_entities_factory import create_or_update_entities_factory
 from .patch_entities_factory import patch_entities_factory
+from ..graph.ttl_liquid import TtlLiquidGraphFactory
 from ..protocol import (
     WebPageImportProtocolInterface,
     load_override_class,
@@ -70,6 +72,9 @@ class KgImportWorkflow:
         self.concurrency = concurrency
 
     async def run(self):
+        await TtlLiquidGraphFactory(
+            context=self.context, path=Path("data/templates")
+        ).graphs()
         await self._run_url_import()
         await self._run_graph_queue()
         await self._run_entity_patch_queue()

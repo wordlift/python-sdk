@@ -1,25 +1,23 @@
 import logging
 from pathlib import Path
-from typing import AsyncGenerator
-from rdflib import Graph
-from liquid import Environment, CachingFileSystemLoader
 
-from wordlift_sdk.wordlift.sitemap_import.protocol import ProtocolContext
-from ..graph_provider import GraphProvider
-from ..graph_bag import GraphBag
+from liquid import Environment, CachingFileSystemLoader
+from rdflib import Graph
+
+from ...protocol import Context
 
 logger = logging.getLogger(__name__)
 
 
-class TtlLiquidGraphFactory(GraphProvider):
+class TtlLiquidGraphFactory:
     path: Path
-    context: ProtocolContext
+    context: Context
 
-    def __init__(self, context: ProtocolContext, path: Path):
+    def __init__(self, context: Context, path: Path):
         self.context = context
         self.path = path
 
-    async def graphs(self) -> AsyncGenerator[GraphBag, None]:
+    async def graphs(self) -> None:
         templates = list(self.path.rglob("*.ttl.liquid"))
         env = Environment(
             loader=CachingFileSystemLoader(self.path),
@@ -36,8 +34,10 @@ class TtlLiquidGraphFactory(GraphProvider):
                 # Parse the Turtle data into the graph
                 graph.parse(data=turtle, format="turtle")
 
-                logger.info(f"Successfully loaded {template} graph with {len(graph)} triples")
+                logger.info(
+                    f"Successfully loaded {template} graph with {len(graph)} triples"
+                )
 
-                yield GraphBag(graph)
+                self.context.graph_queue.put(graph)
             except Exception as e:
                 logger.error(f"Error loading contact points graph: {e}")
