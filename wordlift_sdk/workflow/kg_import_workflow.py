@@ -119,7 +119,6 @@ class KgImportWorkflow:
         await tqdm.gather(
             *[delayed()(url) for url in list(list_url)],
             total=len(list_url),
-            dynamic_ncols=True,
         )
 
     async def _run_graph_queue(self):
