@@ -6,18 +6,21 @@ import pytest
 import pytest_asyncio
 import wordlift_client
 from wordlift_client import AccountInfo
-import wordlift_sdk.utils
+
 import wordlift_sdk.client
+import wordlift_sdk.utils
 from wordlift_sdk.configuration import ConfigurationProvider
 from wordlift_sdk.container.application_container import ApplicationContainer
 from wordlift_sdk.graphql.client import GraphQlClient, GraphQlClientFactory
 from wordlift_sdk.id_generator import IdGenerator
-from wordlift_sdk.protocol import Context
+from wordlift_sdk.protocol import Context, DefaultWebPageImportProtocol
 from wordlift_sdk.protocol.entity_patch import EntityPatchQueue
 from wordlift_sdk.protocol.graph import GraphQueue
 from wordlift_sdk.url_source import UrlSource, SitemapUrlSource
 from wordlift_sdk.url_source.new_or_changed_url_source import NewOrChangedUrlSource
 from wordlift_sdk.workflow.kg_import_workflow import KgImportWorkflow
+from wordlift_sdk.workflow.url_handler import WebPageImportUrlHandler
+from wordlift_sdk.workflow.url_handler.url_handler import UrlHandler
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -90,9 +93,27 @@ def context(
     )
 
 
+@pytest_asyncio.fixture
+async def url_handler(context: Context) -> UrlHandler:
+    return WebPageImportUrlHandler(
+        context=context,
+        embedding_properties=[
+            "http://schema.org/headline",
+            "http://schema.org/abstract",
+            "http://schema.org/text",
+        ],
+        web_page_types=["http://schema.org/WebPage"],
+        web_page_import_callback=DefaultWebPageImportProtocol(context=context),
+    )
+
+
 @pytest.fixture
-def kg_import_workflow(context: Context, url_provider: UrlSource) -> KgImportWorkflow:
-    return KgImportWorkflow(context=context, url_source=url_provider, concurrency=5)
+def kg_import_workflow(
+    context: Context, url_provider: UrlSource, url_handler: UrlHandler
+) -> KgImportWorkflow:
+    return KgImportWorkflow(
+        context=context, url_source=url_provider, concurrency=5, url_handler=url_handler
+    )
 
 
 @pytest.mark.asyncio

@@ -1,123 +1,49 @@
-import asyncio
 import logging
 from os import cpu_count
 from pathlib import Path
 
-import aiohttp
-from tenacity import retry, retry_if_exception_type, wait_fixed, after_log
 from tqdm.asyncio import tqdm
-from wordlift_client import (
-    EmbeddingRequest,
-    ApiClient,
-    WebPagesImportsApi,
-    WebPageImportRequest,
-)
 
+from .url_handler.url_handler import UrlHandler
 from ..graph.ttl_liquid import TtlLiquidGraphFactory
 from ..protocol import (
-    WebPageImportProtocolInterface,
-    load_override_class,
-    DefaultWebPageImportProtocol,
     Context,
 )
-from ..url_source import UrlSource, Url
+from ..url_source import UrlSource
 from ..utils import create_delayed
 
 logger = logging.getLogger(__name__)
 
 
 class KgImportWorkflow:
-    context: Context
-    concurrency: int
-    embedding_request: EmbeddingRequest
-    url_source: UrlSource
-    web_page_import_callback: WebPageImportProtocolInterface
-    web_page_types: list[str]
+    _concurrency: int
+    _context: Context
+    _url_handler: UrlHandler
+    _url_source: UrlSource
 
     def __init__(
         self,
         context: Context,
         url_source: UrlSource,
-        embedding_properties: list[str] | None = None,
-        web_page_types: list[str] | None = None,
-        web_page_import_callback: WebPageImportProtocolInterface | None = None,
+        url_handler: UrlHandler,
         concurrency: int = min(cpu_count(), 4),
     ) -> None:
-        self.context = context
-        self.url_source = url_source
-        self.embedding_request = EmbeddingRequest(
-            properties=[
-                "http://schema.org/headline",
-                "http://schema.org/abstract",
-                "http://schema.org/text",
-            ]
-            if embedding_properties is None
-            else embedding_properties
-        )
-        self.web_page_types = (
-            ["http://schema.org/Article"] if web_page_types is None else web_page_types
-        )
-
-        if web_page_import_callback is None:
-            self.web_page_import_callback = load_override_class(
-                name="web_page_import_protocol",
-                class_name="WebPageImportProtocol",
-                # Default class to use in case of missing override.
-                default_class=DefaultWebPageImportProtocol,
-                context=context,
-            )
-
-        self.concurrency = concurrency
+        self._context = context
+        self._url_source = url_source
+        self._url_handler = url_handler
+        self._concurrency = concurrency
 
     async def run(self):
         await TtlLiquidGraphFactory(
-            context=self.context, path=Path("data/templates")
+            context=self._context, path=Path("data/templates")
         ).graphs()
-        await self._run_url_import()
 
-    async def _run_url_import(self):
-        list_url = []
-        async for url in self.url_source.urls():
-            list_url.append(url)
+        url_list = [url async for url in self._url_source.urls()]
 
-        @retry(
-            # stop=stop_after_attempt(5),  # Retry up to 5 times
-            retry=retry_if_exception_type(
-                asyncio.TimeoutError
-                | aiohttp.client_exceptions.ServerDisconnectedError
-                | aiohttp.client_exceptions.ClientConnectorError
-                | aiohttp.client_exceptions.ClientPayloadError
-                | aiohttp.client_exceptions.ClientConnectorDNSError
-            ),
-            wait=wait_fixed(2),  # Wait 2 seconds between retries
-            after=after_log(logger, logging.WARNING),
-            reraise=True,
-        )
-        async def url_handler(url: Url) -> None:
-            async with ApiClient(self.context.client_configuration) as client:
-                api_instance = WebPagesImportsApi(client)
+        logger.info("Applying %d URL import request(s)" % len(url_list))
 
-                request = WebPageImportRequest(
-                    url=url.value,
-                    id=None if url.iri is None else url.iri,
-                    embedding=self.embedding_request,
-                    output_types=self.web_page_types,
-                    id_generator="headline-with-url-hash",
-                )
-
-                try:
-                    response = await api_instance.create_web_page_imports(
-                        web_page_import_request=request, _request_timeout=60.0
-                    )
-                    await self.web_page_import_callback.callback(response)
-                except Exception as e:
-                    logger.error("Error importing Web Page %s" % url.value, exc_info=e)
-                    raise e
-
-        logger.info("Applying %d URL import request(s)" % len(list_url))
-
-        delayed = create_delayed(url_handler, self.concurrency)
+        delayed = create_delayed(self._url_handler, self._concurrency)
         await tqdm.gather(
-            *[delayed(url) for url in list(list_url)],
-            total=len(list_url),
+            *[delayed(url) for url in list(url_list)],
+            total=len(url_list),
         )

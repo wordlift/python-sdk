@@ -24,6 +24,9 @@ from ..url_source import (
 from ..url_source.new_or_changed_url_source import NewOrChangedUrlSource
 from ..utils import get_me
 from ..workflow.kg_import_workflow import KgImportWorkflow
+from ..workflow.url_handler import WebPageImportUrlHandler
+from ..workflow.url_handler.default_url_handler import DefaultUrlHandler
+from ..workflow.url_handler.search_console_url_handler import SearchConsoleUrlHandler
 
 
 @dataclass
@@ -45,9 +48,12 @@ class UrlSourceInput:
 
 class ApplicationContainer:
     _api_url: str
-    _configuration_provider: ConfigurationProvider
     _client_configuration: Configuration
+    _configuration_provider: ConfigurationProvider
     _key: str
+
+    _context: Context | None = None
+    _graphql_client: GraphQlClient | None = None
 
     def __init__(self, configuration_provider: ConfigurationProvider | None = None):
         self._configuration_provider = (
@@ -65,32 +71,59 @@ class ApplicationContainer:
     async def get_account(self) -> AccountInfo:
         return await get_me(configuration=self._client_configuration)
 
-    async def create_context(self) -> Context:
-        account = await self.get_account()
-        return Context(
-            account=account,
-            client_configuration=self._client_configuration,
-            id_generator=IdGenerator(account=account),
-            graph_queue=GraphQueue(client_configuration=self._client_configuration),
-            entity_patch_queue=EntityPatchQueue(
-                client_configuration=self._client_configuration
+    async def get_context(self) -> Context:
+        if not self._context:
+            account = await self.get_account()
+            self._context = Context(
+                account=account,
+                client_configuration=self._client_configuration,
+                id_generator=IdGenerator(account=account),
+                graph_queue=GraphQueue(client_configuration=self._client_configuration),
+                entity_patch_queue=EntityPatchQueue(
+                    client_configuration=self._client_configuration
+                ),
+            )
+
+        return self._context
+
+    async def create_web_page_import_url_handler(self):
+        return WebPageImportUrlHandler(
+            context=await self.get_context(),
+            embedding_properties=self._configuration_provider.get_value(
+                "EMBEDDING_PROPERTIES",
+                [
+                    "http://schema.org/headline",
+                    "http://schema.org/abstract",
+                    "http://schema.org/text",
+                ],
+            ),
+            web_page_types=self._configuration_provider.get_value(
+                "WEB_PAGE_TYPES", ["http://schema.org/Article"]
             ),
         )
 
-    async def create_kg_import_workflow(
-        self, web_page_types: list[str] | None = None
-    ) -> KgImportWorkflow:
+    async def create_search_console_url_handler(self):
+        return SearchConsoleUrlHandler(
+            context=await self.get_context(),
+            graphql_client=await self.get_graphql_client(),
+        )
+
+    async def create_multi_url_handler(self):
+        return DefaultUrlHandler(
+            url_handler_list=[
+                await self.create_web_page_import_url_handler(),
+                await self.create_search_console_url_handler(),
+            ]
+        )
+
+    async def create_kg_import_workflow(self) -> KgImportWorkflow:
         concurrency = self._configuration_provider.get_value(
             "CONCURRENCY", min(cpu_count(), 4)
         )
         return KgImportWorkflow(
-            context=await self.create_context(),
+            context=await self.get_context(),
             url_source=await self.create_new_or_changed_source(),
-            web_page_types=web_page_types
-            if web_page_types
-            else self._configuration_provider.get_value(
-                "WEB_PAGE_TYPES", ["http://schema.org/Article"]
-            ),
+            url_handler=await self.create_multi_url_handler(),
             concurrency=concurrency,
         )
 
@@ -165,13 +198,16 @@ class ApplicationContainer:
             "(sheets_url, sheets_name, sheets_creds_or_client), or urls."
         )
 
-    async def create_graphql_client(self) -> GraphQlClient:
-        return GraphQlClientFactory(
-            key=self._key, api_url=self._api_url + "/graphql"
-        ).create()
+    async def get_graphql_client(self) -> GraphQlClient:
+        if self._graphql_client is None:
+            self._graphql_client = GraphQlClientFactory(
+                key=self._key, api_url=self._api_url + "/graphql"
+            ).create()
+
+        return self._graphql_client
 
     async def create_new_or_changed_source(self) -> UrlSource:
         return NewOrChangedUrlSource(
             url_provider=await self.create_url_source(),
-            graphql_client=await self.create_graphql_client(),
+            graphql_client=await self.get_graphql_client(),
         )

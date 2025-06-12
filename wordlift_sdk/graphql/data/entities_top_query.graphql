@@ -1,5 +1,5 @@
-query entities_top_query($url: String!) {
-    entities(query: { urlConstraint: { in: [$url] } }) {
+query entities_top_query($urls: String!) {
+    entities(query: { urlConstraint: { in: $urls } }) {
         iri
         url: string(name: "schema:url")
         name: string(name: "schema:name")

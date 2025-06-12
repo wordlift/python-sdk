@@ -1,8 +1,10 @@
 import os.path
 from typing import Any, Optional, Dict, List
 
-from gql import Client, gql
+from gql import gql
 from graphql import parse, OperationDefinitionNode, FieldNode, DocumentNode
+
+from .gql_client_provider import GqlClientProvider
 
 
 class GraphQlQuery:
@@ -35,27 +37,33 @@ class GraphQlQuery:
 
 file_contents = {}
 
-filenames = ['entities_top_query.graphql', 'entities_url_id.graphql', 'entities_url_iri.graphql']
+filenames = [
+    "entities_top_query.graphql",
+    "entities_url_id.graphql",
+    "entities_url_iri.graphql",
+]
 base_dir = os.path.dirname(os.path.abspath(__file__))
 
 for filename in filenames:
-    filepath = os.path.join(base_dir, '../data', filename)
-    with open(filepath, 'r', encoding='utf-8') as f:
+    filepath = os.path.join(base_dir, "../data", filename)
+    with open(filepath, "r", encoding="utf-8") as f:
         query = f.read()
         file_contents[filename] = GraphQlQuery(query)
 
 
 class GraphQlClient:
-    _client: Client
+    _client_provider: GqlClientProvider
 
-    def __init__(self, client: Client):
-        self._client = client
+    def __init__(self, client_provider: GqlClientProvider):
+        self._client_provider = client_provider
 
-    async def run(self, graphql: str, variables: Optional[Dict[str, Any]] = None) -> List:
-        query = file_contents[graphql + '.graphql']
+    async def run(
+        self, graphql: str, variables: Optional[Dict[str, Any]] = None
+    ) -> list[dict[str, Any]]:
+        query = file_contents[graphql + ".graphql"]
 
         # Asynchronous function to execute the query
-        async with self._client as session:
+        async with self._client_provider.create() as session:
             response = await session.execute(query.query, variable_values=variables)
 
-            return response['entities']
+            return response["entities"]
