@@ -48,7 +48,7 @@ class SearchConsoleUrlHandler(UrlHandler):
         seven_days_ago = datetime.now() - timedelta(days=7)
         entity_top_query = EntityTopQuery.from_graphql_response(entities[0])
         if (
-            not entity_top_query.top_query_date_created
+            entity_top_query.top_query_date_created
             and datetime.fromisoformat(entity_top_query.top_query_date_created)
             > seven_days_ago
         ):
