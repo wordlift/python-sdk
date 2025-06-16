@@ -120,18 +120,20 @@ class ApplicationContainer:
         concurrency = self._configuration_provider.get_value(
             "CONCURRENCY", min(cpu_count(), 4)
         )
-        overwrite = self._configuration_provider.get_value("OVERWRITE", False)
-        source = (
-            await self.create_new_or_changed_source()
-            if overwrite
-            else await self.create_url_source()
-        )
         return KgImportWorkflow(
             context=await self.get_context(),
-            url_source=source,
+            url_source=await self.create_url_source_with_overwrite(),
             url_handler=await self.create_multi_url_handler(),
             concurrency=concurrency,
         )
+
+    async def get_graphql_client(self) -> GraphQlClient:
+        if self._graphql_client is None:
+            self._graphql_client = GraphQlClientFactory(
+                key=self._key, api_url=self._api_url + "/graphql"
+            ).create()
+
+        return self._graphql_client
 
     async def create_url_source(self) -> UrlSource:
         # Try to read the configuration from the `config/default.py` file.
@@ -204,16 +206,16 @@ class ApplicationContainer:
             "(sheets_url, sheets_name, sheets_creds_or_client), or urls."
         )
 
-    async def get_graphql_client(self) -> GraphQlClient:
-        if self._graphql_client is None:
-            self._graphql_client = GraphQlClientFactory(
-                key=self._key, api_url=self._api_url + "/graphql"
-            ).create()
-
-        return self._graphql_client
-
     async def create_new_or_changed_source(self) -> UrlSource:
         return NewOrChangedUrlSource(
             url_provider=await self.create_url_source(),
             graphql_client=await self.get_graphql_client(),
+        )
+
+    async def create_url_source_with_overwrite(self) -> UrlSource:
+        overwrite = self._configuration_provider.get_value("OVERWRITE", False)
+        return (
+            await self.create_url_source()
+            if overwrite
+            else await self.create_new_or_changed_source()
         )
