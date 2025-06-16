@@ -120,9 +120,15 @@ class ApplicationContainer:
         concurrency = self._configuration_provider.get_value(
             "CONCURRENCY", min(cpu_count(), 4)
         )
+        overwrite = self._configuration_provider.get_value("OVERWRITE", False)
+        source = (
+            await self.create_new_or_changed_source()
+            if overwrite
+            else await self.create_url_source()
+        )
         return KgImportWorkflow(
             context=await self.get_context(),
-            url_source=await self.create_new_or_changed_source(),
+            url_source=source,
             url_handler=await self.create_multi_url_handler(),
             concurrency=concurrency,
         )
