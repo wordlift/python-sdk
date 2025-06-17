@@ -37,6 +37,9 @@ class SearchConsoleUrlHandler(UrlHandler):
         reraise=True,
     )
     async def __call__(self, url: Url) -> None:
+        if not self._context.account.google_search_console_site_url:
+            return
+
         entities = await self._graphql_client.run(
             graphql="entities_top_query", variables={"urls": [url.value]}
         )
