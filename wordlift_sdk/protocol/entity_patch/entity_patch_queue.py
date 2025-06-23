@@ -1,6 +1,7 @@
 import logging
 import asyncio
 import aiohttp
+import pydantic_core
 import wordlift_client
 from wordlift_client import Configuration
 
@@ -24,6 +25,8 @@ class EntityPatchQueue:
             | aiohttp.client_exceptions.ClientConnectorError
             | aiohttp.client_exceptions.ClientPayloadError
             | aiohttp.client_exceptions.ClientConnectorDNSError
+            | pydantic_core._pydantic_core.ValidationError
+            | wordlift_client.exceptions.ServiceException
         ),
         wait=wait_fixed(2),  # Wait 2 seconds between retries
         after=after_log(logger, logging.WARNING),

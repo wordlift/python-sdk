@@ -2,6 +2,8 @@ import hashlib
 import logging
 import aiohttp
 import asyncio
+
+import pydantic_core
 import wordlift_client
 from rdflib import Graph
 from rdflib.compare import to_isomorphic
@@ -27,6 +29,8 @@ class GraphQueue:
             | aiohttp.client_exceptions.ClientConnectorError
             | aiohttp.client_exceptions.ClientPayloadError
             | aiohttp.client_exceptions.ClientConnectorDNSError
+            | pydantic_core._pydantic_core.ValidationError
+            | wordlift_client.exceptions.ServiceException
         ),
         wait=wait_fixed(2),  # Wait 2 seconds between retries
         after=after_log(logger, logging.WARNING),

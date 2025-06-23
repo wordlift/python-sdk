@@ -3,6 +3,7 @@ import logging
 from datetime import datetime, timedelta
 
 import aiohttp
+import pydantic_core
 import wordlift_client
 from tenacity import retry, retry_if_exception_type, wait_fixed, after_log
 from wordlift_client import AnalyticsImportRequest
@@ -31,6 +32,8 @@ class SearchConsoleUrlHandler(UrlHandler):
             | aiohttp.client_exceptions.ClientConnectorError
             | aiohttp.client_exceptions.ClientPayloadError
             | aiohttp.client_exceptions.ClientConnectorDNSError
+            | pydantic_core._pydantic_core.ValidationError
+            | wordlift_client.exceptions.ServiceException
         ),
         wait=wait_fixed(2),  # Wait 2 seconds between retries
         after=after_log(logger, logging.WARNING),
