@@ -136,7 +136,8 @@ class ApplicationContainer:
 
     async def get_graphql_client(self) -> GraphQlClient:
         if self._graphql_client is None:
-            self._graphql_client = self.create_graphql_client_factory().create()
+            graphql_client_factory = await self.create_graphql_client_factory()
+            self._graphql_client = graphql_client_factory.create()
 
         return self._graphql_client
 
