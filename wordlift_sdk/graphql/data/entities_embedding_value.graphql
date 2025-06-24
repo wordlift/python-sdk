@@ -1,0 +1,15 @@
+query entities_embedding_value($url: String!) {
+    entities(
+        page: 0
+        rows: 1
+        query: {
+            urlConstraint: { in: [$url] }
+            embeddingValueConstraint: {
+                exists: { exists: true, excludeEmpty: false }
+            }
+        }
+    ) {
+        iri
+        embedding_value: string(name: "seovoc:embeddingValue")
+    }
+}

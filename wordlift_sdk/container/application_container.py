@@ -10,7 +10,7 @@ from wordlift_client import Configuration, AccountInfo
 
 from ..client.client_configuration_factory import ClientConfigurationFactory
 from ..configuration import ConfigurationProvider
-from ..graphql.client import GraphQlClientFactory, GraphQlClient
+from ..graphql.client import GraphQlClientFactory, GraphQlClient, GqlClientProvider
 from ..id_generator import IdGenerator
 from ..protocol import Context
 from ..protocol.entity_patch import EntityPatchQueue
@@ -127,11 +127,16 @@ class ApplicationContainer:
             concurrency=concurrency,
         )
 
+    async def create_graphql_client_factory(self) -> GraphQlClientFactory:
+        return GraphQlClientFactory(key=self._key, api_url=self._api_url + "/graphql")
+
+    async def create_gql_client_provider(self) -> GqlClientProvider:
+        graphql_client_factory = await self.create_graphql_client_factory()
+        return graphql_client_factory.create_provider()
+
     async def get_graphql_client(self) -> GraphQlClient:
         if self._graphql_client is None:
-            self._graphql_client = GraphQlClientFactory(
-                key=self._key, api_url=self._api_url + "/graphql"
-            ).create()
+            self._graphql_client = self.create_graphql_client_factory().create()
 
         return self._graphql_client
 
