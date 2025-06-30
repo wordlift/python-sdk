@@ -77,6 +77,7 @@ class ApplicationContainer:
             self._context = Context(
                 account=account,
                 client_configuration=self._client_configuration,
+                configuration_provider=self._configuration_provider,
                 id_generator=IdGenerator(account=account),
                 graph_queue=GraphQueue(client_configuration=self._client_configuration),
                 entity_patch_queue=EntityPatchQueue(
