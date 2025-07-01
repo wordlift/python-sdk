@@ -87,7 +87,10 @@ class ApplicationContainer:
 
         return self._context
 
-    async def create_web_page_import_url_handler(self):
+    async def create_web_page_import_url_handler(self) -> WebPageImportUrlHandler:
+        write_strategy = self._configuration_provider.get_value(
+            "WEB_PAGE_IMPORT_WRITE_STRATEGY", "createOrUpdateModel"
+        )
         return WebPageImportUrlHandler(
             context=await self.get_context(),
             embedding_properties=self._configuration_provider.get_value(
@@ -101,6 +104,7 @@ class ApplicationContainer:
             web_page_types=self._configuration_provider.get_value(
                 "WEB_PAGE_TYPES", ["http://schema.org/Article"]
             ),
+            write_strategy=write_strategy,
         )
 
     async def create_search_console_url_handler(self):

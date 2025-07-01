@@ -29,6 +29,7 @@ class WebPageImportUrlHandler(UrlHandler):
     _embedding_request: EmbeddingRequest
     _web_page_import_callback: WebPageImportProtocolInterface
     _web_page_types: list[str]
+    _write_strategy: str
 
     def __init__(
         self,
@@ -36,6 +37,7 @@ class WebPageImportUrlHandler(UrlHandler):
         embedding_properties: list[str],
         web_page_types: list[str],
         web_page_import_callback: WebPageImportProtocolInterface | None = None,
+        write_strategy: str = "createOrUpdateModel",
     ):
         self._context = context
         self._embedding_request = EmbeddingRequest(
@@ -52,6 +54,8 @@ class WebPageImportUrlHandler(UrlHandler):
             )
         else:
             self._web_page_import_callback = web_page_import_callback
+
+        self._write_strategy = write_strategy
 
     @retry(
         retry=retry_if_exception_type(
@@ -77,6 +81,7 @@ class WebPageImportUrlHandler(UrlHandler):
                 embedding=self._embedding_request,
                 output_types=self._web_page_types,
                 id_generator="headline-with-url-hash",
+                write_strategy=self._write_strategy,
             )
 
             try:
