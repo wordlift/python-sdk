@@ -75,7 +75,6 @@ class WebPageImportUrlHandler(UrlHandler):
         ),
         wait=wait_fixed(2),  # Wait 2 seconds between retries
         after=after_log(logger, logging.WARNING),
-        reraise=True,
         stop=stop_after_attempt(5),
     )
     async def __call__(self, url: Url) -> None:
