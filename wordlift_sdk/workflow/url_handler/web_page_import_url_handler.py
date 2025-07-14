@@ -3,7 +3,13 @@ import logging
 
 import aiohttp
 import pydantic_core
-from tenacity import retry, retry_if_exception_type, wait_fixed, after_log
+from tenacity import (
+    retry,
+    retry_if_exception_type,
+    wait_fixed,
+    after_log,
+    stop_after_attempt,
+)
 from wordlift_client import (
     ApiClient,
     WebPagesImportsApi,
@@ -70,6 +76,7 @@ class WebPageImportUrlHandler(UrlHandler):
         wait=wait_fixed(2),  # Wait 2 seconds between retries
         after=after_log(logger, logging.WARNING),
         reraise=True,
+        stop=stop_after_attempt(5),
     )
     async def __call__(self, url: Url) -> None:
         async with ApiClient(self._context.client_configuration) as client:
