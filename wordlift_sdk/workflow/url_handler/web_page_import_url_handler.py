@@ -92,7 +92,7 @@ class WebPageImportUrlHandler(UrlHandler):
 
             try:
                 response = await api_instance.create_web_page_imports(
-                    web_page_import_request=request, _request_timeout=60.0
+                    web_page_import_request=request, _request_timeout=120.0
                 )
                 await self._web_page_import_callback.callback(response)
             except Exception as e:
