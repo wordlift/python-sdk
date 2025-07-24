@@ -17,6 +17,7 @@ from wordlift_client import (
     EmbeddingRequest,
 )
 import wordlift_client
+import gql.transport.exceptions
 
 from .url_handler import UrlHandler
 from ...protocol import (
@@ -72,6 +73,7 @@ class WebPageImportUrlHandler(UrlHandler):
             | aiohttp.client_exceptions.ClientConnectorDNSError
             | pydantic_core._pydantic_core.ValidationError
             | wordlift_client.exceptions.ServiceException
+            | gql.transport.exceptions.TransportServerError
         ),
         wait=wait_fixed(2),  # Wait 2 seconds between retries
         after=after_log(logger, logging.WARNING),
