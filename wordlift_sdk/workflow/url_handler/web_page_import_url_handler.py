@@ -74,6 +74,7 @@ class WebPageImportUrlHandler(UrlHandler):
             | pydantic_core._pydantic_core.ValidationError
             | wordlift_client.exceptions.ServiceException
             | gql.transport.exceptions.TransportServerError
+            | wordlift_client.exceptions.BadRequestException
         ),
         wait=wait_fixed(2),  # Wait 2 seconds between retries
         after=after_log(logger, logging.WARNING),

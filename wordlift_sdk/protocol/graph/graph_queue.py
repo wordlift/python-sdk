@@ -31,6 +31,7 @@ class GraphQueue:
             | aiohttp.client_exceptions.ClientConnectorDNSError
             | pydantic_core._pydantic_core.ValidationError
             | wordlift_client.exceptions.ServiceException
+            | wordlift_client.exceptions.BadRequestException
         ),
         wait=wait_fixed(2),  # Wait 2 seconds between retries
         after=after_log(logger, logging.WARNING),
