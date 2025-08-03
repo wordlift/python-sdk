@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "wordlift-sdk"
-version = "2.4.6"
+version = "2.4.7"
 description = ""
 authors = ["David Riccitelli <david@wordlift.io>"]
 readme = "README.md"
