@@ -35,6 +35,7 @@ class SearchConsoleUrlHandler(UrlHandler):
             | pydantic_core._pydantic_core.ValidationError
             | wordlift_client.exceptions.ServiceException
             | wordlift_client.exceptions.BadRequestException
+            | aiohttp.client_exceptions.ClientOSError
         ),
         wait=wait_fixed(2),  # Wait 2 seconds between retries
         after=after_log(logger, logging.WARNING),
