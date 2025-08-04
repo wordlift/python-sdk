@@ -27,6 +27,7 @@ from ..workflow.kg_import_workflow import KgImportWorkflow
 from ..workflow.url_handler import WebPageImportUrlHandler
 from ..workflow.url_handler.default_url_handler import DefaultUrlHandler
 from ..workflow.url_handler.search_console_url_handler import SearchConsoleUrlHandler
+from ..workflow.url_handler.url_handler import UrlHandler
 
 
 @dataclass
@@ -114,12 +115,16 @@ class ApplicationContainer:
         )
 
     async def create_multi_url_handler(self):
-        return DefaultUrlHandler(
-            url_handler_list=[
-                await self.create_web_page_import_url_handler(),
-                await self.create_search_console_url_handler(),
-            ]
-        )
+        handlers: list[UrlHandler] = [
+            await self.create_web_page_import_url_handler(),
+        ]
+        if (
+            self._configuration_provider.get_value("GOOGLE_SEARCH_CONSOLE", True)
+            is True
+        ):
+            handlers.append(await self.create_search_console_url_handler())
+
+        return DefaultUrlHandler(url_handler_list=handlers)
 
     async def create_kg_import_workflow(self) -> KgImportWorkflow:
         concurrency = self._configuration_provider.get_value(
