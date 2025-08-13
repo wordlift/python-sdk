@@ -2,6 +2,7 @@ import re
 from dataclasses import dataclass
 from os import cpu_count
 from typing import Optional, Union
+from warnings import deprecated
 
 import gspread
 from google.auth.credentials import Credentials
@@ -132,7 +133,7 @@ class ApplicationContainer:
         )
         return KgImportWorkflow(
             context=await self.get_context(),
-            url_source=await self.create_url_source_with_overwrite(),
+            url_source=await self.create_new_or_changed_source(),
             url_handler=await self.create_multi_url_handler(),
             concurrency=concurrency,
         )
@@ -223,15 +224,13 @@ class ApplicationContainer:
         )
 
     async def create_new_or_changed_source(self) -> UrlSource:
+        overwrite = self._configuration_provider.get_value("OVERWRITE", False)
         return NewOrChangedUrlSource(
             url_provider=await self.create_url_source(),
             graphql_client=await self.get_graphql_client(),
+            overwrite=overwrite,
         )
 
+    @deprecated("Use create_new_or_changed_source instead")
     async def create_url_source_with_overwrite(self) -> UrlSource:
-        overwrite = self._configuration_provider.get_value("OVERWRITE", False)
-        return (
-            await self.create_url_source()
-            if overwrite
-            else await self.create_new_or_changed_source()
-        )
+        return await self.create_new_or_changed_source()

@@ -10,10 +10,14 @@ from ..graphql.client import GraphQlClient
 class NewOrChangedUrlSource(UrlSource):
     graphql_client: GraphQlClient
     url_provider: UrlSource
+    overwrite: bool
 
-    def __init__(self, url_provider: UrlSource, graphql_client: GraphQlClient):
+    def __init__(
+        self, url_provider: UrlSource, graphql_client: GraphQlClient, overwrite: bool
+    ):
         self.graphql_client = graphql_client
         self.url_provider = url_provider
+        self.overwrite = overwrite
 
     async def urls(self) -> AsyncGenerator[Url, None]:
         # Get the list of URLs from the underlying provider.
@@ -38,7 +42,8 @@ class NewOrChangedUrlSource(UrlSource):
             suffixes=("", "_graphql"),
         )
         filtered_df = merged_df[
-            merged_df["date_imported"].isna()
+            self.overwrite
+            | merged_df["date_imported"].isna()
             | (merged_df["date_imported"] < merged_df["date_modified"])
         ]
         for _, row in filtered_df.iterrows():
