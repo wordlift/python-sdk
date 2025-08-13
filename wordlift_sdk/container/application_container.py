@@ -2,7 +2,6 @@ import re
 from dataclasses import dataclass
 from os import cpu_count
 from typing import Optional, Union
-from warnings import deprecated
 
 import gspread
 from google.auth.credentials import Credentials
@@ -231,6 +230,5 @@ class ApplicationContainer:
             overwrite=overwrite,
         )
 
-    @deprecated("Use create_new_or_changed_source instead")
     async def create_url_source_with_overwrite(self) -> UrlSource:
         return await self.create_new_or_changed_source()
