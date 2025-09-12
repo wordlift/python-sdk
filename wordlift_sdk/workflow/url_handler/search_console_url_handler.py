@@ -2,6 +2,7 @@ import asyncio
 import logging
 from datetime import datetime, timedelta
 
+import gql.transport.exceptions
 import aiohttp
 import pydantic_core
 import wordlift_client
@@ -36,6 +37,7 @@ class SearchConsoleUrlHandler(UrlHandler):
             | wordlift_client.exceptions.ServiceException
             | wordlift_client.exceptions.BadRequestException
             | aiohttp.client_exceptions.ClientOSError
+            | gql.transport.exceptions.TransportServerError
         ),
         wait=wait_fixed(2),  # Wait 2 seconds between retries
         after=after_log(logger, logging.WARNING),
