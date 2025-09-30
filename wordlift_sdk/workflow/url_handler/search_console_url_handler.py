@@ -6,7 +6,13 @@ import gql.transport.exceptions
 import aiohttp
 import pydantic_core
 import wordlift_client
-from tenacity import retry, retry_if_exception_type, wait_fixed, after_log
+from tenacity import (
+    retry,
+    retry_if_exception_type,
+    wait_fixed,
+    after_log,
+    stop_after_attempt,
+)
 from wordlift_client import AnalyticsImportRequest
 
 from .url_handler import UrlHandler
@@ -40,6 +46,7 @@ class SearchConsoleUrlHandler(UrlHandler):
             | gql.transport.exceptions.TransportServerError
         ),
         wait=wait_fixed(2),  # Wait 2 seconds between retries
+        stop=stop_after_attempt(3),  # Max 3 retries
         after=after_log(logger, logging.WARNING),
         reraise=True,
     )
