@@ -24,7 +24,8 @@ class NewOrChangedUrlSource(UrlSource):
         url_df = pd.DataFrame([asdict(url) async for url in self.url_provider.urls()])
         # Get the list of URLs from GraphQL.
         list_records = await self.graphql_client.run(
-            "entities_url_iri", {"urls": url_df["value"].tolist()}
+            "entities_url_iri",
+            {"urls": url_df["value"].tolist() if "value" in url_df.columns else []},
         )
         graphql_df = pd.DataFrame.from_records(
             data=[record for record in list_records],
