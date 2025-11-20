@@ -430,14 +430,14 @@ pycparser = {version = "*", markers = "implementation_name != \"PyPy\""}
 
 [[package]]
 name = "cfgv"
-version = "3.4.0"
+version = "3.5.0"
 description = "Validate configuration and produce human readable error messages."
 optional = false
-python-versions = ">=3.8"
+python-versions = ">=3.10"
 groups = ["dev"]
 files = [
-    {file = "cfgv-3.4.0-py2.py3-none-any.whl", hash = "sha256:b7265b1f29fd3316bfcd2b330d63d024f2bfd8bcb8b0272f8e19a504856c48f9"},
-    {file = "cfgv-3.4.0.tar.gz", hash = "sha256:e52591d4c5f5dead8e0f673fb16db7949d2cfb3f7da4582893288f0ded8fe560"},
+    {file = "cfgv-3.5.0-py2.py3-none-any.whl", hash = "sha256:a8dc6b26ad22ff227d2634a65cb388215ce6cc96bbcc5cfde7641ae87e8dacc0"},
+    {file = "cfgv-3.5.0.tar.gz", hash = "sha256:d5b1034354820651caa73ede66a6294d6e95c1b00acc5e9b098e917404669132"},
 ]
 
 [[package]]
@@ -3083,14 +3083,14 @@ files = [
 
 [[package]]
 name = "wordlift-client"
-version = "1.126.0"
+version = "1.127.0"
 description = "WordLift API"
 optional = false
 python-versions = "*"
 groups = ["main"]
 files = [
-    {file = "wordlift_client-1.126.0-py3-none-any.whl", hash = "sha256:e12e68f4b1558e713625c402cee0645386b0552715ab263565fb714259855887"},
-    {file = "wordlift_client-1.126.0.tar.gz", hash = "sha256:bd3342588d0376fac92053f1130142ab3a22e4c2fff341f81547eed3d43c0054"},
+    {file = "wordlift_client-1.127.0-py3-none-any.whl", hash = "sha256:0caa0efc68fe8f36642c28deb3a38f962c398e2bcde2207ebdbf6d6d798dc451"},
+    {file = "wordlift_client-1.127.0.tar.gz", hash = "sha256:ae6605c7ad52c83f224ee7dc466a7d430036bc4cbb2fc1a6a145aeb3dd1dbf6e"},
 ]
 
 [package.dependencies]
@@ -3294,5 +3294,5 @@ testing = ["coverage[toml]", "zope.event", "zope.testing"]
 
 [metadata]
 lock-version = "2.1"
-python-versions = ">=3.10, <3.13"
-content-hash = "196101aaf9bb57e638d704e70b83f6a882cfd41a95b7f15e7f52aca32d9cd000"
+python-versions = ">=3.10, <3.14"
+content-hash = "17f0940dd18a29fd773b0c47fbc987554224c7fce439b1671b1d948a78100475"
