@@ -1,0 +1,10 @@
+query entities_url_iri_filtering_by_type($urls: [String]!, $types: [String]!) {
+    entities(query: {
+        urlConstraint: { in: $urls }
+        typeConstraint: {in: $types }
+    }) {
+        iri
+        url: string(name: "schema:url")
+        date_imported: dateTime(name: "seovoc:dateImported")
+    }
+}

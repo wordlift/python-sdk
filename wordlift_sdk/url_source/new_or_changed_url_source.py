@@ -1,5 +1,5 @@
 from dataclasses import asdict
-from typing import AsyncGenerator
+from typing import AsyncGenerator, List
 
 import pandas as pd
 
@@ -11,21 +11,30 @@ class NewOrChangedUrlSource(UrlSource):
     graphql_client: GraphQlClient
     url_provider: UrlSource
     overwrite: bool
+    web_page_types: List[str]
 
     def __init__(
-        self, url_provider: UrlSource, graphql_client: GraphQlClient, overwrite: bool
+        self,
+        url_provider: UrlSource,
+        graphql_client: GraphQlClient,
+        overwrite: bool,
+        web_page_types: List[str],
     ):
         self.graphql_client = graphql_client
         self.url_provider = url_provider
         self.overwrite = overwrite
+        self.web_page_types = web_page_types
 
     async def urls(self) -> AsyncGenerator[Url, None]:
         # Get the list of URLs from the underlying provider.
         url_df = pd.DataFrame([asdict(url) async for url in self.url_provider.urls()])
         # Get the list of URLs from GraphQL.
         list_records = await self.graphql_client.run(
-            "entities_url_iri",
-            {"urls": url_df["value"].tolist() if "value" in url_df.columns else []},
+            "entities_url_iri_filtering_by_type",
+            {
+                "urls": url_df["value"].tolist() if "value" in url_df.columns else [],
+                "types": self.web_page_types,
+            },
         )
         graphql_df = pd.DataFrame.from_records(
             data=[record for record in list_records],

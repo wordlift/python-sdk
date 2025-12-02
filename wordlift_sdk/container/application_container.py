@@ -1,7 +1,7 @@
 import re
 from dataclasses import dataclass
 from os import cpu_count
-from typing import Optional, Union
+from typing import Optional, Union, List
 
 import gspread
 from google.auth.credentials import Credentials
@@ -102,9 +102,7 @@ class ApplicationContainer:
                     "http://schema.org/text",
                 ],
             ),
-            web_page_types=self._configuration_provider.get_value(
-                "WEB_PAGE_TYPES", ["http://schema.org/Article"]
-            ),
+            web_page_types=self.get_web_page_types(),
             write_strategy=write_strategy,
         )
 
@@ -228,7 +226,13 @@ class ApplicationContainer:
             url_provider=await self.create_url_source(),
             graphql_client=await self.get_graphql_client(),
             overwrite=overwrite,
+            web_page_types=self.get_web_page_types(),
         )
 
     async def create_url_source_with_overwrite(self) -> UrlSource:
         return await self.create_new_or_changed_source()
+
+    def get_web_page_types(self) -> List[str]:
+        return self._configuration_provider.get_value(
+            "WEB_PAGE_TYPES", ["http://schema.org/Article"]
+        )
