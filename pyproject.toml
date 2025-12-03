@@ -4,8 +4,8 @@ version = "2.7.2"
 description = ""
 authors = ["David Riccitelli <david@wordlift.io>"]
 readme = "README.md"
-packages = [{ include = "wordlift_sdk/" }]
-include = [{ path = "wordlift_sdk/graphql/data" }]
+packages = [{ include = "wordlift_sdk" }]
+include = ["wordlift_sdk/graphql/data/**"]
 
 [tool.poetry.dependencies]
 python = ">=3.10, <3.14"
