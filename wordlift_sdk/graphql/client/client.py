@@ -41,6 +41,7 @@ filenames = [
     "entities_top_query.graphql",
     "entities_url_id.graphql",
     "entities_url_iri.graphql",
+    "entities_url_iri_with_source_equal_to_web_page_import.graphql",
 ]
 base_dir = os.path.dirname(os.path.abspath(__file__))
 
