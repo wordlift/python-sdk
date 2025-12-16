@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "wordlift-sdk"
-version = "2.7.4"
+version = "2.7.5"
 description = ""
 authors = ["David Riccitelli <david@wordlift.io>"]
 readme = "README.md"
@@ -19,7 +19,7 @@ wordlift-client = "^1.117.0"
 gspread = "^6.1.2"
 google-auth = "^2.35.0"
 tqdm = "^4.67.1"
-advertools = "^0.16.6"
+advertools = ">0.16.6,<1.0.0"
 pycountry = "^24.6.1"
 python-liquid = "^2.0.1"
 
@@ -29,6 +29,7 @@ pytest-asyncio = "^0.24.0"
 docker = "^7.1.0"
 ruff = "^0.11.13"
 pre-commit = "^4.2.0"
+pandas-stubs = "^2.3.3.251201"
 
 [build-system]
 requires = ["poetry-core"]

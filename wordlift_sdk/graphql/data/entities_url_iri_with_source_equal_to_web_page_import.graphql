@@ -2,7 +2,7 @@ query entities_url_iri_with_source_equal_to_web_page_import($urls: [String]!) {
     entities(
         query: {
             urlConstraint: { in: $urls }
-            typeConstraint: { in: [ "web-page-import" ] }
+            sourceConstraint: { in: [ "web-page-import" ] }
         }
     ) {
         iri
