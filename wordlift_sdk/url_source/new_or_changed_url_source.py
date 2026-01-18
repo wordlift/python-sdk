@@ -42,6 +42,9 @@ class NewOrChangedUrlSource(UrlSource):
             how="left",
             suffixes=("", "_graphql"),
         )
+        merged_df["date_modified"] = pd.to_datetime(
+            merged_df["date_modified"], utc=True, errors="coerce"
+        )
         filtered_df = merged_df[
             self.overwrite
             | merged_df["date_imported"].isna()
