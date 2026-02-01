@@ -1,0 +1,122 @@
+@prefix : <https://wordlift.io/shacl/google/google-return-policy/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix schema: <http://schema.org/> .
+
+# Source: https://developers.google.com/search/docs/appearance/structured-data/return-policy
+# Generated: 2026-01-13T11:23:47Z
+# Notes: required properties => errors; recommended properties => warnings.
+
+:google_URLShape
+  a sh:NodeShape ;
+  sh:targetClass schema:URL ;
+  sh:property [
+    sh:path schema:returnPolicyCategory ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:returnPolicySeasonalOverride ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:customerRemorseReturnFees ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: customerRemorseReturnFees." ;
+  ] ;
+  sh:property [
+    sh:path schema:customerRemorseReturnLabelSource ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: customerRemorseReturnLabelSource." ;
+  ] ;
+  sh:property [
+    sh:path schema:customerRemorseReturnShippingFeesAmount ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: customerRemorseReturnShippingFeesAmount." ;
+  ] ;
+  sh:property [
+    sh:path schema:endDate ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: endDate." ;
+  ] ;
+  sh:property [
+    sh:path schema:itemCondition ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: itemCondition." ;
+  ] ;
+  sh:property [
+    sh:path schema:itemDefectReturnFees ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: itemDefectReturnFees." ;
+  ] ;
+  sh:property [
+    sh:path schema:itemDefectReturnLabelSource ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: itemDefectReturnLabelSource." ;
+  ] ;
+  sh:property [
+    sh:path schema:itemDefectReturnShippingFeesAmount ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: itemDefectReturnShippingFeesAmount." ;
+  ] ;
+  sh:property [
+    sh:path schema:merchantReturnDays ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: merchantReturnDays." ;
+  ] ;
+  sh:property [
+    sh:path schema:refundType ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: refundType." ;
+  ] ;
+  sh:property [
+    sh:path schema:restockingFee ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: restockingFee." ;
+  ] ;
+  sh:property [
+    sh:path schema:returnFees ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: returnFees." ;
+  ] ;
+  sh:property [
+    sh:path schema:returnLabelSource ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: returnLabelSource." ;
+  ] ;
+  sh:property [
+    sh:path schema:returnMethod ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: returnMethod." ;
+  ] ;
+  sh:property [
+    sh:path schema:returnPolicyCountry ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: returnPolicyCountry." ;
+  ] ;
+  sh:property [
+    sh:path schema:returnShippingFeesAmount ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: returnShippingFeesAmount." ;
+  ] ;
+  sh:property [
+    sh:path schema:startDate ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: startDate." ;
+  ] ;
+.

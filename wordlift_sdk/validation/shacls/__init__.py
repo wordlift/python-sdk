@@ -1,0 +1,1 @@
+"""Packaged SHACL shapes."""

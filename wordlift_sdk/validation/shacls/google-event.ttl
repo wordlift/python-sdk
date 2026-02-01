@@ -1,0 +1,46 @@
+@prefix : <https://wordlift.io/shacl/google/google-event/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix schema: <http://schema.org/> .
+
+# Source: https://developers.google.com/search/docs/appearance/structured-data/event
+# Generated: 2026-01-13T11:23:27Z
+# Notes: required properties => errors; recommended properties => warnings.
+
+:google_EventShape
+  a sh:NodeShape ;
+  sh:targetClass schema:Event ;
+  sh:property [
+    sh:path schema:address ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:location ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:name ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:startDate ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:description ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: description." ;
+  ] ;
+  sh:property [
+    sh:path schema:endDate ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: endDate." ;
+  ] ;
+  sh:property [
+    sh:path schema:eventStatus ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: eventStatus." ;
+  ] ;
+.

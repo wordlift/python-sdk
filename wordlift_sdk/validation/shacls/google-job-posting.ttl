@@ -1,0 +1,74 @@
+@prefix : <https://wordlift.io/shacl/google/google-job-posting/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix schema: <http://schema.org/> .
+
+# Source: https://developers.google.com/search/docs/appearance/structured-data/job-posting
+# Generated: 2026-01-13T11:23:31Z
+# Notes: required properties => errors; recommended properties => warnings.
+
+:google_JobPostingShape
+  a sh:NodeShape ;
+  sh:targetClass schema:JobPosting ;
+  sh:property [
+    sh:path schema:datePosted ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:description ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:hiringOrganization ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:jobLocation ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:title ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:applicantLocationRequirements ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: applicantLocationRequirements." ;
+  ] ;
+  sh:property [
+    sh:path schema:baseSalary ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: baseSalary." ;
+  ] ;
+  sh:property [
+    sh:path schema:directApply ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: directApply." ;
+  ] ;
+  sh:property [
+    sh:path schema:employmentType ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: employmentType." ;
+  ] ;
+  sh:property [
+    sh:path schema:identifier ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: identifier." ;
+  ] ;
+  sh:property [
+    sh:path schema:jobLocationType ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: jobLocationType." ;
+  ] ;
+  sh:property [
+    sh:path schema:validThrough ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: validThrough." ;
+  ] ;
+.

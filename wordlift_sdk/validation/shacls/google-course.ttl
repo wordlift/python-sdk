@@ -1,0 +1,43 @@
+@prefix : <https://wordlift.io/shacl/google/google-course/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix schema: <http://schema.org/> .
+
+# Source: https://developers.google.com/search/docs/appearance/structured-data/course
+# Generated: 2026-01-13T11:23:18Z
+# Notes: required properties => errors; recommended properties => warnings.
+
+:google_CourseShape
+  a sh:NodeShape ;
+  sh:targetClass schema:Course ;
+  sh:property [
+    sh:path schema:description ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:name ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:provider ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: provider." ;
+  ] ;
+.
+
+:google_ItemListShape
+  a sh:NodeShape ;
+  sh:targetClass schema:ItemList ;
+  sh:property [
+    sh:path schema:itemListElement ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:position ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:url ;
+    sh:minCount 1 ;
+  ] ;
+.

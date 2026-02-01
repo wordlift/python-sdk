@@ -1,0 +1,34 @@
+@prefix : <https://wordlift.io/shacl/google/google-paywalled-content/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix schema: <http://schema.org/> .
+
+# Source: https://developers.google.com/search/docs/appearance/structured-data/paywalled-content
+# Generated: 2026-01-13T11:23:59Z
+# Notes: required properties => errors; recommended properties => warnings.
+
+:google_CreativeWorkShape
+  a sh:NodeShape ;
+  sh:targetClass schema:CreativeWork ;
+  sh:property [
+    sh:path schema:isAccessibleForFree ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:cssSelector ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: cssSelector." ;
+  ] ;
+  sh:property [
+    sh:path schema:hasPart ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: hasPart." ;
+  ] ;
+  sh:property [
+    sh:path schema:type ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: type." ;
+  ] ;
+.

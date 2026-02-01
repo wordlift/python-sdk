@@ -1,0 +1,606 @@
+@prefix : <https://wordlift.io/shacl/google/google-shipping-policy/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix schema: <http://schema.org/> .
+
+# Source: https://developers.google.com/search/docs/appearance/structured-data/shipping-policy
+# Generated: 2026-01-13T11:23:49Z
+# Notes: required properties => errors; recommended properties => warnings.
+
+:google_ConditionsShape
+  a sh:NodeShape ;
+  sh:targetClass schema:Conditions ;
+  sh:property [
+    sh:path schema:addressCountry ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:addressRegion ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: addressRegion." ;
+  ] ;
+  sh:property [
+    sh:path schema:doesNotShip ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: doesNotShip." ;
+  ] ;
+  sh:property [
+    sh:path schema:numItems ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: numItems." ;
+  ] ;
+  sh:property [
+    sh:path schema:orderValue ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: orderValue." ;
+  ] ;
+  sh:property [
+    sh:path schema:postalCode ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: postalCode." ;
+  ] ;
+  sh:property [
+    sh:path schema:seasonalOverride ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: seasonalOverride." ;
+  ] ;
+  sh:property [
+    sh:path schema:shippingDestination ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: shippingDestination." ;
+  ] ;
+  sh:property [
+    sh:path schema:shippingOrigin ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: shippingOrigin." ;
+  ] ;
+  sh:property [
+    sh:path schema:shippingRate ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: shippingRate." ;
+  ] ;
+  sh:property [
+    sh:path schema:transitTime ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: transitTime." ;
+  ] ;
+  sh:property [
+    sh:path schema:weight ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: weight." ;
+  ] ;
+.
+
+:google_FridayShape
+  a sh:NodeShape ;
+  sh:targetClass schema:Friday ;
+  sh:property [
+    sh:path schema:currency ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:maxValue ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:minValue ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:value ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:businessDays ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: businessDays." ;
+  ] ;
+  sh:property [
+    sh:path schema:duration ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: duration." ;
+  ] ;
+  sh:property [
+    sh:path schema:orderPercentage ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: orderPercentage." ;
+  ] ;
+  sh:property [
+    sh:path schema:unitCode ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: unitCode." ;
+  ] ;
+  sh:property [
+    sh:path schema:validFrom ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: validFrom." ;
+  ] ;
+  sh:property [
+    sh:path schema:validThrough ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: validThrough." ;
+  ] ;
+  sh:property [
+    sh:path schema:weightPercentage ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: weightPercentage." ;
+  ] ;
+.
+
+:google_MondayShape
+  a sh:NodeShape ;
+  sh:targetClass schema:Monday ;
+  sh:property [
+    sh:path schema:currency ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:maxValue ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:minValue ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:value ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:businessDays ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: businessDays." ;
+  ] ;
+  sh:property [
+    sh:path schema:duration ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: duration." ;
+  ] ;
+  sh:property [
+    sh:path schema:orderPercentage ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: orderPercentage." ;
+  ] ;
+  sh:property [
+    sh:path schema:unitCode ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: unitCode." ;
+  ] ;
+  sh:property [
+    sh:path schema:validFrom ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: validFrom." ;
+  ] ;
+  sh:property [
+    sh:path schema:validThrough ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: validThrough." ;
+  ] ;
+  sh:property [
+    sh:path schema:weightPercentage ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: weightPercentage." ;
+  ] ;
+.
+
+:google_QuantitativeValueShape
+  a sh:NodeShape ;
+  sh:targetClass schema:QuantitativeValue ;
+  sh:property [
+    sh:path schema:maxValue ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: maxValue." ;
+  ] ;
+  sh:property [
+    sh:path schema:minValue ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: minValue." ;
+  ] ;
+  sh:property [
+    sh:path schema:unitCode ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: unitCode." ;
+  ] ;
+  sh:property [
+    sh:path schema:value ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: value." ;
+  ] ;
+.
+
+:google_ShippingConditionsShape
+  a sh:NodeShape ;
+  sh:targetClass schema:ShippingConditions ;
+  sh:property [
+    sh:path schema:addressCountry ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:addressRegion ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: addressRegion." ;
+  ] ;
+  sh:property [
+    sh:path schema:description ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: description." ;
+  ] ;
+  sh:property [
+    sh:path schema:doesNotShip ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: doesNotShip." ;
+  ] ;
+  sh:property [
+    sh:path schema:fulfillmentType ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: fulfillmentType." ;
+  ] ;
+  sh:property [
+    sh:path schema:handlingTime ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: handlingTime." ;
+  ] ;
+  sh:property [
+    sh:path schema:name ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: name." ;
+  ] ;
+  sh:property [
+    sh:path schema:numItems ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: numItems." ;
+  ] ;
+  sh:property [
+    sh:path schema:orderValue ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: orderValue." ;
+  ] ;
+  sh:property [
+    sh:path schema:postalCode ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: postalCode." ;
+  ] ;
+  sh:property [
+    sh:path schema:seasonalOverride ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: seasonalOverride." ;
+  ] ;
+  sh:property [
+    sh:path schema:shippingDestination ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: shippingDestination." ;
+  ] ;
+  sh:property [
+    sh:path schema:shippingOrigin ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: shippingOrigin." ;
+  ] ;
+  sh:property [
+    sh:path schema:shippingRate ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: shippingRate." ;
+  ] ;
+  sh:property [
+    sh:path schema:transitTime ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: transitTime." ;
+  ] ;
+  sh:property [
+    sh:path schema:validForMemberTier ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: validForMemberTier." ;
+  ] ;
+  sh:property [
+    sh:path schema:weight ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: weight." ;
+  ] ;
+.
+
+:google_ShippingServiceShape
+  a sh:NodeShape ;
+  sh:targetClass schema:ShippingService ;
+  sh:property [
+    sh:path schema:addressCountry ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:addressRegion ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: addressRegion." ;
+  ] ;
+  sh:property [
+    sh:path schema:doesNotShip ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: doesNotShip." ;
+  ] ;
+  sh:property [
+    sh:path schema:numItems ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: numItems." ;
+  ] ;
+  sh:property [
+    sh:path schema:orderValue ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: orderValue." ;
+  ] ;
+  sh:property [
+    sh:path schema:postalCode ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: postalCode." ;
+  ] ;
+  sh:property [
+    sh:path schema:seasonalOverride ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: seasonalOverride." ;
+  ] ;
+  sh:property [
+    sh:path schema:shippingDestination ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: shippingDestination." ;
+  ] ;
+  sh:property [
+    sh:path schema:shippingOrigin ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: shippingOrigin." ;
+  ] ;
+  sh:property [
+    sh:path schema:shippingRate ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: shippingRate." ;
+  ] ;
+  sh:property [
+    sh:path schema:transitTime ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: transitTime." ;
+  ] ;
+  sh:property [
+    sh:path schema:weight ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: weight." ;
+  ] ;
+.
+
+:google_ThursdayShape
+  a sh:NodeShape ;
+  sh:targetClass schema:Thursday ;
+  sh:property [
+    sh:path schema:currency ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:maxValue ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:minValue ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:value ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:businessDays ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: businessDays." ;
+  ] ;
+  sh:property [
+    sh:path schema:duration ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: duration." ;
+  ] ;
+  sh:property [
+    sh:path schema:orderPercentage ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: orderPercentage." ;
+  ] ;
+  sh:property [
+    sh:path schema:unitCode ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: unitCode." ;
+  ] ;
+  sh:property [
+    sh:path schema:validFrom ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: validFrom." ;
+  ] ;
+  sh:property [
+    sh:path schema:validThrough ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: validThrough." ;
+  ] ;
+  sh:property [
+    sh:path schema:weightPercentage ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: weightPercentage." ;
+  ] ;
+.
+
+:google_TuesdayShape
+  a sh:NodeShape ;
+  sh:targetClass schema:Tuesday ;
+  sh:property [
+    sh:path schema:currency ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:maxValue ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:minValue ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:value ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:businessDays ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: businessDays." ;
+  ] ;
+  sh:property [
+    sh:path schema:duration ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: duration." ;
+  ] ;
+  sh:property [
+    sh:path schema:orderPercentage ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: orderPercentage." ;
+  ] ;
+  sh:property [
+    sh:path schema:unitCode ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: unitCode." ;
+  ] ;
+  sh:property [
+    sh:path schema:validFrom ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: validFrom." ;
+  ] ;
+  sh:property [
+    sh:path schema:validThrough ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: validThrough." ;
+  ] ;
+  sh:property [
+    sh:path schema:weightPercentage ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: weightPercentage." ;
+  ] ;
+.
+
+:google_WednesdayShape
+  a sh:NodeShape ;
+  sh:targetClass schema:Wednesday ;
+  sh:property [
+    sh:path schema:currency ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:maxValue ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:minValue ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:value ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:businessDays ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: businessDays." ;
+  ] ;
+  sh:property [
+    sh:path schema:duration ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: duration." ;
+  ] ;
+  sh:property [
+    sh:path schema:orderPercentage ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: orderPercentage." ;
+  ] ;
+  sh:property [
+    sh:path schema:unitCode ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: unitCode." ;
+  ] ;
+  sh:property [
+    sh:path schema:validFrom ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: validFrom." ;
+  ] ;
+  sh:property [
+    sh:path schema:validThrough ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: validThrough." ;
+  ] ;
+  sh:property [
+    sh:path schema:weightPercentage ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: weightPercentage." ;
+  ] ;
+.

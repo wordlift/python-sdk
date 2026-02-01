@@ -72,6 +72,7 @@ def url_provider(
             pattern=re.compile(test_sitemap_url_pattern),
         ),
         graphql_client=graphql_client,
+        overwrite=False,
     )
 
 
@@ -88,6 +89,9 @@ def context(
         account=account,
         client_configuration=client_configuration,
         id_generator=IdGenerator(account=account),
+        configuration_provider=ConfigurationProvider.create(
+            os.path.join(os.path.dirname(__file__), "config/default.py")
+        ),
         graph_queue=GraphQueue(client_configuration=client_configuration),
         entity_patch_queue=EntityPatchQueue(client_configuration=client_configuration),
     )

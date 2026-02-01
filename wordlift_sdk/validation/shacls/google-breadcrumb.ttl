@@ -1,0 +1,33 @@
+@prefix : <https://wordlift.io/shacl/google/google-breadcrumb/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix schema: <http://schema.org/> .
+
+# Source: https://developers.google.com/search/docs/appearance/structured-data/breadcrumb
+# Generated: 2026-01-13T11:23:15Z
+# Notes: required properties => errors; recommended properties => warnings.
+
+:google_BreadcrumbListShape
+  a sh:NodeShape ;
+  sh:targetClass schema:BreadcrumbList ;
+  sh:property [
+    sh:path schema:itemListElement ;
+    sh:minCount 1 ;
+  ] ;
+.
+
+:google_ListItemShape
+  a sh:NodeShape ;
+  sh:targetClass schema:ListItem ;
+  sh:property [
+    sh:path schema:item ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:name ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:position ;
+    sh:minCount 1 ;
+  ] ;
+.

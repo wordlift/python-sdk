@@ -1,0 +1,247 @@
+@prefix : <https://wordlift.io/shacl/google/google-discussion-forum/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix schema: <http://schema.org/> .
+
+# Source: https://developers.google.com/search/docs/appearance/structured-data/discussion-forum
+# Generated: 2026-01-13T11:23:21Z
+# Notes: required properties => errors; recommended properties => warnings.
+
+:google_CommentShape
+  a sh:NodeShape ;
+  sh:targetClass schema:Comment ;
+  sh:property [
+    sh:path schema:author ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:datePublished ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:text ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:comment ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: comment." ;
+  ] ;
+  sh:property [
+    sh:path schema:creativeWorkStatus ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: creativeWorkStatus." ;
+  ] ;
+  sh:property [
+    sh:path schema:dateModified ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: dateModified." ;
+  ] ;
+  sh:property [
+    sh:path schema:image ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: image." ;
+  ] ;
+  sh:property [
+    sh:path schema:interactionStatistic ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: interactionStatistic." ;
+  ] ;
+  sh:property [
+    sh:path schema:sharedContent ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: sharedContent." ;
+  ] ;
+  sh:property [
+    sh:path schema:url ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: url." ;
+  ] ;
+  sh:property [
+    sh:path schema:video ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: video." ;
+  ] ;
+.
+
+:google_DiscussionForumPostingShape
+  a sh:NodeShape ;
+  sh:targetClass schema:DiscussionForumPosting ;
+  sh:property [
+    sh:path schema:author ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:datePublished ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:name ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:text ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:comment ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: comment." ;
+  ] ;
+  sh:property [
+    sh:path schema:creativeWorkStatus ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: creativeWorkStatus." ;
+  ] ;
+  sh:property [
+    sh:path schema:dateModified ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: dateModified." ;
+  ] ;
+  sh:property [
+    sh:path schema:headline ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: headline." ;
+  ] ;
+  sh:property [
+    sh:path schema:image ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: image." ;
+  ] ;
+  sh:property [
+    sh:path schema:interactionStatistic ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: interactionStatistic." ;
+  ] ;
+  sh:property [
+    sh:path schema:isPartOf ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: isPartOf." ;
+  ] ;
+  sh:property [
+    sh:path schema:sharedContent ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: sharedContent." ;
+  ] ;
+  sh:property [
+    sh:path schema:url ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: url." ;
+  ] ;
+  sh:property [
+    sh:path schema:video ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: video." ;
+  ] ;
+.
+
+:google_InteractionCounterShape
+  a sh:NodeShape ;
+  sh:targetClass schema:InteractionCounter ;
+  sh:property [
+    sh:path schema:interactionType ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:userInteractionCount ;
+    sh:minCount 1 ;
+  ] ;
+.
+
+:google_SocialMediaPostingShape
+  a sh:NodeShape ;
+  sh:targetClass schema:SocialMediaPosting ;
+  sh:property [
+    sh:path schema:author ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:datePublished ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:name ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:text ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:comment ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: comment." ;
+  ] ;
+  sh:property [
+    sh:path schema:creativeWorkStatus ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: creativeWorkStatus." ;
+  ] ;
+  sh:property [
+    sh:path schema:dateModified ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: dateModified." ;
+  ] ;
+  sh:property [
+    sh:path schema:headline ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: headline." ;
+  ] ;
+  sh:property [
+    sh:path schema:image ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: image." ;
+  ] ;
+  sh:property [
+    sh:path schema:interactionStatistic ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: interactionStatistic." ;
+  ] ;
+  sh:property [
+    sh:path schema:isPartOf ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: isPartOf." ;
+  ] ;
+  sh:property [
+    sh:path schema:sharedContent ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: sharedContent." ;
+  ] ;
+  sh:property [
+    sh:path schema:url ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: url." ;
+  ] ;
+  sh:property [
+    sh:path schema:video ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: video." ;
+  ] ;
+.

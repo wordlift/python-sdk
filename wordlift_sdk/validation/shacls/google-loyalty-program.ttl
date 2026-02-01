@@ -1,0 +1,61 @@
+@prefix : <https://wordlift.io/shacl/google/google-loyalty-program/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix schema: <http://schema.org/> .
+
+# Source: https://developers.google.com/search/docs/appearance/structured-data/loyalty-program
+# Generated: 2026-01-13T11:23:45Z
+# Notes: required properties => errors; recommended properties => warnings.
+
+:google_MemberProgramShape
+  a sh:NodeShape ;
+  sh:targetClass schema:MemberProgram ;
+  sh:property [
+    sh:path schema:description ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:hasTiers ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:name ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:url ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: url." ;
+  ] ;
+.
+
+:google_MemberProgramTierShape
+  a sh:NodeShape ;
+  sh:targetClass schema:MemberProgramTier ;
+  sh:property [
+    sh:path schema:hasTierBenefit ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:name ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:hasTierRequirement ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: hasTierRequirement." ;
+  ] ;
+  sh:property [
+    sh:path schema:membershipPointsEarned ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: membershipPointsEarned." ;
+  ] ;
+  sh:property [
+    sh:path schema:url ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: url." ;
+  ] ;
+.

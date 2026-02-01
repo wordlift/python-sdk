@@ -1,0 +1,75 @@
+@prefix : <https://wordlift.io/shacl/google/google-education-qa/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix schema: <http://schema.org/> .
+
+# Source: https://developers.google.com/search/docs/appearance/structured-data/education-qa
+# Generated: 2026-01-13T11:23:22Z
+# Notes: required properties => errors; recommended properties => warnings.
+
+:google_QuestionShape
+  a sh:NodeShape ;
+  sh:targetClass schema:Question ;
+  sh:property [
+    sh:path schema:acceptedAnswer ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:eduQuestionType ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:text ;
+    sh:minCount 1 ;
+  ] ;
+.
+
+:google_QuizShape
+  a sh:NodeShape ;
+  sh:targetClass schema:Quiz ;
+  sh:property [
+    sh:path schema:acceptedAnswer ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:eduQuestionType ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:hasPart ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:text ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:about ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: about." ;
+  ] ;
+  sh:property [
+    sh:path schema:alignmentType ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: alignmentType." ;
+  ] ;
+  sh:property [
+    sh:path schema:educationalAlignment ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: educationalAlignment." ;
+  ] ;
+  sh:property [
+    sh:path schema:name ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: name." ;
+  ] ;
+  sh:property [
+    sh:path schema:targetName ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: targetName." ;
+  ] ;
+.

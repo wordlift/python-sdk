@@ -1,0 +1,38 @@
+@prefix : <https://wordlift.io/shacl/google/google-faqpage/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix schema: <http://schema.org/> .
+
+# Source: https://developers.google.com/search/docs/appearance/structured-data/faqpage
+# Generated: 2026-01-13T11:23:28Z
+# Notes: required properties => errors; recommended properties => warnings.
+
+:google_AnswerShape
+  a sh:NodeShape ;
+  sh:targetClass schema:Answer ;
+  sh:property [
+    sh:path schema:text ;
+    sh:minCount 1 ;
+  ] ;
+.
+
+:google_FAQPageShape
+  a sh:NodeShape ;
+  sh:targetClass schema:FAQPage ;
+  sh:property [
+    sh:path schema:mainEntity ;
+    sh:minCount 1 ;
+  ] ;
+.
+
+:google_QuestionShape
+  a sh:NodeShape ;
+  sh:targetClass schema:Question ;
+  sh:property [
+    sh:path schema:acceptedAnswer ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:name ;
+    sh:minCount 1 ;
+  ] ;
+.

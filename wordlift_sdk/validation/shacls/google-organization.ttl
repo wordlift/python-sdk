@@ -1,0 +1,180 @@
+@prefix : <https://wordlift.io/shacl/google/google-organization/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix schema: <http://schema.org/> .
+
+# Source: https://developers.google.com/search/docs/appearance/structured-data/organization
+# Generated: 2026-01-13T11:23:36Z
+# Notes: required properties => errors; recommended properties => warnings.
+
+:google_OrganizationShape
+  a sh:NodeShape ;
+  sh:targetClass schema:Organization ;
+  sh:property [
+    sh:path schema:address ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: address." ;
+  ] ;
+  sh:property [
+    sh:path schema:addressCountry ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: addressCountry." ;
+  ] ;
+  sh:property [
+    sh:path schema:addressLocality ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: addressLocality." ;
+  ] ;
+  sh:property [
+    sh:path schema:addressRegion ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: addressRegion." ;
+  ] ;
+  sh:property [
+    sh:path schema:alternateName ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: alternateName." ;
+  ] ;
+  sh:property [
+    sh:path schema:contactPoint ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: contactPoint." ;
+  ] ;
+  sh:property [
+    sh:path schema:description ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: description." ;
+  ] ;
+  sh:property [
+    sh:path schema:duns ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: duns." ;
+  ] ;
+  sh:property [
+    sh:path schema:email ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: email." ;
+  ] ;
+  sh:property [
+    sh:path schema:foundingDate ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: foundingDate." ;
+  ] ;
+  sh:property [
+    sh:path schema:globalLocationNumber ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: globalLocationNumber." ;
+  ] ;
+  sh:property [
+    sh:path schema:hasMemberProgram ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: hasMemberProgram." ;
+  ] ;
+  sh:property [
+    sh:path schema:hasMerchantReturnPolicy ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: hasMerchantReturnPolicy." ;
+  ] ;
+  sh:property [
+    sh:path schema:hasShippingService ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: hasShippingService." ;
+  ] ;
+  sh:property [
+    sh:path schema:iso6523Code ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: iso6523Code." ;
+  ] ;
+  sh:property [
+    sh:path schema:legalName ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: legalName." ;
+  ] ;
+  sh:property [
+    sh:path schema:leiCode ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: leiCode." ;
+  ] ;
+  sh:property [
+    sh:path schema:logo ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: logo." ;
+  ] ;
+  sh:property [
+    sh:path schema:naics ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: naics." ;
+  ] ;
+  sh:property [
+    sh:path schema:name ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: name." ;
+  ] ;
+  sh:property [
+    sh:path schema:numberOfEmployees ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: numberOfEmployees." ;
+  ] ;
+  sh:property [
+    sh:path schema:postalCode ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: postalCode." ;
+  ] ;
+  sh:property [
+    sh:path schema:sameAs ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: sameAs." ;
+  ] ;
+  sh:property [
+    sh:path schema:streetAddress ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: streetAddress." ;
+  ] ;
+  sh:property [
+    sh:path schema:taxID ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: taxID." ;
+  ] ;
+  sh:property [
+    sh:path schema:telephone ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: telephone." ;
+  ] ;
+  sh:property [
+    sh:path schema:url ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: url." ;
+  ] ;
+  sh:property [
+    sh:path schema:vatID ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: vatID." ;
+  ] ;
+.

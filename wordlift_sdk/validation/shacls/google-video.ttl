@@ -1,0 +1,149 @@
+@prefix : <https://wordlift.io/shacl/google/google-video/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix schema: <http://schema.org/> .
+
+# Source: https://developers.google.com/search/docs/appearance/structured-data/video
+# Generated: 2026-01-13T11:24:02Z
+# Notes: required properties => errors; recommended properties => warnings.
+
+:google_BroadcastEventShape
+  a sh:NodeShape ;
+  sh:targetClass schema:BroadcastEvent ;
+  sh:property [
+    sh:path schema:endDate ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:isLiveBroadcast ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:publication ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:startDate ;
+    sh:minCount 1 ;
+  ] ;
+.
+
+:google_ClipShape
+  a sh:NodeShape ;
+  sh:targetClass schema:Clip ;
+  sh:property [
+    sh:path schema:name ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:startOffset ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:url ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:endOffset ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: endOffset." ;
+  ] ;
+.
+
+:google_SeekToActionShape
+  a sh:NodeShape ;
+  sh:targetClass schema:SeekToAction ;
+  sh:property [
+    sh:path schema:input ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:potentialAction ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:startOffset ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:target ;
+    sh:minCount 1 ;
+  ] ;
+.
+
+:google_VideoObjectShape
+  a sh:NodeShape ;
+  sh:targetClass schema:VideoObject ;
+  sh:property [
+    sh:path schema:name ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:thumbnailUrl ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:uploadDate ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:contentUrl ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: contentUrl." ;
+  ] ;
+  sh:property [
+    sh:path schema:description ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: description." ;
+  ] ;
+  sh:property [
+    sh:path schema:duration ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: duration." ;
+  ] ;
+  sh:property [
+    sh:path schema:embedUrl ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: embedUrl." ;
+  ] ;
+  sh:property [
+    sh:path schema:expires ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: expires." ;
+  ] ;
+  sh:property [
+    sh:path schema:hasPart ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: hasPart." ;
+  ] ;
+  sh:property [
+    sh:path schema:ineligibleRegion ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: ineligibleRegion." ;
+  ] ;
+  sh:property [
+    sh:path schema:interactionStatistic ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: interactionStatistic." ;
+  ] ;
+  sh:property [
+    sh:path schema:publication ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: publication." ;
+  ] ;
+  sh:property [
+    sh:path schema:regionsAllowed ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: regionsAllowed." ;
+  ] ;
+.

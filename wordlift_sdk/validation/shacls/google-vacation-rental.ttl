@@ -1,0 +1,278 @@
+@prefix : <https://wordlift.io/shacl/google/google-vacation-rental/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix schema: <http://schema.org/> .
+
+# Source: https://developers.google.com/search/docs/appearance/structured-data/vacation-rental
+# Generated: 2026-01-13T11:24:00Z
+# Notes: required properties => errors; recommended properties => warnings.
+
+:google_VacationRentalShape
+  a sh:NodeShape ;
+  sh:targetClass schema:VacationRental ;
+  sh:property [
+    sh:path schema:containsPlace ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:identifier ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:image ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:latitude ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:longitude ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:name ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:occupancy ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:value ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:additionalType ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: additionalType." ;
+  ] ;
+  sh:property [
+    sh:path schema:address ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: address." ;
+  ] ;
+  sh:property [
+    sh:path schema:addressCountry ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: addressCountry." ;
+  ] ;
+  sh:property [
+    sh:path schema:addressLocality ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: addressLocality." ;
+  ] ;
+  sh:property [
+    sh:path schema:addressRegion ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: addressRegion." ;
+  ] ;
+  sh:property [
+    sh:path schema:aggregateRating ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: aggregateRating." ;
+  ] ;
+  sh:property [
+    sh:path schema:airportShuttle ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: airportShuttle." ;
+  ] ;
+  sh:property [
+    sh:path schema:amenityFeature ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: amenityFeature." ;
+  ] ;
+  sh:property [
+    sh:path schema:balcony ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: balcony." ;
+  ] ;
+  sh:property [
+    sh:path schema:beachAccess ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: beachAccess." ;
+  ] ;
+  sh:property [
+    sh:path schema:brand ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: brand." ;
+  ] ;
+  sh:property [
+    sh:path schema:checkinTime ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: checkinTime." ;
+  ] ;
+  sh:property [
+    sh:path schema:checkoutTime ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: checkoutTime." ;
+  ] ;
+  sh:property [
+    sh:path schema:childFriendly ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: childFriendly." ;
+  ] ;
+  sh:property [
+    sh:path schema:crib ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: crib." ;
+  ] ;
+  sh:property [
+    sh:path schema:elevator ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: elevator." ;
+  ] ;
+  sh:property [
+    sh:path schema:fireplace ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: fireplace." ;
+  ] ;
+  sh:property [
+    sh:path schema:freeBreakfast ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: freeBreakfast." ;
+  ] ;
+  sh:property [
+    sh:path schema:gymFitnessEquipment ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: gymFitnessEquipment." ;
+  ] ;
+  sh:property [
+    sh:path schema:heating ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: heating." ;
+  ] ;
+  sh:property [
+    sh:path schema:hotTub ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: hotTub." ;
+  ] ;
+  sh:property [
+    sh:path schema:instantBookable ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: instantBookable." ;
+  ] ;
+  sh:property [
+    sh:path schema:ironingBoard ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: ironingBoard." ;
+  ] ;
+  sh:property [
+    sh:path schema:kitchen ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: kitchen." ;
+  ] ;
+  sh:property [
+    sh:path schema:microwave ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: microwave." ;
+  ] ;
+  sh:property [
+    sh:path schema:outdoorGrill ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: outdoorGrill." ;
+  ] ;
+  sh:property [
+    sh:path schema:ovenStove ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: ovenStove." ;
+  ] ;
+  sh:property [
+    sh:path schema:patio ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: patio." ;
+  ] ;
+  sh:property [
+    sh:path schema:petsAllowed ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: petsAllowed." ;
+  ] ;
+  sh:property [
+    sh:path schema:pool ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: pool." ;
+  ] ;
+  sh:property [
+    sh:path schema:postalCode ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: postalCode." ;
+  ] ;
+  sh:property [
+    sh:path schema:privateBeachAccess ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: privateBeachAccess." ;
+  ] ;
+  sh:property [
+    sh:path schema:selfCheckinCheckout ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: selfCheckinCheckout." ;
+  ] ;
+  sh:property [
+    sh:path schema:smokingAllowed ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: smokingAllowed." ;
+  ] ;
+  sh:property [
+    sh:path schema:streetAddress ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: streetAddress." ;
+  ] ;
+  sh:property [
+    sh:path schema:tv ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: tv." ;
+  ] ;
+  sh:property [
+    sh:path schema:washerDryer ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: washerDryer." ;
+  ] ;
+  sh:property [
+    sh:path schema:wheelchairAccessible ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: wheelchairAccessible." ;
+  ] ;
+  sh:property [
+    sh:path schema:wifi ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: wifi." ;
+  ] ;
+.

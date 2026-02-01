@@ -1,0 +1,86 @@
+@prefix : <https://wordlift.io/shacl/google/google-factcheck/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix schema: <http://schema.org/> .
+
+# Source: https://developers.google.com/search/docs/appearance/structured-data/factcheck
+# Generated: 2026-01-13T11:23:25Z
+# Notes: required properties => errors; recommended properties => warnings.
+
+:google_ClaimShape
+  a sh:NodeShape ;
+  sh:targetClass schema:Claim ;
+  sh:property [
+    sh:path schema:appearance ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: appearance." ;
+  ] ;
+  sh:property [
+    sh:path schema:author ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: author." ;
+  ] ;
+  sh:property [
+    sh:path schema:sameAs ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: sameAs." ;
+  ] ;
+.
+
+:google_ClaimReviewShape
+  a sh:NodeShape ;
+  sh:targetClass schema:ClaimReview ;
+  sh:property [
+    sh:path schema:claimReviewed ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:reviewRating ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:url ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:author ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: author." ;
+  ] ;
+.
+
+:google_RatingShape
+  a sh:NodeShape ;
+  sh:targetClass schema:Rating ;
+  sh:property [
+    sh:path schema:alternateName ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:bestRating ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: bestRating." ;
+  ] ;
+  sh:property [
+    sh:path schema:name ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: name." ;
+  ] ;
+  sh:property [
+    sh:path schema:ratingValue ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: ratingValue." ;
+  ] ;
+  sh:property [
+    sh:path schema:worstRating ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: worstRating." ;
+  ] ;
+.

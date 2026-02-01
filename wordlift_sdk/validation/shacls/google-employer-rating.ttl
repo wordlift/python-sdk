@@ -1,0 +1,40 @@
+@prefix : <https://wordlift.io/shacl/google/google-employer-rating/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix schema: <http://schema.org/> .
+
+# Source: https://developers.google.com/search/docs/appearance/structured-data/employer-rating
+# Generated: 2026-01-13T11:23:23Z
+# Notes: required properties => errors; recommended properties => warnings.
+
+:google_EmployerAggregateRatingShape
+  a sh:NodeShape ;
+  sh:targetClass schema:EmployerAggregateRating ;
+  sh:property [
+    sh:path schema:itemReviewed ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:ratingCount ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:ratingValue ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:reviewCount ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:bestRating ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: bestRating." ;
+  ] ;
+  sh:property [
+    sh:path schema:worstRating ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: worstRating." ;
+  ] ;
+.

@@ -1,0 +1,146 @@
+@prefix : <https://wordlift.io/shacl/google/google-dataset/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix schema: <http://schema.org/> .
+
+# Source: https://developers.google.com/search/docs/appearance/structured-data/dataset
+# Generated: 2026-01-13T11:23:19Z
+# Notes: required properties => errors; recommended properties => warnings.
+
+:google_DataCatalogShape
+  a sh:NodeShape ;
+  sh:targetClass schema:DataCatalog ;
+  sh:property [
+    sh:path schema:includedInDataCatalog ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: includedInDataCatalog." ;
+  ] ;
+.
+
+:google_DataDownloadShape
+  a sh:NodeShape ;
+  sh:targetClass schema:DataDownload ;
+  sh:property [
+    sh:path schema:contentUrl ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:distribution ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:encodingFormat ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: encodingFormat." ;
+  ] ;
+.
+
+:google_DatasetShape
+  a sh:NodeShape ;
+  sh:targetClass schema:Dataset ;
+  sh:property [
+    sh:path schema:description ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:name ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:alternateName ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: alternateName." ;
+  ] ;
+  sh:property [
+    sh:path schema:citation ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: citation." ;
+  ] ;
+  sh:property [
+    sh:path schema:creator ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: creator." ;
+  ] ;
+  sh:property [
+    sh:path schema:funder ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: funder." ;
+  ] ;
+  sh:property [
+    sh:path schema:hasPart ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: hasPart." ;
+  ] ;
+  sh:property [
+    sh:path schema:identifier ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: identifier." ;
+  ] ;
+  sh:property [
+    sh:path schema:isAccessibleForFree ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: isAccessibleForFree." ;
+  ] ;
+  sh:property [
+    sh:path schema:keywords ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: keywords." ;
+  ] ;
+  sh:property [
+    sh:path schema:license ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: license." ;
+  ] ;
+  sh:property [
+    sh:path schema:measurementTechnique ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: measurementTechnique." ;
+  ] ;
+  sh:property [
+    sh:path schema:sameAs ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: sameAs." ;
+  ] ;
+  sh:property [
+    sh:path schema:spatialCoverage ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: spatialCoverage." ;
+  ] ;
+  sh:property [
+    sh:path schema:temporalCoverage ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: temporalCoverage." ;
+  ] ;
+  sh:property [
+    sh:path schema:url ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: url." ;
+  ] ;
+  sh:property [
+    sh:path schema:variableMeasured ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: variableMeasured." ;
+  ] ;
+  sh:property [
+    sh:path schema:version ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: version." ;
+  ] ;
+.

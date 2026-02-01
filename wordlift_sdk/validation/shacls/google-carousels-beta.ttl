@@ -1,0 +1,291 @@
+@prefix : <https://wordlift.io/shacl/google/google-carousels-beta/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix schema: <http://schema.org/> .
+
+# Source: https://developers.google.com/search/docs/appearance/structured-data/carousels-beta
+# Generated: 2026-01-13T11:24:03Z
+# Notes: required properties => errors; recommended properties => warnings.
+
+:google_EventShape
+  a sh:NodeShape ;
+  sh:targetClass schema:Event ;
+  sh:property [
+    sh:path schema:image ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:name ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:url ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:aggregateRating ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: aggregateRating." ;
+  ] ;
+  sh:property [
+    sh:path schema:amenityFeature ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: amenityFeature." ;
+  ] ;
+  sh:property [
+    sh:path schema:bestRating ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: bestRating." ;
+  ] ;
+  sh:property [
+    sh:path schema:highPrice ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: highPrice." ;
+  ] ;
+  sh:property [
+    sh:path schema:lowPrice ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: lowPrice." ;
+  ] ;
+  sh:property [
+    sh:path schema:offers ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: offers." ;
+  ] ;
+  sh:property [
+    sh:path schema:price ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: price." ;
+  ] ;
+  sh:property [
+    sh:path schema:priceCurrency ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: priceCurrency." ;
+  ] ;
+  sh:property [
+    sh:path schema:priceRange ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: priceRange." ;
+  ] ;
+  sh:property [
+    sh:path schema:ratingCount ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: ratingCount." ;
+  ] ;
+  sh:property [
+    sh:path schema:ratingValue ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: ratingValue." ;
+  ] ;
+  sh:property [
+    sh:path schema:servesCuisine ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: servesCuisine." ;
+  ] ;
+.
+
+:google_ItemListShape
+  a sh:NodeShape ;
+  sh:targetClass schema:ItemList ;
+  sh:property [
+    sh:path schema:item ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:itemListElement ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:position ;
+    sh:minCount 1 ;
+  ] ;
+.
+
+:google_LocalBusinessShape
+  a sh:NodeShape ;
+  sh:targetClass schema:LocalBusiness ;
+  sh:property [
+    sh:path schema:image ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:name ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:url ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:aggregateRating ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: aggregateRating." ;
+  ] ;
+  sh:property [
+    sh:path schema:amenityFeature ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: amenityFeature." ;
+  ] ;
+  sh:property [
+    sh:path schema:bestRating ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: bestRating." ;
+  ] ;
+  sh:property [
+    sh:path schema:highPrice ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: highPrice." ;
+  ] ;
+  sh:property [
+    sh:path schema:lowPrice ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: lowPrice." ;
+  ] ;
+  sh:property [
+    sh:path schema:offers ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: offers." ;
+  ] ;
+  sh:property [
+    sh:path schema:price ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: price." ;
+  ] ;
+  sh:property [
+    sh:path schema:priceCurrency ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: priceCurrency." ;
+  ] ;
+  sh:property [
+    sh:path schema:priceRange ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: priceRange." ;
+  ] ;
+  sh:property [
+    sh:path schema:ratingCount ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: ratingCount." ;
+  ] ;
+  sh:property [
+    sh:path schema:ratingValue ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: ratingValue." ;
+  ] ;
+  sh:property [
+    sh:path schema:servesCuisine ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: servesCuisine." ;
+  ] ;
+.
+
+:google_ProductShape
+  a sh:NodeShape ;
+  sh:targetClass schema:Product ;
+  sh:property [
+    sh:path schema:image ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:name ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:url ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:aggregateRating ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: aggregateRating." ;
+  ] ;
+  sh:property [
+    sh:path schema:amenityFeature ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: amenityFeature." ;
+  ] ;
+  sh:property [
+    sh:path schema:bestRating ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: bestRating." ;
+  ] ;
+  sh:property [
+    sh:path schema:highPrice ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: highPrice." ;
+  ] ;
+  sh:property [
+    sh:path schema:lowPrice ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: lowPrice." ;
+  ] ;
+  sh:property [
+    sh:path schema:offers ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: offers." ;
+  ] ;
+  sh:property [
+    sh:path schema:price ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: price." ;
+  ] ;
+  sh:property [
+    sh:path schema:priceCurrency ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: priceCurrency." ;
+  ] ;
+  sh:property [
+    sh:path schema:priceRange ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: priceRange." ;
+  ] ;
+  sh:property [
+    sh:path schema:ratingCount ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: ratingCount." ;
+  ] ;
+  sh:property [
+    sh:path schema:ratingValue ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: ratingValue." ;
+  ] ;
+  sh:property [
+    sh:path schema:servesCuisine ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: servesCuisine." ;
+  ] ;
+.

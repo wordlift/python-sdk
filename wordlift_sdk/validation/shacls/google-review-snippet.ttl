@@ -1,0 +1,87 @@
+@prefix : <https://wordlift.io/shacl/google/google-review-snippet/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix schema: <http://schema.org/> .
+
+# Source: https://developers.google.com/search/docs/appearance/structured-data/review-snippet
+# Generated: 2026-01-13T11:23:56Z
+# Notes: required properties => errors; recommended properties => warnings.
+
+:google_AggregateRatingShape
+  a sh:NodeShape ;
+  sh:targetClass schema:AggregateRating ;
+  sh:property [
+    sh:path schema:itemReviewed ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:name ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:ratingCount ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:ratingValue ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:reviewCount ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:bestRating ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: bestRating." ;
+  ] ;
+  sh:property [
+    sh:path schema:worstRating ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: worstRating." ;
+  ] ;
+.
+
+:google_ReviewShape
+  a sh:NodeShape ;
+  sh:targetClass schema:Review ;
+  sh:property [
+    sh:path schema:author ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:itemReviewed ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:name ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:ratingValue ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:reviewRating ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:bestRating ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: bestRating." ;
+  ] ;
+  sh:property [
+    sh:path schema:datePublished ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: datePublished." ;
+  ] ;
+  sh:property [
+    sh:path schema:worstRating ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: worstRating." ;
+  ] ;
+.

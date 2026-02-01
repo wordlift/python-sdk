@@ -1,0 +1,20 @@
+@prefix : <https://wordlift.io/shacl/google/google-speakable/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix schema: <http://schema.org/> .
+
+# Source: https://developers.google.com/search/docs/appearance/structured-data/speakable
+# Generated: 2026-01-13T11:23:58Z
+# Notes: required properties => errors; recommended properties => warnings.
+
+:google_speakableShape
+  a sh:NodeShape ;
+  sh:targetClass schema:speakable ;
+  sh:property [
+    sh:path schema:cssSelector ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:xPath ;
+    sh:minCount 1 ;
+  ] ;
+.

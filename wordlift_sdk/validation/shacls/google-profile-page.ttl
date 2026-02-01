@@ -1,0 +1,130 @@
+@prefix : <https://wordlift.io/shacl/google/google-profile-page/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix schema: <http://schema.org/> .
+
+# Source: https://developers.google.com/search/docs/appearance/structured-data/profile-page
+# Generated: 2026-01-13T11:23:51Z
+# Notes: required properties => errors; recommended properties => warnings.
+
+:google_OrganizationShape
+  a sh:NodeShape ;
+  sh:targetClass schema:Organization ;
+  sh:property [
+    sh:path schema:name ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:agentInteractionStatistic ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: agentInteractionStatistic." ;
+  ] ;
+  sh:property [
+    sh:path schema:alternateName ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: alternateName." ;
+  ] ;
+  sh:property [
+    sh:path schema:description ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: description." ;
+  ] ;
+  sh:property [
+    sh:path schema:identifier ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: identifier." ;
+  ] ;
+  sh:property [
+    sh:path schema:image ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: image." ;
+  ] ;
+  sh:property [
+    sh:path schema:interactionStatistic ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: interactionStatistic." ;
+  ] ;
+  sh:property [
+    sh:path schema:sameAs ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: sameAs." ;
+  ] ;
+.
+
+:google_PersonShape
+  a sh:NodeShape ;
+  sh:targetClass schema:Person ;
+  sh:property [
+    sh:path schema:name ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:agentInteractionStatistic ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: agentInteractionStatistic." ;
+  ] ;
+  sh:property [
+    sh:path schema:alternateName ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: alternateName." ;
+  ] ;
+  sh:property [
+    sh:path schema:description ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: description." ;
+  ] ;
+  sh:property [
+    sh:path schema:identifier ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: identifier." ;
+  ] ;
+  sh:property [
+    sh:path schema:image ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: image." ;
+  ] ;
+  sh:property [
+    sh:path schema:interactionStatistic ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: interactionStatistic." ;
+  ] ;
+  sh:property [
+    sh:path schema:sameAs ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: sameAs." ;
+  ] ;
+.
+
+:google_ProfilePageShape
+  a sh:NodeShape ;
+  sh:targetClass schema:ProfilePage ;
+  sh:property [
+    sh:path schema:mainEntity ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:dateCreated ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: dateCreated." ;
+  ] ;
+  sh:property [
+    sh:path schema:dateModified ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: dateModified." ;
+  ] ;
+.

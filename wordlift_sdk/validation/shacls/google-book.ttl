@@ -1,0 +1,660 @@
+@prefix : <https://wordlift.io/shacl/google/google-book/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix schema: <http://schema.org/> .
+
+# Source: https://developers.google.com/search/docs/appearance/structured-data/book
+# Generated: 2026-01-13T11:23:13Z
+# Notes: required properties => errors; recommended properties => warnings.
+
+:google_AndroidPlatformShape
+  a sh:NodeShape ;
+  sh:targetClass schema:AndroidPlatform ;
+  sh:property [
+    sh:path schema:actionPlatform ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:additionalProperty ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:addressCountry ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:addressLocality ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:addressRegion ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:category ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:context ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:eligibleRegion ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:expectsAcceptanceOf ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:id ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:lender ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:location ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:member ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:name ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:postalCode ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:streetAddress ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:target ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:type ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:url ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:urlTemplate ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:value ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:availabilityEnds ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: availabilityEnds." ;
+  ] ;
+  sh:property [
+    sh:path schema:availabilityStarts ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: availabilityStarts." ;
+  ] ;
+  sh:property [
+    sh:path schema:price ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: price." ;
+  ] ;
+  sh:property [
+    sh:path schema:priceCurrency ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: priceCurrency." ;
+  ] ;
+.
+
+:google_BookShape
+  a sh:NodeShape ;
+  sh:targetClass schema:Book ;
+  sh:property [
+    sh:path schema:author ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:bookFormat ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:context ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:id ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:inLanguage ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:isbn ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:name ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:potentialAction ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:type ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:url ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:workExample ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:bookEdition ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: bookEdition." ;
+  ] ;
+  sh:property [
+    sh:path schema:datePublished ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: datePublished." ;
+  ] ;
+  sh:property [
+    sh:path schema:identifier ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: identifier." ;
+  ] ;
+  sh:property [
+    sh:path schema:sameAs ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: sameAs." ;
+  ] ;
+.
+
+:google_DataFeedShape
+  a sh:NodeShape ;
+  sh:targetClass schema:DataFeed ;
+  sh:property [
+    sh:path schema:context ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:dataFeedElement ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:type ;
+    sh:minCount 1 ;
+  ] ;
+.
+
+:google_DesktopWebPlatformShape
+  a sh:NodeShape ;
+  sh:targetClass schema:DesktopWebPlatform ;
+  sh:property [
+    sh:path schema:actionPlatform ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:additionalProperty ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:addressCountry ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:addressLocality ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:addressRegion ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:category ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:context ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:eligibleRegion ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:expectsAcceptanceOf ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:id ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:lender ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:location ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:member ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:name ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:postalCode ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:streetAddress ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:target ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:type ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:url ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:urlTemplate ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:value ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:availabilityEnds ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: availabilityEnds." ;
+  ] ;
+  sh:property [
+    sh:path schema:availabilityStarts ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: availabilityStarts." ;
+  ] ;
+  sh:property [
+    sh:path schema:price ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: price." ;
+  ] ;
+  sh:property [
+    sh:path schema:priceCurrency ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: priceCurrency." ;
+  ] ;
+.
+
+:google_EBookShape
+  a sh:NodeShape ;
+  sh:targetClass schema:EBook ;
+  sh:property [
+    sh:path schema:name ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:propertyID ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:type ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:value ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:sameAs ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: sameAs." ;
+  ] ;
+.
+
+:google_HardcoverShape
+  a sh:NodeShape ;
+  sh:targetClass schema:Hardcover ;
+  sh:property [
+    sh:path schema:actionPlatform ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:category ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:eligibleRegion ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:expectsAcceptanceOf ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:name ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:propertyID ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:target ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:type ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:urlTemplate ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:value ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:availabilityEnds ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: availabilityEnds." ;
+  ] ;
+  sh:property [
+    sh:path schema:availabilityStarts ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: availabilityStarts." ;
+  ] ;
+  sh:property [
+    sh:path schema:price ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: price." ;
+  ] ;
+  sh:property [
+    sh:path schema:priceCurrency ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: priceCurrency." ;
+  ] ;
+  sh:property [
+    sh:path schema:sameAs ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: sameAs." ;
+  ] ;
+.
+
+:google_IOSPlatformShape
+  a sh:NodeShape ;
+  sh:targetClass schema:IOSPlatform ;
+  sh:property [
+    sh:path schema:actionPlatform ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:additionalProperty ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:addressCountry ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:addressLocality ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:addressRegion ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:category ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:context ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:eligibleRegion ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:expectsAcceptanceOf ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:id ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:lender ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:location ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:member ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:name ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:postalCode ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:streetAddress ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:target ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:type ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:url ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:urlTemplate ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:value ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:availabilityEnds ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: availabilityEnds." ;
+  ] ;
+  sh:property [
+    sh:path schema:availabilityStarts ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: availabilityStarts." ;
+  ] ;
+  sh:property [
+    sh:path schema:price ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: price." ;
+  ] ;
+  sh:property [
+    sh:path schema:priceCurrency ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: priceCurrency." ;
+  ] ;
+.
+
+:google_LibraryShape
+  a sh:NodeShape ;
+  sh:targetClass schema:Library ;
+  sh:property [
+    sh:path schema:additionalProperty ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:addressCountry ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:addressLocality ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:addressRegion ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:context ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:id ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:location ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:member ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:name ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:postalCode ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:streetAddress ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:type ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:url ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:value ;
+    sh:minCount 1 ;
+  ] ;
+.
+
+:google_PaperbackShape
+  a sh:NodeShape ;
+  sh:targetClass schema:Paperback ;
+  sh:property [
+    sh:path schema:actionPlatform ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:category ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:eligibleRegion ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:expectsAcceptanceOf ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:name ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:target ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:type ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:urlTemplate ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:availabilityEnds ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: availabilityEnds." ;
+  ] ;
+  sh:property [
+    sh:path schema:availabilityStarts ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: availabilityStarts." ;
+  ] ;
+  sh:property [
+    sh:path schema:price ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: price." ;
+  ] ;
+  sh:property [
+    sh:path schema:priceCurrency ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: priceCurrency." ;
+  ] ;
+.

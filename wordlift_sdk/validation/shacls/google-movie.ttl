@@ -1,0 +1,44 @@
+@prefix : <https://wordlift.io/shacl/google/google-movie/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix schema: <http://schema.org/> .
+
+# Source: https://developers.google.com/search/docs/appearance/structured-data/movie
+# Generated: 2026-01-13T11:23:35Z
+# Notes: required properties => errors; recommended properties => warnings.
+
+:google_MovieShape
+  a sh:NodeShape ;
+  sh:targetClass schema:Movie ;
+  sh:property [
+    sh:path schema:image ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:name ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:aggregateRating ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: aggregateRating." ;
+  ] ;
+  sh:property [
+    sh:path schema:dateCreated ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: dateCreated." ;
+  ] ;
+  sh:property [
+    sh:path schema:director ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: director." ;
+  ] ;
+  sh:property [
+    sh:path schema:review ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: review." ;
+  ] ;
+.

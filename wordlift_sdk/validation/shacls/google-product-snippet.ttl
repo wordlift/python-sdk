@@ -1,0 +1,121 @@
+@prefix : <https://wordlift.io/shacl/google/google-product-snippet/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix schema: <http://schema.org/> .
+
+# Source: https://developers.google.com/search/docs/appearance/structured-data/product-snippet
+# Generated: 2026-01-13T11:23:39Z
+# Notes: required properties => errors; recommended properties => warnings.
+
+:google_AggregateOfferShape
+  a sh:NodeShape ;
+  sh:targetClass schema:AggregateOffer ;
+  sh:property [
+    sh:path schema:lowPrice ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:priceCurrency ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:highPrice ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: highPrice." ;
+  ] ;
+  sh:property [
+    sh:path schema:offerCount ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: offerCount." ;
+  ] ;
+.
+
+:google_OfferShape
+  a sh:NodeShape ;
+  sh:targetClass schema:Offer ;
+  sh:property [
+    sh:path schema:price ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:availability ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: availability." ;
+  ] ;
+  sh:property [
+    sh:path schema:priceCurrency ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: priceCurrency." ;
+  ] ;
+  sh:property [
+    sh:path schema:priceValidUntil ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: priceValidUntil." ;
+  ] ;
+.
+
+:google_ProductShape
+  a sh:NodeShape ;
+  sh:targetClass schema:Product ;
+  sh:property [
+    sh:path schema:itemListElement ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:name ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:review ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:aggregateRating ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: aggregateRating." ;
+  ] ;
+  sh:property [
+    sh:path schema:negativeNotes ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: negativeNotes." ;
+  ] ;
+  sh:property [
+    sh:path schema:offers ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: offers." ;
+  ] ;
+  sh:property [
+    sh:path schema:position ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: position." ;
+  ] ;
+  sh:property [
+    sh:path schema:positiveNotes ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: positiveNotes." ;
+  ] ;
+.
+
+:google_UnitPriceSpecificationShape
+  a sh:NodeShape ;
+  sh:targetClass schema:UnitPriceSpecification ;
+  sh:property [
+    sh:path schema:price ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:priceCurrency ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: priceCurrency." ;
+  ] ;
+.
