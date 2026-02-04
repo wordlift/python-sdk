@@ -18,7 +18,7 @@ pip install wordlift-sdk
 poetry add wordlift-sdk
 ```
 
-Requires Python 3.10–3.13.
+Requires Python 3.10–3.14.
 
 ## Configuration
 
