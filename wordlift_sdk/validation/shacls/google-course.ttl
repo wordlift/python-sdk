@@ -3,7 +3,7 @@
 @prefix schema: <http://schema.org/> .
 
 # Source: https://developers.google.com/search/docs/appearance/structured-data/course
-# Generated: 2026-01-13T11:23:18Z
+# Generated: 2026-02-04T20:09:17Z
 # Notes: required properties => errors; recommended properties => warnings.
 
 :google_CourseShape
@@ -29,15 +29,15 @@
   a sh:NodeShape ;
   sh:targetClass schema:ItemList ;
   sh:property [
+    sh:path ( schema:ListItem schema:position ) ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path ( schema:ListItem schema:url ) ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
     sh:path schema:itemListElement ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:position ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:url ;
     sh:minCount 1 ;
   ] ;
 .

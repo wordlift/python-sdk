@@ -3,18 +3,18 @@
 @prefix schema: <http://schema.org/> .
 
 # Source: https://developers.google.com/search/docs/appearance/structured-data/merchant-listing
-# Generated: 2026-01-13T11:23:41Z
+# Generated: 2026-02-04T20:09:18Z
 # Notes: required properties => errors; recommended properties => warnings.
 
 :google_3DModelShape
   a sh:NodeShape ;
   sh:targetClass schema:3DModel ;
   sh:property [
-    sh:path schema:contentUrl ;
+    sh:path schema:encoding ;
     sh:minCount 1 ;
   ] ;
   sh:property [
-    sh:path schema:encoding ;
+    sh:path ( schema:encoding schema:contentUrl ) ;
     sh:minCount 1 ;
   ] ;
 .
@@ -40,62 +40,11 @@
   ] ;
 .
 
-:google_OfferShape
-  a sh:NodeShape ;
-  sh:targetClass schema:Offer ;
-  sh:property [
-    sh:path schema:price ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:priceCurrency ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:priceSpecification ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:availability ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: availability." ;
-  ] ;
-  sh:property [
-    sh:path schema:hasMerchantReturnPolicy ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: hasMerchantReturnPolicy." ;
-  ] ;
-  sh:property [
-    sh:path schema:itemCondition ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: itemCondition." ;
-  ] ;
-  sh:property [
-    sh:path schema:shippingDetails ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: shippingDetails." ;
-  ] ;
-  sh:property [
-    sh:path schema:url ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: url." ;
-  ] ;
-.
-
 :google_OfferShippingDetailsShape
   a sh:NodeShape ;
   sh:targetClass schema:OfferShippingDetails ;
   sh:property [
     sh:path schema:addressCountry ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:currency ;
     sh:minCount 1 ;
   ] ;
   sh:property [
@@ -111,7 +60,11 @@
     sh:minCount 1 ;
   ] ;
   sh:property [
-    sh:path schema:value ;
+    sh:path ( schema:shippingRate schema:currency ) ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path ( schema:shippingRate schema:value ) ;
     sh:minCount 1 ;
   ] ;
   sh:property [
@@ -165,6 +118,52 @@
   sh:property [
     sh:path schema:offers ;
     sh:minCount 1 ;
+    sh:node [
+      a sh:NodeShape ;
+      sh:class schema:Offer ;
+      sh:property [
+        sh:path schema:price ;
+        sh:minCount 1 ;
+      ] ;
+      sh:property [
+        sh:path schema:priceCurrency ;
+        sh:minCount 1 ;
+      ] ;
+      sh:property [
+        sh:path schema:priceSpecification ;
+        sh:minCount 1 ;
+      ] ;
+      sh:property [
+        sh:path schema:availability ;
+        sh:minCount 1 ;
+        sh:severity sh:Warning ;
+        sh:message "Recommended by Google: availability." ;
+      ] ;
+      sh:property [
+        sh:path schema:hasMerchantReturnPolicy ;
+        sh:minCount 1 ;
+        sh:severity sh:Warning ;
+        sh:message "Recommended by Google: hasMerchantReturnPolicy." ;
+      ] ;
+      sh:property [
+        sh:path schema:itemCondition ;
+        sh:minCount 1 ;
+        sh:severity sh:Warning ;
+        sh:message "Recommended by Google: itemCondition." ;
+      ] ;
+      sh:property [
+        sh:path schema:shippingDetails ;
+        sh:minCount 1 ;
+        sh:severity sh:Warning ;
+        sh:message "Recommended by Google: shippingDetails." ;
+      ] ;
+      sh:property [
+        sh:path schema:url ;
+        sh:minCount 1 ;
+        sh:severity sh:Warning ;
+        sh:message "Recommended by Google: url." ;
+      ] ;
+    ] ;
   ] ;
   sh:property [
     sh:path schema:aggregateRating ;
@@ -179,10 +178,10 @@
     sh:message "Recommended by Google: audience." ;
   ] ;
   sh:property [
-    sh:path schema:brand ;
+    sh:path ( schema:brand schema:name ) ;
     sh:minCount 1 ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: brand." ;
+    sh:message "Recommended by Google: brand.name." ;
   ] ;
   sh:property [
     sh:path schema:color ;

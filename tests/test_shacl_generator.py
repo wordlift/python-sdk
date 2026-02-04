@@ -31,6 +31,173 @@ def test_scopes_listitem_under_itemlist(tmp_path: Path) -> None:
     assert "sh:path schema:url" in content
 
 
+def test_scopes_listitem_under_breadcrumb_list(tmp_path: Path) -> None:
+    feature = FeatureData(
+        url="https://example.com",
+        types={
+            "BreadcrumbList": {"required": {"itemListElement"}, "recommended": set()},
+            "ListItem": {
+                "required": {"position", "name", "item"},
+                "recommended": set(),
+            },
+        },
+    )
+
+    content = _read_output(tmp_path, feature)
+
+    assert "sh:targetClass schema:BreadcrumbList" in content
+    assert "sh:targetClass schema:ListItem" not in content
+    assert "sh:path schema:itemListElement" in content
+    assert "sh:node [" in content
+    assert "sh:class schema:ListItem" in content
+    assert "sh:path schema:position" in content
+
+
+def test_scopes_question_under_qapage(tmp_path: Path) -> None:
+    feature = FeatureData(
+        url="https://example.com",
+        types={
+            "QAPage": {"required": {"mainEntity"}, "recommended": set()},
+            "Question": {
+                "required": {"acceptedAnswer", "suggestedAnswer"},
+                "recommended": {"comment"},
+            },
+            "Answer": {"required": {"text"}, "recommended": {"comment"}},
+            "Comment": {"required": {"text"}, "recommended": set()},
+        },
+    )
+
+    content = _read_output(tmp_path, feature)
+
+    assert "sh:targetClass schema:QAPage" in content
+    assert "sh:targetClass schema:Question" not in content
+    assert "sh:targetClass schema:Answer" not in content
+    assert "sh:targetClass schema:Comment" not in content
+    assert "sh:path schema:mainEntity" in content
+    assert "sh:class schema:Question" in content
+    assert "sh:path schema:acceptedAnswer" in content
+    assert "sh:class schema:Answer" in content
+    assert "sh:path schema:comment" in content
+    assert "sh:class schema:Comment" in content
+
+
+def test_scopes_question_under_faqpage(tmp_path: Path) -> None:
+    feature = FeatureData(
+        url="https://example.com",
+        types={
+            "FAQPage": {"required": {"mainEntity"}, "recommended": set()},
+            "Question": {"required": {"acceptedAnswer", "name"}, "recommended": set()},
+            "Answer": {"required": {"text"}, "recommended": set()},
+        },
+    )
+
+    content = _read_output(tmp_path, feature)
+
+    assert "sh:targetClass schema:FAQPage" in content
+    assert "sh:targetClass schema:Question" not in content
+    assert "sh:targetClass schema:Answer" not in content
+    assert "sh:path schema:mainEntity" in content
+    assert "sh:class schema:Question" in content
+    assert "sh:path schema:acceptedAnswer" in content
+    assert "sh:class schema:Answer" in content
+
+
+def test_scopes_question_under_quiz(tmp_path: Path) -> None:
+    feature = FeatureData(
+        url="https://example.com",
+        types={
+            "Quiz": {"required": {"hasPart"}, "recommended": set()},
+            "Question": {
+                "required": {"acceptedAnswer", "eduQuestionType", "text"},
+                "recommended": set(),
+            },
+        },
+    )
+
+    content = _read_output(tmp_path, feature)
+
+    assert "sh:targetClass schema:Quiz" in content
+    assert "sh:targetClass schema:Question" not in content
+    assert "sh:path schema:hasPart" in content
+    assert "sh:class schema:Question" in content
+
+
+def test_scopes_offer_under_product(tmp_path: Path) -> None:
+    feature = FeatureData(
+        url="https://example.com",
+        types={
+            "Product": {"required": {"offers"}, "recommended": set()},
+            "Offer": {"required": {"price"}, "recommended": set()},
+        },
+    )
+
+    content = _read_output(tmp_path, feature)
+
+    assert "sh:targetClass schema:Product" in content
+    assert "sh:targetClass schema:Offer" not in content
+    assert "sh:path schema:offers" in content
+    assert "sh:class schema:Offer" in content
+
+
+def test_scopes_howtostep_under_recipe(tmp_path: Path) -> None:
+    feature = FeatureData(
+        url="https://example.com",
+        types={
+            "Recipe": {"required": {"recipeInstructions"}, "recommended": set()},
+            "HowToStep": {"required": {"text"}, "recommended": set()},
+        },
+    )
+
+    content = _read_output(tmp_path, feature)
+
+    assert "sh:targetClass schema:Recipe" in content
+    assert "sh:targetClass schema:HowToStep" not in content
+    assert "sh:path schema:recipeInstructions" in content
+    assert "sh:class schema:HowToStep" in content
+
+
+def test_scopes_profilepage_mainentity_person_or_org(tmp_path: Path) -> None:
+    feature = FeatureData(
+        url="https://example.com",
+        types={
+            "ProfilePage": {"required": {"mainEntity"}, "recommended": set()},
+            "Person": {"required": {"name"}, "recommended": set()},
+            "Organization": {"required": {"name"}, "recommended": set()},
+        },
+    )
+
+    content = _read_output(tmp_path, feature)
+
+    assert "sh:targetClass schema:ProfilePage" in content
+    assert "sh:targetClass schema:Person" not in content
+    assert "sh:targetClass schema:Organization" not in content
+    assert "sh:path schema:mainEntity" in content
+    assert "sh:or (" in content
+    assert "sh:class schema:Person" in content
+    assert "sh:class schema:Organization" in content
+
+
+def test_scopes_course_parts(tmp_path: Path) -> None:
+    feature = FeatureData(
+        url="https://example.com",
+        types={
+            "Course": {"required": {"provider", "hasPart"}, "recommended": set()},
+            "Organization": {"required": {"name"}, "recommended": set()},
+            "CreativeWork": {"required": {"name"}, "recommended": set()},
+        },
+    )
+
+    content = _read_output(tmp_path, feature)
+
+    assert "sh:targetClass schema:Course" in content
+    assert "sh:targetClass schema:Organization" not in content
+    assert "sh:targetClass schema:CreativeWork" not in content
+    assert "sh:path schema:provider" in content
+    assert "sh:class schema:Organization" in content
+    assert "sh:path schema:hasPart" in content
+    assert "sh:class schema:CreativeWork" in content
+
+
 def test_keeps_listitem_shape_without_itemlist(tmp_path: Path) -> None:
     feature = FeatureData(
         url="https://example.com",

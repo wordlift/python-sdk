@@ -92,7 +92,7 @@ Add `.ttl.liquid` files under `data/templates`. Templates render with `account` 
 
 ## Validation
 
-SHACL validation utilities and generated Google Search Gallery shapes are included. Carousel `ListItem` requirements are scoped under `ItemList` when both types are present to avoid enforcing carousel constraints on non-carousel lists (for example, `BreadcrumbList`).
+SHACL validation utilities and generated Google Search Gallery shapes are included. When a feature includes both container types (for example `ItemList`, `BreadcrumbList`, `QAPage`, `FAQPage`, `Quiz`, `ProfilePage`, `Product`, `Recipe`, `Course`) and their contained types (`ListItem`, `Question`, `Answer`, `Comment`, `Offer`, `HowToStep`, `Person`, `Organization`), the generator scopes the contained constraints under the container properties to avoid enforcing them on unrelated nodes.
 
 ## Testing
 

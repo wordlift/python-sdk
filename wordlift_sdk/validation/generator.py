@@ -169,13 +169,135 @@ def _prop_path(prop: str) -> str:
     return f"( {seq} )"
 
 
+_SCOPED_CHILD_RULES: dict[str, dict[str, list[str]]] = {
+    "ItemList": {"itemListElement": ["ListItem"]},
+    "BreadcrumbList": {"itemListElement": ["ListItem"]},
+    "QAPage": {"mainEntity": ["Question"]},
+    "FAQPage": {"mainEntity": ["Question"]},
+    "Quiz": {"hasPart": ["Question"]},
+    "ProfilePage": {"mainEntity": ["Person", "Organization"]},
+    "Question": {
+        "acceptedAnswer": ["Answer"],
+        "suggestedAnswer": ["Answer"],
+        "comment": ["Comment"],
+    },
+    "Answer": {"comment": ["Comment"]},
+    "Product": {"offers": ["Offer"]},
+    "Recipe": {"recipeInstructions": ["HowToStep"], "step": ["HowToStep"]},
+    "Course": {"provider": ["Organization"], "hasPart": ["Course", "CreativeWork"]},
+}
+
+
+def _emit_property(
+    lines: list[str],
+    prop: str,
+    required: bool,
+    child_types: list[str] | None,
+    indent: int,
+    buckets: dict[str, dict[str, set[str]]],
+    visited: set[str],
+) -> None:
+    sp = " " * indent
+    path = _prop_path(prop)
+    lines.append(f"{sp}sh:property [")
+    lines.append(f"{sp}  sh:path {path} ;")
+    lines.append(f"{sp}  sh:minCount 1 ;")
+    if not required:
+        lines.append(f"{sp}  sh:severity sh:Warning ;")
+        lines.append(f'{sp}  sh:message "Recommended by Google: {prop}." ;')
+    if child_types:
+        valid_children = [
+            child_type
+            for child_type in child_types
+            if child_type not in visited and child_type in buckets
+        ]
+        if len(valid_children) == 1:
+            child_type = valid_children[0]
+            child_bucket = buckets.get(child_type)
+            node_indent = indent + 2
+            node_sp = " " * node_indent
+            lines.append(f"{node_sp}sh:node [")
+            _emit_node(
+                lines,
+                child_type,
+                child_bucket,
+                node_indent + 2,
+                buckets,
+                visited | {child_type},
+            )
+            lines.append(f"{node_sp}] ;")
+        elif len(valid_children) > 1:
+            or_indent = indent + 2
+            or_sp = " " * or_indent
+            lines.append(f"{or_sp}sh:or (")
+            for child_type in valid_children:
+                child_bucket = buckets.get(child_type)
+                lines.append(f"{or_sp}  [")
+                _emit_node(
+                    lines,
+                    child_type,
+                    child_bucket,
+                    or_indent + 4,
+                    buckets,
+                    visited | {child_type},
+                )
+                lines.append(f"{or_sp}  ]")
+            lines.append(f"{or_sp}) ;")
+    lines.append(f"{sp}] ;")
+
+
+def _emit_node(
+    lines: list[str],
+    type_name: str,
+    bucket: dict[str, set[str]],
+    indent: int,
+    buckets: dict[str, dict[str, set[str]]],
+    visited: set[str],
+) -> None:
+    sp = " " * indent
+    lines.append(f"{sp}a sh:NodeShape ;")
+    lines.append(f"{sp}sh:class schema:{type_name} ;")
+
+    child_rules = _SCOPED_CHILD_RULES.get(type_name, {})
+    for prop in sorted(bucket["required"]):
+        child_types = child_rules.get(prop)
+        _emit_property(
+            lines,
+            prop,
+            required=True,
+            child_types=child_types,
+            indent=indent,
+            buckets=buckets,
+            visited=visited,
+        )
+
+    for prop in sorted(bucket["recommended"]):
+        child_types = child_rules.get(prop)
+        _emit_property(
+            lines,
+            prop,
+            required=False,
+            child_types=child_types,
+            indent=indent,
+            buckets=buckets,
+            visited=visited,
+        )
+
+
 def _write_feature(feature: FeatureData, output_path: Path, overwrite: bool) -> bool:
     if output_path.exists() and not overwrite:
         return False
 
-    scoped_list_item = None
-    if "ItemList" in feature.types and "ListItem" in feature.types:
-        scoped_list_item = feature.types["ListItem"]
+    scoped_types: set[str] = set()
+    for parent_type, rules in _SCOPED_CHILD_RULES.items():
+        if parent_type not in feature.types:
+            continue
+        for child_types in rules.values():
+            for child_type in child_types:
+                if child_type == parent_type:
+                    continue
+                if child_type in feature.types:
+                    scoped_types.add(child_type)
 
     lines: list[str] = []
     slug = output_path.stem
@@ -186,7 +308,8 @@ def _write_feature(feature: FeatureData, output_path: Path, overwrite: bool) -> 
     lines.append("")
     lines.append(f"# Source: {feature.url}")
     lines.append(
-        f"# Generated: {datetime.now(timezone.utc).isoformat(timespec='seconds')}Z"
+        "# Generated: "
+        f"{datetime.now(timezone.utc).isoformat(timespec='seconds').replace('+00:00', 'Z')}"
     )
     lines.append(
         "# Notes: required properties => errors; recommended properties => warnings."
@@ -194,7 +317,7 @@ def _write_feature(feature: FeatureData, output_path: Path, overwrite: bool) -> 
     lines.append("")
 
     for type_name in sorted(feature.types.keys()):
-        if scoped_list_item and type_name == "ListItem":
+        if type_name in scoped_types:
             continue
         bucket = feature.types[type_name]
         shape_name = f":google_{type_name}Shape"
@@ -203,56 +326,28 @@ def _write_feature(feature: FeatureData, output_path: Path, overwrite: bool) -> 
         lines.append(f"  sh:targetClass schema:{type_name} ;")
 
         for prop in sorted(bucket["required"]):
-            if (
-                scoped_list_item
-                and type_name == "ItemList"
-                and prop == "itemListElement"
-            ):
-                lines.append("  sh:property [")
-                lines.append("    sh:path schema:itemListElement ;")
-                lines.append("    sh:minCount 1 ;")
-                lines.append("    sh:node [")
-                lines.append("      a sh:NodeShape ;")
-                lines.append("      sh:class schema:ListItem ;")
-                for item_prop in sorted(scoped_list_item["required"]):
-                    item_path = _prop_path(item_prop)
-                    lines.append("      sh:property [")
-                    lines.append(f"        sh:path {item_path} ;")
-                    lines.append("        sh:minCount 1 ;")
-                    lines.append("      ] ;")
-                for item_prop in sorted(scoped_list_item["recommended"]):
-                    item_path = _prop_path(item_prop)
-                    lines.append("      sh:property [")
-                    lines.append(f"        sh:path {item_path} ;")
-                    lines.append("        sh:minCount 1 ;")
-                    lines.append("        sh:severity sh:Warning ;")
-                    lines.append(
-                        f'        sh:message "Recommended by Google: {item_prop}." ;'
-                    )
-                    lines.append("      ] ;")
-                lines.append("    ] ;")
-                lines.append("  ] ;")
-                continue
-            path = _prop_path(prop)
-            lines.append("  sh:property [")
-            lines.append(f"    sh:path {path} ;")
-            lines.append("    sh:minCount 1 ;")
-            lines.append("  ] ;")
+            child_types = _SCOPED_CHILD_RULES.get(type_name, {}).get(prop)
+            _emit_property(
+                lines,
+                prop,
+                required=True,
+                child_types=child_types,
+                indent=2,
+                buckets=feature.types,
+                visited={type_name},
+            )
 
         for prop in sorted(bucket["recommended"]):
-            if (
-                scoped_list_item
-                and type_name == "ItemList"
-                and prop == "itemListElement"
-            ):
-                continue
-            path = _prop_path(prop)
-            lines.append("  sh:property [")
-            lines.append(f"    sh:path {path} ;")
-            lines.append("    sh:minCount 1 ;")
-            lines.append("    sh:severity sh:Warning ;")
-            lines.append(f'    sh:message "Recommended by Google: {prop}." ;')
-            lines.append("  ] ;")
+            child_types = _SCOPED_CHILD_RULES.get(type_name, {}).get(prop)
+            _emit_property(
+                lines,
+                prop,
+                required=False,
+                child_types=child_types,
+                indent=2,
+                buckets=feature.types,
+                visited={type_name},
+            )
 
         lines.append(".")
         lines.append("")
@@ -426,7 +521,8 @@ def generate_schema_shacls(output_file: Path, overwrite: bool) -> int:
     lines.append("")
     lines.append(f"# Source: {SCHEMA_JSONLD_URL}")
     lines.append(
-        f"# Generated: {datetime.now(timezone.utc).isoformat(timespec='seconds')}Z"
+        "# Generated: "
+        f"{datetime.now(timezone.utc).isoformat(timespec='seconds').replace('+00:00', 'Z')}"
     )
     lines.append(
         "# Notes: schema.org grammar checks only; all constraints are warnings."

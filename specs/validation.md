@@ -2,7 +2,10 @@
 
 ## Google Search Gallery SHACLs
 
-When a Google Search Gallery feature includes both `ItemList` and `ListItem` requirements,
-`ListItem` constraints are scoped under `ItemList` via `itemListElement` instead of
-targeting `ListItem` globally. This prevents carousel rules from applying to unrelated
-lists such as `BreadcrumbList`.
+When a Google Search Gallery feature includes container types (for example
+`ItemList`, `BreadcrumbList`, `QAPage`, `FAQPage`, `Quiz`, `ProfilePage`, `Product`,
+`Recipe`, `Course`) and their contained types (`ListItem`, `Question`, `Answer`,
+`Comment`, `Offer`, `HowToStep`, `Person`, `Organization`), the generator scopes
+contained constraints under the container properties instead of targeting the
+contained types globally. This prevents list-, Q&A-, and product/profile-specific
+rules from applying to unrelated nodes.

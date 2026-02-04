@@ -2,6 +2,9 @@
 
 ## Project Notes
 
-- Generated Google SHACLs scope `ListItem` requirements under `ItemList` when both types
-  appear in a feature definition, preventing carousel constraints from firing on
-  `BreadcrumbList`.
+- Generated Google SHACLs scope contained type requirements under container types
+  (for example `ItemList`/`BreadcrumbList` → `ListItem`, `QAPage`/`FAQPage`/`Quiz`
+  → `Question`/`Answer`/`Comment`, `ProfilePage` → `Person`/`Organization`,
+  `Product` → `Offer`, `Recipe` → `HowToStep`, `Course` → `Organization`/`CreativeWork`)
+  when both appear in a feature definition. This prevents constraints from firing
+  on unrelated nodes.

@@ -3,7 +3,7 @@
 @prefix schema: <http://schema.org/> .
 
 # Source: https://developers.google.com/search/docs/appearance/structured-data/product-snippet
-# Generated: 2026-01-13T11:23:39Z
+# Generated: 2026-02-04T20:09:17Z
 # Notes: required properties => errors; recommended properties => warnings.
 
 :google_AggregateOfferShape
@@ -31,38 +31,15 @@
   ] ;
 .
 
-:google_OfferShape
-  a sh:NodeShape ;
-  sh:targetClass schema:Offer ;
-  sh:property [
-    sh:path schema:price ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:availability ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: availability." ;
-  ] ;
-  sh:property [
-    sh:path schema:priceCurrency ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: priceCurrency." ;
-  ] ;
-  sh:property [
-    sh:path schema:priceValidUntil ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: priceValidUntil." ;
-  ] ;
-.
-
 :google_ProductShape
   a sh:NodeShape ;
   sh:targetClass schema:Product ;
   sh:property [
     sh:path schema:itemListElement ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path ( schema:itemListElement schema:name ) ;
     sh:minCount 1 ;
   ] ;
   sh:property [
@@ -80,6 +57,12 @@
     sh:message "Recommended by Google: aggregateRating." ;
   ] ;
   sh:property [
+    sh:path ( schema:itemListElement schema:position ) ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: itemListElement.position." ;
+  ] ;
+  sh:property [
     sh:path schema:negativeNotes ;
     sh:minCount 1 ;
     sh:severity sh:Warning ;
@@ -90,12 +73,32 @@
     sh:minCount 1 ;
     sh:severity sh:Warning ;
     sh:message "Recommended by Google: offers." ;
-  ] ;
-  sh:property [
-    sh:path schema:position ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: position." ;
+    sh:node [
+      a sh:NodeShape ;
+      sh:class schema:Offer ;
+      sh:property [
+        sh:path schema:price ;
+        sh:minCount 1 ;
+      ] ;
+      sh:property [
+        sh:path schema:availability ;
+        sh:minCount 1 ;
+        sh:severity sh:Warning ;
+        sh:message "Recommended by Google: availability." ;
+      ] ;
+      sh:property [
+        sh:path schema:priceCurrency ;
+        sh:minCount 1 ;
+        sh:severity sh:Warning ;
+        sh:message "Recommended by Google: priceCurrency." ;
+      ] ;
+      sh:property [
+        sh:path schema:priceValidUntil ;
+        sh:minCount 1 ;
+        sh:severity sh:Warning ;
+        sh:message "Recommended by Google: priceValidUntil." ;
+      ] ;
+    ] ;
   ] ;
   sh:property [
     sh:path schema:positiveNotes ;
