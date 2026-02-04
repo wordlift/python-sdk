@@ -185,6 +185,7 @@ _SCOPED_CHILD_RULES: dict[str, dict[str, list[str]]] = {
     "Product": {"offers": ["Offer"]},
     "Recipe": {"recipeInstructions": ["HowToStep"], "step": ["HowToStep"]},
     "Course": {"provider": ["Organization"], "hasPart": ["Course", "CreativeWork"]},
+    "Review": {"reviewRating": ["Rating"], "aggregateRating": ["AggregateRating"]},
 }
 
 

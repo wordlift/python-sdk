@@ -198,6 +198,30 @@ def test_scopes_course_parts(tmp_path: Path) -> None:
     assert "sh:class schema:CreativeWork" in content
 
 
+def test_scopes_rating_under_review(tmp_path: Path) -> None:
+    feature = FeatureData(
+        url="https://example.com",
+        types={
+            "Review": {
+                "required": {"reviewRating", "aggregateRating"},
+                "recommended": set(),
+            },
+            "Rating": {"required": {"ratingValue"}, "recommended": set()},
+            "AggregateRating": {"required": {"ratingValue"}, "recommended": set()},
+        },
+    )
+
+    content = _read_output(tmp_path, feature)
+
+    assert "sh:targetClass schema:Review" in content
+    assert "sh:targetClass schema:Rating" not in content
+    assert "sh:targetClass schema:AggregateRating" not in content
+    assert "sh:path schema:reviewRating" in content
+    assert "sh:class schema:Rating" in content
+    assert "sh:path schema:aggregateRating" in content
+    assert "sh:class schema:AggregateRating" in content
+
+
 def test_keeps_listitem_shape_without_itemlist(tmp_path: Path) -> None:
     feature = FeatureData(
         url="https://example.com",
