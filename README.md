@@ -90,6 +90,10 @@ Override the web page import callback by placing `web_page_import_protocol.py` w
 
 Add `.ttl.liquid` files under `data/templates`. Templates render with `account` fields available (e.g., `{{ account.dataset_uri }}`) and are uploaded before URL handling begins.
 
+## Validation
+
+SHACL validation utilities and generated Google Search Gallery shapes are included. Carousel `ListItem` requirements are scoped under `ItemList` when both types are present to avoid enforcing carousel constraints on non-carousel lists (for example, `BreadcrumbList`).
+
 ## Testing
 
 ```bash
@@ -100,4 +104,3 @@ poetry run pytest
 ## Documentation
 
 - [Google Sheets Lookup](docs/google_sheets_lookup.md): Utility for O(1) lookups from Google Sheets.
-

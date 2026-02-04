@@ -3,7 +3,7 @@
 @prefix schema: <http://schema.org/> .
 
 # Source: https://developers.google.com/search/docs/appearance/structured-data/carousel
-# Generated: 2026-01-13T11:23:16Z
+# Generated: 2026-02-04T18:12:24+00:00Z
 # Notes: required properties => errors; recommended properties => warnings.
 
 :google_ItemListShape
@@ -12,26 +12,29 @@
   sh:property [
     sh:path schema:itemListElement ;
     sh:minCount 1 ;
-  ] ;
-.
-
-:google_ListItemShape
-  a sh:NodeShape ;
-  sh:targetClass schema:ListItem ;
-  sh:property [
-    sh:path schema:item ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:name ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:position ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:url ;
-    sh:minCount 1 ;
+    sh:node [
+      a sh:NodeShape ;
+      sh:class schema:ListItem ;
+      sh:property [
+        sh:path schema:item ;
+        sh:minCount 1 ;
+      ] ;
+      sh:property [
+        sh:path ( schema:item schema:name ) ;
+        sh:minCount 1 ;
+      ] ;
+      sh:property [
+        sh:path ( schema:item schema:url ) ;
+        sh:minCount 1 ;
+      ] ;
+      sh:property [
+        sh:path schema:position ;
+        sh:minCount 1 ;
+      ] ;
+      sh:property [
+        sh:path schema:url ;
+        sh:minCount 1 ;
+      ] ;
+    ] ;
   ] ;
 .

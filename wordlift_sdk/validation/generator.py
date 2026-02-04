@@ -6,7 +6,7 @@ import argparse
 import html as html_lib
 import re
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterable
 
@@ -173,6 +173,10 @@ def _write_feature(feature: FeatureData, output_path: Path, overwrite: bool) -> 
     if output_path.exists() and not overwrite:
         return False
 
+    scoped_list_item = None
+    if "ItemList" in feature.types and "ListItem" in feature.types:
+        scoped_list_item = feature.types["ListItem"]
+
     lines: list[str] = []
     slug = output_path.stem
     prefix_base = f"https://wordlift.io/shacl/google/{slug}/"
@@ -181,13 +185,17 @@ def _write_feature(feature: FeatureData, output_path: Path, overwrite: bool) -> 
     lines.append("@prefix schema: <http://schema.org/> .")
     lines.append("")
     lines.append(f"# Source: {feature.url}")
-    lines.append(f"# Generated: {datetime.utcnow().isoformat(timespec='seconds')}Z")
+    lines.append(
+        f"# Generated: {datetime.now(timezone.utc).isoformat(timespec='seconds')}Z"
+    )
     lines.append(
         "# Notes: required properties => errors; recommended properties => warnings."
     )
     lines.append("")
 
     for type_name in sorted(feature.types.keys()):
+        if scoped_list_item and type_name == "ListItem":
+            continue
         bucket = feature.types[type_name]
         shape_name = f":google_{type_name}Shape"
         lines.append(shape_name)
@@ -195,6 +203,36 @@ def _write_feature(feature: FeatureData, output_path: Path, overwrite: bool) -> 
         lines.append(f"  sh:targetClass schema:{type_name} ;")
 
         for prop in sorted(bucket["required"]):
+            if (
+                scoped_list_item
+                and type_name == "ItemList"
+                and prop == "itemListElement"
+            ):
+                lines.append("  sh:property [")
+                lines.append("    sh:path schema:itemListElement ;")
+                lines.append("    sh:minCount 1 ;")
+                lines.append("    sh:node [")
+                lines.append("      a sh:NodeShape ;")
+                lines.append("      sh:class schema:ListItem ;")
+                for item_prop in sorted(scoped_list_item["required"]):
+                    item_path = _prop_path(item_prop)
+                    lines.append("      sh:property [")
+                    lines.append(f"        sh:path {item_path} ;")
+                    lines.append("        sh:minCount 1 ;")
+                    lines.append("      ] ;")
+                for item_prop in sorted(scoped_list_item["recommended"]):
+                    item_path = _prop_path(item_prop)
+                    lines.append("      sh:property [")
+                    lines.append(f"        sh:path {item_path} ;")
+                    lines.append("        sh:minCount 1 ;")
+                    lines.append("        sh:severity sh:Warning ;")
+                    lines.append(
+                        f'        sh:message "Recommended by Google: {item_prop}." ;'
+                    )
+                    lines.append("      ] ;")
+                lines.append("    ] ;")
+                lines.append("  ] ;")
+                continue
             path = _prop_path(prop)
             lines.append("  sh:property [")
             lines.append(f"    sh:path {path} ;")
@@ -202,6 +240,12 @@ def _write_feature(feature: FeatureData, output_path: Path, overwrite: bool) -> 
             lines.append("  ] ;")
 
         for prop in sorted(bucket["recommended"]):
+            if (
+                scoped_list_item
+                and type_name == "ItemList"
+                and prop == "itemListElement"
+            ):
+                continue
             path = _prop_path(prop)
             lines.append("  sh:property [")
             lines.append(f"    sh:path {path} ;")
@@ -381,7 +425,9 @@ def generate_schema_shacls(output_file: Path, overwrite: bool) -> int:
     lines.append(f"@prefix schema: <{SCHEMA_DATA}> .")
     lines.append("")
     lines.append(f"# Source: {SCHEMA_JSONLD_URL}")
-    lines.append(f"# Generated: {datetime.utcnow().isoformat(timespec='seconds')}Z")
+    lines.append(
+        f"# Generated: {datetime.now(timezone.utc).isoformat(timespec='seconds')}Z"
+    )
     lines.append(
         "# Notes: schema.org grammar checks only; all constraints are warnings."
     )
