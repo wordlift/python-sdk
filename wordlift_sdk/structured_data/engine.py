@@ -23,6 +23,7 @@ from rdflib import Graph, Namespace, RDF
 from rdflib.term import BNode, Identifier, Literal, URIRef
 
 from wordlift_sdk.structured_data.constants import DEFAULT_BASE_URL
+from wordlift_sdk.utils.ssl_ca_bundle import resolve_ssl_ca_cert
 from wordlift_sdk.validation.shacl import ValidationResult, validate_file
 
 
@@ -70,22 +71,36 @@ class StructuredDataResult:
     yarrml_filename: str
 
 
-def _build_client(api_key: str, base_url: str) -> ApiClient:
+def _build_client(
+    api_key: str, base_url: str, ssl_ca_cert: str | None = None
+) -> ApiClient:
     config = Configuration(host=base_url)
     config.api_key["ApiKey"] = api_key
     config.api_key_prefix["ApiKey"] = "Key"
+    config.verify_ssl = True
+    resolved_ca = resolve_ssl_ca_cert(ssl_ca_cert)
+    if resolved_ca:
+        config.ssl_ca_cert = resolved_ca
     return ApiClient(config)
 
 
-def _build_agent_client(api_key: str) -> ApiClient:
+def _build_agent_client(api_key: str, ssl_ca_cert: str | None = None) -> ApiClient:
     config = Configuration(host=_AGENT_BASE_URL)
     config.api_key["ApiKey"] = api_key
     config.api_key_prefix["ApiKey"] = "Key"
+    config.verify_ssl = True
+    resolved_ca = resolve_ssl_ca_cert(ssl_ca_cert)
+    if resolved_ca:
+        config.ssl_ca_cert = resolved_ca
     return ApiClient(config)
 
 
-async def get_dataset_uri_async(api_key: str, base_url: str = DEFAULT_BASE_URL) -> str:
-    async with _build_client(api_key, base_url) as api_client:
+async def get_dataset_uri_async(
+    api_key: str,
+    base_url: str = DEFAULT_BASE_URL,
+    ssl_ca_cert: str | None = None,
+) -> str:
+    async with _build_client(api_key, base_url, ssl_ca_cert=ssl_ca_cert) as api_client:
         api = wordlift_client.AccountApi(api_client)
         account = await api.get_me()
     dataset_uri = getattr(account, "dataset_uri", None)
@@ -94,8 +109,12 @@ async def get_dataset_uri_async(api_key: str, base_url: str = DEFAULT_BASE_URL) 
     return dataset_uri
 
 
-def get_dataset_uri(api_key: str, base_url: str = DEFAULT_BASE_URL) -> str:
-    return asyncio.run(get_dataset_uri_async(api_key, base_url))
+def get_dataset_uri(
+    api_key: str, base_url: str = DEFAULT_BASE_URL, ssl_ca_cert: str | None = None
+) -> str:
+    return asyncio.run(
+        get_dataset_uri_async(api_key, base_url, ssl_ca_cert=ssl_ca_cert)
+    )
 
 
 def normalize_type(value: str) -> str:
@@ -625,9 +644,12 @@ def _quality_prompt(
 
 
 async def _ask_agent_async(
-    prompt: str, api_key: str, model: str | None = None
+    prompt: str,
+    api_key: str,
+    model: str | None = None,
+    ssl_ca_cert: str | None = None,
 ) -> object:
-    async with _build_agent_client(api_key) as api_client:
+    async with _build_agent_client(api_key, ssl_ca_cert=ssl_ca_cert) as api_client:
         api = AgentApi(api_client)
         ask_request = AskRequest(message=prompt, model=model or _AGENT_MODEL)
         return await api.ask_request_api_ask_post(ask_request)
@@ -697,6 +719,7 @@ def ask_agent_for_yarrml(
     url: str,
     html: str,
     target_type: str | None,
+    ssl_ca_cert: str | None = None,
     debug: bool = False,
     debug_path: Path | None = None,
     property_guides: dict[str, dict[str, list[str]]] | None = None,
@@ -724,7 +747,9 @@ def ask_agent_for_yarrml(
         quality_feedback=quality_feedback,
     )
     try:
-        response = asyncio.run(_ask_agent_async(prompt, api_key))
+        response = asyncio.run(
+            _ask_agent_async(prompt, api_key, ssl_ca_cert=ssl_ca_cert)
+        )
     except Exception as exc:
         raise RuntimeError(f"Agent request failed: {exc}") from exc
 
@@ -758,10 +783,13 @@ def ask_agent_for_quality(
     jsonld: dict[str, Any] | list[Any],
     property_guides: dict[str, dict[str, list[str]]] | None,
     target_type: str | None,
+    ssl_ca_cert: str | None = None,
 ) -> dict[str, Any] | None:
     prompt = _quality_prompt(url, xhtml, jsonld, property_guides, target_type)
     try:
-        response = asyncio.run(_ask_agent_async(prompt, api_key))
+        response = asyncio.run(
+            _ask_agent_async(prompt, api_key, ssl_ca_cert=ssl_ca_cert)
+        )
     except Exception as exc:
         raise RuntimeError(f"Agent quality request failed: {exc}") from exc
     return _extract_agent_json(response)
@@ -2595,6 +2623,7 @@ def generate_from_agent(
     max_retries: int = 2,
     max_nesting_depth: int = 2,
     quality_check: bool = True,
+    ssl_ca_cert: str | None = None,
     log: Callable[[str], None] | None = None,
 ) -> tuple[str, dict[str, Any]]:
     debug_path = workdir / "agent_debug.json" if debug else None
@@ -2645,6 +2674,7 @@ def generate_from_agent(
             url,
             cleaned_xhtml,
             target_type,
+            ssl_ca_cert=ssl_ca_cert,
             debug=debug,
             debug_path=debug_path,
             property_guides=property_guides,
@@ -2799,6 +2829,7 @@ def generate_from_agent(
                         normalized_jsonld,
                         property_guides,
                         target_type,
+                        ssl_ca_cert=ssl_ca_cert,
                     )
                 except RuntimeError:
                     quality_payload = None

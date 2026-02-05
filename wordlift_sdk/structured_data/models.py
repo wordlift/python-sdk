@@ -16,6 +16,7 @@ class CreateRequest:
     yarrml_path: Path | None
     api_key: str | None
     base_url: str | None
+    ssl_ca_cert: str | None
     debug: bool
     headed: bool
     timeout_ms: int
@@ -39,6 +40,7 @@ class GenerateRequest:
     concurrency: str
     api_key: str | None
     base_url: str | None
+    ssl_ca_cert: str | None
     headed: bool
     timeout_ms: int
     wait_until: str

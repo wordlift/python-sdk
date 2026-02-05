@@ -103,7 +103,9 @@ class _FakeValidator:
 def test_create_workflow_writes_outputs(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    def _fake_get_dataset_uri(self, api_key: str, base_url: str | None = None) -> str:
+    def _fake_get_dataset_uri(
+        self, api_key: str, base_url: str | None = None, ssl_ca_cert: str | None = None
+    ) -> str:
         return "urn:dataset"
 
     def _fake_make_reusable_yarrrml(self, yarrrml: str, url: str) -> str:
@@ -131,6 +133,7 @@ def test_create_workflow_writes_outputs(
         yarrml_path=None,
         api_key="test-key",
         base_url=None,
+        ssl_ca_cert=None,
         debug=False,
         headed=False,
         timeout_ms=1000,
@@ -175,7 +178,7 @@ def test_generate_workflow_runs_batch(
     )
     monkeypatch.setattr(
         "wordlift_sdk.structured_data.structured_data_engine.StructuredDataEngine.get_dataset_uri",
-        lambda self, api_key, base_url=None: "urn:dataset",
+        lambda self, api_key, base_url=None, ssl_ca_cert=None: "urn:dataset",
     )
 
     class _FakeBatch:
@@ -205,6 +208,7 @@ def test_generate_workflow_runs_batch(
         concurrency="1",
         api_key="test-key",
         base_url=None,
+        ssl_ca_cert=None,
         headed=False,
         timeout_ms=1000,
         wait_until="load",

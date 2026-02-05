@@ -77,7 +77,7 @@ def test_dataset_resolver_get_dataset_uri(monkeypatch: pytest.MonkeyPatch) -> No
 
     monkeypatch.setattr(
         "wordlift_sdk.structured_data.dataset_resolver.get_dataset_uri",
-        lambda api_key, base_url=None: "urn:dataset",
+        lambda api_key, base_url=None, ssl_ca_cert=None: "urn:dataset",
     )
 
     assert resolver.get_dataset_uri("k") == "urn:dataset"

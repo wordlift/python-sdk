@@ -38,6 +38,45 @@ Common options:
 - `CONCURRENCY`: max concurrent handlers, defaults to `min(cpu_count(), 4)`.
 - `WORDLIFT_OVERRIDE_DIR`: folder containing protocol overrides (default `app/overrides`).
 
+## TLS/SSL
+
+The SDK enforces SSL verification. On macOS it uses the system CA bundle when available and falls back to `certifi` if needed. You can override the CA bundle path explicitly in code:
+
+```python
+from wordlift_sdk.client import ClientConfigurationFactory
+from wordlift_sdk.structured_data import CreateRequest
+
+factory = ClientConfigurationFactory(
+    key="your-api-key",
+    api_url="https://api.wordlift.io",
+    ssl_ca_cert="/path/to/ca.pem",
+)
+configuration = factory.create()
+
+request = CreateRequest(
+    url="https://example.com",
+    target_type="Thing",
+    output_dir=Path("."),
+    base_name="structured-data",
+    jsonld_path=None,
+    yarrml_path=None,
+    api_key="your-api-key",
+    base_url=None,
+    ssl_ca_cert="/path/to/ca.pem",
+    debug=False,
+    headed=False,
+    timeout_ms=30000,
+    max_retries=2,
+    quality_check=True,
+    max_xhtml_chars=40000,
+    max_text_node_chars=400,
+    max_nesting_depth=2,
+    verbose=True,
+    validate=True,
+    wait_until="networkidle",
+)
+```
+
 Example `config/default.py`:
 
 ```python

@@ -63,14 +63,22 @@ class _StubDataset:
     def __init__(self) -> None:
         self.calls = []
 
-    def get_dataset_uri(self, api_key: str, base_url: str | None = None) -> str:
-        self.calls.append((api_key, base_url))
+    def get_dataset_uri(
+        self,
+        api_key: str,
+        base_url: str | None = None,
+        ssl_ca_cert: str | None = None,
+    ) -> str:
+        self.calls.append((api_key, base_url, ssl_ca_cert))
         return "urn:dataset"
 
     async def get_dataset_uri_async(
-        self, api_key: str, base_url: str | None = None
+        self,
+        api_key: str,
+        base_url: str | None = None,
+        ssl_ca_cert: str | None = None,
     ) -> str:
-        self.calls.append((api_key, base_url))
+        self.calls.append((api_key, base_url, ssl_ca_cert))
         return "urn:dataset"
 
 

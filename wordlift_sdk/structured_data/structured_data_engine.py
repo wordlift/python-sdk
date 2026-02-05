@@ -25,13 +25,25 @@ class StructuredDataEngine:
         self.yarrrml = yarrrml or YarrrmlPipeline()
         self.agent = agent or AgentGenerator()
 
-    def get_dataset_uri(self, api_key: str, base_url: str = DEFAULT_BASE_URL) -> str:
-        return self.dataset.get_dataset_uri(api_key, base_url)
+    def get_dataset_uri(
+        self,
+        api_key: str,
+        base_url: str = DEFAULT_BASE_URL,
+        ssl_ca_cert: str | None = None,
+    ) -> str:
+        return self.dataset.get_dataset_uri(
+            api_key, base_url=base_url, ssl_ca_cert=ssl_ca_cert
+        )
 
     async def get_dataset_uri_async(
-        self, api_key: str, base_url: str = DEFAULT_BASE_URL
+        self,
+        api_key: str,
+        base_url: str = DEFAULT_BASE_URL,
+        ssl_ca_cert: str | None = None,
     ) -> str:
-        return await self.dataset.get_dataset_uri_async(api_key, base_url)
+        return await self.dataset.get_dataset_uri_async(
+            api_key, base_url=base_url, ssl_ca_cert=ssl_ca_cert
+        )
 
     def generate_from_agent(self, *args, **kwargs):
         return self.agent.generate_from_agent(*args, **kwargs)

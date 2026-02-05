@@ -30,7 +30,8 @@ class AgentGenerator:
         max_retries: int,
         max_nesting_depth: int,
         quality_check: bool,
-        log: Callable[[str], None],
+        ssl_ca_cert: str | None = None,
+        log: Callable[[str], None] | None = None,
     ) -> tuple[str, dict]:
         return self._engine.generate_from_agent(
             url,
@@ -45,5 +46,6 @@ class AgentGenerator:
             max_retries=max_retries,
             max_nesting_depth=max_nesting_depth,
             quality_check=quality_check,
+            ssl_ca_cert=ssl_ca_cert,
             log=log,
         )

@@ -47,7 +47,9 @@ class CreateWorkflow:
                 "WORDLIFT_KEY is required (or set wordlift.api_key in config)."
             )
         base_url = request.base_url or DEFAULT_BASE_URL
-        dataset_uri = self._engine.get_dataset_uri(request.api_key, base_url=base_url)
+        dataset_uri = self._engine.get_dataset_uri(
+            request.api_key, base_url=base_url, ssl_ca_cert=request.ssl_ca_cert
+        )
 
         renderer = self._renderer or RenderPipeline(
             headed=request.headed,
@@ -90,6 +92,7 @@ class CreateWorkflow:
                 max_retries=options.max_retries,
                 max_nesting_depth=options.max_nesting_depth,
                 quality_check=request.quality_check,
+                ssl_ca_cert=request.ssl_ca_cert,
                 log=log,
             )
         except Exception:
@@ -147,7 +150,9 @@ class GenerateWorkflow:
     ) -> dict[str, object]:
         base_url = request.base_url or DEFAULT_BASE_URL
         dataset_uri = (
-            self._engine.get_dataset_uri(request.api_key, base_url=base_url)
+            self._engine.get_dataset_uri(
+                request.api_key, base_url=base_url, ssl_ca_cert=request.ssl_ca_cert
+            )
             if request.api_key
             else None
         )
