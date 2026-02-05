@@ -3,7 +3,7 @@
 @prefix schema: <http://schema.org/> .
 
 # Source: https://developers.google.com/search/docs/appearance/structured-data/dataset
-# Generated: 2026-01-13T11:23:19Z
+# Generated: 2026-02-05T20:39:49Z
 # Notes: required properties => errors; recommended properties => warnings.
 
 :google_DataCatalogShape
@@ -21,18 +21,20 @@
   a sh:NodeShape ;
   sh:targetClass schema:DataDownload ;
   sh:property [
-    sh:path schema:contentUrl ;
+    sh:path ( schema:distribution schema:contentUrl ) ;
     sh:minCount 1 ;
   ] ;
   sh:property [
     sh:path schema:distribution ;
     sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: distribution." ;
   ] ;
   sh:property [
-    sh:path schema:encodingFormat ;
+    sh:path ( schema:distribution schema:encodingFormat ) ;
     sh:minCount 1 ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: encodingFormat." ;
+    sh:message "Recommended by Google: distribution.encodingFormat." ;
   ] ;
 .
 
@@ -70,12 +72,6 @@
     sh:minCount 1 ;
     sh:severity sh:Warning ;
     sh:message "Recommended by Google: funder." ;
-  ] ;
-  sh:property [
-    sh:path schema:hasPart ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: hasPart." ;
   ] ;
   sh:property [
     sh:path schema:identifier ;
@@ -143,4 +139,18 @@
     sh:severity sh:Warning ;
     sh:message "Recommended by Google: version." ;
   ] ;
+  sh:or (
+    [
+      sh:property [
+        sh:path schema:hasPart ;
+        sh:minCount 1 ;
+      ] ;
+    ]
+    [
+      sh:property [
+        sh:path schema:isPartOf ;
+        sh:minCount 1 ;
+      ] ;
+    ]
+  ) ;
 .

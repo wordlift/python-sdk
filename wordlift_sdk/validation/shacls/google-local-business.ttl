@@ -3,7 +3,7 @@
 @prefix schema: <http://schema.org/> .
 
 # Source: https://developers.google.com/search/docs/appearance/structured-data/local-business
-# Generated: 2026-01-13T11:23:32Z
+# Generated: 2026-02-05T20:39:56Z
 # Notes: required properties => errors; recommended properties => warnings.
 
 :google_DaySpaShape
@@ -28,18 +28,6 @@
     sh:message "Recommended by Google: aggregateRating." ;
   ] ;
   sh:property [
-    sh:path schema:closes ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: closes." ;
-  ] ;
-  sh:property [
-    sh:path schema:dayOfWeek ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: dayOfWeek." ;
-  ] ;
-  sh:property [
     sh:path schema:department ;
     sh:minCount 1 ;
     sh:severity sh:Warning ;
@@ -52,16 +40,16 @@
     sh:message "Recommended by Google: geo." ;
   ] ;
   sh:property [
-    sh:path schema:latitude ;
+    sh:path ( schema:geo schema:latitude ) ;
     sh:minCount 1 ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: latitude." ;
+    sh:message "Recommended by Google: geo.latitude." ;
   ] ;
   sh:property [
-    sh:path schema:longitude ;
+    sh:path ( schema:geo schema:longitude ) ;
     sh:minCount 1 ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: longitude." ;
+    sh:message "Recommended by Google: geo.longitude." ;
   ] ;
   sh:property [
     sh:path schema:menu ;
@@ -76,10 +64,34 @@
     sh:message "Recommended by Google: openingHoursSpecification." ;
   ] ;
   sh:property [
-    sh:path schema:opens ;
+    sh:path ( schema:openingHoursSpecification schema:closes ) ;
     sh:minCount 1 ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: opens." ;
+    sh:message "Recommended by Google: openingHoursSpecification.closes." ;
+  ] ;
+  sh:property [
+    sh:path ( schema:openingHoursSpecification schema:dayOfWeek ) ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: openingHoursSpecification.dayOfWeek." ;
+  ] ;
+  sh:property [
+    sh:path ( schema:openingHoursSpecification schema:opens ) ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: openingHoursSpecification.opens." ;
+  ] ;
+  sh:property [
+    sh:path ( schema:openingHoursSpecification schema:validFrom ) ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: openingHoursSpecification.validFrom." ;
+  ] ;
+  sh:property [
+    sh:path ( schema:openingHoursSpecification schema:validThrough ) ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: openingHoursSpecification.validThrough." ;
   ] ;
   sh:property [
     sh:path schema:priceRange ;
@@ -110,18 +122,6 @@
     sh:minCount 1 ;
     sh:severity sh:Warning ;
     sh:message "Recommended by Google: url." ;
-  ] ;
-  sh:property [
-    sh:path schema:validFrom ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: validFrom." ;
-  ] ;
-  sh:property [
-    sh:path schema:validThrough ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: validThrough." ;
   ] ;
 .
 
@@ -147,18 +147,6 @@
     sh:message "Recommended by Google: aggregateRating." ;
   ] ;
   sh:property [
-    sh:path schema:closes ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: closes." ;
-  ] ;
-  sh:property [
-    sh:path schema:dayOfWeek ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: dayOfWeek." ;
-  ] ;
-  sh:property [
     sh:path schema:department ;
     sh:minCount 1 ;
     sh:severity sh:Warning ;
@@ -171,16 +159,16 @@
     sh:message "Recommended by Google: geo." ;
   ] ;
   sh:property [
-    sh:path schema:latitude ;
+    sh:path ( schema:geo schema:latitude ) ;
     sh:minCount 1 ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: latitude." ;
+    sh:message "Recommended by Google: geo.latitude." ;
   ] ;
   sh:property [
-    sh:path schema:longitude ;
+    sh:path ( schema:geo schema:longitude ) ;
     sh:minCount 1 ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: longitude." ;
+    sh:message "Recommended by Google: geo.longitude." ;
   ] ;
   sh:property [
     sh:path schema:menu ;
@@ -195,10 +183,34 @@
     sh:message "Recommended by Google: openingHoursSpecification." ;
   ] ;
   sh:property [
-    sh:path schema:opens ;
+    sh:path ( schema:openingHoursSpecification schema:closes ) ;
     sh:minCount 1 ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: opens." ;
+    sh:message "Recommended by Google: openingHoursSpecification.closes." ;
+  ] ;
+  sh:property [
+    sh:path ( schema:openingHoursSpecification schema:dayOfWeek ) ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: openingHoursSpecification.dayOfWeek." ;
+  ] ;
+  sh:property [
+    sh:path ( schema:openingHoursSpecification schema:opens ) ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: openingHoursSpecification.opens." ;
+  ] ;
+  sh:property [
+    sh:path ( schema:openingHoursSpecification schema:validFrom ) ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: openingHoursSpecification.validFrom." ;
+  ] ;
+  sh:property [
+    sh:path ( schema:openingHoursSpecification schema:validThrough ) ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: openingHoursSpecification.validThrough." ;
   ] ;
   sh:property [
     sh:path schema:priceRange ;
@@ -229,18 +241,6 @@
     sh:minCount 1 ;
     sh:severity sh:Warning ;
     sh:message "Recommended by Google: url." ;
-  ] ;
-  sh:property [
-    sh:path schema:validFrom ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: validFrom." ;
-  ] ;
-  sh:property [
-    sh:path schema:validThrough ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: validThrough." ;
   ] ;
 .
 
@@ -266,18 +266,6 @@
     sh:message "Recommended by Google: aggregateRating." ;
   ] ;
   sh:property [
-    sh:path schema:closes ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: closes." ;
-  ] ;
-  sh:property [
-    sh:path schema:dayOfWeek ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: dayOfWeek." ;
-  ] ;
-  sh:property [
     sh:path schema:department ;
     sh:minCount 1 ;
     sh:severity sh:Warning ;
@@ -290,16 +278,16 @@
     sh:message "Recommended by Google: geo." ;
   ] ;
   sh:property [
-    sh:path schema:latitude ;
+    sh:path ( schema:geo schema:latitude ) ;
     sh:minCount 1 ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: latitude." ;
+    sh:message "Recommended by Google: geo.latitude." ;
   ] ;
   sh:property [
-    sh:path schema:longitude ;
+    sh:path ( schema:geo schema:longitude ) ;
     sh:minCount 1 ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: longitude." ;
+    sh:message "Recommended by Google: geo.longitude." ;
   ] ;
   sh:property [
     sh:path schema:menu ;
@@ -314,10 +302,34 @@
     sh:message "Recommended by Google: openingHoursSpecification." ;
   ] ;
   sh:property [
-    sh:path schema:opens ;
+    sh:path ( schema:openingHoursSpecification schema:closes ) ;
     sh:minCount 1 ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: opens." ;
+    sh:message "Recommended by Google: openingHoursSpecification.closes." ;
+  ] ;
+  sh:property [
+    sh:path ( schema:openingHoursSpecification schema:dayOfWeek ) ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: openingHoursSpecification.dayOfWeek." ;
+  ] ;
+  sh:property [
+    sh:path ( schema:openingHoursSpecification schema:opens ) ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: openingHoursSpecification.opens." ;
+  ] ;
+  sh:property [
+    sh:path ( schema:openingHoursSpecification schema:validFrom ) ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: openingHoursSpecification.validFrom." ;
+  ] ;
+  sh:property [
+    sh:path ( schema:openingHoursSpecification schema:validThrough ) ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: openingHoursSpecification.validThrough." ;
   ] ;
   sh:property [
     sh:path schema:priceRange ;
@@ -348,18 +360,6 @@
     sh:minCount 1 ;
     sh:severity sh:Warning ;
     sh:message "Recommended by Google: url." ;
-  ] ;
-  sh:property [
-    sh:path schema:validFrom ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: validFrom." ;
-  ] ;
-  sh:property [
-    sh:path schema:validThrough ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: validThrough." ;
   ] ;
 .
 
@@ -385,18 +385,6 @@
     sh:message "Recommended by Google: aggregateRating." ;
   ] ;
   sh:property [
-    sh:path schema:closes ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: closes." ;
-  ] ;
-  sh:property [
-    sh:path schema:dayOfWeek ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: dayOfWeek." ;
-  ] ;
-  sh:property [
     sh:path schema:department ;
     sh:minCount 1 ;
     sh:severity sh:Warning ;
@@ -409,16 +397,16 @@
     sh:message "Recommended by Google: geo." ;
   ] ;
   sh:property [
-    sh:path schema:latitude ;
+    sh:path ( schema:geo schema:latitude ) ;
     sh:minCount 1 ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: latitude." ;
+    sh:message "Recommended by Google: geo.latitude." ;
   ] ;
   sh:property [
-    sh:path schema:longitude ;
+    sh:path ( schema:geo schema:longitude ) ;
     sh:minCount 1 ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: longitude." ;
+    sh:message "Recommended by Google: geo.longitude." ;
   ] ;
   sh:property [
     sh:path schema:menu ;
@@ -433,10 +421,34 @@
     sh:message "Recommended by Google: openingHoursSpecification." ;
   ] ;
   sh:property [
-    sh:path schema:opens ;
+    sh:path ( schema:openingHoursSpecification schema:closes ) ;
     sh:minCount 1 ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: opens." ;
+    sh:message "Recommended by Google: openingHoursSpecification.closes." ;
+  ] ;
+  sh:property [
+    sh:path ( schema:openingHoursSpecification schema:dayOfWeek ) ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: openingHoursSpecification.dayOfWeek." ;
+  ] ;
+  sh:property [
+    sh:path ( schema:openingHoursSpecification schema:opens ) ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: openingHoursSpecification.opens." ;
+  ] ;
+  sh:property [
+    sh:path ( schema:openingHoursSpecification schema:validFrom ) ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: openingHoursSpecification.validFrom." ;
+  ] ;
+  sh:property [
+    sh:path ( schema:openingHoursSpecification schema:validThrough ) ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: openingHoursSpecification.validThrough." ;
   ] ;
   sh:property [
     sh:path schema:priceRange ;
@@ -467,17 +479,5 @@
     sh:minCount 1 ;
     sh:severity sh:Warning ;
     sh:message "Recommended by Google: url." ;
-  ] ;
-  sh:property [
-    sh:path schema:validFrom ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: validFrom." ;
-  ] ;
-  sh:property [
-    sh:path schema:validThrough ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: validThrough." ;
   ] ;
 .

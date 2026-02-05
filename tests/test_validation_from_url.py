@@ -27,8 +27,8 @@ def _fake_shapes(*_args, **_kwargs):
 def test_validate_jsonld_from_url_extracts_and_flattens(monkeypatch):
     html = """
     <html><head>
-    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","@id":"https://example.com"}</script>
-    <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","name":"Acme"},{"@type":"WebSite","name":"Example"}]}</script>
+    <script type="application/ld+json">{"@context":{"@vocab":"http://schema.org/"},"@type":"WebPage","@id":"https://example.com"}</script>
+    <script type="application/ld+json">{"@context":{"@vocab":"http://schema.org/"},"@graph":[{"@type":"Organization","name":"Acme"},{"@type":"WebSite","name":"Example"}]}</script>
     </head><body></body></html>
     """
     monkeypatch.setattr(

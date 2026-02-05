@@ -224,6 +224,49 @@ def test_scopes_rating_under_review(tmp_path: Path) -> None:
     assert "sh:class schema:AggregateRating" in content
 
 
+def test_emits_one_of_group_for_product(tmp_path: Path) -> None:
+    feature = FeatureData(
+        url="https://example.com",
+        types={
+            "Product": {"required": {"name"}, "recommended": set()},
+            "Offer": {"required": {"price"}, "recommended": set()},
+        },
+        one_of={"Product": [{"review", "aggregateRating", "offers"}]},
+    )
+
+    content = _read_output(tmp_path, feature)
+
+    assert "sh:targetClass schema:Product" in content
+    assert "sh:or (" in content
+    assert "sh:path schema:review" in content
+    assert "sh:path schema:aggregateRating" in content
+    assert "sh:path schema:offers" in content
+
+
+def test_scopes_review_under_product_with_notes(tmp_path: Path) -> None:
+    feature = FeatureData(
+        url="https://example.com",
+        types={
+            "Product": {"required": {"review"}, "recommended": set()},
+            "Review": {
+                "required": {"reviewRating", "positiveNotes"},
+                "recommended": set(),
+            },
+            "Rating": {"required": {"ratingValue"}, "recommended": set()},
+            "ItemList": {"required": {"itemListElement"}, "recommended": set()},
+            "ListItem": {"required": {"name"}, "recommended": set()},
+        },
+    )
+
+    content = _read_output(tmp_path, feature)
+
+    assert "sh:targetClass schema:Product" in content
+    assert "sh:targetClass schema:Review" not in content
+    assert "sh:class schema:Review" in content
+    assert "sh:class schema:ItemList" in content
+    assert "sh:class schema:ListItem" in content
+
+
 def test_schemaorg_range_allows_literals(tmp_path: Path) -> None:
     from wordlift_sdk.validation.generator import _render_property_shape
 

@@ -3,7 +3,7 @@
 @prefix schema: <http://schema.org/> .
 
 # Source: https://developers.google.com/search/docs/appearance/structured-data/organization
-# Generated: 2026-01-13T11:23:36Z
+# Generated: 2026-02-05T20:39:58Z
 # Notes: required properties => errors; recommended properties => warnings.
 
 :google_OrganizationShape
@@ -16,22 +16,34 @@
     sh:message "Recommended by Google: address." ;
   ] ;
   sh:property [
-    sh:path schema:addressCountry ;
+    sh:path ( schema:address schema:addressCountry ) ;
     sh:minCount 1 ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: addressCountry." ;
+    sh:message "Recommended by Google: address.addressCountry." ;
   ] ;
   sh:property [
-    sh:path schema:addressLocality ;
+    sh:path ( schema:address schema:addressLocality ) ;
     sh:minCount 1 ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: addressLocality." ;
+    sh:message "Recommended by Google: address.addressLocality." ;
   ] ;
   sh:property [
-    sh:path schema:addressRegion ;
+    sh:path ( schema:address schema:addressRegion ) ;
     sh:minCount 1 ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: addressRegion." ;
+    sh:message "Recommended by Google: address.addressRegion." ;
+  ] ;
+  sh:property [
+    sh:path ( schema:address schema:postalCode ) ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: address.postalCode." ;
+  ] ;
+  sh:property [
+    sh:path ( schema:address schema:streetAddress ) ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: address.streetAddress." ;
   ] ;
   sh:property [
     sh:path schema:alternateName ;
@@ -44,6 +56,18 @@
     sh:minCount 1 ;
     sh:severity sh:Warning ;
     sh:message "Recommended by Google: contactPoint." ;
+  ] ;
+  sh:property [
+    sh:path ( schema:contactPoint schema:email ) ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: contactPoint.email." ;
+  ] ;
+  sh:property [
+    sh:path ( schema:contactPoint schema:telephone ) ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: contactPoint.telephone." ;
   ] ;
   sh:property [
     sh:path schema:description ;
@@ -136,22 +160,10 @@
     sh:message "Recommended by Google: numberOfEmployees." ;
   ] ;
   sh:property [
-    sh:path schema:postalCode ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: postalCode." ;
-  ] ;
-  sh:property [
     sh:path schema:sameAs ;
     sh:minCount 1 ;
     sh:severity sh:Warning ;
     sh:message "Recommended by Google: sameAs." ;
-  ] ;
-  sh:property [
-    sh:path schema:streetAddress ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: streetAddress." ;
   ] ;
   sh:property [
     sh:path schema:taxID ;

@@ -3,7 +3,7 @@
 @prefix schema: <http://schema.org/> .
 
 # Source: https://developers.google.com/search/docs/appearance/structured-data/software-app
-# Generated: 2026-01-13T11:23:57Z
+# Generated: 2026-02-05T20:40:10Z
 # Notes: required properties => errors; recommended properties => warnings.
 
 :google_SoftwareApplicationShape
@@ -14,11 +14,7 @@
     sh:minCount 1 ;
   ] ;
   sh:property [
-    sh:path schema:offers ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:price ;
+    sh:path ( schema:offers schema:price ) ;
     sh:minCount 1 ;
   ] ;
   sh:property [

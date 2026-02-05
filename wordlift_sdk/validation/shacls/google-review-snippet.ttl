@@ -3,7 +3,7 @@
 @prefix schema: <http://schema.org/> .
 
 # Source: https://developers.google.com/search/docs/appearance/structured-data/review-snippet
-# Generated: 2026-02-04T23:26:20Z
+# Generated: 2026-02-05T20:40:08Z
 # Notes: required properties => errors; recommended properties => warnings.
 
 :google_ReviewShape
@@ -15,10 +15,6 @@
   ] ;
   sh:property [
     sh:path schema:itemReviewed ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path ( schema:itemReviewed schema:name ) ;
     sh:minCount 1 ;
   ] ;
   sh:property [
@@ -47,4 +43,18 @@
     sh:severity sh:Warning ;
     sh:message "Recommended by Google: reviewRating.worstRating." ;
   ] ;
+  sh:or (
+    [
+      sh:property [
+        sh:path ( schema:itemReviewed schema:name ) ;
+        sh:minCount 1 ;
+      ] ;
+    ]
+    [
+      sh:property [
+        sh:path schema:name ;
+        sh:minCount 1 ;
+      ] ;
+    ]
+  ) ;
 .

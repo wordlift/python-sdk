@@ -3,7 +3,7 @@
 @prefix schema: <http://schema.org/> .
 
 # Source: https://developers.google.com/search/docs/appearance/structured-data/vacation-rental
-# Generated: 2026-01-13T11:24:00Z
+# Generated: 2026-02-05T20:40:12Z
 # Notes: required properties => errors; recommended properties => warnings.
 
 :google_VacationRentalShape
@@ -11,6 +11,22 @@
   sh:targetClass schema:VacationRental ;
   sh:property [
     sh:path schema:containsPlace ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path ( schema:containsPlace schema:occupancy ) ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path ( schema:containsPlace schema:occupancy schema:value ) ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path ( schema:geo schema:latitude ) ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path ( schema:geo schema:longitude ) ;
     sh:minCount 1 ;
   ] ;
   sh:property [
@@ -34,14 +50,6 @@
     sh:minCount 1 ;
   ] ;
   sh:property [
-    sh:path schema:occupancy ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:value ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
     sh:path schema:additionalType ;
     sh:minCount 1 ;
     sh:severity sh:Warning ;
@@ -54,22 +62,34 @@
     sh:message "Recommended by Google: address." ;
   ] ;
   sh:property [
-    sh:path schema:addressCountry ;
+    sh:path ( schema:address schema:addressCountry ) ;
     sh:minCount 1 ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: addressCountry." ;
+    sh:message "Recommended by Google: address.addressCountry." ;
   ] ;
   sh:property [
-    sh:path schema:addressLocality ;
+    sh:path ( schema:address schema:addressLocality ) ;
     sh:minCount 1 ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: addressLocality." ;
+    sh:message "Recommended by Google: address.addressLocality." ;
   ] ;
   sh:property [
-    sh:path schema:addressRegion ;
+    sh:path ( schema:address schema:addressRegion ) ;
     sh:minCount 1 ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: addressRegion." ;
+    sh:message "Recommended by Google: address.addressRegion." ;
+  ] ;
+  sh:property [
+    sh:path ( schema:address schema:postalCode ) ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: address.postalCode." ;
+  ] ;
+  sh:property [
+    sh:path ( schema:address schema:streetAddress ) ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: address.streetAddress." ;
   ] ;
   sh:property [
     sh:path schema:aggregateRating ;
@@ -82,12 +102,6 @@
     sh:minCount 1 ;
     sh:severity sh:Warning ;
     sh:message "Recommended by Google: airportShuttle." ;
-  ] ;
-  sh:property [
-    sh:path schema:amenityFeature ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: amenityFeature." ;
   ] ;
   sh:property [
     sh:path schema:balcony ;
@@ -222,12 +236,6 @@
     sh:message "Recommended by Google: pool." ;
   ] ;
   sh:property [
-    sh:path schema:postalCode ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: postalCode." ;
-  ] ;
-  sh:property [
     sh:path schema:privateBeachAccess ;
     sh:minCount 1 ;
     sh:severity sh:Warning ;
@@ -244,12 +252,6 @@
     sh:minCount 1 ;
     sh:severity sh:Warning ;
     sh:message "Recommended by Google: smokingAllowed." ;
-  ] ;
-  sh:property [
-    sh:path schema:streetAddress ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: streetAddress." ;
   ] ;
   sh:property [
     sh:path schema:tv ;
@@ -275,4 +277,20 @@
     sh:severity sh:Warning ;
     sh:message "Recommended by Google: wifi." ;
   ] ;
+  sh:or (
+    [
+      sh:property [
+        sh:path ( schema:containsPlace schema:additionalType ) ;
+        sh:minCount 1 ;
+      ] ;
+    ]
+  ) ;
+  sh:or (
+    [
+      sh:property [
+        sh:path ( schema:containsPlace schema:amenityFeature ) ;
+        sh:minCount 1 ;
+      ] ;
+    ]
+  ) ;
 .

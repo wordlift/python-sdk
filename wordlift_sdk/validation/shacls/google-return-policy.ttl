@@ -3,16 +3,31 @@
 @prefix schema: <http://schema.org/> .
 
 # Source: https://developers.google.com/search/docs/appearance/structured-data/return-policy
-# Generated: 2026-01-13T11:23:47Z
+# Generated: 2026-02-05T20:40:04Z
 # Notes: required properties => errors; recommended properties => warnings.
+
+:google_MerchantReturnEnumerationShape
+  a sh:NodeShape ;
+  sh:targetClass schema:MerchantReturnEnumeration ;
+  sh:or (
+    [
+      sh:property [
+        sh:path schema:https ;
+        sh:minCount 1 ;
+      ] ;
+    ]
+    [
+      sh:property [
+        sh:path ( schema:schema schema:org ) ;
+        sh:minCount 1 ;
+      ] ;
+    ]
+  ) ;
+.
 
 :google_URLShape
   a sh:NodeShape ;
   sh:targetClass schema:URL ;
-  sh:property [
-    sh:path schema:returnPolicyCategory ;
-    sh:minCount 1 ;
-  ] ;
   sh:property [
     sh:path schema:returnPolicySeasonalOverride ;
     sh:minCount 1 ;
@@ -34,12 +49,6 @@
     sh:minCount 1 ;
     sh:severity sh:Warning ;
     sh:message "Recommended by Google: customerRemorseReturnShippingFeesAmount." ;
-  ] ;
-  sh:property [
-    sh:path schema:endDate ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: endDate." ;
   ] ;
   sh:property [
     sh:path schema:itemCondition ;
@@ -84,18 +93,6 @@
     sh:message "Recommended by Google: restockingFee." ;
   ] ;
   sh:property [
-    sh:path schema:returnFees ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: returnFees." ;
-  ] ;
-  sh:property [
-    sh:path schema:returnLabelSource ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: returnLabelSource." ;
-  ] ;
-  sh:property [
     sh:path schema:returnMethod ;
     sh:minCount 1 ;
     sh:severity sh:Warning ;
@@ -108,15 +105,69 @@
     sh:message "Recommended by Google: returnPolicyCountry." ;
   ] ;
   sh:property [
+    sh:path ( schema:returnPolicySeasonalOverride schema:endDate ) ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: returnPolicySeasonalOverride.endDate." ;
+  ] ;
+  sh:property [
+    sh:path ( schema:returnPolicySeasonalOverride schema:merchantReturnDays ) ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: returnPolicySeasonalOverride.merchantReturnDays." ;
+  ] ;
+  sh:property [
+    sh:path ( schema:returnPolicySeasonalOverride schema:startDate ) ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: returnPolicySeasonalOverride.startDate." ;
+  ] ;
+  sh:property [
     sh:path schema:returnShippingFeesAmount ;
     sh:minCount 1 ;
     sh:severity sh:Warning ;
     sh:message "Recommended by Google: returnShippingFeesAmount." ;
   ] ;
-  sh:property [
-    sh:path schema:startDate ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: startDate." ;
-  ] ;
+  sh:or (
+    [
+      sh:property [
+        sh:path schema:https ;
+        sh:minCount 1 ;
+      ] ;
+    ]
+    [
+      sh:property [
+        sh:path ( schema:schema schema:org ) ;
+        sh:minCount 1 ;
+      ] ;
+    ]
+  ) ;
+  sh:or (
+    [
+      sh:property [
+        sh:path schema:https ;
+        sh:minCount 1 ;
+      ] ;
+    ]
+    [
+      sh:property [
+        sh:path ( schema:schema schema:org ) ;
+        sh:minCount 1 ;
+      ] ;
+    ]
+  ) ;
+  sh:or (
+    [
+      sh:property [
+        sh:path schema:https ;
+        sh:minCount 1 ;
+      ] ;
+    ]
+    [
+      sh:property [
+        sh:path ( schema:schema schema:org ) ;
+        sh:minCount 1 ;
+      ] ;
+    ]
+  ) ;
 .

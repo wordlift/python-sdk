@@ -5,7 +5,7 @@ from __future__ import annotations
 import argparse
 import html as html_lib
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterable
@@ -19,11 +19,16 @@ FEATURE_URL_RE = re.compile(
     r'href="(/search/docs/appearance/structured-data/[^"#?]+)"', re.IGNORECASE
 )
 TOKEN_RE = re.compile(
-    r"(<table[^>]*>.*?</table>|<p[^>]*>.*?</p>|<h2[^>]*>.*?</h2>|<h3[^>]*>.*?</h3>)",
+    r"(<table[^>]*>.*?</table>|<p[^>]*>.*?</p>|<h2[^>]*>.*?</h2>|<h3[^>]*>.*?</h3>|<h4[^>]*>.*?</h4>|<ul[^>]*>.*?</ul>|<ol[^>]*>.*?</ol>)",
     re.DOTALL | re.IGNORECASE,
 )
 ROW_RE = re.compile(r"<tr[^>]*>.*?</tr>", re.DOTALL | re.IGNORECASE)
 TAG_RE = re.compile(r"<[^>]+>")
+LIST_ITEM_RE = re.compile(r"<li[^>]*>.*?</li>", re.DOTALL | re.IGNORECASE)
+ONE_OF_RE = re.compile(
+    r"(one of the following properties|one of the following|require either|must include one of|must provide one of|at least two statements)",
+    re.IGNORECASE,
+)
 
 SCHEMA_JSONLD_URL = "https://schema.org/version/latest/schemaorg-current-https.jsonld"
 
@@ -38,6 +43,7 @@ RDF_NS = Namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#")
 class FeatureData:
     url: str
     types: dict[str, dict[str, set[str]]]
+    one_of: dict[str, list[set[str]]] = field(default_factory=dict)
 
 
 @dataclass
@@ -93,15 +99,54 @@ def _table_kind(table_html: str) -> str | None:
     return None
 
 
-def _extract_properties(table_html: str) -> list[str]:
+def _extract_table_properties(table_html: str) -> tuple[list[str], list[set[str]]]:
     props: list[str] = []
+    one_of_groups: list[set[str]] = []
     for row in ROW_RE.findall(table_html):
-        td_match = re.search(r"<td[^>]*>(.*?)</td>", row, re.DOTALL | re.IGNORECASE)
-        if not td_match:
+        row_text = _strip_tags(row).lower()
+        tds = re.findall(r"<td[^>]*>(.*?)</td>", row, re.DOTALL | re.IGNORECASE)
+        if not tds:
             continue
-        td_html = td_match.group(1)
+        primary_tokens: list[str] = []
+        code_matches = re.findall(
+            r"<code[^>]*>(.*?)</code>", tds[0], re.DOTALL | re.IGNORECASE
+        )
+        for match in code_matches:
+            raw = _strip_tags(match)
+            for token in re.findall(
+                r"[A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z][A-Za-z0-9]*)*", raw
+            ):
+                if token.startswith("@"):
+                    continue
+                if token[0].isupper() and "." not in token:
+                    continue
+                primary_tokens.append(token)
+        primary_tokens = _unique(primary_tokens)
+        if ONE_OF_RE.search(row_text):
+            list_props: list[str] = []
+            for td in tds:
+                for list_html in re.findall(
+                    r"<ul[^>]*>.*?</ul>|<ol[^>]*>.*?</ol>",
+                    td,
+                    re.DOTALL | re.IGNORECASE,
+                ):
+                    list_props.extend(_extract_list_properties(list_html))
+            if not list_props:
+                list_props = primary_tokens
+            if list_props:
+                one_of_groups.append(set(_unique(list_props)))
+        elif len(primary_tokens) > 1 and " or " in row_text:
+            one_of_groups.append(set(primary_tokens))
+        else:
+            props.extend(primary_tokens)
+    return _unique(props), one_of_groups
+
+
+def _extract_list_properties(list_html: str) -> list[str]:
+    props: list[str] = []
+    for item in LIST_ITEM_RE.findall(list_html):
         code_match = re.search(
-            r"<code[^>]*>(.*?)</code>", td_html, re.DOTALL | re.IGNORECASE
+            r"<code[^>]*>(.*?)</code>", item, re.DOTALL | re.IGNORECASE
         )
         if not code_match:
             continue
@@ -133,20 +178,40 @@ def _feature_urls_from_gallery(html: str) -> list[str]:
 def _parse_feature(html: str, url: str) -> FeatureData:
     current_types: list[str] = []
     type_data: dict[str, dict[str, set[str]]] = {}
+    one_of: dict[str, list[set[str]]] = {}
+    pending_one_of_types: list[str] | None = None
 
     for token in TOKEN_RE.findall(html):
-        if token.lower().startswith(("<p", "<h2", "<h3")):
+        token_lower = token.lower()
+        if pending_one_of_types and not token_lower.startswith(("<ul", "<ol")):
+            pending_one_of_types = None
+        if token_lower.startswith(("<p", "<h2", "<h3")):
+            types = _extract_schema_types(token)
+            if types:
+                current_types = types
+            if token_lower.startswith("<p") and ONE_OF_RE.search(_strip_tags(token)):
+                pending_one_of_types = current_types or ["Thing"]
+            continue
+        if token_lower.startswith("<h4"):
             types = _extract_schema_types(token)
             if types:
                 current_types = types
             continue
 
-        if token.lower().startswith("<table"):
+        if token_lower.startswith(("<ul", "<ol")) and pending_one_of_types:
+            props = _extract_list_properties(token)
+            if props:
+                for t in pending_one_of_types:
+                    one_of.setdefault(t, []).append(set(props))
+            pending_one_of_types = None
+            continue
+
+        if token_lower.startswith("<table"):
             kind = _table_kind(token)
             if not kind:
                 continue
-            props = _extract_properties(token)
-            if not props:
+            props, groups = _extract_table_properties(token)
+            if not props and not groups:
                 continue
             target_types = current_types or ["Thing"]
             for t in target_types:
@@ -154,11 +219,19 @@ def _parse_feature(html: str, url: str) -> FeatureData:
                     t, {"required": set(), "recommended": set()}
                 )
                 bucket[kind].update(props)
+                if groups:
+                    one_of.setdefault(t, []).extend(groups)
 
     for t, bucket in type_data.items():
         bucket["recommended"].difference_update(bucket["required"])
 
-    return FeatureData(url=url, types=type_data)
+    for t, groups in one_of.items():
+        bucket = type_data.setdefault(t, {"required": set(), "recommended": set()})
+        for group in groups:
+            bucket["required"].difference_update(group)
+            bucket["recommended"].difference_update(group)
+
+    return FeatureData(url=url, types=type_data, one_of=one_of)
 
 
 def _prop_path(prop: str) -> str:
@@ -182,10 +255,19 @@ _SCOPED_CHILD_RULES: dict[str, dict[str, list[str]]] = {
         "comment": ["Comment"],
     },
     "Answer": {"comment": ["Comment"]},
-    "Product": {"offers": ["Offer"]},
+    "Product": {
+        "offers": ["Offer"],
+        "review": ["Review"],
+        "aggregateRating": ["AggregateRating"],
+    },
     "Recipe": {"recipeInstructions": ["HowToStep"], "step": ["HowToStep"]},
     "Course": {"provider": ["Organization"], "hasPart": ["Course", "CreativeWork"]},
-    "Review": {"reviewRating": ["Rating"], "aggregateRating": ["AggregateRating"]},
+    "Review": {
+        "reviewRating": ["Rating"],
+        "aggregateRating": ["AggregateRating"],
+        "positiveNotes": ["ItemList"],
+        "negativeNotes": ["ItemList"],
+    },
 }
 
 
@@ -197,6 +279,7 @@ def _emit_property(
     indent: int,
     buckets: dict[str, dict[str, set[str]]],
     visited: set[str],
+    one_of_map: dict[str, list[set[str]]],
 ) -> None:
     sp = " " * indent
     path = _prop_path(prop)
@@ -225,6 +308,8 @@ def _emit_property(
                 node_indent + 2,
                 buckets,
                 visited | {child_type},
+                one_of_map.get(child_type, []),
+                one_of_map,
             )
             lines.append(f"{node_sp}] ;")
         elif len(valid_children) > 1:
@@ -241,10 +326,81 @@ def _emit_property(
                     or_indent + 4,
                     buckets,
                     visited | {child_type},
+                    one_of_map.get(child_type, []),
+                    one_of_map,
                 )
                 lines.append(f"{or_sp}  ]")
             lines.append(f"{or_sp}) ;")
     lines.append(f"{sp}] ;")
+
+
+def _emit_one_of_groups(
+    lines: list[str],
+    groups: list[set[str]],
+    parent_type: str,
+    indent: int,
+    buckets: dict[str, dict[str, set[str]]],
+    visited: set[str],
+    one_of_map: dict[str, list[set[str]]],
+) -> None:
+    if not groups:
+        return
+    sp = " " * indent
+    for group in groups:
+        if not group:
+            continue
+        lines.append(f"{sp}sh:or (")
+        for prop in sorted(group):
+            child_types = _SCOPED_CHILD_RULES.get(parent_type, {}).get(prop)
+            lines.append(f"{sp}  [")
+            lines.append(f"{sp}    sh:property [")
+            lines.append(f"{sp}      sh:path {_prop_path(prop)} ;")
+            lines.append(f"{sp}      sh:minCount 1 ;")
+            if child_types:
+                valid_children = [
+                    child_type
+                    for child_type in child_types
+                    if child_type not in visited and child_type in buckets
+                ]
+                if len(valid_children) == 1:
+                    child_type = valid_children[0]
+                    child_bucket = buckets.get(child_type)
+                    node_indent = indent + 8
+                    node_sp = " " * node_indent
+                    lines.append(f"{node_sp}sh:node [")
+                    _emit_node(
+                        lines,
+                        child_type,
+                        child_bucket,
+                        node_indent + 2,
+                        buckets,
+                        visited | {child_type},
+                        one_of_map.get(child_type, []),
+                        one_of_map,
+                    )
+                    lines.append(f"{node_sp}] ;")
+                elif len(valid_children) > 1:
+                    or_indent = indent + 8
+                    or_sp = " " * or_indent
+                    lines.append(f"{or_sp}sh:or (")
+                    for child_type in valid_children:
+                        child_bucket = buckets.get(child_type)
+                        lines.append(f"{or_sp}  [")
+                        _emit_node(
+                            lines,
+                            child_type,
+                            child_bucket,
+                            or_indent + 4,
+                            buckets,
+                            visited | {child_type},
+                            one_of_map.get(child_type, []),
+                            one_of_map,
+                        )
+                        lines.append(f"{or_sp}  ]")
+                    lines.append(f"{or_sp}) ;")
+            lines.append(f"{sp}    ] ;")
+            lines.append(f"{sp}  ]")
+        lines.append(f"{sp}) ;")
 
 
 def _emit_node(
@@ -254,6 +410,8 @@ def _emit_node(
     indent: int,
     buckets: dict[str, dict[str, set[str]]],
     visited: set[str],
+    one_of_groups: list[set[str]] | None,
+    one_of_map: dict[str, list[set[str]]],
 ) -> None:
     sp = " " * indent
     lines.append(f"{sp}a sh:NodeShape ;")
@@ -270,6 +428,7 @@ def _emit_node(
             indent=indent,
             buckets=buckets,
             visited=visited,
+            one_of_map=one_of_map,
         )
 
     for prop in sorted(bucket["recommended"]):
@@ -282,7 +441,18 @@ def _emit_node(
             indent=indent,
             buckets=buckets,
             visited=visited,
+            one_of_map=one_of_map,
         )
+
+    _emit_one_of_groups(
+        lines,
+        one_of_groups or [],
+        type_name,
+        indent,
+        buckets,
+        visited,
+        one_of_map,
+    )
 
 
 def _write_feature(feature: FeatureData, output_path: Path, overwrite: bool) -> bool:
@@ -336,6 +506,7 @@ def _write_feature(feature: FeatureData, output_path: Path, overwrite: bool) -> 
                 indent=2,
                 buckets=feature.types,
                 visited={type_name},
+                one_of_map=feature.one_of,
             )
 
         for prop in sorted(bucket["recommended"]):
@@ -348,7 +519,18 @@ def _write_feature(feature: FeatureData, output_path: Path, overwrite: bool) -> 
                 indent=2,
                 buckets=feature.types,
                 visited={type_name},
+                one_of_map=feature.one_of,
             )
+
+        _emit_one_of_groups(
+            lines,
+            feature.one_of.get(type_name, []),
+            type_name,
+            2,
+            feature.types,
+            {type_name},
+            feature.one_of,
+        )
 
         lines.append(".")
         lines.append("")

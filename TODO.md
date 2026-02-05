@@ -11,3 +11,4 @@
 - [x] 2026-02-05 Resolve CA bundles on macOS with system-first fallback to certifi.
 - [x] 2026-02-05 Add validation helper to render URLs with Playwright and validate extracted JSON-LD.
 - [x] 2026-02-05 Make Playwright a declared dependency and document browser install steps.
+- [x] 2026-02-05 Add "one of" SHACL groups for Google Search Gallery features and scope Review notes under Product.

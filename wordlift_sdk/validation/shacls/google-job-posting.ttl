@@ -3,7 +3,7 @@
 @prefix schema: <http://schema.org/> .
 
 # Source: https://developers.google.com/search/docs/appearance/structured-data/job-posting
-# Generated: 2026-01-13T11:23:31Z
+# Generated: 2026-02-05T20:39:55Z
 # Notes: required properties => errors; recommended properties => warnings.
 
 :google_JobPostingShape
@@ -42,12 +42,6 @@
     sh:message "Recommended by Google: baseSalary." ;
   ] ;
   sh:property [
-    sh:path schema:directApply ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: directApply." ;
-  ] ;
-  sh:property [
     sh:path schema:employmentType ;
     sh:minCount 1 ;
     sh:severity sh:Warning ;
@@ -71,4 +65,67 @@
     sh:severity sh:Warning ;
     sh:message "Recommended by Google: validThrough." ;
   ] ;
+  sh:or (
+    [
+      sh:property [
+        sh:path schema:directApply ;
+        sh:minCount 1 ;
+      ] ;
+    ]
+  ) ;
+.
+
+:google_TextShape
+  a sh:NodeShape ;
+  sh:targetClass schema:Text ;
+  sh:or (
+    [
+      sh:property [
+        sh:path schema:associate ;
+        sh:minCount 1 ;
+      ] ;
+    ]
+    [
+      sh:property [
+        sh:path schema:bachelor ;
+        sh:minCount 1 ;
+      ] ;
+    ]
+    [
+      sh:property [
+        sh:path schema:certificate ;
+        sh:minCount 1 ;
+      ] ;
+    ]
+    [
+      sh:property [
+        sh:path schema:degree ;
+        sh:minCount 1 ;
+      ] ;
+    ]
+    [
+      sh:property [
+        sh:path schema:high ;
+        sh:minCount 1 ;
+      ] ;
+    ]
+    [
+      sh:property [
+        sh:path schema:postgraduate ;
+        sh:minCount 1 ;
+      ] ;
+    ]
+    [
+      sh:property [
+        sh:path schema:professional ;
+        sh:minCount 1 ;
+      ] ;
+    ]
+    [
+      sh:property [
+        sh:path schema:school ;
+        sh:minCount 1 ;
+      ] ;
+    ]
+  ) ;
 .

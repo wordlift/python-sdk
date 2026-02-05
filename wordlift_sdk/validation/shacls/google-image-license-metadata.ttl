@@ -3,7 +3,7 @@
 @prefix schema: <http://schema.org/> .
 
 # Source: https://developers.google.com/search/docs/appearance/structured-data/image-license-metadata
-# Generated: 2026-01-13T11:23:29Z
+# Generated: 2026-02-05T20:39:54Z
 # Notes: required properties => errors; recommended properties => warnings.
 
 :google_ImageObjectShape
@@ -14,39 +14,43 @@
     sh:minCount 1 ;
   ] ;
   sh:property [
-    sh:path schema:creator ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
     sh:path schema:acquireLicensePage ;
     sh:minCount 1 ;
     sh:severity sh:Warning ;
     sh:message "Recommended by Google: acquireLicensePage." ;
   ] ;
   sh:property [
-    sh:path schema:copyrightNotice ;
+    sh:path ( schema:creator schema:name ) ;
     sh:minCount 1 ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: copyrightNotice." ;
+    sh:message "Recommended by Google: creator.name." ;
   ] ;
-  sh:property [
-    sh:path schema:creditText ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: creditText." ;
-  ] ;
-  sh:property [
-    sh:path schema:license ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: license." ;
-  ] ;
-  sh:property [
-    sh:path schema:name ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: name." ;
-  ] ;
+  sh:or (
+    [
+      sh:property [
+        sh:path schema:copyrightNotice ;
+        sh:minCount 1 ;
+      ] ;
+    ]
+    [
+      sh:property [
+        sh:path schema:creator ;
+        sh:minCount 1 ;
+      ] ;
+    ]
+    [
+      sh:property [
+        sh:path schema:creditText ;
+        sh:minCount 1 ;
+      ] ;
+    ]
+    [
+      sh:property [
+        sh:path schema:license ;
+        sh:minCount 1 ;
+      ] ;
+    ]
+  ) ;
 .
 
 :google_PersonShape
@@ -57,37 +61,41 @@
     sh:minCount 1 ;
   ] ;
   sh:property [
-    sh:path schema:creator ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
     sh:path schema:acquireLicensePage ;
     sh:minCount 1 ;
     sh:severity sh:Warning ;
     sh:message "Recommended by Google: acquireLicensePage." ;
   ] ;
   sh:property [
-    sh:path schema:copyrightNotice ;
+    sh:path ( schema:creator schema:name ) ;
     sh:minCount 1 ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: copyrightNotice." ;
+    sh:message "Recommended by Google: creator.name." ;
   ] ;
-  sh:property [
-    sh:path schema:creditText ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: creditText." ;
-  ] ;
-  sh:property [
-    sh:path schema:license ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: license." ;
-  ] ;
-  sh:property [
-    sh:path schema:name ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: name." ;
-  ] ;
+  sh:or (
+    [
+      sh:property [
+        sh:path schema:copyrightNotice ;
+        sh:minCount 1 ;
+      ] ;
+    ]
+    [
+      sh:property [
+        sh:path schema:creator ;
+        sh:minCount 1 ;
+      ] ;
+    ]
+    [
+      sh:property [
+        sh:path schema:creditText ;
+        sh:minCount 1 ;
+      ] ;
+    ]
+    [
+      sh:property [
+        sh:path schema:license ;
+        sh:minCount 1 ;
+      ] ;
+    ]
+  ) ;
 .

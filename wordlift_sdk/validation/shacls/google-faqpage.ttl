@@ -3,7 +3,7 @@
 @prefix schema: <http://schema.org/> .
 
 # Source: https://developers.google.com/search/docs/appearance/structured-data/faqpage
-# Generated: 2026-02-04T20:00:53Z
+# Generated: 2026-02-05T20:39:54Z
 # Notes: required properties => errors; recommended properties => warnings.
 
 :google_FAQPageShape

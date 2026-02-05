@@ -3,7 +3,7 @@
 @prefix schema: <http://schema.org/> .
 
 # Source: https://developers.google.com/search/docs/appearance/structured-data/carousels-beta
-# Generated: 2026-01-13T11:24:03Z
+# Generated: 2026-02-05T20:40:15Z
 # Notes: required properties => errors; recommended properties => warnings.
 
 :google_EventShape
@@ -22,34 +22,22 @@
     sh:minCount 1 ;
   ] ;
   sh:property [
-    sh:path schema:aggregateRating ;
+    sh:path ( schema:aggregateRating schema:bestRating ) ;
     sh:minCount 1 ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: aggregateRating." ;
+    sh:message "Recommended by Google: aggregateRating.bestRating." ;
   ] ;
   sh:property [
-    sh:path schema:amenityFeature ;
+    sh:path ( schema:aggregateRating schema:ratingCount ) ;
     sh:minCount 1 ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: amenityFeature." ;
+    sh:message "Recommended by Google: aggregateRating.ratingCount." ;
   ] ;
   sh:property [
-    sh:path schema:bestRating ;
+    sh:path ( schema:aggregateRating schema:ratingValue ) ;
     sh:minCount 1 ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: bestRating." ;
-  ] ;
-  sh:property [
-    sh:path schema:highPrice ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: highPrice." ;
-  ] ;
-  sh:property [
-    sh:path schema:lowPrice ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: lowPrice." ;
+    sh:message "Recommended by Google: aggregateRating.ratingValue." ;
   ] ;
   sh:property [
     sh:path schema:offers ;
@@ -58,40 +46,28 @@
     sh:message "Recommended by Google: offers." ;
   ] ;
   sh:property [
-    sh:path schema:price ;
+    sh:path ( schema:offers schema:highPrice ) ;
     sh:minCount 1 ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: price." ;
+    sh:message "Recommended by Google: offers.highPrice." ;
   ] ;
   sh:property [
-    sh:path schema:priceCurrency ;
+    sh:path ( schema:offers schema:lowPrice ) ;
     sh:minCount 1 ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: priceCurrency." ;
+    sh:message "Recommended by Google: offers.lowPrice." ;
   ] ;
   sh:property [
-    sh:path schema:priceRange ;
+    sh:path ( schema:offers schema:price ) ;
     sh:minCount 1 ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: priceRange." ;
+    sh:message "Recommended by Google: offers.price." ;
   ] ;
   sh:property [
-    sh:path schema:ratingCount ;
+    sh:path ( schema:offers schema:priceCurrency ) ;
     sh:minCount 1 ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: ratingCount." ;
-  ] ;
-  sh:property [
-    sh:path schema:ratingValue ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: ratingValue." ;
-  ] ;
-  sh:property [
-    sh:path schema:servesCuisine ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: servesCuisine." ;
+    sh:message "Recommended by Google: offers.priceCurrency." ;
   ] ;
 .
 
@@ -99,15 +75,15 @@
   a sh:NodeShape ;
   sh:targetClass schema:ItemList ;
   sh:property [
-    sh:path schema:item ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
     sh:path schema:itemListElement ;
     sh:minCount 1 ;
   ] ;
   sh:property [
-    sh:path schema:position ;
+    sh:path ( schema:itemListElement schema:item ) ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path ( schema:itemListElement schema:position ) ;
     sh:minCount 1 ;
   ] ;
 .
@@ -128,10 +104,22 @@
     sh:minCount 1 ;
   ] ;
   sh:property [
-    sh:path schema:aggregateRating ;
+    sh:path ( schema:aggregateRating schema:bestRating ) ;
     sh:minCount 1 ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: aggregateRating." ;
+    sh:message "Recommended by Google: aggregateRating.bestRating." ;
+  ] ;
+  sh:property [
+    sh:path ( schema:aggregateRating schema:ratingCount ) ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: aggregateRating.ratingCount." ;
+  ] ;
+  sh:property [
+    sh:path ( schema:aggregateRating schema:ratingValue ) ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: aggregateRating.ratingValue." ;
   ] ;
   sh:property [
     sh:path schema:amenityFeature ;
@@ -140,58 +128,10 @@
     sh:message "Recommended by Google: amenityFeature." ;
   ] ;
   sh:property [
-    sh:path schema:bestRating ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: bestRating." ;
-  ] ;
-  sh:property [
-    sh:path schema:highPrice ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: highPrice." ;
-  ] ;
-  sh:property [
-    sh:path schema:lowPrice ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: lowPrice." ;
-  ] ;
-  sh:property [
-    sh:path schema:offers ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: offers." ;
-  ] ;
-  sh:property [
-    sh:path schema:price ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: price." ;
-  ] ;
-  sh:property [
-    sh:path schema:priceCurrency ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: priceCurrency." ;
-  ] ;
-  sh:property [
     sh:path schema:priceRange ;
     sh:minCount 1 ;
     sh:severity sh:Warning ;
     sh:message "Recommended by Google: priceRange." ;
-  ] ;
-  sh:property [
-    sh:path schema:ratingCount ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: ratingCount." ;
-  ] ;
-  sh:property [
-    sh:path schema:ratingValue ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: ratingValue." ;
   ] ;
   sh:property [
     sh:path schema:servesCuisine ;
@@ -217,34 +157,22 @@
     sh:minCount 1 ;
   ] ;
   sh:property [
-    sh:path schema:aggregateRating ;
+    sh:path ( schema:aggregateRating schema:bestRating ) ;
     sh:minCount 1 ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: aggregateRating." ;
+    sh:message "Recommended by Google: aggregateRating.bestRating." ;
   ] ;
   sh:property [
-    sh:path schema:amenityFeature ;
+    sh:path ( schema:aggregateRating schema:ratingCount ) ;
     sh:minCount 1 ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: amenityFeature." ;
+    sh:message "Recommended by Google: aggregateRating.ratingCount." ;
   ] ;
   sh:property [
-    sh:path schema:bestRating ;
+    sh:path ( schema:aggregateRating schema:ratingValue ) ;
     sh:minCount 1 ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: bestRating." ;
-  ] ;
-  sh:property [
-    sh:path schema:highPrice ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: highPrice." ;
-  ] ;
-  sh:property [
-    sh:path schema:lowPrice ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: lowPrice." ;
+    sh:message "Recommended by Google: aggregateRating.ratingValue." ;
   ] ;
   sh:property [
     sh:path schema:offers ;
@@ -253,39 +181,27 @@
     sh:message "Recommended by Google: offers." ;
   ] ;
   sh:property [
-    sh:path schema:price ;
+    sh:path ( schema:offers schema:highPrice ) ;
     sh:minCount 1 ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: price." ;
+    sh:message "Recommended by Google: offers.highPrice." ;
   ] ;
   sh:property [
-    sh:path schema:priceCurrency ;
+    sh:path ( schema:offers schema:lowPrice ) ;
     sh:minCount 1 ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: priceCurrency." ;
+    sh:message "Recommended by Google: offers.lowPrice." ;
   ] ;
   sh:property [
-    sh:path schema:priceRange ;
+    sh:path ( schema:offers schema:price ) ;
     sh:minCount 1 ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: priceRange." ;
+    sh:message "Recommended by Google: offers.price." ;
   ] ;
   sh:property [
-    sh:path schema:ratingCount ;
+    sh:path ( schema:offers schema:priceCurrency ) ;
     sh:minCount 1 ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: ratingCount." ;
-  ] ;
-  sh:property [
-    sh:path schema:ratingValue ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: ratingValue." ;
-  ] ;
-  sh:property [
-    sh:path schema:servesCuisine ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: servesCuisine." ;
+    sh:message "Recommended by Google: offers.priceCurrency." ;
   ] ;
 .

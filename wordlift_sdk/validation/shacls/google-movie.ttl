@@ -3,7 +3,7 @@
 @prefix schema: <http://schema.org/> .
 
 # Source: https://developers.google.com/search/docs/appearance/structured-data/movie
-# Generated: 2026-01-13T11:23:35Z
+# Generated: 2026-02-05T20:39:57Z
 # Notes: required properties => errors; recommended properties => warnings.
 
 :google_MovieShape

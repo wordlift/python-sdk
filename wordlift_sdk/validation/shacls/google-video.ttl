@@ -3,26 +3,26 @@
 @prefix schema: <http://schema.org/> .
 
 # Source: https://developers.google.com/search/docs/appearance/structured-data/video
-# Generated: 2026-01-13T11:24:02Z
+# Generated: 2026-02-05T20:40:13Z
 # Notes: required properties => errors; recommended properties => warnings.
 
 :google_BroadcastEventShape
   a sh:NodeShape ;
   sh:targetClass schema:BroadcastEvent ;
   sh:property [
-    sh:path schema:endDate ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:isLiveBroadcast ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
     sh:path schema:publication ;
     sh:minCount 1 ;
   ] ;
   sh:property [
-    sh:path schema:startDate ;
+    sh:path ( schema:publication schema:endDate ) ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path ( schema:publication schema:isLiveBroadcast ) ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path ( schema:publication schema:startDate ) ;
     sh:minCount 1 ;
   ] ;
 .
@@ -62,11 +62,11 @@
     sh:minCount 1 ;
   ] ;
   sh:property [
-    sh:path schema:startOffset ;
+    sh:path ( schema:potentialAction schema:startOffset ) ;
     sh:minCount 1 ;
   ] ;
   sh:property [
-    sh:path schema:target ;
+    sh:path ( schema:potentialAction schema:target ) ;
     sh:minCount 1 ;
   ] ;
 .

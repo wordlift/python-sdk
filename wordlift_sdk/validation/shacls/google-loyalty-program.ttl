@@ -3,7 +3,7 @@
 @prefix schema: <http://schema.org/> .
 
 # Source: https://developers.google.com/search/docs/appearance/structured-data/loyalty-program
-# Generated: 2026-01-13T11:23:45Z
+# Generated: 2026-02-05T20:40:03Z
 # Notes: required properties => errors; recommended properties => warnings.
 
 :google_MemberProgramShape
