@@ -133,6 +133,14 @@ Add `.ttl.liquid` files under `data/templates`. Templates render with `account` 
 
 SHACL validation utilities and generated Google Search Gallery shapes are included. When a feature includes both container types (for example `ItemList`, `BreadcrumbList`, `QAPage`, `FAQPage`, `Quiz`, `ProfilePage`, `Product`, `Recipe`, `Course`, `Review`) and their contained types (`ListItem`, `Question`, `Answer`, `Comment`, `Offer`, `HowToStep`, `Person`, `Organization`, `Rating`, `AggregateRating`), the generator scopes the contained constraints under the container properties to avoid enforcing them on unrelated nodes. Schema.org grammar checks are intentionally permissive and accept URL/text literals for all properties.
 
+Use `wordlift_sdk.validation.validate_jsonld_from_url` to render a URL with Playwright, extract JSON-LD fragments, and validate them against SHACL shapes.
+
+Playwright is required for URL rendering. After installing dependencies, install the browser binaries:
+
+```bash
+poetry run playwright install
+```
+
 ## Testing
 
 ```bash

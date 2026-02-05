@@ -13,3 +13,12 @@ rules from applying to unrelated nodes.
 
 Schema.org grammar checks intentionally allow URL and text literals for every
 property (in addition to the documented range types).
+
+## JSON-LD validation from URLs
+
+The validation module can render a URL with Playwright, extract all
+`application/ld+json` fragments, flatten them into a single list of JSON-LD
+nodes, and pass them through the SHACL validation pipeline.
+
+Playwright is a required dependency for URL rendering. Install browser binaries
+with `playwright install` after the Python dependencies are installed.

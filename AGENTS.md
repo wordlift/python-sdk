@@ -12,6 +12,8 @@
   bumping the range.
 - Schema.org grammar checks are deliberately permissive, accepting URL/text literals
   for all properties.
+- URL validation can render pages with Playwright, extract JSON-LD fragments, and
+  validate them via SHACL. Playwright browser binaries must be installed.
 - SSL verification is always enabled; on macOS the SDK uses the system CA bundle
   when available and falls back to `certifi`. Explicit CA bundle overrides are
   supported in the SDK layer.

@@ -9,3 +9,5 @@
 - [x] 2026-02-04 Scope `Rating`/`AggregateRating` constraints under `Review`.
 - [x] 2026-02-05 Allow URL/text literals for all schema.org grammar range checks.
 - [x] 2026-02-05 Resolve CA bundles on macOS with system-first fallback to certifi.
+- [x] 2026-02-05 Add validation helper to render URLs with Playwright and validate extracted JSON-LD.
+- [x] 2026-02-05 Make Playwright a declared dependency and document browser install steps.
