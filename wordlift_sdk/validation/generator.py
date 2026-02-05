@@ -469,6 +469,9 @@ def _render_property_shape(prop: URIRef, ranges: list[URIRef]) -> list[str]:
     lines.append("    sh:severity sh:Warning ;")
 
     range_constraints: list[str] = []
+    range_constraints.append(f"[ sh:datatype <{XSD.anyURI}> ]")
+    range_constraints.append(f"[ sh:datatype <{XSD.string}> ]")
+    range_constraints.append(f"[ sh:datatype <{RDF_NS.langString}> ]")
     for r in ranges:
         name = _short_name(r)
         datatype_shapes = _datatype_shapes(name)
@@ -479,6 +482,7 @@ def _render_property_shape(prop: URIRef, ranges: list[URIRef]) -> list[str]:
             range_constraints.append(f"[ sh:class schema:{name} ]")
 
     if range_constraints:
+        range_constraints = _unique(range_constraints)
         if len(range_constraints) == 1:
             lines.append(f"    sh:or ( {range_constraints[0]} ) ;")
         else:

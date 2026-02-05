@@ -7,3 +7,4 @@
 - [x] 2026-02-04 Scope product/profile/recipe/course child constraints under their containers.
 - [x] 2026-02-04 Validate Python 3.14 and expand supported range.
 - [x] 2026-02-04 Scope `Rating`/`AggregateRating` constraints under `Review`.
+- [x] 2026-02-05 Allow URL/text literals for all schema.org grammar range checks.

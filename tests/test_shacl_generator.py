@@ -1,5 +1,7 @@
 from pathlib import Path
 
+from rdflib import URIRef
+
 from wordlift_sdk.validation.generator import FeatureData, _write_feature
 
 
@@ -220,6 +222,21 @@ def test_scopes_rating_under_review(tmp_path: Path) -> None:
     assert "sh:class schema:Rating" in content
     assert "sh:path schema:aggregateRating" in content
     assert "sh:class schema:AggregateRating" in content
+
+
+def test_schemaorg_range_allows_literals(tmp_path: Path) -> None:
+    from wordlift_sdk.validation.generator import _render_property_shape
+
+    lines = _render_property_shape(
+        URIRef("http://schema.org/item"), [URIRef("http://schema.org/Thing")]
+    )
+    content = "\n".join(lines)
+
+    assert "sh:datatype <http://www.w3.org/2001/XMLSchema#anyURI>" in content
+    assert "sh:datatype <http://www.w3.org/2001/XMLSchema#string>" in content
+    assert (
+        "sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString>" in content
+    )
 
 
 def test_keeps_listitem_shape_without_itemlist(tmp_path: Path) -> None:
