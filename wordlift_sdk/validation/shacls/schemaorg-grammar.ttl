@@ -3,7 +3,7 @@
 @prefix schema: <http://schema.org/> .
 
 # Source: https://schema.org/version/latest/schemaorg-current-https.jsonld
-# Generated: 2026-02-05T00:18:22Z
+# Generated: 2026-02-06T07:25:27Z
 # Notes: schema.org grammar checks only; all constraints are warnings.
 
 :schema_3DModelShape

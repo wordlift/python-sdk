@@ -5,7 +5,7 @@
 - Generated Google SHACLs scope contained type requirements under container types
   (for example `ItemList`/`BreadcrumbList` → `ListItem`, `QAPage`/`FAQPage`/`Quiz`
   → `Question`/`Answer`/`Comment`, `ProfilePage` → `Person`/`Organization`,
-  `Product` → `Offer`/`Review`/`AggregateRating`, `Recipe` → `HowToStep`,
+  `Product` → `Offer`/`AggregateOffer`/`Review`/`AggregateRating`, `Recipe` → `HowToStep`,
   `Course` → `Organization`/`CreativeWork`, `Review` → `Rating`/`AggregateRating`/
   `ItemList`) when both appear in a feature definition. This prevents constraints
   from firing on unrelated nodes.

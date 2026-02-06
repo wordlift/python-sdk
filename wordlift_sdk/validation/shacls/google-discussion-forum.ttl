@@ -3,7 +3,7 @@
 @prefix schema: <http://schema.org/> .
 
 # Source: https://developers.google.com/search/docs/appearance/structured-data/discussion-forum
-# Generated: 2026-02-05T20:39:50Z
+# Generated: 2026-02-06T07:25:06Z
 # Notes: required properties => errors; recommended properties => warnings.
 
 :google_CommentShape

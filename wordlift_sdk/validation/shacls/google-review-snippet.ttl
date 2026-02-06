@@ -3,7 +3,7 @@
 @prefix schema: <http://schema.org/> .
 
 # Source: https://developers.google.com/search/docs/appearance/structured-data/review-snippet
-# Generated: 2026-02-05T20:40:08Z
+# Generated: 2026-02-06T07:25:23Z
 # Notes: required properties => errors; recommended properties => warnings.
 
 :google_ReviewShape

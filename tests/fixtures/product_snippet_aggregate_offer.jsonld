@@ -1,0 +1,19 @@
+[
+  {
+    "@context": "https://schema.org/",
+    "@id": "https://example.com/product/1",
+    "@type": "Product",
+    "name": "Example Product",
+    "offers": {
+      "@id": "https://example.com/product/1#offers"
+    }
+  },
+  {
+    "@context": "https://schema.org/",
+    "@id": "https://example.com/product/1#offers",
+    "@type": "AggregateOffer",
+    "lowPrice": 199.99,
+    "priceCurrency": "USD",
+    "offerCount": 3
+  }
+]

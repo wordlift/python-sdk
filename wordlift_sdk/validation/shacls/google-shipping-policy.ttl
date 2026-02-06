@@ -3,7 +3,7 @@
 @prefix schema: <http://schema.org/> .
 
 # Source: https://developers.google.com/search/docs/appearance/structured-data/shipping-policy
-# Generated: 2026-02-05T20:40:05Z
+# Generated: 2026-02-06T07:25:20Z
 # Notes: required properties => errors; recommended properties => warnings.
 
 :google_ConditionsShape

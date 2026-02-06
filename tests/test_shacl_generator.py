@@ -130,6 +130,7 @@ def test_scopes_offer_under_product(tmp_path: Path) -> None:
         types={
             "Product": {"required": {"offers"}, "recommended": set()},
             "Offer": {"required": {"price"}, "recommended": set()},
+            "AggregateOffer": {"required": {"lowPrice"}, "recommended": set()},
         },
     )
 
@@ -137,8 +138,11 @@ def test_scopes_offer_under_product(tmp_path: Path) -> None:
 
     assert "sh:targetClass schema:Product" in content
     assert "sh:targetClass schema:Offer" not in content
+    assert "sh:targetClass schema:AggregateOffer" not in content
     assert "sh:path schema:offers" in content
+    assert "sh:or (" in content
     assert "sh:class schema:Offer" in content
+    assert "sh:class schema:AggregateOffer" in content
 
 
 def test_scopes_howtostep_under_recipe(tmp_path: Path) -> None:
