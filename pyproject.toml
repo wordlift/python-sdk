@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "wordlift-sdk"
-version = "2.19.0"
+version = "2.20.0"
 description = ""
 authors = ["David Riccitelli <david@wordlift.io>"]
 readme = "README.md"
@@ -15,7 +15,7 @@ aiohttp = "^3.10.5"
 # Google Colab requires pandas 2.1.4
 pandas = ">=2.1.4, <2.3.0"
 rdflib = "^7.0.0"
-wordlift-client = "^1.133.0"
+wordlift-client = "^1.137.0"
 gspread = "^6.1.2"
 google-auth = "^2.35.0"
 tqdm = "^4.67.1"

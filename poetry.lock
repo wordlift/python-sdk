@@ -3595,14 +3595,14 @@ files = [
 
 [[package]]
 name = "wordlift-client"
-version = "1.135.0"
+version = "1.137.0"
 description = "WordLift API"
 optional = false
 python-versions = "*"
 groups = ["main"]
 files = [
-    {file = "wordlift_client-1.135.0-py3-none-any.whl", hash = "sha256:f5baca324aa05471c916dcbfb326d47f517354a46b38469046bf80fce04cba0e"},
-    {file = "wordlift_client-1.135.0.tar.gz", hash = "sha256:84d9dedcb565a72beaf87dba51ea3bf718b84806512929e3ceb5ba4d3cae5431"},
+    {file = "wordlift_client-1.137.0-py3-none-any.whl", hash = "sha256:093b754a9ddd92151ef40d3b57c2e46b8596165607dbd94ff9821df795bb39cd"},
+    {file = "wordlift_client-1.137.0.tar.gz", hash = "sha256:d36e2762edc1b5b52acb11c4440e2c25a2c36d297f24bdc02410a6ab8c74b048"},
 ]
 
 [package.dependencies]
@@ -3828,4 +3828,4 @@ testing = ["coverage[toml]", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10, <3.15"
-content-hash = "a59f31c5f75107d86d95e0467528b41e4397d04e8ef699ae3c2eec17292f3ee6"
+content-hash = "2f5051dd8c5f3fd95f1d696810e02b7e01e25ce0596794046e2cb5edab7d6492"
