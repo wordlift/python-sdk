@@ -6,7 +6,7 @@ from typing import Optional, Union
 import gspread
 from google.auth.credentials import Credentials
 from gspread import Client
-from wordlift_client import Configuration, AccountInfo
+from wordlift_client import Configuration, AccountInfo, WebPageImportFetchOptions
 
 from ..client.client_configuration_factory import ClientConfigurationFactory
 from ..configuration import ConfigurationProvider
@@ -92,6 +92,29 @@ class ApplicationContainer:
         write_strategy = self._configuration_provider.get_value(
             "WEB_PAGE_IMPORT_WRITE_STRATEGY", "createOrUpdateModel"
         )
+        fetch_options = WebPageImportFetchOptions(
+            mode=self._configuration_provider.get_value(
+                "WEB_PAGE_IMPORT_MODE", "default"
+            ),
+            render_js=self._configuration_provider.get_value(
+                "WEB_PAGE_IMPORT_RENDER_JS", None
+            ),
+            wait_for=self._configuration_provider.get_value(
+                "WEB_PAGE_IMPORT_WAIT_FOR", None
+            ),
+            country_code=self._configuration_provider.get_value(
+                "WEB_PAGE_IMPORT_COUNTRY_CODE", None
+            ),
+            premium_proxy=self._configuration_provider.get_value(
+                "WEB_PAGE_IMPORT_PREMIUM_PROXY", None
+            ),
+            block_ads=self._configuration_provider.get_value(
+                "WEB_PAGE_IMPORT_BLOCK_ADS", None
+            ),
+            timeout=self._configuration_provider.get_value(
+                "WEB_PAGE_IMPORT_TIMEOUT", None
+            ),
+        )
         return WebPageImportUrlHandler(
             context=await self.get_context(),
             embedding_properties=self._configuration_provider.get_value(
@@ -106,6 +129,7 @@ class ApplicationContainer:
                 "WEB_PAGE_TYPES", ["http://schema.org/Article"]
             ),
             write_strategy=write_strategy,
+            fetch_options=fetch_options,
         )
 
     async def create_search_console_url_handler(self):

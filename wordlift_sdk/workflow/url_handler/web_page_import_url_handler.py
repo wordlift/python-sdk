@@ -15,6 +15,7 @@ from wordlift_client import (
     WebPagesImportsApi,
     WebPageImportRequest,
     EmbeddingRequest,
+    WebPageImportFetchOptions,
 )
 import wordlift_client
 import gql.transport.exceptions
@@ -34,6 +35,7 @@ logger = logging.getLogger(__name__)
 class WebPageImportUrlHandler(UrlHandler):
     _context: Context
     _embedding_request: EmbeddingRequest
+    _fetch_options: WebPageImportFetchOptions | None
     _web_page_import_callback: WebPageImportProtocolInterface
     _web_page_types: list[str]
     _write_strategy: str
@@ -45,6 +47,7 @@ class WebPageImportUrlHandler(UrlHandler):
         web_page_types: list[str],
         web_page_import_callback: WebPageImportProtocolInterface | None = None,
         write_strategy: str = "createOrUpdateModel",
+        fetch_options: WebPageImportFetchOptions | None = None,
     ):
         self._context = context
         self._embedding_request = EmbeddingRequest(
@@ -63,6 +66,7 @@ class WebPageImportUrlHandler(UrlHandler):
             self._web_page_import_callback = web_page_import_callback
 
         self._write_strategy = write_strategy
+        self._fetch_options = fetch_options
 
     @retry(
         retry=retry_if_exception_type(
@@ -92,6 +96,7 @@ class WebPageImportUrlHandler(UrlHandler):
                 output_types=self._web_page_types,
                 id_generator="headline-with-url-hash",
                 write_strategy=self._write_strategy,
+                fetch_options=self._fetch_options,
             )
 
             try:

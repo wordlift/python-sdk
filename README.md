@@ -151,3 +151,5 @@ poetry run pytest
 ## Documentation
 
 - [Google Sheets Lookup](docs/google_sheets_lookup.md): Utility for O(1) lookups from Google Sheets.
+- [Web Page Import](docs/web_page_import.md): Configure fetch options, proxies, and JS rendering.
+
