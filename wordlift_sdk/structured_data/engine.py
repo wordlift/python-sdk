@@ -829,10 +829,72 @@ def make_reusable_yarrrml(
     normalized = _replace_sources_with_placeholder(yarrml, source_placeholder)
     escaped_url = re.escape(url)
     normalized = re.sub(
-        rf"(schema:url\s*,\s*['\"])({escaped_url})(['\"])",
-        r"\1__URL__\3",
+        rf"(?<![A-Za-z0-9_]){escaped_url}(?![A-Za-z0-9_])",
+        "__URL__",
         normalized,
     )
+    return normalized
+
+
+def _resolve_runtime_url(
+    *,
+    response: Any | None = None,
+    url: str | None = None,
+) -> str | None:
+    if response is not None:
+        web_page = None
+        if isinstance(response, dict):
+            web_page = response.get("web_page")
+        else:
+            web_page = getattr(response, "web_page", None)
+        if web_page is not None:
+            if isinstance(web_page, dict):
+                resolved = web_page.get("url")
+            else:
+                resolved = getattr(web_page, "url", None)
+            if isinstance(resolved, str) and resolved.strip():
+                return resolved.strip()
+    if isinstance(url, str) and url.strip():
+        return url.strip()
+    return None
+
+
+def _replace_runtime_tokens(
+    yarrml: str,
+    *,
+    file_uri: str,
+    response: Any | None = None,
+    url: str | None = None,
+    strict_url_token: bool = False,
+    replace_url: bool = True,
+) -> str:
+    normalized = yarrml
+    normalized = re.sub(
+        r"(?<![A-Za-z0-9_])__XHTML__(?![A-Za-z0-9_])",
+        file_uri,
+        normalized,
+    )
+    normalized = _replace_sources_with_file(normalized, file_uri)
+    if replace_url:
+        resolved_url = _resolve_runtime_url(response=response, url=url)
+        has_url_token = re.search(
+            r"(?<![A-Za-z0-9_])__URL__(?![A-Za-z0-9_])", normalized
+        )
+        if has_url_token:
+            if resolved_url:
+                normalized = re.sub(
+                    r"(?<![A-Za-z0-9_])__URL__(?![A-Za-z0-9_])",
+                    resolved_url,
+                    normalized,
+                )
+            elif strict_url_token:
+                raise RuntimeError(
+                    "YARRRML contains __URL__ but no runtime URL is available."
+                )
+            else:
+                logging.warning(
+                    "YARRRML contains __URL__ but no runtime URL is available; leaving token unchanged."
+                )
     return normalized
 
 
@@ -1267,16 +1329,18 @@ def materialize_yarrrml(
     xhtml_path: Path,
     workdir: Path,
     *,
+    response: Any | None = None,
     url: str | None = None,
+    strict_url_token: bool = False,
 ) -> Graph:
     file_uri = xhtml_path.as_posix()
-    normalized = _replace_sources_with_file(yarrrml, file_uri)
-    if url:
-        normalized = re.sub(
-            r"(schema:url\s*,\s*['\"])__URL__(['\"])",
-            rf"\1{url}\2",
-            normalized,
-        )
+    normalized = _replace_runtime_tokens(
+        yarrrml,
+        file_uri=file_uri,
+        response=response,
+        url=url,
+        strict_url_token=strict_url_token,
+    )
     workdir.mkdir(parents=True, exist_ok=True)
     yarrml_path = workdir / "mapping.yarrrml"
     rml_path = workdir / "mapping.ttl"
@@ -1291,9 +1355,14 @@ def normalize_yarrrml_mappings(
     yarrrml: str,
     url: str,
     xhtml_path: Path,
-    target_type: str | None = None,
 ) -> tuple[str, list[dict[str, Any]]]:
-    return _normalize_agent_yarrml(yarrrml, url, xhtml_path.as_posix(), target_type)
+    normalized = _replace_runtime_tokens(
+        yarrrml,
+        file_uri=xhtml_path.as_posix(),
+        url=url,
+        replace_url=False,
+    )
+    return normalized, []
 
 
 def materialize_yarrrml_jsonld(
@@ -1301,16 +1370,18 @@ def materialize_yarrrml_jsonld(
     xhtml_path: Path,
     workdir: Path,
     *,
+    response: Any | None = None,
     url: str | None = None,
+    strict_url_token: bool = False,
 ) -> dict[str, Any] | list[Any]:
     file_uri = xhtml_path.as_posix()
-    normalized = _replace_sources_with_file(yarrrml, file_uri)
-    if url:
-        normalized = re.sub(
-            r"(schema:url\s*,\s*['\"])__URL__(['\"])",
-            rf"\1{url}\2",
-            normalized,
-        )
+    normalized = _replace_runtime_tokens(
+        yarrrml,
+        file_uri=file_uri,
+        response=response,
+        url=url,
+        strict_url_token=strict_url_token,
+    )
     workdir.mkdir(parents=True, exist_ok=True)
     yarrml_path = workdir / "mapping.yarrml"
     rml_path = workdir / "mapping.ttl"
@@ -1329,288 +1400,10 @@ def postprocess_jsonld(
     url: str,
     target_type: str | None = None,
 ) -> dict[str, Any]:
-    jsonld_raw = _fill_jsonld_from_mappings(jsonld_raw, mappings, xhtml)
-    _ensure_node_ids(jsonld_raw, dataset_uri, url)
-    _dedupe_review_notes(jsonld_raw)
-    normalized = normalize_jsonld(
+    _ = (mappings, xhtml)
+    return normalize_jsonld(
         jsonld_raw, dataset_uri, url, target_type, embed_nodes=False
     )
-    _materialize_literal_nodes(normalized, dataset_uri, url)
-    _ensure_author_name(normalized, xhtml, dataset_uri, url)
-    _ensure_review_url(normalized, url)
-    _prune_empty_rating_nodes(normalized)
-    return normalized
-
-
-def _prune_empty_rating_nodes(data: dict[str, Any] | list[Any]) -> None:
-    nodes = _flatten_jsonld(data)
-    if not nodes:
-        return
-    rating_value_key = f"{_SCHEMA_BASE}/ratingValue"
-    empty_rating_ids: set[str] = set()
-
-    def _has_rating_value(node: dict[str, Any]) -> bool:
-        value = node.get(rating_value_key, node.get("ratingValue"))
-        if value is None:
-            return False
-        values = value if isinstance(value, list) else [value]
-        for item in values:
-            if isinstance(item, dict):
-                text = item.get("@value") or item.get("value")
-            else:
-                text = item
-            if isinstance(text, str) and text.strip():
-                return True
-            if isinstance(text, (int, float)):
-                return True
-        return False
-
-    for node in nodes:
-        if not isinstance(node, dict):
-            continue
-        node_types = {
-            normalize_type(t) for t in node.get("@type", []) if isinstance(t, str)
-        }
-        if "Rating" not in node_types:
-            continue
-        if not _has_rating_value(node):
-            node_id = node.get("@id")
-            if isinstance(node_id, str):
-                empty_rating_ids.add(node_id)
-    if not empty_rating_ids:
-        return
-
-    def _filter_refs(values: Any) -> Any:
-        if isinstance(values, list):
-            filtered = [
-                value
-                for value in values
-                if not (
-                    isinstance(value, dict) and value.get("@id") in empty_rating_ids
-                )
-            ]
-            return filtered
-        return values
-
-    for node in nodes:
-        if not isinstance(node, dict):
-            continue
-        for key in (f"{_SCHEMA_BASE}/reviewRating", "reviewRating"):
-            if key in node:
-                node[key] = _filter_refs(node[key])
-                if not node[key]:
-                    node.pop(key, None)
-
-    if isinstance(data, dict) and isinstance(data.get("@graph"), list):
-        data["@graph"] = [
-            node
-            for node in data["@graph"]
-            if not (isinstance(node, dict) and node.get("@id") in empty_rating_ids)
-        ]
-    elif isinstance(data, list):
-        data[:] = [
-            node
-            for node in data
-            if not (isinstance(node, dict) and node.get("@id") in empty_rating_ids)
-        ]
-
-
-def _dedupe_review_notes(data: dict[str, Any] | list[Any]) -> None:
-    nodes = _flatten_jsonld(data)
-    if not nodes:
-        return
-    pos_key = f"{_SCHEMA_BASE}/positiveNotes"
-    neg_key = f"{_SCHEMA_BASE}/negativeNotes"
-
-    def _extract_values(values: Any) -> list[str]:
-        if isinstance(values, list):
-            items = values
-        else:
-            items = [values]
-        normalized: list[str] = []
-        for item in items:
-            if isinstance(item, dict):
-                value = item.get("@value") or item.get("value")
-            else:
-                value = item
-            if isinstance(value, str):
-                normalized.append(value.strip())
-        return [value for value in normalized if value]
-
-    for node in nodes:
-        if not isinstance(node, dict):
-            continue
-        node_types = {
-            normalize_type(t) for t in node.get("@type", []) if isinstance(t, str)
-        }
-        if "Review" not in node_types and "Product" not in node_types:
-            continue
-        pos_values = _extract_values(node.get(pos_key) or node.get("positiveNotes"))
-        neg_values = _extract_values(node.get(neg_key) or node.get("negativeNotes"))
-        if pos_values and neg_values and pos_values == neg_values:
-            node.pop(pos_key, None)
-            node.pop("positiveNotes", None)
-
-
-def _materialize_literal_nodes(
-    data: dict[str, Any] | list[Any],
-    dataset_uri: str,
-    url: str,
-) -> None:
-    nodes = _flatten_jsonld(data)
-    if not nodes:
-        return
-    graph = data.get("@graph") if isinstance(data, dict) else None
-    if not isinstance(graph, list):
-        return
-    schema_author = f"{_SCHEMA_BASE}/author"
-    schema_item = f"{_SCHEMA_BASE}/itemReviewed"
-    schema_publisher = f"{_SCHEMA_BASE}/publisher"
-    schema_name = f"{_SCHEMA_BASE}/name"
-
-    def _ensure_node(type_name: str, name: str, index: int) -> dict[str, Any]:
-        node_id = build_id_base(dataset_uri, type_name, name, url, index)
-        node = {
-            "@id": node_id,
-            "@type": [f"{_SCHEMA_BASE}/{type_name}"],
-            schema_name: [{"@value": name}],
-            "@context": _SCHEMA_BASE,
-        }
-        graph.append(node)
-        return node
-
-    def _replace_literal(
-        node: dict[str, Any], key: str, type_name: str, start_index: int
-    ) -> None:
-        values = node.get(key)
-        if not values:
-            return
-        items = values if isinstance(values, list) else [values]
-        new_refs: list[dict[str, Any]] = []
-        for idx, item in enumerate(items, start=start_index):
-            if isinstance(item, dict) and item.get("@id"):
-                new_refs.append(item)
-                continue
-            if isinstance(item, dict) and "@value" in item:
-                name = str(item["@value"]).strip()
-            else:
-                name = str(item).strip()
-            if not name:
-                continue
-            new_node = _ensure_node(type_name, name, idx)
-            new_refs.append({"@id": new_node["@id"]})
-        if new_refs:
-            node[key] = new_refs
-        else:
-            node.pop(key, None)
-
-    review_nodes = [
-        node
-        for node in nodes
-        if isinstance(node, dict)
-        and "Review"
-        in {normalize_type(t) for t in node.get("@type", []) if isinstance(t, str)}
-    ]
-    for index, review in enumerate(review_nodes, start=1):
-        _replace_literal(review, schema_author, "Person", index)
-        _replace_literal(review, schema_item, "Product", index + 100)
-        _replace_literal(review, schema_publisher, "Organization", index + 200)
-
-
-def _ensure_review_url(data: dict[str, Any] | list[Any], url: str) -> None:
-    nodes = _flatten_jsonld(data)
-    if not nodes or not url:
-        return
-    url_key = f"{_SCHEMA_BASE}/url"
-    for node in nodes:
-        if not isinstance(node, dict):
-            continue
-        node_types = {
-            normalize_type(t) for t in node.get("@type", []) if isinstance(t, str)
-        }
-        if "Review" not in node_types:
-            continue
-        if url_key not in node:
-            node[url_key] = [{"@value": url}]
-
-
-def _ensure_author_name(
-    data: dict[str, Any] | list[Any],
-    xhtml: str,
-    dataset_uri: str,
-    url: str,
-) -> None:
-    author_name = _extract_author_name(xhtml)
-    if not author_name:
-        return
-    nodes = _flatten_jsonld(data)
-    if not nodes:
-        return
-    schema_name = f"{_SCHEMA_BASE}/name"
-    schema_author = f"{_SCHEMA_BASE}/author"
-    graph = data.get("@graph") if isinstance(data, dict) else None
-    if not isinstance(graph, list):
-        return
-
-    author_nodes = [
-        node
-        for node in nodes
-        if isinstance(node, dict)
-        and "Person"
-        in {normalize_type(t) for t in node.get("@type", []) if isinstance(t, str)}
-    ]
-    for node in author_nodes:
-        if schema_name not in node:
-            node[schema_name] = [{"@value": author_name}]
-
-    review_nodes = [
-        node
-        for node in nodes
-        if isinstance(node, dict)
-        and "Review"
-        in {normalize_type(t) for t in node.get("@type", []) if isinstance(t, str)}
-    ]
-    for review in review_nodes:
-        if schema_author in review:
-            continue
-        author_node = build_id_base(dataset_uri, "Person", author_name, url, 0)
-        graph.append(
-            {
-                "@id": author_node,
-                "@type": [f"{_SCHEMA_BASE}/Person"],
-                schema_name: [{"@value": author_name}],
-                "@context": _SCHEMA_BASE,
-            }
-        )
-        review[schema_author] = [{"@id": author_node}]
-
-
-def _extract_author_name(xhtml: str) -> str | None:
-    try:
-        from lxml import html as lxml_html
-    except Exception:
-        return None
-    parser = lxml_html.HTMLParser(encoding="utf-8", recover=True)
-    try:
-        doc = lxml_html.document_fromstring(xhtml, parser=parser)
-    except Exception:
-        return None
-
-    candidates = [
-        "//meta[@name='author']/@content",
-        "//meta[@property='article:author']/@content",
-        "//a[@rel='author']/text()",
-        "//*[contains(normalize-space(.), 'Written by')]/following::a[1]/text()",
-    ]
-    for path in candidates:
-        try:
-            results = doc.xpath(path)
-        except Exception:
-            continue
-        for value in results:
-            if isinstance(value, str) and value.strip():
-                return value.strip()
-    return None
 
 
 def _materialize_jsonld(mapping_path: Path) -> dict[str, Any] | list[Any]:
@@ -1779,220 +1572,6 @@ def _is_item_list_value(value: Any) -> bool:
     if not isinstance(item, dict):
         return False
     return normalize_type(item.get("@type")) == "ItemList"
-
-
-def _extract_rating_number(text: str | None) -> str | None:
-    if not text:
-        return None
-    match = re.search(r"-?\\d+(?:\\.\\d+)?", text)
-    if not match:
-        return None
-    try:
-        value = float(match.group(0))
-    except ValueError:
-        return None
-    if value < 0 or value > 5:
-        return None
-    return match.group(0)
-
-
-def _extract_rating_value(doc: Any) -> str | None:
-    candidates = [
-        "//*[@itemprop='ratingValue']/text()",
-        "//*[@data-rating]/@data-rating",
-        "//*[contains(@class, 'rating')]/text()",
-        "//*[contains(@class, 'Rating')]/text()",
-        "//*[contains(@id, 'rating')]/text()",
-        "//*[contains(@id, 'Rating')]/text()",
-        "//*[contains(@aria-label, 'rating')]/@aria-label",
-        "//*[contains(@aria-label, 'star')]/@aria-label",
-    ]
-    for xpath in candidates:
-        text = _xpath_first_text(doc, xpath)
-        value = _extract_rating_number(text)
-        if value is not None:
-            return value
-    return None
-
-
-def enrich_graph_from_xhtml(graph: Graph, xhtml: str, url: str | None = None) -> None:
-    try:
-        from lxml import html as lxml_html
-    except Exception:
-        return
-    parser = lxml_html.HTMLParser(encoding="utf-8", recover=True)
-    try:
-        doc = lxml_html.document_fromstring(xhtml, parser=parser)
-    except Exception:
-        return
-
-    schema = Namespace(f"{_SCHEMA_BASE}/")
-    review_type = URIRef(f"{_SCHEMA_BASE}/Review")
-    review_nodes = list(graph.subjects(RDF.type, review_type))
-    if not review_nodes:
-        return
-
-    title = (
-        _xpath_first_text(doc, '/html/head/meta[@property="og:title"]/@content')
-        or _xpath_first_text(doc, "/html/head/title/text()")
-        or _xpath_first_text(doc, "//h1[1]")
-    )
-    description = _xpath_first_text(
-        doc, '/html/head/meta[@property="og:description"]/@content'
-    ) or _xpath_first_text(doc, '/html/head/meta[@name="description"]/@content')
-    author_name = (
-        _xpath_first_text(doc, '/html/head/meta[@name="author"]/@content')
-        or _xpath_first_text(doc, '/html/head/meta[@property="author"]/@content')
-        or _xpath_first_text(
-            doc, '/html/head/meta[@property="article:author"]/@content'
-        )
-    )
-    item_name = _xpath_first_text(doc, "//figure//img/@alt") or _xpath_first_text(
-        doc, "//h1[1]"
-    )
-
-    for review in review_nodes:
-        if url and graph.value(review, schema.url) is None:
-            graph.add((review, schema.url, Literal(url)))
-        if title and graph.value(review, schema.name) is None:
-            graph.add((review, schema.name, Literal(title)))
-        if description and graph.value(review, schema.description) is None:
-            graph.add((review, schema.description, Literal(description)))
-
-        author = graph.value(review, schema.author)
-        if (
-            author is not None
-            and author_name
-            and graph.value(author, schema.name) is None
-        ):
-            graph.add((author, schema.name, Literal(author_name)))
-
-        item = graph.value(review, schema.itemReviewed)
-        if item is not None and item_name and graph.value(item, schema.name) is None:
-            graph.add((item, schema.name, Literal(item_name)))
-
-        rating = graph.value(review, schema.reviewRating)
-        if rating is not None and graph.value(rating, schema.ratingValue) is None:
-            rating_value = _extract_rating_value(doc)
-            if rating_value:
-                graph.add((rating, schema.ratingValue, Literal(rating_value)))
-
-
-def _fill_jsonld_from_mappings(
-    data: dict[str, Any] | list[Any],
-    mappings: list[dict[str, Any]],
-    xhtml: str,
-) -> dict[str, Any] | list[Any]:
-    try:
-        from lxml import html as lxml_html
-    except Exception:
-        return data
-    parser = lxml_html.HTMLParser(encoding="utf-8", recover=True)
-    try:
-        doc = lxml_html.document_fromstring(xhtml, parser=parser)
-    except Exception:
-        return data
-
-    nodes = _flatten_jsonld(data)
-    node_by_id: dict[str, dict[str, Any]] = {
-        str(node.get("@id")): node
-        for node in nodes
-        if isinstance(node, dict) and node.get("@id")
-    }
-    for node_id, node in list(node_by_id.items()):
-        if node_id.endswith("~iri"):
-            node_by_id.setdefault(node_id[: -len("~iri")], node)
-
-    def _author_url_fallback() -> str | None:
-        return _xpath_first_text(doc, "/html/head/link[@rel='author']/@href")
-
-    author_url_fallback = _author_url_fallback()
-
-    for mapping in mappings:
-        name = mapping.get("name")
-        if not name:
-            continue
-        node_id = f"http://example.com/{name}~iri"
-        node = node_by_id.get(node_id) or node_by_id.get(f"http://example.com/{name}")
-        if node is None:
-            continue
-        for prop, obj in mapping.get("props", []):
-            prop_name = prop[7:] if prop.startswith("schema:") else prop
-            if prop_name in {"a", "url"}:
-                continue
-            full_prop = f"{_SCHEMA_BASE}/{prop_name}"
-            if full_prop in node:
-                continue
-            if not obj:
-                continue
-            if obj.startswith("ex:") and obj.endswith("~iri"):
-                target = obj.split("ex:", 1)[1].split("~", 1)[0]
-                node[full_prop] = [{"@id": f"http://example.com/{target}"}]
-                continue
-            if _looks_like_xpath(obj):
-                xpath = _normalize_xpath_reference(_simplify_xpath(obj))
-                text = _xpath_first_text(doc, xpath)
-                if text:
-                    if prop_name in {"ratingValue", "bestRating", "worstRating"}:
-                        match = re.search(r"-?\\d+(?:\\.\\d+)?", text)
-                        if not match:
-                            continue
-                        text = match.group(0)
-                    node[full_prop] = [{"@value": text}]
-                    if prop_name == "name":
-                        node_type = node.get("@type") or []
-                        node_types = {
-                            normalize_type(t) for t in node_type if isinstance(t, str)
-                        }
-                        if node_types & {"Person", "Organization"}:
-                            url_xpath = f"{xpath}/@href"
-                            url_value = _xpath_first_text(doc, url_xpath)
-                            if url_value:
-                                node[f"{_SCHEMA_BASE}/url"] = [{"@value": url_value}]
-                            elif author_url_fallback:
-                                node[f"{_SCHEMA_BASE}/url"] = [
-                                    {"@value": author_url_fallback}
-                                ]
-                continue
-            if obj:
-                node[full_prop] = [{"@value": obj}]
-
-    for node in nodes:
-        if not isinstance(node, dict):
-            continue
-        node_types = {
-            normalize_type(t) for t in node.get("@type", []) if isinstance(t, str)
-        }
-        if "Review" not in node_types:
-            continue
-        review_rating_prop = f"{_SCHEMA_BASE}/reviewRating"
-        review_rating_pairs: list[tuple[dict[str, Any], dict[str, Any]]] = []
-        for rating_ref in node.get(review_rating_prop, []):
-            if isinstance(rating_ref, dict) and rating_ref.get("@id"):
-                rating_node = node_by_id.get(str(rating_ref["@id"]))
-                if isinstance(rating_node, dict):
-                    review_rating_pairs.append((rating_ref, rating_node))
-        valid_rating_refs: list[dict[str, Any]] = []
-        for rating_ref, rating_node in review_rating_pairs:
-            rating_value_key = f"{_SCHEMA_BASE}/ratingValue"
-            if rating_value_key not in rating_node:
-                rating_value = _extract_rating_value(doc)
-                if rating_value:
-                    rating_node[rating_value_key] = [{"@value": rating_value}]
-            if rating_value_key in rating_node:
-                valid_rating_refs.append(rating_ref)
-        if review_rating_pairs:
-            if valid_rating_refs:
-                node[review_rating_prop] = valid_rating_refs
-            else:
-                node.pop(review_rating_prop, None)
-        if f"{_SCHEMA_BASE}/description" not in node:
-            description = _xpath_first_text(
-                doc, '/html/head/meta[@property="og:description"]/@content'
-            ) or _xpath_first_text(doc, '/html/head/meta[@name="description"]/@content')
-            if description:
-                node[f"{_SCHEMA_BASE}/description"] = [{"@value": description}]
-    return data
 
 
 def _extract_type(node: dict[str, Any]) -> str | None:
@@ -2229,29 +1808,6 @@ def _blank_node_errors(data: dict[str, Any] | list[Any]) -> list[str]:
 
     _walk(data)
     return errors
-
-
-def _review_rating_dropped(
-    data: dict[str, Any] | list[Any],
-    mappings: list[dict[str, Any]],
-    target_type: str | None,
-) -> bool:
-    target = normalize_type(target_type or "Thing")
-    if target != "Review":
-        return False
-    mapped_props = _main_mapping_props(mappings)
-    if "reviewRating" not in mapped_props:
-        return False
-    nodes = _flatten_jsonld(data)
-    for node in nodes:
-        if not isinstance(node, dict):
-            continue
-        node_types = {
-            normalize_type(t) for t in node.get("@type", []) if isinstance(t, str)
-        }
-        if "Review" in node_types:
-            return f"{_SCHEMA_BASE}/reviewRating" not in node
-    return False
 
 
 def _build_id_map(
@@ -2703,7 +2259,6 @@ def generate_from_agent(
             _ensure_subject_termtype_iri(rml_path)
             _normalize_reference_formulation(rml_path)
             jsonld_raw = _materialize_jsonld(rml_path)
-            jsonld_raw = _fill_jsonld_from_mappings(jsonld_raw, mappings, cleaned_xhtml)
             _ensure_node_ids(jsonld_raw, dataset_uri, url)
             mapping_jsonld_path.write_text(json.dumps(jsonld_raw, indent=2))
             normalized_jsonld = postprocess_jsonld(
@@ -2794,8 +2349,6 @@ def generate_from_agent(
             validation_report = None
             xpath_warnings = warnings_out
         else:
-            if _review_rating_dropped(jsonld_raw, mappings, target_type):
-                warnings_out.append("Review ratingValue missing; reviewRating dropped.")
             mapping_validation_path.write_text(
                 json.dumps(
                     {

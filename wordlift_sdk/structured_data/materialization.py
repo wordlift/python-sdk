@@ -14,17 +14,26 @@ class MaterializationPipeline:
         self._pipeline = pipeline or YarrrmlPipeline()
 
     def normalize(
-        self, yarrrml: str, url: str, xhtml_path: Path, target_type: str | None
+        self, yarrrml: str, url: str, xhtml_path: Path
     ) -> tuple[str, list[dict]]:
-        return self._pipeline.normalize_mappings(
-            yarrrml, url, xhtml_path, target_type=target_type
-        )
+        return self._pipeline.normalize_mappings(yarrrml, url, xhtml_path)
 
     def materialize(
-        self, normalized_yarrrml: str, xhtml_path: Path, workdir: Path, url: str
+        self,
+        normalized_yarrrml: str,
+        xhtml_path: Path,
+        workdir: Path,
+        url: str | None = None,
+        response: object | None = None,
+        strict_url_token: bool = False,
     ) -> dict:
         return self._pipeline.materialize_jsonld(
-            normalized_yarrrml, xhtml_path, workdir, url=url
+            normalized_yarrrml,
+            xhtml_path,
+            workdir,
+            response=response,
+            url=url,
+            strict_url_token=strict_url_token,
         )
 
     def postprocess(
@@ -34,7 +43,6 @@ class MaterializationPipeline:
         cleaned_xhtml: str,
         dataset_uri: str,
         url: str,
-        target_type: str | None,
     ) -> dict:
         return self._pipeline.postprocess_jsonld(
             jsonld_raw,
@@ -42,7 +50,6 @@ class MaterializationPipeline:
             cleaned_xhtml,
             dataset_uri,
             url,
-            target_type=target_type,
         )
 
     def run(
@@ -53,18 +60,23 @@ class MaterializationPipeline:
         dataset_uri: str,
         xhtml_path: Path,
         workdir: Path,
-        target_type: str | None,
+        response: object | None = None,
+        strict_url_token: bool = False,
     ) -> tuple[dict, list[dict]]:
-        normalized_yarrrml, mappings = self.normalize(
-            yarrrml, url, xhtml_path, target_type=target_type
+        normalized_yarrrml, mappings = self.normalize(yarrrml, url, xhtml_path)
+        jsonld_raw = self.materialize(
+            normalized_yarrrml,
+            xhtml_path,
+            workdir,
+            url=url,
+            response=response,
+            strict_url_token=strict_url_token,
         )
-        jsonld_raw = self.materialize(normalized_yarrrml, xhtml_path, workdir, url=url)
         jsonld = self.postprocess(
             jsonld_raw,
             mappings,
             cleaned_xhtml,
             dataset_uri,
             url,
-            target_type=target_type,
         )
         return jsonld, mappings

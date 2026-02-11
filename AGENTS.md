@@ -20,3 +20,10 @@
 - SSL verification is always enabled; on macOS the SDK uses the system CA bundle
   when available and falls back to `certifi`. Explicit CA bundle overrides are
   supported in the SDK layer.
+- Structured data materialization is mapping-preserving by default: no synthetic
+  remapping to `ex:*`, no implicit `Review`/`Thing` coercion, and no review-specific
+  postprocessing hooks in the generic pipeline.
+- Runtime mapping tokens are supported in materialization input:
+  `__XHTML__` (local XHTML source path) and `__URL__` (resolved from
+  `response.web_page.url` first, then explicit `url` argument; non-strict mode warns
+  and keeps unresolved tokens).
