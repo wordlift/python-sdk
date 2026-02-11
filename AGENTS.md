@@ -24,9 +24,10 @@
   remapping to `ex:*`, no implicit `Review`/`Thing` coercion, and no review-specific
   postprocessing hooks in the generic pipeline.
 - Runtime mapping tokens are supported in materialization input:
-  `__XHTML__` (local XHTML source path) and `__URL__` (resolved from
+  `__XHTML__` (local XHTML source path), `__URL__` (resolved from
   `response.web_page.url` first, then explicit `url` argument; non-strict mode warns
-  and keeps unresolved tokens).
+  and keeps unresolved tokens), and `__ID__` (resolved from `response.id`;
+  unresolved usage fails closed).
 - Structured data materialization executes YARRRML directly with `morph-kgc`
   native support; legacy `yarrrml-parser` transpilation is not used.
 - Materialization errors are categorized with actionable context for malformed

@@ -152,14 +152,22 @@ conversion artifact in the materialization pipeline.
 Customer-authored mappings can use runtime tokens:
 - `__XHTML__` for the local XHTML source path used by materialization.
 - `__URL__` for canonical page URL injection.
+- `__ID__` for callback/import entity IRI injection.
 
 `__URL__` resolution order is:
 1. `response.web_page.url`
 2. explicit `url` argument passed to materialization
 
+`__ID__` resolution source is:
+1. `response.id`
+
 When unresolved:
 - strict mode (`strict_url_token=True`): fail fast
 - default non-strict mode: warn and keep `__URL__` unchanged
+- `__ID__`: fail closed with an explicit error
+
+Recommendation: use `__ID__` in subject/object IRI positions instead of
+temporary hardcoded page subjects such as `{{ dataset_uri }}/web-pages/page`.
 
 Compatibility note: `morph-kgc` native YARRRML behavior may differ from legacy
 JS parser behavior for some advanced XPath/function constructs.
@@ -176,5 +184,6 @@ poetry run pytest
 - [Google Sheets Lookup](docs/google_sheets_lookup.md): Utility for O(1) lookups from Google Sheets.
 - [Web Page Import](docs/web_page_import.md): Configure fetch options, proxies, and JS rendering.
 - [Structured Data](docs/structured_data.md): Structured data architecture and pipeline behavior.
+- [Structured Data Spec](specs/structured_data.md): Internal technical details for runtime placeholder resolution.
 - [Migration Guide](MIGRATION.md): Breaking changes for structured data refactor.
 - [Changelog](CHANGELOG.md): Versioned release notes.

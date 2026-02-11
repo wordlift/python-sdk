@@ -18,7 +18,7 @@ The structured data materialization pipeline was refactored to be generic and ma
 
 `MaterializationPipeline` now removes `target_type` from generic materialization flow methods:
 
-- `normalize(self, yarrrml: str, url: str, xhtml_path: Path) -> tuple[str, list[dict]]`
+- `normalize(self, yarrrml: str, url: str, xhtml_path: Path, response: object | None = None) -> tuple[str, list[dict]]`
 - `postprocess(self, jsonld_raw: dict, mappings: list[dict], cleaned_xhtml: str, dataset_uri: str, url: str) -> dict`
 - `run(self, yarrrml: str, url: str, cleaned_xhtml: str, dataset_uri: str, xhtml_path: Path, workdir: Path, response: object | None = None, strict_url_token: bool = False) -> tuple[dict, list[dict]]`
 
@@ -30,10 +30,14 @@ Mappings can use runtime tokens before materialization:
 
 - `__XHTML__`: replaced with local XHTML source path.
 - `__URL__`: resolved from `response.web_page.url` first, then explicit `url` argument.
+- `__ID__`: resolved from `response.id`.
 
 URL token resolution policy:
 - strict mode (`strict_url_token=True`): fail if unresolved
 - default mode: warn and keep `__URL__` unchanged
+
+ID token resolution policy:
+- fail-closed if `__ID__` appears and no runtime ID is available
 
 ## Materialization Engine Migration
 

@@ -205,6 +205,134 @@ mappings:
     assert "__URL__" not in capture["mapping_text"]
 
 
+def test_runtime_token_replacement_id_subject(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    capture: dict[str, str] = {}
+    _install_materialization_stubs(monkeypatch, capture)
+
+    mapping = """
+prefixes:
+  schema: 'https://schema.org/'
+mappings:
+  page:
+    sources:
+      - [__XHTML__~xpath, '/']
+    s: __ID__~iri
+    po:
+      - [a, 'schema:WebPage']
+"""
+
+    class _Response:
+        id = "https://example.com/imports/root-node"
+
+    materialize_yarrrml_jsonld(
+        mapping,
+        xhtml_path=tmp_path / "page.xhtml",
+        workdir=tmp_path / "work",
+        response=_Response(),
+    )
+
+    assert "__ID__" not in capture["mapping_text"]
+    assert "https://example.com/imports/root-node~iri" in capture["mapping_text"]
+
+
+def test_runtime_token_replacement_id_object_iri(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    capture: dict[str, str] = {}
+    _install_materialization_stubs(monkeypatch, capture)
+
+    mapping = """
+prefixes:
+  schema: 'https://schema.org/'
+mappings:
+  page:
+    sources:
+      - [__XHTML__~xpath, '/']
+    s: https://example.com/page~iri
+    po:
+      - [a, 'schema:WebPage']
+      - [schema:mainEntity, __ID__~iri]
+"""
+
+    class _Response:
+        id = "https://example.com/imports/root-node"
+
+    materialize_yarrrml_jsonld(
+        mapping,
+        xhtml_path=tmp_path / "page.xhtml",
+        workdir=tmp_path / "work",
+        response=_Response(),
+    )
+
+    assert "__ID__" not in capture["mapping_text"]
+    assert (
+        "[schema:mainEntity, https://example.com/imports/root-node~iri]"
+        in capture["mapping_text"]
+    )
+
+
+def test_id_token_without_runtime_id_fails_closed(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    capture: dict[str, str] = {}
+    _install_materialization_stubs(monkeypatch, capture)
+
+    mapping = """
+prefixes:
+  schema: 'https://schema.org/'
+mappings:
+  page:
+    sources:
+      - [__XHTML__~xpath, '/']
+    s: __ID__~iri
+"""
+
+    with pytest.raises(RuntimeError, match="__ID__"):
+        materialize_yarrrml_jsonld(
+            mapping,
+            xhtml_path=tmp_path / "page.xhtml",
+            workdir=tmp_path / "work",
+        )
+
+
+def test_runtime_tokens_url_and_xhtml_regression_after_id_support(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    capture: dict[str, str] = {}
+    _install_materialization_stubs(monkeypatch, capture)
+
+    mapping = """
+prefixes:
+  schema: 'https://schema.org/'
+mappings:
+  page:
+    sources:
+      - [__XHTML__~xpath, '/']
+    s: __URL__~iri
+    po:
+      - [a, 'schema:WebPage']
+      - [schema:url, '__URL__']
+"""
+
+    materialize_yarrrml_jsonld(
+        mapping,
+        xhtml_path=tmp_path / "page.xhtml",
+        workdir=tmp_path / "work",
+        url="https://example.com/final",
+    )
+
+    assert "__XHTML__" not in capture["mapping_text"]
+    assert "__URL__" not in capture["mapping_text"]
+    assert (tmp_path / "page.xhtml").as_posix() in capture["mapping_text"]
+    assert "https://example.com/final" in capture["mapping_text"]
+
+
 def test_url_token_without_runtime_placeholder(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -372,6 +500,56 @@ mappings:
     assert "https://argument.example/page" not in capture["mapping_text"]
 
 
+def test_runtime_id_resolution_in_materialization_pipeline_run(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    capture: dict[str, str] = {}
+
+    def _fake_materialize(input_path: Path) -> dict[str, object]:
+        capture["mapping_path"] = str(input_path)
+        capture["mapping_text"] = input_path.read_text()
+        return {
+            "@graph": [
+                {
+                    "@id": "https://example.com/node",
+                    "@type": ["https://schema.org/WebPage"],
+                }
+            ]
+        }
+
+    monkeypatch.setattr(
+        "wordlift_sdk.structured_data.engine._materialize_jsonld",
+        _fake_materialize,
+    )
+
+    class _Response:
+        id = "https://response.example/web-page-imports/123"
+
+    mapping = """
+prefixes:
+  schema: 'https://schema.org/'
+mappings:
+  page:
+    sources:
+      - [__XHTML__~xpath, '/']
+    s: __ID__~iri
+"""
+
+    materializer = MaterializationPipeline()
+    materializer.run(
+        yarrrml=mapping,
+        url="https://argument.example/page",
+        cleaned_xhtml="<html/>",
+        dataset_uri="urn:dataset",
+        xhtml_path=tmp_path / "page.xhtml",
+        workdir=tmp_path / "work",
+        response=_Response(),
+    )
+
+    assert "https://response.example/web-page-imports/123" in capture["mapping_text"]
+
+
 def test_malformed_yarrrml_raises_actionable_error(tmp_path: Path) -> None:
     malformed = """
 prefixes:
@@ -459,3 +637,39 @@ mappings:
         elif isinstance(value, str):
             names.append(value)
     assert "Example Title" in names
+
+
+def test_id_smoke_materialization_uses_runtime_response_id(
+    tmp_path: Path,
+) -> None:
+    xhtml_path = tmp_path / "page.xhtml"
+    xhtml_path.write_text("<html><head></head><body></body></html>")
+
+    runtime_id = "https://example.com/web-page-imports/12345"
+    mapping = """
+prefixes:
+  schema: 'https://schema.org/'
+mappings:
+  page:
+    sources:
+      - [__XHTML__~xpath, '/html']
+    s: __ID__~iri
+    po:
+      - [a, 'schema:WebPage']
+      - [schema:name, 'Rooted Page']
+      - [schema:mainEntity, __ID__~iri]
+"""
+
+    class _Response:
+        id = runtime_id
+
+    jsonld = materialize_yarrrml_jsonld(
+        mapping,
+        xhtml_path=xhtml_path,
+        workdir=tmp_path / "work",
+        response=_Response(),
+    )
+
+    payload = str(jsonld)
+    assert "__ID__" not in payload
+    assert runtime_id in payload

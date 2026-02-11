@@ -1,6 +1,6 @@
 # Changelog
 
-## 3.1.0 - 2026-02-11
+## 3.2.0 - 2026-02-11
 
 ### Breaking
 
@@ -15,7 +15,9 @@
 - Runtime token replacement before direct materialization execution:
   - `__XHTML__` -> local XHTML source path
   - `__URL__` -> canonical URL resolved from `response.web_page.url` then explicit `url`
+  - `__ID__` -> entity IRI resolved from `response.id`
 - Strict URL token mode (`strict_url_token=True`) to fail on unresolved `__URL__` tokens.
+- Fail-closed ID token handling when `__ID__` is present and unresolved.
 - Explicit mapping error categories for malformed YARRRML and unsupported XPath/function constructs.
 
 ### Rationale

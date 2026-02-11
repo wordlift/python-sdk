@@ -853,6 +853,20 @@ def _resolve_runtime_url(
     return None
 
 
+def _resolve_runtime_id(
+    *,
+    response: Any | None = None,
+) -> str | None:
+    if response is not None:
+        if isinstance(response, dict):
+            resolved = response.get("id")
+        else:
+            resolved = getattr(response, "id", None)
+        if isinstance(resolved, str) and resolved.strip():
+            return resolved.strip()
+    return None
+
+
 def _replace_runtime_tokens(
     yarrml: str,
     *,
@@ -869,6 +883,21 @@ def _replace_runtime_tokens(
         normalized,
     )
     normalized = _replace_sources_with_file(normalized, file_uri)
+    has_id_token = re.search(r"(?<![A-Za-z0-9_])__ID__(?![A-Za-z0-9_])", normalized)
+    if has_id_token:
+        resolved_id = _resolve_runtime_id(
+            response=response,
+        )
+        if not resolved_id:
+            raise RuntimeError(
+                "YARRRML contains __ID__ but no runtime ID is available."
+                " Provide response.id."
+            )
+        normalized = re.sub(
+            r"(?<![A-Za-z0-9_])__ID__(?![A-Za-z0-9_])",
+            resolved_id,
+            normalized,
+        )
     if replace_url:
         resolved_url = _resolve_runtime_url(response=response, url=url)
         has_url_token = re.search(
@@ -1357,10 +1386,12 @@ def normalize_yarrrml_mappings(
     yarrrml: str,
     url: str,
     xhtml_path: Path,
+    response: Any | None = None,
 ) -> tuple[str, list[dict[str, Any]]]:
     normalized = _replace_runtime_tokens(
         yarrrml,
         file_uri=xhtml_path.as_posix(),
+        response=response,
         url=url,
         replace_url=False,
     )

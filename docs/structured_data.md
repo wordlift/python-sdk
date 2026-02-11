@@ -29,7 +29,7 @@ Maps schema.org types to available SHACL shapes and helps select relevant shape 
 Generic YARRRML helpers for structural normalization, materialization, and postprocessing.
 
 Key methods:
-- `normalize_mappings(yarrrml, url, xhtml_path)`
+- `normalize_mappings(yarrrml, url, xhtml_path, response=None)`
 - `materialize_jsonld(yarrrml, xhtml_path, workdir, response=None, url=None, strict_url_token=False)`
 - `postprocess_jsonld(jsonld_raw, mappings, xhtml, dataset_uri, url)`
 - `ensure_no_blank_nodes(graph)`
@@ -47,9 +47,14 @@ The materialization path is mapping-preserving by default:
 Mapping content supports runtime token replacement before direct materialization:
 - `__XHTML__`: replaced with callback XHTML local file path.
 - `__URL__`: replaced from `response.web_page.url` first, then explicit `url` argument.
+- `__ID__`: replaced from `response.id`.
 
 `strict_url_token=True` fails if `__URL__` is unresolved.
 Default non-strict policy logs a warning and leaves `__URL__` unchanged.
+`__ID__` is always fail-closed when unresolved.
+
+Use `__ID__` in subject/object IRI positions to anchor generated triples to
+the callback/import root entity IRI instead of hardcoded temporary page IRIs.
 
 ### Error model
 
@@ -57,6 +62,7 @@ Materialization raises explicit runtime errors for:
 - malformed YARRRML mappings
 - unsupported XPath/function constructs
 - unresolved `__URL__` when strict mode is enabled
+- unresolved `__ID__` when the token appears in mapping content
 
 Compatibility note: `morph-kgc` native YARRRML handling may differ from legacy JS parser behavior in edge mappings; update mappings to align with `morph-kgc` semantics.
 

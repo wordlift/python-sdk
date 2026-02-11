@@ -14,9 +14,18 @@ class MaterializationPipeline:
         self._pipeline = pipeline or YarrrmlPipeline()
 
     def normalize(
-        self, yarrrml: str, url: str, xhtml_path: Path
+        self,
+        yarrrml: str,
+        url: str,
+        xhtml_path: Path,
+        response: object | None = None,
     ) -> tuple[str, list[dict]]:
-        return self._pipeline.normalize_mappings(yarrrml, url, xhtml_path)
+        return self._pipeline.normalize_mappings(
+            yarrrml,
+            url,
+            xhtml_path,
+            response=response,
+        )
 
     def materialize(
         self,
@@ -63,7 +72,12 @@ class MaterializationPipeline:
         response: object | None = None,
         strict_url_token: bool = False,
     ) -> tuple[dict, list[dict]]:
-        normalized_yarrrml, mappings = self.normalize(yarrrml, url, xhtml_path)
+        normalized_yarrrml, mappings = self.normalize(
+            yarrrml,
+            url,
+            xhtml_path,
+            response=response,
+        )
         jsonld_raw = self.materialize(
             normalized_yarrrml,
             xhtml_path,

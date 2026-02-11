@@ -15,3 +15,4 @@
 - [x] 2026-02-06 Support `Product.offers` as `Offer` or `AggregateOffer` in Google Product snippet SHACLs.
 - [x] 2026-02-11 Refactor structured data materialization to mapping-preserving generic pipeline with runtime `__XHTML__`/`__URL__` token replacement.
 - [x] 2026-02-11 Remove `yarrrml-parser` execution path and run YARRRML directly with `morph-kgc` native support, including explicit mapping error categories.
+- [x] 2026-02-11 Add runtime `__ID__` token support with fail-closed resolution from `response.id` across normalization/materialization.
