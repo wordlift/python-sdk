@@ -10,7 +10,6 @@ Facade that wires dataset resolution, schema guidance, YARRRML handling, and age
 Key methods:
 - `get_dataset_uri(api_key, base_url=DEFAULT_BASE_URL)`
 - `shape_specs_for_type(type_name)`
-- `make_reusable_yarrrml(yarrrml, url)`
 - `generate_from_agent(...)`
 
 ### AgentGenerator
@@ -27,13 +26,29 @@ Key methods:
 Maps schema.org types to available SHACL shapes and helps select relevant shape specs.
 
 ### YarrrmlPipeline
-Normalizes YARRRML mappings, materializes JSON-LD, and applies post-processing.
+Generic YARRRML helpers for structural normalization, materialization, and postprocessing.
 
 Key methods:
-- `normalize_mappings(yarrrml)`
-- `materialize_jsonld(yarrrml, workdir)`
-- `postprocess_jsonld(jsonld, dataset_uri)`
-- `make_reusable_yarrrml(yarrrml, url)`
+- `normalize_mappings(yarrrml, url, xhtml_path)`
+- `materialize_jsonld(yarrrml, xhtml_path, workdir, response=None, url=None, strict_url_token=False)`
+- `postprocess_jsonld(jsonld_raw, mappings, xhtml, dataset_uri, url, target_type=None)`
+- `ensure_no_blank_nodes(graph)`
+
+## Pipeline behavior (breaking)
+
+The materialization path is mapping-preserving by default:
+- No synthetic remapping to internal `ex:*` structures.
+- No implicit coercion to `Review`/`Thing`.
+- No review-specific postprocessing (`_dedupe_review_notes`, review URL/author/rating injections).
+
+### Runtime tokens
+
+Mapping content supports runtime token replacement before YARRRML parsing:
+- `__XHTML__`: replaced with callback XHTML local file path.
+- `__URL__`: replaced from `response.web_page.url` first, then explicit `url` argument.
+
+`strict_url_token=True` fails if `__URL__` is unresolved.
+Default non-strict policy logs a warning and leaves `__URL__` unchanged.
 
 ## Workflows
 

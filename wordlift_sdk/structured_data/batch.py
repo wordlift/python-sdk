@@ -115,7 +115,6 @@ class BatchGenerator:
                         yarrrml,
                         url,
                         xhtml_path,
-                        target_type=None,
                     )
                     log(
                         f"Normalized YARRRML: {url} in {time.perf_counter() - step_start:.2f}s"
@@ -134,7 +133,6 @@ class BatchGenerator:
                         cleaned_xhtml,
                         self._dataset_uri,
                         url,
-                        target_type=None,
                     )
                     log(
                         f"Postprocessed JSON-LD: {url} in {time.perf_counter() - step_start:.2f}s"

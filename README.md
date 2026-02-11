@@ -77,6 +77,8 @@ request = CreateRequest(
 )
 ```
 
+Note: `target_type` is used for agent guidance and validation shape selection. The YARRRML materialization pipeline now preserves authored mapping semantics and does not coerce nodes to `Review`/`Thing`.
+
 Example `config/default.py`:
 
 ```python
@@ -141,6 +143,20 @@ Playwright is required for URL rendering. After installing dependencies, install
 poetry run playwright install
 ```
 
+## Structured Data Tokens
+
+Customer-authored mappings can use runtime tokens:
+- `__XHTML__` for the local XHTML source path used by materialization.
+- `__URL__` for canonical page URL injection.
+
+`__URL__` resolution order is:
+1. `response.web_page.url`
+2. explicit `url` argument passed to materialization
+
+When unresolved:
+- strict mode (`strict_url_token=True`): fail fast
+- default non-strict mode: warn and keep `__URL__` unchanged
+
 ## Testing
 
 ```bash
@@ -152,4 +168,6 @@ poetry run pytest
 
 - [Google Sheets Lookup](docs/google_sheets_lookup.md): Utility for O(1) lookups from Google Sheets.
 - [Web Page Import](docs/web_page_import.md): Configure fetch options, proxies, and JS rendering.
-
+- [Structured Data](docs/structured_data.md): Structured data architecture and pipeline behavior.
+- [Migration Guide](MIGRATION.md): Breaking changes for structured data refactor.
+- [Changelog](CHANGELOG.md): Versioned release notes.
