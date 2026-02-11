@@ -27,3 +27,7 @@
   `__XHTML__` (local XHTML source path) and `__URL__` (resolved from
   `response.web_page.url` first, then explicit `url` argument; non-strict mode warns
   and keeps unresolved tokens).
+- Structured data materialization executes YARRRML directly with `morph-kgc`
+  native support; legacy `yarrrml-parser` transpilation is not used.
+- Materialization errors are categorized with actionable context for malformed
+  YARRRML and unsupported XPath/function constructs.

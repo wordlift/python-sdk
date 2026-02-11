@@ -68,25 +68,14 @@ from wordlift_sdk.structured_data.materialization import MaterializationPipeline
 def _install_materialization_stubs(
     monkeypatch: pytest.MonkeyPatch, capture: dict
 ) -> None:
-    def _fake_parser(input_path: Path, output_path: Path) -> None:
+    def _fake_materialize(input_path: Path) -> dict[str, object]:
+        capture["mapping_path"] = str(input_path)
         capture["mapping_text"] = input_path.read_text()
-        output_path.write_text("")
+        return {"@graph": []}
 
     monkeypatch.setattr(
-        "wordlift_sdk.structured_data.engine._run_yarrrml_parser",
-        _fake_parser,
-    )
-    monkeypatch.setattr(
-        "wordlift_sdk.structured_data.engine._ensure_subject_termtype_iri",
-        lambda _path: None,
-    )
-    monkeypatch.setattr(
-        "wordlift_sdk.structured_data.engine._normalize_reference_formulation",
-        lambda _path: None,
-    )
-    monkeypatch.setattr(
         "wordlift_sdk.structured_data.engine._materialize_jsonld",
-        lambda _path: {"@graph": []},
+        _fake_materialize,
     )
 
 
@@ -176,6 +165,8 @@ mappings:
 
     assert "__XHTML__" not in capture["mapping_text"]
     assert (tmp_path / "page.xhtml").as_posix() in capture["mapping_text"]
+    assert capture["mapping_path"].endswith("mapping.yarrrml")
+    assert not (tmp_path / "work" / "mapping.ttl").exists()
 
 
 def test_runtime_token_replacement_url(
@@ -246,6 +237,36 @@ mappings:
     assert "https://example.com/final" in capture["mapping_text"]
 
 
+def test_materialization_uses_direct_yarrrml_without_ttl_transpile(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    capture: dict[str, str] = {}
+    _install_materialization_stubs(monkeypatch, capture)
+
+    mapping = """
+prefixes:
+  schema: 'https://schema.org/'
+mappings:
+  page:
+    sources:
+      - [__XHTML__~xpath, '/']
+    s: https://example.com/page~iri
+    po:
+      - [a, 'schema:WebPage']
+"""
+
+    materialize_yarrrml_jsonld(
+        mapping,
+        xhtml_path=tmp_path / "page.xhtml",
+        workdir=tmp_path / "work",
+    )
+
+    assert capture["mapping_path"].endswith("mapping.yarrrml")
+    assert (tmp_path / "work" / "mapping.yarrrml").exists()
+    assert not (tmp_path / "work" / "mapping.ttl").exists()
+
+
 def test_unresolved_url_token_non_strict_keeps_token_and_warns(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -305,17 +326,22 @@ def test_runtime_url_precedence_in_materialization_pipeline_run(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     capture: dict[str, str] = {}
-    _install_materialization_stubs(monkeypatch, capture)
-    monkeypatch.setattr(
-        "wordlift_sdk.structured_data.engine._materialize_jsonld",
-        lambda _path: {
+
+    def _fake_materialize(input_path: Path) -> dict[str, object]:
+        capture["mapping_path"] = str(input_path)
+        capture["mapping_text"] = input_path.read_text()
+        return {
             "@graph": [
                 {
                     "@id": "https://example.com/node",
                     "@type": ["https://schema.org/WebPage"],
                 }
             ]
-        },
+        }
+
+    monkeypatch.setattr(
+        "wordlift_sdk.structured_data.engine._materialize_jsonld",
+        _fake_materialize,
     )
 
     class _Response:
@@ -344,3 +370,92 @@ mappings:
 
     assert "https://response.example/page" in capture["mapping_text"]
     assert "https://argument.example/page" not in capture["mapping_text"]
+
+
+def test_malformed_yarrrml_raises_actionable_error(tmp_path: Path) -> None:
+    malformed = """
+prefixes:
+  schema: 'https://schema.org/'
+mappings:
+  page: [
+"""
+
+    with pytest.raises(RuntimeError, match="Malformed YARRRML mapping"):
+        materialize_yarrrml_jsonld(
+            malformed,
+            xhtml_path=tmp_path / "page.xhtml",
+            workdir=tmp_path / "work",
+        )
+
+
+def test_unsupported_xpath_or_function_raises_actionable_error(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fake_morph = types.SimpleNamespace(
+        materialize=lambda _cfg: (_ for _ in ()).throw(
+            ValueError("XPathEvalError: Unsupported function local-namez()")
+        )
+    )
+    monkeypatch.setitem(sys.modules, "morph_kgc", fake_morph)
+
+    mapping = """
+prefixes:
+  schema: 'https://schema.org/'
+mappings:
+  page:
+    sources:
+      - [__XHTML__~xpath, '/']
+    s: https://example.com/page~iri
+"""
+
+    with pytest.raises(RuntimeError, match="Unsupported XPath/function construct"):
+        materialize_yarrrml_jsonld(
+            mapping,
+            xhtml_path=tmp_path / "page.xhtml",
+            workdir=tmp_path / "work",
+        )
+
+
+def test_xpath_mapping_over_xhtml_callback_input_regression(tmp_path: Path) -> None:
+    xhtml_path = tmp_path / "page.xhtml"
+    xhtml_path.write_text(
+        "<html><head><title>Example Title</title></head><body></body></html>"
+    )
+
+    mapping = """
+prefixes:
+  schema: 'https://schema.org/'
+mappings:
+  page:
+    sources:
+      - [__XHTML__~xpath, '/html']
+    s: __URL__~iri
+    po:
+      - [a, 'schema:WebPage']
+      - [schema:name, 'Example Title']
+"""
+
+    materializer = MaterializationPipeline()
+    jsonld, _ = materializer.run(
+        yarrrml=mapping,
+        url="https://example.com/page",
+        cleaned_xhtml=xhtml_path.read_text(),
+        dataset_uri="urn:dataset",
+        xhtml_path=xhtml_path,
+        workdir=tmp_path / "work",
+        strict_url_token=True,
+    )
+
+    names: list[str] = []
+    for node in jsonld.get("@graph", []):
+        value = node.get("https://schema.org/name")
+        if value is None:
+            value = node.get("http://schema.org/name")
+        if isinstance(value, list):
+            for item in value:
+                if isinstance(item, dict) and "@value" in item:
+                    names.append(item["@value"])
+        elif isinstance(value, str):
+            names.append(value)
+    assert "Example Title" in names

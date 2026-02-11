@@ -145,6 +145,10 @@ poetry run playwright install
 
 ## Structured Data Tokens
 
+YARRRML mappings are now executed directly by `morph-kgc` native YARRRML support.
+There is no JS transpile step via `yarrrml-parser`, and no temporary `mapping.ttl`
+conversion artifact in the materialization pipeline.
+
 Customer-authored mappings can use runtime tokens:
 - `__XHTML__` for the local XHTML source path used by materialization.
 - `__URL__` for canonical page URL injection.
@@ -156,6 +160,9 @@ Customer-authored mappings can use runtime tokens:
 When unresolved:
 - strict mode (`strict_url_token=True`): fail fast
 - default non-strict mode: warn and keep `__URL__` unchanged
+
+Compatibility note: `morph-kgc` native YARRRML behavior may differ from legacy
+JS parser behavior for some advanced XPath/function constructs.
 
 ## Testing
 

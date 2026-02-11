@@ -31,7 +31,7 @@ Generic YARRRML helpers for structural normalization, materialization, and postp
 Key methods:
 - `normalize_mappings(yarrrml, url, xhtml_path)`
 - `materialize_jsonld(yarrrml, xhtml_path, workdir, response=None, url=None, strict_url_token=False)`
-- `postprocess_jsonld(jsonld_raw, mappings, xhtml, dataset_uri, url, target_type=None)`
+- `postprocess_jsonld(jsonld_raw, mappings, xhtml, dataset_uri, url)`
 - `ensure_no_blank_nodes(graph)`
 
 ## Pipeline behavior (breaking)
@@ -40,15 +40,25 @@ The materialization path is mapping-preserving by default:
 - No synthetic remapping to internal `ex:*` structures.
 - No implicit coercion to `Review`/`Thing`.
 - No review-specific postprocessing (`_dedupe_review_notes`, review URL/author/rating injections).
+- YARRRML is executed directly by `morph-kgc` native YARRRML support (no `yarrrml-parser` transpile step and no temporary RML `.ttl` artifact).
 
 ### Runtime tokens
 
-Mapping content supports runtime token replacement before YARRRML parsing:
+Mapping content supports runtime token replacement before direct materialization:
 - `__XHTML__`: replaced with callback XHTML local file path.
 - `__URL__`: replaced from `response.web_page.url` first, then explicit `url` argument.
 
 `strict_url_token=True` fails if `__URL__` is unresolved.
 Default non-strict policy logs a warning and leaves `__URL__` unchanged.
+
+### Error model
+
+Materialization raises explicit runtime errors for:
+- malformed YARRRML mappings
+- unsupported XPath/function constructs
+- unresolved `__URL__` when strict mode is enabled
+
+Compatibility note: `morph-kgc` native YARRRML handling may differ from legacy JS parser behavior in edge mappings; update mappings to align with `morph-kgc` semantics.
 
 ## Workflows
 

@@ -1,6 +1,6 @@
 # Migration Guide
 
-## 3.0.0 Breaking Changes
+## 3.1.0 Breaking Changes
 
 The structured data materialization pipeline was refactored to be generic and mapping-preserving.
 
@@ -8,6 +8,7 @@ The structured data materialization pipeline was refactored to be generic and ma
 
 - Synthetic remapping of authored mappings into internal `ex:*` structures.
 - Implicit coercion/defaulting toward `Review`/`Thing` in the generic materialization path.
+- Legacy JS transpile path (`yarrrml-parser` -> temporary RML `.ttl`) in the materialization pipeline.
 - Review-specific postprocessing side effects in core pipeline execution:
   - `_dedupe_review_notes`
   - `_ensure_review_url`
@@ -21,6 +22,8 @@ The structured data materialization pipeline was refactored to be generic and ma
 - `postprocess(self, jsonld_raw: dict, mappings: list[dict], cleaned_xhtml: str, dataset_uri: str, url: str) -> dict`
 - `run(self, yarrrml: str, url: str, cleaned_xhtml: str, dataset_uri: str, xhtml_path: Path, workdir: Path, response: object | None = None, strict_url_token: bool = False) -> tuple[dict, list[dict]]`
 
+`postprocess_jsonld(...)` in the generic YARRRML pipeline also no longer accepts `target_type`.
+
 ## Runtime Tokens
 
 Mappings can use runtime tokens before materialization:
@@ -31,6 +34,15 @@ Mappings can use runtime tokens before materialization:
 URL token resolution policy:
 - strict mode (`strict_url_token=True`): fail if unresolved
 - default mode: warn and keep `__URL__` unchanged
+
+## Materialization Engine Migration
+
+The SDK now passes YARRRML directly to `morph-kgc`.
+
+What to update from legacy transpile flow:
+1. Remove operational dependencies on `yarrrml-parser` in your runtime.
+2. Validate mappings against `morph-kgc` native YARRRML behavior.
+3. Update XPath/function expressions that relied on parser-specific transpile behavior.
 
 ## How To Migrate Legacy Specialized Consumers
 

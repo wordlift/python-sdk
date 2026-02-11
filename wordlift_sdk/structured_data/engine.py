@@ -7,8 +7,6 @@ import hashlib
 import json
 import logging
 import re
-import shutil
-import subprocess
 from dataclasses import dataclass
 from importlib import resources
 from pathlib import Path
@@ -31,10 +29,6 @@ _SCHEMA_BASE = "https://schema.org"
 _SCHEMA_HTTP = "http://schema.org/"
 _AGENT_BASE_URL = "https://api.wordlift.io/agent"
 _AGENT_MODEL = "gpt-5.1"
-_RR = Namespace("http://www.w3.org/ns/r2rml#")
-_RML = Namespace("http://w3id.org/rml/")
-_RML_LEGACY = Namespace("http://semweb.mmlab.be/ns/rml#")
-_QL = Namespace("http://semweb.mmlab.be/ns/ql#")
 _SH = Namespace("http://www.w3.org/ns/shacl#")
 _REVIEW_OPTIONAL_EXTRAS = {
     "description",
@@ -1285,25 +1279,32 @@ def _quote_unquoted_xpath_attributes(text: str) -> str:
     return pattern.sub(repl, text)
 
 
-def _run_yarrrml_parser(input_path: Path, output_path: Path) -> None:
-    parser = shutil.which("yarrrml-parser")
-    if not parser:
-        raise RuntimeError(
-            "yarrrml-parser is required. Install with: npm install -g @rmlio/yarrrml-parser"
+def _normalize_materialization_error(error: Exception) -> RuntimeError:
+    message = str(error).strip() or error.__class__.__name__
+    lowered = message.lower()
+    if "parsererror" in lowered or "while parsing" in lowered:
+        return RuntimeError(
+            "Malformed YARRRML mapping. Validate YAML/YARRRML syntax and prefixes."
+            f" Details: {message}"
         )
-    if output_path.exists():
-        output_path.unlink()
-    result = subprocess.run(
-        [parser, "-i", str(input_path), "-o", str(output_path)],
-        capture_output=True,
-        text=True,
-        check=False,
+    if (
+        "xpath" in lowered
+        or "absolute path on element" in lowered
+        or (
+            "function" in lowered
+            and ("unsupported" in lowered or "not supported" in lowered)
+        )
+    ):
+        return RuntimeError(
+            "Unsupported XPath/function construct in YARRRML mapping."
+            " Adjust XPath/functions to constructs supported by morph-kgc."
+            f" Details: {message}"
+        )
+    return RuntimeError(
+        "Failed to materialize YARRRML mapping with morph-kgc."
+        " Check mapping syntax and source expressions."
+        f" Details: {message}"
     )
-    if not output_path.exists():
-        error = (result.stderr or result.stdout).strip()
-        raise RuntimeError(f"yarrrml-parser failed to produce output. {error}")
-    if result.returncode != 0:
-        raise RuntimeError(f"yarrrml-parser failed: {result.stderr.strip()}")
 
 
 def _materialize_graph(mapping_path: Path) -> Graph:
@@ -1321,7 +1322,12 @@ def _materialize_graph(mapping_path: Path) -> Graph:
         "[DataSource1]\n"
         f"mappings = {mapping_path}\n"
     )
-    return morph_kgc.materialize(config)
+    try:
+        return morph_kgc.materialize(config)
+    except RuntimeError:
+        raise
+    except Exception as exc:
+        raise _normalize_materialization_error(exc) from exc
 
 
 def materialize_yarrrml(
@@ -1343,12 +1349,8 @@ def materialize_yarrrml(
     )
     workdir.mkdir(parents=True, exist_ok=True)
     yarrml_path = workdir / "mapping.yarrrml"
-    rml_path = workdir / "mapping.ttl"
     yarrml_path.write_text(normalized)
-    _run_yarrrml_parser(yarrml_path, rml_path)
-    _ensure_subject_termtype_iri(rml_path)
-    _normalize_reference_formulation(rml_path)
-    return _materialize_graph(rml_path)
+    return _materialize_graph(yarrml_path)
 
 
 def normalize_yarrrml_mappings(
@@ -1383,13 +1385,9 @@ def materialize_yarrrml_jsonld(
         strict_url_token=strict_url_token,
     )
     workdir.mkdir(parents=True, exist_ok=True)
-    yarrml_path = workdir / "mapping.yarrml"
-    rml_path = workdir / "mapping.ttl"
+    yarrml_path = workdir / "mapping.yarrrml"
     yarrml_path.write_text(normalized)
-    _run_yarrrml_parser(yarrml_path, rml_path)
-    _ensure_subject_termtype_iri(rml_path)
-    _normalize_reference_formulation(rml_path)
-    return _materialize_jsonld(rml_path)
+    return _materialize_jsonld(yarrml_path)
 
 
 def postprocess_jsonld(
@@ -1398,39 +1396,15 @@ def postprocess_jsonld(
     xhtml: str,
     dataset_uri: str,
     url: str,
-    target_type: str | None = None,
 ) -> dict[str, Any]:
     _ = (mappings, xhtml)
-    return normalize_jsonld(
-        jsonld_raw, dataset_uri, url, target_type, embed_nodes=False
-    )
+    return normalize_jsonld(jsonld_raw, dataset_uri, url, None, embed_nodes=False)
 
 
 def _materialize_jsonld(mapping_path: Path) -> dict[str, Any] | list[Any]:
     graph = _materialize_graph(mapping_path)
     jsonld_str = graph.serialize(format="json-ld")
     return json.loads(jsonld_str)
-
-
-def _ensure_subject_termtype_iri(mapping_path: Path) -> None:
-    graph = Graph()
-    graph.parse(mapping_path, format="turtle")
-    for subject_map in graph.subjects(RDF.type, _RR.SubjectMap):
-        graph.add((subject_map, _RR.termType, _RR.IRI))
-    graph.serialize(destination=str(mapping_path), format="turtle")
-
-
-def _normalize_reference_formulation(mapping_path: Path) -> None:
-    graph = Graph()
-    graph.parse(mapping_path, format="turtle")
-    replaced = False
-    for predicate in (_RML.referenceFormulation, _RML_LEGACY.referenceFormulation):
-        for subject in list(graph.subjects(predicate, _QL.XPath)):
-            graph.remove((subject, predicate, _QL.XPath))
-            graph.add((subject, predicate, _RML.XPath))
-            replaced = True
-    if replaced:
-        graph.serialize(destination=str(mapping_path), format="turtle")
 
 
 def _flatten_jsonld(data: dict[str, Any] | list[Any]) -> list[dict[str, Any]]:
@@ -2250,15 +2224,11 @@ def generate_from_agent(
             cleaned_path.as_posix(),
             target_type,
         )
-        yarrml_path = workdir / "mapping.yarrml"
-        rml_path = workdir / "mapping.ttl"
+        yarrml_path = workdir / "mapping.yarrrml"
         yarrml_path.write_text(yarrml)
 
         try:
-            _run_yarrrml_parser(yarrml_path, rml_path)
-            _ensure_subject_termtype_iri(rml_path)
-            _normalize_reference_formulation(rml_path)
-            jsonld_raw = _materialize_jsonld(rml_path)
+            jsonld_raw = _materialize_jsonld(yarrml_path)
             _ensure_node_ids(jsonld_raw, dataset_uri, url)
             mapping_jsonld_path.write_text(json.dumps(jsonld_raw, indent=2))
             normalized_jsonld = postprocess_jsonld(
@@ -2267,7 +2237,6 @@ def generate_from_agent(
                 cleaned_xhtml,
                 dataset_uri,
                 url,
-                target_type=target_type,
             )
             final_jsonld_path = workdir / "structured-data.jsonld"
             final_jsonld_path.write_text(json.dumps(normalized_jsonld, indent=2))
