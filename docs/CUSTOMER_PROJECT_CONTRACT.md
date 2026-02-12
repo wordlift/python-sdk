@@ -22,7 +22,7 @@ Each customer repo must provide:
 config.toml
 profiles/
   _base/
-    postprocessors/
+    postprocessors.toml   # optional
   <profile_name>/
     mappings/
     templates/

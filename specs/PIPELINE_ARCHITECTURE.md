@@ -37,9 +37,8 @@ Debug output convention:
 
 - when cloud debug is enabled, callback graphs are written as Turtle under:
   - `output/debug_cloud/<profile_name>/`
-- merged validation for a profile can be run via:
-  - `python scripts/validate_debug_cloud.py --profile <name>`
-  - uses `wordlift_sdk.validation.validate_file` on a merged Turtle graph
+- merged validation can be run by host-project tooling using
+  `wordlift_sdk.validation.validate_file`.
 
 ## Cloud Callback Protocol
 
@@ -132,9 +131,8 @@ Pending migration work:
 
 ## Configuration Model
 
-Primary files:
+Primary file:
 
-- `legacy.toml` for legacy local flow
 - `config.toml` for profile-driven cloud flow
 
 - Static country extraction/pricing defaults in TOML.
@@ -144,10 +142,11 @@ Primary files:
   - inheritance via `_base`
   - `${ENV_VAR}` interpolation for keys/secrets
   - optional URL-based mapping routing with implicit fallback to `default.yarrrml`
-  - drop-in postprocessors loaded from profile folder
+  - manifest-based postprocessors loaded from
+    `profiles/_base/postprocessors.toml` and
+    `profiles/<profile>/postprocessors.toml`
 
 ## Current Non-Functional Constraints
 
-- Local strategy RML step depends on Docker and `yarrrml-parser`.
 - Cloud flow depends on valid profile key and Sheets service account settings (inline JSON or JSON file path).
-- Local and cloud parity is a tracked requirement; scripts exist but automated parity tests are not yet part of CI.
+- Automated parity tests are not yet part of CI.

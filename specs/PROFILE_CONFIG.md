@@ -137,20 +137,20 @@ Resolution rules:
 
 ## Postprocessors
 
-`postprocessors_dir` is a drop-in folder loaded at runtime.
+`postprocessors_dir` is a profile path setting. Postprocessor loading is manifest-based.
 
 Expected behavior:
 
 1. Load base postprocessors from `profiles/_base/postprocessors.toml` first.
 2. Load profile postprocessors from `profiles/<profile>/postprocessors.toml` second.
 3. Apply resolved processors to RDFLib graph after mapping materialization.
-5. Graph postprocessing is part of runtime flow; no config toggle is required to disable it.
-6. Manifest contract:
+4. Graph postprocessing is part of runtime flow; no config toggle is required to disable it.
+5. Manifest contract:
    - top-level optional defaults: `python`, `timeout_seconds`, `enabled`, `keep_temp_on_error`
    - entries are `[[postprocessors]]` tables
    - required entry field: `class = "package.module:ClassName"`
    - optional per-entry overrides: `python`, `timeout_seconds`, `enabled`, `keep_temp_on_error`
-7. Runtime execution contract:
+6. Runtime execution contract:
    - each entry runs in subprocess using configured interpreter (`python`)
    - input graph/output graph are exchanged via N-Quads temp files
    - context is exchanged via JSON temp file
