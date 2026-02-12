@@ -84,7 +84,3 @@ class KgBuildApplicationContainer(ApplicationContainer):
             url_handler=await self.create_web_page_import_url_handler(),
             concurrency=concurrency,
         )
-
-
-# Backwards-compatible alias.
-CandidateApplicationContainer = KgBuildApplicationContainer

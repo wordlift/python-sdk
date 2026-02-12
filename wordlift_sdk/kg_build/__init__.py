@@ -16,7 +16,6 @@ __all__ = [
     "get_debug_output_dir",
     "run_cloud_workflow",
     "KgBuildApplicationContainer",
-    "CandidateApplicationContainer",
     "IdAllocator",
     "CanonicalIdGenerator",
     "CanonicalIdsPostprocessor",
@@ -61,10 +60,6 @@ _EXPORTS: dict[str, tuple[str, str]] = {
     "KgBuildApplicationContainer": (
         "wordlift_sdk.kg_build.container",
         "KgBuildApplicationContainer",
-    ),
-    "CandidateApplicationContainer": (
-        "wordlift_sdk.kg_build.container",
-        "CandidateApplicationContainer",
     ),
     "IdAllocator": ("wordlift_sdk.kg_build.id_allocator", "IdAllocator"),
     "CanonicalIdGenerator": (
