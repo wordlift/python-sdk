@@ -1,5 +1,27 @@
 # Changelog
 
+## 3.3.0 - 2026-02-12
+
+### Breaking
+
+- Integrated `wordlift_sdk.kg_build` as the SDK-owned profile pipeline and removed candidate naming/API aliases from the public module surface.
+- Enforced hard cutover to manifest-based postprocessor orchestration only; legacy `.py` and `*.command.toml` discovery is not supported.
+
+### Added
+
+- Included `wordlift_sdk.kg_build` package modules for profile config loading, cloud workflow orchestration, callback protocol, ID policy/allocation, YARRRML validation, and postprocessor subprocess execution.
+- Added SDK docs/specs for profile runtime contracts:
+  - `docs/CUSTOMER_PROJECT_CONTRACT.md`
+  - `specs/PROFILE_CONFIG.md`
+  - `specs/PIPELINE_ARCHITECTURE.md`
+- Added dedicated postprocessor contract tests for:
+  - base + profile manifest merge ordering
+  - subprocess execution
+  - N-Quads input/output exchange
+  - fail-fast behavior
+  - `enabled`, `python`, `timeout_seconds`, `keep_temp_on_error`
+- Added direct dependency `jinja2` for Jinja-based KG template rendering.
+
 ## 3.2.0 - 2026-02-11
 
 ### Breaking

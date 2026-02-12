@@ -32,3 +32,6 @@
   native support; legacy `yarrrml-parser` transpilation is not used.
 - Materialization errors are categorized with actionable context for malformed
   YARRRML and unsupported XPath/function constructs.
+- `wordlift_sdk.kg_build` is integrated in the SDK with manifest-based
+  postprocessor orchestration only; legacy `.py`/`*.command.toml` discovery
+  is intentionally removed.

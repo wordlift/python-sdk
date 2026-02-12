@@ -1240,7 +1240,7 @@ description = "Read metadata from Python packages"
 optional = false
 python-versions = ">=3.9"
 groups = ["main"]
-markers = "python_version < \"3.12\""
+markers = "python_version <= \"3.11\""
 files = [
     {file = "importlib_metadata-8.7.1-py3-none-any.whl", hash = "sha256:5a1f80bf1daa489495071efbb095d75a634cf28a8bc299581244063b53176151"},
     {file = "importlib_metadata-8.7.1.tar.gz", hash = "sha256:49fef1ae6440c182052f407c8d34a68f72efc36db9ca90dc0113398f2fdde8bb"},
@@ -1332,6 +1332,24 @@ files = [
 itemadapter = ">=0.1.0"
 jmespath = ">=0.9.5"
 parsel = ">=1.5.0"
+
+[[package]]
+name = "jinja2"
+version = "3.1.6"
+description = "A very fast and expressive template engine."
+optional = false
+python-versions = ">=3.7"
+groups = ["main"]
+files = [
+    {file = "jinja2-3.1.6-py3-none-any.whl", hash = "sha256:85ece4451f492d0c13c5dd7c13a64681a86afae63a5f347908daf103ce6d2f67"},
+    {file = "jinja2-3.1.6.tar.gz", hash = "sha256:0137fb05990d35f1275a587e9aee6d56da821fc83491a0fb838183be43f66d6d"},
+]
+
+[package.dependencies]
+MarkupSafe = ">=2.0"
+
+[package.extras]
+i18n = ["Babel (>=2.7)"]
 
 [[package]]
 name = "jmespath"
@@ -3764,7 +3782,7 @@ description = "Backport of pathlib-compatible object wrapper for zip files"
 optional = false
 python-versions = ">=3.9"
 groups = ["main"]
-markers = "python_version < \"3.12\""
+markers = "python_version <= \"3.11\""
 files = [
     {file = "zipp-3.23.0-py3-none-any.whl", hash = "sha256:071652d6115ed432f5ce1d34c336c0adfd6a884660d1e9712a256d3d3bd4b14e"},
     {file = "zipp-3.23.0.tar.gz", hash = "sha256:a07157588a12518c9d4034df3fbbee09c814741a33ff63c05fa29d26a2404166"},
@@ -3827,4 +3845,4 @@ testing = ["coverage[toml]", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10, <3.15"
-content-hash = "94421f4883b5e6ba4d4649fc11ac3afb25d9c70eb038fbb865ce52c9b8a7f1b1"
+content-hash = "fc3c590dace9c4d0e7f08cecee006186fa749c8f42aeda2595c9169cdbdf8048"

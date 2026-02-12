@@ -21,3 +21,4 @@
 - [x] 2026-02-12 Increase coverage for structured-data engine utilities, batch generation branches, and browser context/open flows.
 - [x] 2026-02-12 Increase coverage for SHACL generator parsing/generation and KG entity store async/dataframe paths.
 - [x] 2026-02-12 Increase coverage for structured-data engine normalization/validation helper paths (ID assignment, mapping/XPath checks, SHACL message formatting).
+- [x] 2026-02-12 Integrate `wordlift_sdk.kg_build` with manifest-only postprocessor runtime, SDK import surface updates, and dedicated postprocessor contract tests.
