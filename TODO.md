@@ -16,3 +16,8 @@
 - [x] 2026-02-11 Refactor structured data materialization to mapping-preserving generic pipeline with runtime `__XHTML__`/`__URL__` token replacement.
 - [x] 2026-02-11 Remove `yarrrml-parser` execution path and run YARRRML directly with `morph-kgc` native support, including explicit mapping error categories.
 - [x] 2026-02-11 Add runtime `__ID__` token support with fail-closed resolution from `response.id` across normalization/materialization.
+- [x] 2026-02-11 Increase unit-test coverage for configuration lookup, structured-data input resolution, and XHTML cleanup paths.
+- [x] 2026-02-11 Increase unit-test coverage across GraphQL helpers, structured-data orchestration/IO, protocol queues, and renderer helpers.
+- [x] 2026-02-12 Increase coverage for structured-data engine utilities, batch generation branches, and browser context/open flows.
+- [x] 2026-02-12 Increase coverage for SHACL generator parsing/generation and KG entity store async/dataframe paths.
+- [x] 2026-02-12 Increase coverage for structured-data engine normalization/validation helper paths (ID assignment, mapping/XPath checks, SHACL message formatting).
