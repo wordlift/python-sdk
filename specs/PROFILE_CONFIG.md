@@ -154,13 +154,6 @@ Expected behavior:
    - context is exchanged via JSON temp file
    - workflow fails fast on first postprocessor failure
 
-Compatibility note:
-
-- `postprocessors_dir` may still appear in older profile files, but postprocessor
-  loading uses only:
-  - `profiles/_base/postprocessors.toml`
-  - `profiles/<profile>/postprocessors.toml`
-
 Current shared/base chain:
 
 - project-defined classes loaded from manifest `[[postprocessors]]` entries.
