@@ -178,6 +178,9 @@ The SDK now includes a profile-driven cloud mapping module under `wordlift_sdk.k
 
 - Public module import: `wordlift_sdk.kg_build`
 - Postprocessor runner entrypoint: `python -m wordlift_sdk.kg_build.postprocessor_runner`
+- URL handling parity with legacy workflow:
+  - `WebPageImportUrlHandler` is always enabled
+  - `SearchConsoleUrlHandler` is enabled when `GOOGLE_SEARCH_CONSOLE=True` (default)
 - Postprocessor manifests are loaded from:
 1. `profiles/_base/postprocessors.toml`
 2. `profiles/<profile>/postprocessors.toml`

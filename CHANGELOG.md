@@ -1,5 +1,21 @@
 # Changelog
 
+## 3.4.0 - 2026-02-12
+
+### Changed
+
+- Restored `kg_build` URL-handler parity with the legacy workflow by executing
+  `WebPageImportUrlHandler` plus optional `SearchConsoleUrlHandler` when
+  `GOOGLE_SEARCH_CONSOLE` is enabled (default `True`).
+
+### Added
+
+- Added `kg_build` container tests validating:
+  - Search Console handler is included by default.
+  - Search Console handler is skipped when `GOOGLE_SEARCH_CONSOLE=False`.
+  - `KgBuildApplicationContainer` still passes the configured protocol callback
+    to `WebPageImportUrlHandler`.
+
 ## 3.3.0 - 2026-02-12
 
 ### Breaking

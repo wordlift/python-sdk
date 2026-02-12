@@ -24,6 +24,9 @@ Sequence:
 1. Load profile from `worai.toml` (`[profiles.<name>]` + inheritance).
 2. Resolve runtime settings (env interpolation + fallbacks).
 3. Build SDK temp configuration and run `KgImportWorkflow`.
+   - URL handlers run as:
+     - `WebPageImportUrlHandler` always
+     - optional `SearchConsoleUrlHandler` when `GOOGLE_SEARCH_CONSOLE=true`
 4. For each callback:
    - patch static entity templates once from `profiles/<name>/templates/*`
    - resolve URL-routed mapping from `profiles/<name>/mappings/*`
