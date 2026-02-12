@@ -185,8 +185,8 @@ Postprocessor `context` includes:
 
 ### Optional Rules Dataset Convention
 
-Projects may define their own rules dataset (for example pricing/classification
-rules from a spreadsheet) and consume it in custom manifest postprocessors.
+Projects may define their own rules datasets and consume them in custom
+manifest postprocessors.
 The SDK does not prescribe rule-table names, columns, or matching semantics.
 
 ## RDF Templates

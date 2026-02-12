@@ -80,37 +80,6 @@ Current implementation status:
 - manifest-based postprocessor execution (base + profile manifests, subprocess isolation, N-Quads exchange): implemented in `wordlift_sdk.kg_build.postprocessors`.
 - profile-specific processors are external to the SDK and loaded by class path from manifests.
 
-## Placeholder Coverage Matrix
-
-This table documents how mapping placeholders are satisfied at runtime in cloud flow.
-
-| Placeholder | Resolution source | Runtime owner | Status |
-| --- | --- | --- | --- |
-| `$(url)` | Callback URL (mapping input) | Mapping templates (XPath) | Covered |
-| `$(name)` | XPath mapping expressions (`<title>` / node text) | Mapping templates (XPath) | Covered |
-| `$(description)` | XPath mapping expressions (`<meta name="description">` / node text) | Mapping templates (XPath) | Covered |
-| `$(language)` | XPath mapping expressions (`<html lang>`) | Mapping templates (XPath) | Covered |
-| `$(html)` | Raw callback HTML | Custom postprocessor chain | Project-defined |
-| `$(markdownText)` | HTML->Markdown conversion | Custom postprocessor chain | Project-defined |
-| `$(image)` | XPath mapping expressions (OpenGraph image) | Mapping templates (XPath) | Covered |
-| `$(page_key)` | `sha256(url)[:12]` | built-in canonical ID stage, helpers | Covered |
-| `$(product_id)` | Canonical ID generated from Product node + URL hash policy | built-in canonical ID stage | Covered |
-| `$(category)` | Existing value or URL-based classification | Custom postprocessor chain | Project-defined |
-| `$(offer_price_currency)` | Pricing config + URL match | Custom postprocessor chain | Project-defined |
-| `$(offer_min_price)` | Pricing config + URL match | Custom postprocessor chain | Project-defined |
-| `$(offer_max_price)` | Pricing config + URL match | Custom postprocessor chain | Project-defined |
-| `$(offer_availability)` | Runtime default to `schema:InStock` | Custom postprocessor chain | Project-defined |
-| `$(q_index)` | XPath `count(preceding::...) + 1` expressions | Mapping templates (XPath) | Covered |
-| `$(question)` | XPath node extraction from accordion question nodes | Mapping templates (XPath) | Covered |
-| `$(answer)` | XPath node extraction from accordion answer nodes | Mapping templates (XPath) | Covered |
-| `$(position)` | XPath `count(preceding::...) + 1` expressions | Mapping templates (XPath) | Covered |
-| `$(page_type)` | URL-based page classification | Custom postprocessor chain | Project-defined |
-
-Notes:
-
-- `$(` expression placeholders (for example `$(normalize-space(...))`, `$(count(...))`, `$(concat(...))`) are mapping-engine expressions and are not owned by postprocessors.
-- Coverage status for project-defined placeholders depends on the customer's postprocessor implementation.
-
 ## Cloud Mapping Runtime Status
 
 Implemented:
@@ -135,9 +104,8 @@ Primary file:
 
 - `config.toml` for profile-driven cloud flow
 
-- Static country extraction/pricing defaults in TOML.
-- Remote URL/pricing overrides from Google Sheets.
-- Dynamic WordLift dataset/domain from account metadata fetched using country API key.
+- Runtime settings are resolved from profile TOML plus environment interpolation/fallbacks.
+- Account metadata (for example `dataset_uri`) is resolved from SDK context at runtime.
 - Profile-first cloud mapping configuration is defined in `specs/PROFILE_CONFIG.md`:
   - inheritance via `_base`
   - `${ENV_VAR}` interpolation for keys/secrets
