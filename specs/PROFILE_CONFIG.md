@@ -46,18 +46,18 @@ web_page_import_timeout = "${WEB_PAGE_IMPORT_TIMEOUT}"
 google_search_console = "${GOOGLE_SEARCH_CONSOLE}"
 service_account_file = "${SERVICE_ACCOUNT_FILE}"
 
-[profiles.insurance_faq_v1]
+[profiles.sample_profile]
 inherit = "_base"
-api_key = "${WORDLIFT_API_KEY_INSURANCE_FAQ}"
-templates_dir = "profiles/insurance_faq_v1/templates"   # optional
-mappings_dir = "profiles/insurance_faq_v1/mappings"      # optional
-postprocessors_dir = "profiles/insurance_faq_v1/postprocessors" # optional
+api_key = "${WORDLIFT_API_KEY_SAMPLE_PROFILE}"
+templates_dir = "profiles/sample_profile/templates"   # optional
+mappings_dir = "profiles/sample_profile/mappings"      # optional
+postprocessors_dir = "profiles/sample_profile/postprocessors" # optional
 
-[[profiles.insurance_faq_v1.mappings]]
+[[profiles.sample_profile.mappings]]
 pattern = "^/products/.*$"
 mapping = "product.yarrrml"
 
-[[profiles.insurance_faq_v1.mappings]]
+[[profiles.sample_profile.mappings]]
 pattern = "^/videos/.*$"
 mapping = "video.yarrrml"
 ```
