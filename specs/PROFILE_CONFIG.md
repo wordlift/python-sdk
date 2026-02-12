@@ -183,27 +183,11 @@ Postprocessor `context` includes:
 - `settings` (resolved profile runtime settings from config/env)
 - `ids` (canonical ID allocator helper)
 
-### Rules Tab Schema (`Pricing Rules`)
+### Optional Rules Dataset Convention
 
-`20_pricing.py` and `40_classification.py` are driven by rules loaded from the spreadsheet tab named `Pricing Rules` (or `pricing_rules_sheet` if explicitly provided in runtime settings).
-
-Column contract (case-insensitive, spaces/hyphens normalized to underscores):
-
-- `Country` (optional but recommended): ISO-2 country code (`DE`, `AT`, `CH`, `US`).
-- `Pattern` (required): substring matched against page URL path/URL.
-- `Category` (optional): used by classification enrichment.
-- `Min Price` or `Min` (optional): numeric lower bound for offer pricing.
-- `Max Price` or `Max` (optional): numeric upper bound for offer pricing.
-- `Currency` (optional): ISO currency code (`EUR`, `CHF`, `USD`).
-- `Priority` (optional): integer; higher value wins first.
-- `Active` (optional): truthy (`true`, `yes`, `1`, `on`, `active`) or falsy.
-
-Resolution rules:
-
-1. Filter by `Country` matching current profile/account country (if provided).
-2. Filter out inactive rows when `Active` is present and falsy.
-3. Sort by `Priority` descending.
-4. First matching `Pattern` (`pattern in url`) is applied.
+Projects may define their own rules dataset (for example pricing/classification
+rules from a spreadsheet) and consume it in custom manifest postprocessors.
+The SDK does not prescribe rule-table names, columns, or matching semantics.
 
 ## RDF Templates
 

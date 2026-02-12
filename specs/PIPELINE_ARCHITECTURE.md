@@ -90,26 +90,26 @@ This table documents how mapping placeholders are satisfied at runtime in cloud 
 | `$(name)` | XPath mapping expressions (`<title>` / node text) | Mapping templates (XPath) | Covered |
 | `$(description)` | XPath mapping expressions (`<meta name="description">` / node text) | Mapping templates (XPath) | Covered |
 | `$(language)` | XPath mapping expressions (`<html lang>`) | Mapping templates (XPath) | Covered |
-| `$(html)` | Raw callback HTML | `05_seovoc` (`seovoc:html`) | Covered |
-| `$(markdownText)` | HTML->Markdown conversion | `05_seovoc` | Covered |
+| `$(html)` | Raw callback HTML | Custom postprocessor chain | Project-defined |
+| `$(markdownText)` | HTML->Markdown conversion | Custom postprocessor chain | Project-defined |
 | `$(image)` | XPath mapping expressions (OpenGraph image) | Mapping templates (XPath) | Covered |
 | `$(page_key)` | `sha256(url)[:12]` | built-in canonical ID stage, helpers | Covered |
 | `$(product_id)` | Canonical ID generated from Product node + URL hash policy | built-in canonical ID stage | Covered |
-| `$(category)` | Existing value or URL-based classification | `40_classification` | Covered |
-| `$(offer_price_currency)` | Pricing config + URL match | `20_pricing` | Covered |
-| `$(offer_min_price)` | Pricing config + URL match | `20_pricing` | Covered |
-| `$(offer_max_price)` | Pricing config + URL match | `20_pricing` | Covered |
-| `$(offer_availability)` | Runtime default to `schema:InStock` | `20_pricing` | Covered |
+| `$(category)` | Existing value or URL-based classification | Custom postprocessor chain | Project-defined |
+| `$(offer_price_currency)` | Pricing config + URL match | Custom postprocessor chain | Project-defined |
+| `$(offer_min_price)` | Pricing config + URL match | Custom postprocessor chain | Project-defined |
+| `$(offer_max_price)` | Pricing config + URL match | Custom postprocessor chain | Project-defined |
+| `$(offer_availability)` | Runtime default to `schema:InStock` | Custom postprocessor chain | Project-defined |
 | `$(q_index)` | XPath `count(preceding::...) + 1` expressions | Mapping templates (XPath) | Covered |
 | `$(question)` | XPath node extraction from accordion question nodes | Mapping templates (XPath) | Covered |
 | `$(answer)` | XPath node extraction from accordion answer nodes | Mapping templates (XPath) | Covered |
 | `$(position)` | XPath `count(preceding::...) + 1` expressions | Mapping templates (XPath) | Covered |
-| `$(page_type)` (US) | URL-based page classification | `40_classification` | Covered |
+| `$(page_type)` | URL-based page classification | Custom postprocessor chain | Project-defined |
 
 Notes:
 
 - `$(` expression placeholders (for example `$(normalize-space(...))`, `$(count(...))`, `$(concat(...))`) are mapping-engine expressions and are not owned by postprocessors.
-- Coverage means runtime value is guaranteed by callback HTML + postprocessing chain for currently supported page patterns; new site patterns may require selector updates.
+- Coverage status for project-defined placeholders depends on the customer's postprocessor implementation.
 
 ## Cloud Mapping Runtime Status
 
