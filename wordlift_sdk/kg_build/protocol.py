@@ -41,7 +41,6 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         self.profile_dir = self.root_dir / "profiles" / self.profile.name
         self.templates_dir = self._resolve_path(self.profile.templates_dir)
         self.mappings_dir = self._resolve_path(self.profile.mappings_dir)
-        self.postprocessors_dir = self._resolve_path(self.profile.postprocessors_dir)
 
         self.rml_service = RmlMappingService(context)
         self.patcher = EntityPatcher(context)

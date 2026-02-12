@@ -42,7 +42,6 @@ class ProfileDefinition:
     mapping: str
     templates_dir: str
     mappings_dir: str
-    postprocessors_dir: str
     routes: tuple[ProfileMappingRoute, ...]
     settings: dict[str, Any]
 
@@ -199,7 +198,6 @@ def _profile_defaults(name: str, raw: dict[str, Any], has_base: bool) -> dict[st
         result.setdefault("mapping", "default.yarrrml")
         result.setdefault("templates_dir", f"profiles/{name}/templates")
         result.setdefault("mappings_dir", f"profiles/{name}/mappings")
-        result.setdefault("postprocessors_dir", f"profiles/{name}/postprocessors")
     else:
         result.setdefault("mapping", "default.yarrrml")
 
@@ -287,9 +285,6 @@ def load_profile_config(
                 merged.get("templates_dir", f"profiles/{name}/templates")
             ),
             mappings_dir=str(merged.get("mappings_dir", f"profiles/{name}/mappings")),
-            postprocessors_dir=str(
-                merged.get("postprocessors_dir", f"profiles/{name}/postprocessors")
-            ),
             routes=routes,
             settings=settings,
         )
