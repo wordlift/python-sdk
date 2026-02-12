@@ -172,6 +172,17 @@ temporary hardcoded page subjects such as `{{ dataset_uri }}/web-pages/page`.
 Compatibility note: `morph-kgc` native YARRRML behavior may differ from legacy
 JS parser behavior for some advanced XPath/function constructs.
 
+## KG Build Module
+
+The SDK now includes a profile-driven cloud mapping module under `wordlift_sdk.kg_build`.
+
+- Public module import: `wordlift_sdk.kg_build`
+- Postprocessor runner entrypoint: `python -m wordlift_sdk.kg_build.postprocessor_runner`
+- Postprocessor manifests are loaded from:
+1. `profiles/_base/postprocessors.toml`
+2. `profiles/<profile>/postprocessors.toml`
+- Execution is manifest-based only (hard cutover): no legacy `.py` or `*.command.toml` discovery.
+
 ## Testing
 
 ```bash
@@ -184,6 +195,9 @@ poetry run pytest
 - [Google Sheets Lookup](docs/google_sheets_lookup.md): Utility for O(1) lookups from Google Sheets.
 - [Web Page Import](docs/web_page_import.md): Configure fetch options, proxies, and JS rendering.
 - [Structured Data](docs/structured_data.md): Structured data architecture and pipeline behavior.
+- [Customer Project Contract](docs/CUSTOMER_PROJECT_CONTRACT.md): Profile repo contract and manifest-based postprocessor runtime.
 - [Structured Data Spec](specs/structured_data.md): Internal technical details for runtime placeholder resolution.
+- [Profile Config Spec](specs/PROFILE_CONFIG.md): Profile inheritance, environment interpolation, and manifest postprocessor contract.
+- [Pipeline Architecture Spec](specs/PIPELINE_ARCHITECTURE.md): `kg_build` runtime flow and callback architecture.
 - [Migration Guide](MIGRATION.md): Breaking changes for structured data refactor.
 - [Changelog](CHANGELOG.md): Versioned release notes.
