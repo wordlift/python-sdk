@@ -51,7 +51,6 @@ inherit = "_base"
 api_key = "${WORDLIFT_API_KEY_SAMPLE_PROFILE}"
 templates_dir = "profiles/sample_profile/templates"   # optional
 mappings_dir = "profiles/sample_profile/mappings"      # optional
-postprocessors_dir = "profiles/sample_profile/postprocessors" # optional
 
 [[profiles.sample_profile.mappings]]
 pattern = "^/products/.*$"
@@ -69,7 +68,6 @@ If omitted:
 - `inherit`: defaults to `_base` (except profile `_base` itself).
 - `templates_dir`: defaults to `profiles/<profile_name>/templates`.
 - `mappings_dir`: defaults to `profiles/<profile_name>/mappings`.
-- `postprocessors_dir`: defaults to `profiles/<profile_name>/postprocessors`.
 - `mapping`: defaults to `default.yarrrml`.
 - `mapping_mode`: defaults to `xpath` and currently only `xpath` is valid.
 
@@ -137,7 +135,7 @@ Resolution rules:
 
 ## Postprocessors
 
-`postprocessors_dir` is a profile path setting. Postprocessor loading is manifest-based.
+Postprocessor loading is manifest-based.
 
 Expected behavior:
 
@@ -155,6 +153,13 @@ Expected behavior:
    - input graph/output graph are exchanged via N-Quads temp files
    - context is exchanged via JSON temp file
    - workflow fails fast on first postprocessor failure
+
+Compatibility note:
+
+- `postprocessors_dir` may still appear in older profile files, but postprocessor
+  loading uses only:
+  - `profiles/_base/postprocessors.toml`
+  - `profiles/<profile>/postprocessors.toml`
 
 Current shared/base chain:
 
