@@ -13,7 +13,7 @@ This model is project-agnostic and does not encode country-specific assumptions.
 3. Secrets are injected via environment interpolation (`${ENV_VAR}`).
 4. Mapping selection can be URL-routed.
 5. Routing is optional; a default mapping is implicitly applied.
-6. Postprocessors are loaded from a drop-in folder per profile.
+6. Postprocessors are loaded from profile manifests.
 7. Runtime keys are lowercase in TOML and may fallback to uppercase environment variables.
 
 ## Config Shape (TOML)
@@ -212,7 +212,7 @@ Sidecar exports:
 
 This spec does not define:
 
-- converter-specific rule file wiring in `config.toml`
+- converter-specific rule file wiring in `worai.toml`
 - country-specific profile semantics
 - static list-based postprocessor orchestration
 

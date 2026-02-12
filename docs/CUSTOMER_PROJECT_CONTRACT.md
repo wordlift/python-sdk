@@ -19,7 +19,7 @@ Run from project root with your host workflow command.
 Each customer repo must provide:
 
 ```text
-config.toml
+worai.toml
 profiles/
   _base/
     postprocessors.toml   # optional
@@ -86,7 +86,7 @@ Recommended patterns:
 Use this checklist before onboarding a customer repo.
 
 - [ ] Running command from repo root works with the host project workflow entrypoint.
-- [ ] `config.toml` contains expected profiles and resolves all `${ENV_VAR}` placeholders
+- [ ] `worai.toml` contains expected profiles and resolves all `${ENV_VAR}` placeholders
 - [ ] Profile has a valid input source (`urls` or `sheets_url` + `sheets_name`)
 - [ ] `sheets_service_account` is valid JSON or a valid readable path
 - [ ] `profiles/<name>/mappings` exists and contains the default/target mapping
@@ -100,7 +100,7 @@ Use this checklist before onboarding a customer repo.
 ## Suggested Onboarding Workflow
 
 1. Copy this contract file into the customer repo (or keep a centrally versioned copy).
-2. Create/verify profile directories and `config.toml`.
+2. Create/verify profile directories and `worai.toml`.
 3. Configure profile/base `postprocessors.toml` with class entries and interpreter defaults.
 4. Run one profile in debug mode.
 5. Validate debug output and patching behavior.

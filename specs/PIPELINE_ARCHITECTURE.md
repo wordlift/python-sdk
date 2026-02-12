@@ -21,7 +21,7 @@ Core modules:
 
 Sequence:
 
-1. Load profile from `config.toml` (`[profiles.<name>]` + inheritance).
+1. Load profile from `worai.toml` (`[profiles.<name>]` + inheritance).
 2. Resolve runtime settings (env interpolation + fallbacks).
 3. Build SDK temp configuration and run `KgImportWorkflow`.
 4. For each callback:
@@ -102,7 +102,7 @@ Pending migration work:
 
 Primary file:
 
-- `config.toml` for profile-driven cloud flow
+- `worai.toml` for profile-driven cloud flow
 
 - Runtime settings are resolved from profile TOML plus environment interpolation/fallbacks.
 - Account metadata (for example `dataset_uri`) is resolved from SDK context at runtime.

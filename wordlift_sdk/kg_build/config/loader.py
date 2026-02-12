@@ -222,7 +222,7 @@ def load_profile_config(
     raw_profiles = doc.get("profiles", {})
     if not isinstance(raw_profiles, dict) or not raw_profiles:
         raise ProfileConfigError(
-            "config.toml must define a non-empty [profiles] section."
+            "worai.toml must define a non-empty [profiles] section."
         )
 
     env_dict = dict(os.environ)
