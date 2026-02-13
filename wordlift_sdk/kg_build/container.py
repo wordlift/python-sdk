@@ -9,6 +9,8 @@ from wordlift_sdk.protocol.web_page_import_protocol import (
 )
 from wordlift_sdk.workflow.kg_import_workflow import KgImportWorkflow
 from wordlift_sdk.workflow.url_handler import WebPageImportUrlHandler
+from wordlift_sdk.workflow.url_handler.default_url_handler import DefaultUrlHandler
+from wordlift_sdk.workflow.url_handler.url_handler import UrlHandler
 from wordlift_sdk.workflow.url_handler.web_page_import_url_handler import (
     WebPageImportFetchOptions,
 )
@@ -81,6 +83,18 @@ class KgBuildApplicationContainer(ApplicationContainer):
         return KgImportWorkflow(
             context=await self.get_context(),
             url_source=url_source,
-            url_handler=await self.create_web_page_import_url_handler(),
+            url_handler=await self.create_multi_url_handler(),
             concurrency=concurrency,
         )
+
+    async def create_multi_url_handler(self) -> UrlHandler:
+        handlers: list[UrlHandler] = [
+            await self.create_web_page_import_url_handler(),
+        ]
+        if (
+            self._configuration_provider.get_value("GOOGLE_SEARCH_CONSOLE", True)
+            is True
+        ):
+            handlers.append(await self.create_search_console_url_handler())
+
+        return DefaultUrlHandler(url_handler_list=handlers)
