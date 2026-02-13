@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "wordlift-sdk"
 version = "3.4.0"
-description = ""
+description = "Python toolkit for orchestrating WordLift imports and structured data workflows."
 authors = ["David Riccitelli <david@wordlift.io>"]
 readme = "README.md"
 packages = [{ include = "wordlift_sdk" }]
