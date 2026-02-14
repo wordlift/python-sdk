@@ -302,3 +302,34 @@ def test_fail_fast_stops_after_first_postprocessor_error() -> None:
             graph = processor.run(graph, context)
 
     assert second.called is False
+
+
+def test_subprocess_uses_inherited_environment_without_pythonpath_injection(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    root = tmp_path
+    spec = PostprocessorSpec(
+        class_path="test_pp:AddTriple",
+        python=sys.executable,
+        timeout_seconds=30,
+        enabled=True,
+        keep_temp_on_error=False,
+    )
+    processor = SubprocessPostprocessor(spec=spec, root_dir=root)
+    captured: dict[str, object] = {}
+
+    def fake_run(*args, **kwargs):
+        captured["kwargs"] = kwargs
+        cmd = args[0]
+        output_flag_index = cmd.index("--output-graph")
+        output_path = Path(cmd[output_flag_index + 1])
+        output_path.write_text("", encoding="utf-8")
+        return subprocess.CompletedProcess(args=cmd, returncode=0, stdout="", stderr="")
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    output = processor.process_graph(_sample_graph(), _sample_context())
+    assert output is not None
+
+    kwargs = captured["kwargs"]
+    assert isinstance(kwargs, dict)
+    assert "env" not in kwargs

@@ -1,5 +1,18 @@
 # Changelog
 
+## 3.6.0 - 2026-02-14
+
+### Changed
+
+- Stopped injecting SDK package paths into postprocessor subprocess `PYTHONPATH`.
+- `kg_build` postprocessors now run with inherited environment only, requiring
+  configured interpreters to resolve their own dependencies.
+
+### Added
+
+- Added postprocessor contract test coverage to assert no `PYTHONPATH`
+  environment override is passed to subprocess execution.
+
 ## 3.4.0 - 2026-02-12
 
 ### Changed

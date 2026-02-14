@@ -62,6 +62,8 @@ Execution contract:
 
 - `wordlift_sdk.kg_build` runs each class in a subprocess.
 - working directory is repo root.
+- subprocesses inherit the parent environment as-is; SDK does not inject or rewrite
+  `PYTHONPATH`.
 - graph exchange uses temp files in N-Quads:
   - input: `input_graph.nq`
   - output: `output_graph.nq`

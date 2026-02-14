@@ -150,6 +150,7 @@ Expected behavior:
    - optional per-entry overrides: `python`, `timeout_seconds`, `enabled`, `keep_temp_on_error`
 6. Runtime execution contract:
    - each entry runs in subprocess using configured interpreter (`python`)
+   - subprocesses inherit parent environment without SDK `PYTHONPATH` injection
    - input graph/output graph are exchanged via N-Quads temp files
    - context is exchanged via JSON temp file
    - workflow fails fast on first postprocessor failure

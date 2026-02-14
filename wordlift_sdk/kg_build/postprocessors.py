@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 import logging
-import os
 import shutil
 import subprocess
 import tempfile
@@ -150,17 +149,6 @@ def _build_runner_payload(context: PostprocessorContext) -> dict[str, Any]:
     }
 
 
-def _prepend_pythonpath(env: dict[str, str]) -> dict[str, str]:
-    # Ensure subprocess interpreters can import this package even when they run
-    # from project-local venvs where wordlift_sdk is not installed.
-    package_root = str(Path(__file__).resolve().parents[2])
-    existing = env.get("PYTHONPATH", "")
-    env["PYTHONPATH"] = (
-        f"{package_root}{os.pathsep}{existing}" if existing else package_root
-    )
-    return env
-
-
 @dataclass(frozen=True)
 class SubprocessPostprocessor:
     spec: PostprocessorSpec
@@ -196,7 +184,6 @@ class SubprocessPostprocessor:
                 "--context",
                 str(context_path),
             ]
-            env = _prepend_pythonpath(dict(os.environ))
             completed = subprocess.run(
                 cmd,
                 text=True,
@@ -204,7 +191,6 @@ class SubprocessPostprocessor:
                 cwd=str(self.root_dir),
                 timeout=self.spec.timeout_seconds,
                 check=False,
-                env=env,
             )
             if completed.returncode != 0:
                 failed = True
