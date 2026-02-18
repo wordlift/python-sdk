@@ -173,6 +173,11 @@ temporary hardcoded page subjects such as `{{ dataset_uri }}/web-pages/page`.
 Compatibility note: `morph-kgc` native YARRRML behavior may differ from legacy
 JS parser behavior for some advanced XPath/function constructs.
 
+When preparing XHTML sources from raw HTML, `HtmlConverter` strips undeclared
+namespace prefixes from tag names and removes undeclared prefixed attributes to
+avoid `xml.etree.ElementTree.ParseError: unbound prefix` failures in XPath
+materialization flows.
+
 ## KG Build Module
 
 The SDK now includes a profile-driven cloud mapping module under `wordlift_sdk.kg_build`.

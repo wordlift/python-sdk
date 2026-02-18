@@ -30,6 +30,9 @@
   unresolved usage fails closed).
 - Structured data materialization executes YARRRML directly with `morph-kgc`
   native support; legacy `yarrrml-parser` transpilation is not used.
+- `HtmlConverter` sanitizes undeclared namespace prefixes before XHTML
+  materialization (`prefix:tag` -> `tag`, undeclared prefixed attributes
+  removed) to avoid XML parser `unbound prefix` failures with XPath sources.
 - Materialization errors are categorized with actionable context for malformed
   YARRRML and unsupported XPath/function constructs.
 - `wordlift_sdk.kg_build` is integrated in the SDK with manifest-based

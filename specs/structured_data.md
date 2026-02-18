@@ -33,3 +33,12 @@ content. `__ID__` is therefore supported in any IRI position, including:
 
 - subject `s:` entries
 - object IRI terms in `po` blocks
+
+## XHTML Namespace Safety
+
+`HtmlConverter` sanitizes XHTML source before materialization to keep XML parsing
+safe for `morph-kgc` XPath sources:
+
+- undeclared prefixed element names are rewritten to their local name
+- undeclared prefixed attributes are removed
+- declared prefixes and reserved `xml:*` attributes are preserved

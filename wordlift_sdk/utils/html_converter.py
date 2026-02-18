@@ -44,13 +44,60 @@ class HtmlConverter:
         return _INVALID_XML_CHARS_RE.sub("", value)
 
     def _sanitize_xhtml_tree(self, doc: Any) -> None:
-        for element in doc.iter():
-            if not hasattr(element, "attrib"):
-                continue
-            for attr in list(element.attrib):
-                if not _XML_NAME_RE.match(attr):
-                    del element.attrib[attr]
-                    continue
+        self._sanitize_element_with_namespaces(doc, inherited_prefixes={"xml"})
+
+    def _sanitize_element_with_namespaces(
+        self, element: Any, inherited_prefixes: set[str]
+    ) -> None:
+        if not hasattr(element, "attrib"):
+            return
+
+        declared = self._declared_prefixes(element)
+        in_scope = inherited_prefixes | declared | {"xml"}
+
+        tag = getattr(element, "tag", None)
+        if isinstance(tag, str) and ":" in tag and not tag.startswith("{"):
+            prefix, local = tag.split(":", 1)
+            if prefix and prefix not in in_scope:
+                element.tag = local
+
+        for attr in list(element.attrib):
+            if attr.startswith("{"):
                 value = element.attrib.get(attr)
                 if isinstance(value, str):
                     element.attrib[attr] = self._strip_invalid_xml_chars(value)
+                continue
+
+            if attr == "xmlns" or attr.startswith("xmlns:"):
+                value = element.attrib.get(attr)
+                if isinstance(value, str):
+                    element.attrib[attr] = self._strip_invalid_xml_chars(value)
+                continue
+
+            if ":" in attr:
+                prefix, _ = attr.split(":", 1)
+                if prefix != "xml" and prefix not in in_scope:
+                    del element.attrib[attr]
+                    continue
+
+            if not _XML_NAME_RE.match(attr):
+                del element.attrib[attr]
+                continue
+
+            value = element.attrib.get(attr)
+            if isinstance(value, str):
+                element.attrib[attr] = self._strip_invalid_xml_chars(value)
+
+        for child in list(element):
+            self._sanitize_element_with_namespaces(child, inherited_prefixes=in_scope)
+
+    def _declared_prefixes(self, element: Any) -> set[str]:
+        declared: set[str] = set()
+        for attr in getattr(element, "attrib", {}):
+            if attr == "xmlns":
+                continue
+            if attr.startswith("xmlns:"):
+                prefix = attr.split(":", 1)[1]
+                if prefix:
+                    declared.add(prefix)
+        return declared

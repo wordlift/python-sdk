@@ -66,6 +66,11 @@ Materialization raises explicit runtime errors for:
 
 Compatibility note: `morph-kgc` native YARRRML handling may differ from legacy JS parser behavior in edge mappings; update mappings to align with `morph-kgc` semantics.
 
+When XHTML input is produced by `wordlift_sdk.utils.html_converter.HtmlConverter`,
+undeclared namespace prefixes are sanitized (`prefix:tag` -> `tag`; undeclared
+prefixed attributes dropped) so XML/XPath materialization does not fail with
+`unbound prefix` parser errors.
+
 ## Workflows
 
 ### CreateWorkflow

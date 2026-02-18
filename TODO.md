@@ -32,3 +32,4 @@
 - [x] 2026-02-18 Expand public entry-point docs with explicit per-method aims, parameter descriptions, and an agent/human usability gap checklist.
 - [x] 2026-02-18 Add machine-readable agent metadata index (id/task/signature/sync_async/side_effects/raises/stability) to public entry-point docs.
 - [x] 2026-02-18 Add task quickstarts, operational behavior matrix, API stability contract, and a docs-sync test for `docs/public_entry_points.md`.
+- [x] 2026-02-18 Sanitize undeclared namespace prefixes in `HtmlConverter` output to prevent `unbound prefix` XML parse failures in XPath materialization.

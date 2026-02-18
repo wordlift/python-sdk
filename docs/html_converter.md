@@ -8,6 +8,7 @@ The `HtmlConverter` utility class provides a mechanism to convert HTML strings i
 - **Invalid Character Stripping**: Removes control characters invalid in XML 1.0 (e.g., null bytes).
 - **Attribute Sanitization**: Removes attributes with invalid XML names.
 - **Value Sanitization**: Strips invalid characters from attribute values.
+- **Namespace Safety**: Rewrites undeclared prefixed tags (e.g. `o:p` -> `p`) and removes undeclared prefixed attributes (e.g. `foo:bar`) to avoid XML parser `unbound prefix` failures.
 - **Encoding**: Produces UTF-8 encoded, recover-mode parsed XHTML.
 
 ## Usage
@@ -23,9 +24,9 @@ raw_html = """
 <!DOCTYPE html>
 <html>
   <body>
-    <div invalid:attr="test" data-id="123">
+    <o:p xlink:href="https://example.com" data-id="123">
       <p>Hello & World</p>
-    </div>
+    </o:p>
   </body>
 </html>
 """
@@ -36,9 +37,9 @@ try:
     # Output will be a valid XHTML string:
     # <html>
     #   <body>
-    #     <div data-id="123">
+    #     <p data-id="123">
     #       <p>Hello &amp; World</p>
-    #     </div>
+    #     </p>
     #   </body>
     # </html>
 except ImportError:

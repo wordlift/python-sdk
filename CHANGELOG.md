@@ -1,5 +1,22 @@
 # Changelog
 
+## 3.9.0 - 2026-02-18
+
+### Fixed
+
+- Sanitized XHTML namespace safety in `HtmlConverter` to prevent
+  `xml.etree.ElementTree.ParseError: unbound prefix` during `morph-kgc`
+  XPath materialization:
+  - undeclared prefixed tag names are rewritten to local names
+  - undeclared prefixed attributes are removed
+  - declared prefixes and `xml:*` attributes are preserved
+
+### Added
+
+- Unit coverage for undeclared-prefix sanitation in `HtmlConverter`.
+- Integration-style coverage validating `__XHTML__~xpath` materialization with
+  converter-sanitized XHTML containing undeclared prefixes.
+
 ## 3.6.0 - 2026-02-14
 
 ### Changed

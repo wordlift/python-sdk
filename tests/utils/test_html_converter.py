@@ -1,5 +1,7 @@
 """Tests for the HtmlConverter utility."""
 
+import xml.etree.ElementTree as ET
+
 import pytest
 
 try:
@@ -78,3 +80,28 @@ class TestHtmlConverter:
 
         with pytest.raises(RuntimeError, match="Failed to convert HTML to XHTML"):
             converter.convert("<html></html>")
+
+    def test_convert_strips_undeclared_prefixes_and_preserves_declared_ones(
+        self, converter
+    ):
+        """Undeclared prefixes are stripped/removed while declared ones remain."""
+        if lxml_html is None:
+            pytest.skip("lxml not installed")
+
+        html_input = """
+<html><body>
+  <o:p xlink:href="https://example.com" foo:bar="1" xml:lang="en">Hello</o:p>
+  <svg:svg xmlns:svg="http://www.w3.org/2000/svg" svg:width="100"></svg:svg>
+</body></html>
+"""
+        xhtml_output = converter.convert(html_input)
+
+        assert "<o:p" not in xhtml_output
+        assert "<p" in xhtml_output
+        assert "xlink:href=" not in xhtml_output
+        assert "foo:bar=" not in xhtml_output
+        assert 'xml:lang="en"' in xhtml_output
+        assert "svg:svg" in xhtml_output
+        assert "svg:width" in xhtml_output
+
+        ET.fromstring(xhtml_output)

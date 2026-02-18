@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import sys
 import types
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 import pytest
@@ -63,6 +64,7 @@ from wordlift_sdk.structured_data.engine import (  # noqa: E402
     postprocess_jsonld,
 )
 from wordlift_sdk.structured_data.materialization import MaterializationPipeline  # noqa: E402
+from wordlift_sdk.utils.html_converter import HtmlConverter  # noqa: E402
 
 
 def _install_materialization_stubs(
@@ -637,6 +639,48 @@ mappings:
         elif isinstance(value, str):
             names.append(value)
     assert "Example Title" in names
+
+
+def test_xpath_materialization_accepts_sanitized_xhtml_with_bad_prefixes(
+    tmp_path: Path,
+) -> None:
+    raw_html = """
+<html><body>
+  <o:p xlink:href="https://example.com">Prefixed Heading</o:p>
+</body></html>
+"""
+    xhtml = HtmlConverter().convert(raw_html)
+    ET.fromstring(xhtml)
+
+    xhtml_path = tmp_path / "page.xhtml"
+    xhtml_path.write_text(xhtml)
+
+    mapping = """
+prefixes:
+  schema: 'https://schema.org/'
+mappings:
+  page:
+    sources:
+      - [__XHTML__~xpath, '/html/body']
+    s: __URL__~iri
+    po:
+      - [a, 'schema:WebPage']
+"""
+
+    materializer = MaterializationPipeline()
+    jsonld, _ = materializer.run(
+        yarrrml=mapping,
+        url="https://example.com/page",
+        cleaned_xhtml=xhtml,
+        dataset_uri="urn:dataset",
+        xhtml_path=xhtml_path,
+        workdir=tmp_path / "work",
+        strict_url_token=True,
+    )
+
+    graph = jsonld.get("@graph", [])
+    assert isinstance(graph, list)
+    assert graph
 
 
 def test_id_smoke_materialization_uses_runtime_response_id(
