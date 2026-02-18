@@ -7,6 +7,7 @@ from rdflib import Graph, Literal, RDF, URIRef
 from wordlift_client import WebPage, WebPageScrapeResponse
 
 from wordlift_sdk.kg_build.config.loader import ProfileDefinition, ProfileMappingRoute
+import wordlift_sdk.kg_build.protocol as protocol_module
 from wordlift_sdk.kg_build.protocol import ProfileImportProtocol
 
 
@@ -22,6 +23,22 @@ def _make_profile() -> ProfileDefinition:
         mappings_dir="profiles/test-profile/mappings",
         routes=(ProfileMappingRoute(pattern=".*", mapping="default.yarrrml"),),
         settings={},
+    )
+
+
+def _make_profile_with_settings(settings: dict[str, object]) -> ProfileDefinition:
+    profile = _make_profile()
+    return ProfileDefinition(
+        name=profile.name,
+        inherit=profile.inherit,
+        api_key=profile.api_key,
+        mapping_mode=profile.mapping_mode,
+        strict_mapping=profile.strict_mapping,
+        mapping=profile.mapping,
+        templates_dir=profile.templates_dir,
+        mappings_dir=profile.mappings_dir,
+        routes=profile.routes,
+        settings=settings,
     )
 
 
@@ -106,3 +123,23 @@ async def test_profile_protocol_sets_source_on_mapped_subject_when_existing_id_m
         URIRef("https://w3id.org/seovoc/source"),
         Literal("web-page-import"),
     ) in patched_graph
+
+
+def test_protocol_uses_profile_postprocessor_runtime_setting(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    captured: dict[str, str] = {}
+
+    def fake_loader(*, root_dir, profile_name, runtime=None):
+        del root_dir, profile_name
+        captured["runtime"] = runtime
+        return []
+
+    monkeypatch.setattr(protocol_module, "load_postprocessors_for_profile", fake_loader)
+    protocol = ProfileImportProtocol(
+        context=_make_context(),
+        profile=_make_profile_with_settings({"POSTPROCESSOR_RUNTIME": "persistent"}),
+        root_dir=Path.cwd(),
+    )
+    assert protocol._postprocessor_runtime == "persistent"
+    assert captured["runtime"] == "persistent"

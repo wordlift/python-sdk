@@ -61,6 +61,9 @@ Manifest contract:
 Execution contract:
 
 - `wordlift_sdk.kg_build` runs each class in a subprocess.
+- runtime mode is selected by `POSTPROCESSOR_RUNTIME`:
+  - `oneshot` (default): one subprocess invocation per callback
+  - `persistent`: one long-lived subprocess worker per class reused across callbacks
 - working directory is repo root.
 - subprocesses inherit the parent environment as-is; SDK does not inject or rewrite
   `PYTHONPATH`.

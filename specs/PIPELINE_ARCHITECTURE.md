@@ -76,6 +76,9 @@ Entries are executed in list order (base first, then profile).
 Runtime-isolated execution:
 
 - each class runs in subprocess using configured interpreter (default `./.venv/bin/python`)
+- runtime mode is selected by `POSTPROCESSOR_RUNTIME` (`oneshot` default, `persistent` optional)
+- `oneshot`: launch runner per callback
+- `persistent`: launch one worker process per class and reuse it across callbacks
 - graph exchange uses temp `nquads` files
 - context exchange uses temp JSON
 - failures are fail-fast

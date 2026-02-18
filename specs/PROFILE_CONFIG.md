@@ -153,6 +153,9 @@ Expected behavior:
    - optional per-entry overrides: `python`, `timeout_seconds`, `enabled`, `keep_temp_on_error`
 6. Runtime execution contract:
    - each entry runs in subprocess using configured interpreter (`python`)
+   - runtime mode is selected by `POSTPROCESSOR_RUNTIME` from profile settings or process environment:
+     - `oneshot` (default): start `postprocessor_runner` on each callback invocation
+     - `persistent`: keep one `postprocessor_worker` process per class for protocol lifetime
    - subprocesses inherit parent environment without SDK `PYTHONPATH` injection
    - input graph/output graph are exchanged via N-Quads temp files
    - context is exchanged via JSON temp file

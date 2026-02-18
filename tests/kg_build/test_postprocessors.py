@@ -15,6 +15,7 @@ from wordlift_sdk.kg_build.postprocessors import (
     PostprocessorContext,
     PostprocessorSpec,
     SubprocessPostprocessor,
+    close_loaded_postprocessors,
     load_postprocessors_for_profile,
 )
 
@@ -105,6 +106,34 @@ def test_manifest_merge_order_and_flags(tmp_path: Path) -> None:
     assert third.spec.keep_temp_on_error is True
 
 
+def test_manifest_runtime_selection(tmp_path: Path) -> None:
+    root = tmp_path
+    _write(
+        root / "profiles" / "_base" / "postprocessors.toml",
+        """
+        [[postprocessors]]
+        class = "test_pp:BaseOne"
+        """,
+    )
+    _write(
+        root / "profiles" / "alpha" / "postprocessors.toml",
+        """
+        [[postprocessors]]
+        class = "test_pp:ProfileOne"
+        """,
+    )
+
+    loaded = load_postprocessors_for_profile(
+        root_dir=root,
+        profile_name="alpha",
+        runtime="persistent",
+    )
+    assert len(loaded) == 2
+    assert isinstance(loaded[0].handler, SubprocessPostprocessor)
+    assert loaded[0].handler.runtime == "persistent"
+    assert loaded[1].handler.runtime == "persistent"
+
+
 def test_subprocess_execution_and_nquads_exchange(tmp_path: Path) -> None:
     root = tmp_path
     _write(
@@ -141,6 +170,60 @@ def test_subprocess_execution_and_nquads_exchange(tmp_path: Path) -> None:
         URIRef("https://example.com/new-p"),
         Literal("new-v"),
     ) in output
+
+
+def test_persistent_runtime_reuses_postprocessor_instance(tmp_path: Path) -> None:
+    root = tmp_path
+    _write(
+        root / "test_pp.py",
+        """
+        from rdflib import Literal, URIRef
+
+        class StatefulPostprocessor:
+            def __init__(self):
+                self.calls = 0
+
+            def process_graph(self, graph, context):
+                self.calls += 1
+                graph.set(
+                    (
+                        URIRef("https://example.com/state-s"),
+                        URIRef("https://example.com/state-p"),
+                        Literal(self.calls),
+                    )
+                )
+                return graph
+        """,
+    )
+    spec = PostprocessorSpec(
+        class_path="test_pp:StatefulPostprocessor",
+        python=sys.executable,
+        timeout_seconds=30,
+        enabled=True,
+        keep_temp_on_error=False,
+    )
+    processor = SubprocessPostprocessor(
+        spec=spec,
+        root_dir=root,
+        runtime="persistent",
+    )
+
+    first = processor.process_graph(_sample_graph(), _sample_context())
+    second = processor.process_graph(_sample_graph(), _sample_context())
+    processor.close()
+
+    assert first is not None
+    assert second is not None
+    assert (
+        URIRef("https://example.com/state-s"),
+        URIRef("https://example.com/state-p"),
+        Literal(1),
+    ) in first
+    assert (
+        URIRef("https://example.com/state-s"),
+        URIRef("https://example.com/state-p"),
+        Literal(2),
+    ) in second
 
 
 def test_runner_module_is_runnable_via_python_m(tmp_path: Path) -> None:
@@ -244,6 +327,36 @@ def test_timeout_seconds_is_enforced(tmp_path: Path) -> None:
         processor.process_graph(_sample_graph(), _sample_context())
 
 
+def test_timeout_seconds_is_enforced_in_persistent_runtime(tmp_path: Path) -> None:
+    root = tmp_path
+    _write(
+        root / "test_pp.py",
+        """
+        import time
+
+        class SlowPersistentPostprocessor:
+            def process_graph(self, graph, context):
+                time.sleep(2.0)
+                return graph
+        """,
+    )
+    spec = PostprocessorSpec(
+        class_path="test_pp:SlowPersistentPostprocessor",
+        python=sys.executable,
+        timeout_seconds=1,
+        enabled=True,
+        keep_temp_on_error=False,
+    )
+    processor = SubprocessPostprocessor(
+        spec=spec,
+        root_dir=root,
+        runtime="persistent",
+    )
+
+    with pytest.raises(subprocess.TimeoutExpired):
+        processor.process_graph(_sample_graph(), _sample_context())
+
+
 def test_keep_temp_on_error_preserves_debug_files(tmp_path: Path) -> None:
     root = tmp_path
     _write(
@@ -334,3 +447,20 @@ def test_subprocess_uses_inherited_environment_without_pythonpath_injection(
     kwargs = captured["kwargs"]
     assert isinstance(kwargs, dict)
     assert "env" not in kwargs
+
+
+def test_close_loaded_postprocessors_calls_handler_close() -> None:
+    class Closable:
+        def __init__(self):
+            self.closed = False
+
+        def close(self):
+            self.closed = True
+
+        def process_graph(self, graph: Graph, context: PostprocessorContext) -> Graph:
+            return graph
+
+    handler = Closable()
+    loaded = [LoadedPostprocessor(name="x", handler=handler)]
+    close_loaded_postprocessors(loaded)
+    assert handler.closed is True

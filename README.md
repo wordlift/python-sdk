@@ -179,6 +179,7 @@ The SDK now includes a profile-driven cloud mapping module under `wordlift_sdk.k
 
 - Public module import: `wordlift_sdk.kg_build`
 - Postprocessor runner entrypoint: `python -m wordlift_sdk.kg_build.postprocessor_runner`
+- Persistent postprocessor worker entrypoint: `python -m wordlift_sdk.kg_build.postprocessor_worker`
 - URL handling parity with legacy workflow:
   - `WebPageScrapeUrlHandler` is always enabled for `kg_build`
   - `SearchConsoleUrlHandler` is enabled when `GOOGLE_SEARCH_CONSOLE=True` (default)
@@ -187,6 +188,9 @@ The SDK now includes a profile-driven cloud mapping module under `wordlift_sdk.k
 1. `profiles/_base/postprocessors.toml`
 2. `profiles/<profile>/postprocessors.toml`
 - Execution is manifest-based only (hard cutover): no legacy `.py` or `*.command.toml` discovery.
+- Postprocessor runtime mode:
+  - `POSTPROCESSOR_RUNTIME=oneshot` (default): start one subprocess per callback call.
+  - `POSTPROCESSOR_RUNTIME=persistent`: keep one long-lived subprocess per configured class and reuse it across callbacks.
 
 ## Testing
 
