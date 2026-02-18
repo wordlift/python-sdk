@@ -191,6 +191,10 @@ The SDK now includes a profile-driven cloud mapping module under `wordlift_sdk.k
 - Postprocessor runtime mode:
   - `POSTPROCESSOR_RUNTIME=oneshot` (default): start one subprocess per callback call.
   - `POSTPROCESSOR_RUNTIME=persistent`: keep one long-lived subprocess per configured class and reuse it across callbacks.
+- Postprocessor authoring contract:
+  - supported method: `process_graph(self, graph, context)`
+  - supported return values: `Graph`, `None`, or an awaitable resolving to `Graph | None`
+  - in persistent mode, each worker instance processes one job at a time (callbacks can still run concurrently across different workers/classes)
 
 ## Testing
 

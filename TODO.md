@@ -26,3 +26,4 @@
 - [x] 2026-02-14 Stop injecting SDK package path into postprocessor subprocess `PYTHONPATH`; rely on interpreter-managed dependencies.
 - [x] 2026-02-18 Switch `kg_build` URL ingestion to `WebPageScrapeApi` (legacy workflow remains on imports), propagate `existing_web_page_id` through callback/postprocessor context, and set `seovoc:source` in host-side graph patching.
 - [x] 2026-02-18 Add configurable `kg_build` postprocessor runtimes with persistent worker reuse (`POSTPROCESSOR_RUNTIME=persistent`), protocol lifecycle cleanup, and tests for runtime selection/timeouts/state reuse.
+- [x] 2026-02-18 Document awaitable postprocessor return support (`process_graph` may return `Graph | None | Awaitable[Graph | None]`) across README/specs/customer contract.

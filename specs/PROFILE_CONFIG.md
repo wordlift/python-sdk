@@ -156,6 +156,11 @@ Expected behavior:
    - runtime mode is selected by `POSTPROCESSOR_RUNTIME` from profile settings or process environment:
      - `oneshot` (default): start `postprocessor_runner` on each callback invocation
      - `persistent`: keep one `postprocessor_worker` process per class for protocol lifetime
+   - postprocessor method contract:
+     - implement `process_graph(self, graph, context)`
+     - return `Graph`, `None`, or an awaitable resolving to `Graph | None`
+     - awaitables are executed in the worker process event loop boundary
+   - persistent worker execution is serialized per worker instance (single in-flight job per class instance)
    - subprocesses inherit parent environment without SDK `PYTHONPATH` injection
    - input graph/output graph are exchanged via N-Quads temp files
    - context is exchanged via JSON temp file

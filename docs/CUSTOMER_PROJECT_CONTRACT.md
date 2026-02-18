@@ -64,6 +64,10 @@ Execution contract:
 - runtime mode is selected by `POSTPROCESSOR_RUNTIME`:
   - `oneshot` (default): one subprocess invocation per callback
   - `persistent`: one long-lived subprocess worker per class reused across callbacks
+- class method contract:
+  - implement `process_graph(self, graph, context)`
+  - return `Graph`, `None`, or an awaitable resolving to `Graph | None`
+  - in persistent mode, each worker instance handles one in-flight job at a time
 - working directory is repo root.
 - subprocesses inherit the parent environment as-is; SDK does not inject or rewrite
   `PYTHONPATH`.
