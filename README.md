@@ -205,6 +205,8 @@ poetry run pytest
 
 ## Documentation
 
+- [Documentation Index](docs/INDEX.md): Quick index for all user and agent-facing docs.
+- [Public Entry Points](docs/public_entry_points.md): Task-oriented inventory of client APIs by module file.
 - [Google Sheets Lookup](docs/google_sheets_lookup.md): Utility for O(1) lookups from Google Sheets.
 - [Web Page Import](docs/web_page_import.md): Configure fetch options, proxies, and JS rendering.
 - [Structured Data](docs/structured_data.md): Structured data architecture and pipeline behavior.
