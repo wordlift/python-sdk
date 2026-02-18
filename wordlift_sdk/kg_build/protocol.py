@@ -3,10 +3,11 @@ from __future__ import annotations
 import hashlib
 import logging
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any
 
-from rdflib import Graph, RDF, URIRef
-from wordlift_client.models.web_page_import_response import WebPageImportResponse
+from rdflib import Graph, Literal, RDF, URIRef
+from wordlift_client.models.web_page_scrape_response import WebPageScrapeResponse
 from wordlift_sdk.protocol import Context
 from wordlift_sdk.protocol.web_page_import_protocol import (
     WebPageImportProtocolInterface,
@@ -21,6 +22,7 @@ from .rml_mapping import RmlMappingService
 from .templates import JinjaRdfTemplateReifier, TemplateTextRenderer
 
 logger = logging.getLogger(__name__)
+SEOVOC_SOURCE = URIRef("https://w3id.org/seovoc/source")
 
 
 class ProfileImportProtocol(WebPageImportProtocolInterface):
@@ -57,7 +59,11 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             profile_name=self.profile.name,
         )
 
-    async def callback(self, response: WebPageImportResponse) -> None:
+    async def callback(
+        self,
+        response: WebPageScrapeResponse,
+        existing_web_page_id: str | None = None,
+    ) -> None:
         url = (
             response.web_page.url
             if hasattr(response, "web_page") and response.web_page
@@ -72,32 +78,30 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             logger.warning("No HTML content for %s, skipping mapping", url)
             return
 
-        root_id = response.id
-        if not root_id:
-            logger.warning("No root ID for %s, skipping mapping", url)
-            return
-
         await self._patch_static_templates_once()
 
         mapping_path = self._resolve_mapping_path(url)
         rendered_mapping = self._get_mapping_content(mapping_path)
+        mapping_response = self._mapping_response(response, existing_web_page_id)
 
         graph = await self.rml_service.apply_mapping(
             html=response.web_page.html,
             url=url,
             mapping_file_path=mapping_path,
             mapping_content=rendered_mapping,
-            response=response,
+            response=mapping_response,
         )
         if not graph or len(graph) == 0:
             logger.warning("No triples produced for %s", url)
             return
 
-        self._reconcile_root_id(graph, root_id)
+        if existing_web_page_id:
+            self._reconcile_root_id(graph, existing_web_page_id)
         graph = self._core_ids.process_graph(
-            graph, self._build_pp_context(url, response)
+            graph, self._build_pp_context(url, response, existing_web_page_id)
         )
-        graph = self._apply_postprocessors(graph, url, response)
+        graph = self._apply_postprocessors(graph, url, response, existing_web_page_id)
+        self._set_source(graph, existing_web_page_id)
 
         if self.debug_dir:
             self._write_debug_graph(graph, url)
@@ -189,12 +193,13 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         self,
         graph: Graph,
         url: str,
-        response: WebPageImportResponse,
+        response: WebPageScrapeResponse,
+        existing_web_page_id: str | None,
     ) -> Graph:
         if not self._postprocessors:
             return graph
 
-        pp_context = self._build_pp_context(url, response)
+        pp_context = self._build_pp_context(url, response, existing_web_page_id)
 
         for processor in self._postprocessors:
             graph = processor.run(graph, pp_context)
@@ -202,7 +207,10 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         return graph
 
     def _build_pp_context(
-        self, url: str, response: WebPageImportResponse
+        self,
+        url: str,
+        response: WebPageScrapeResponse,
+        existing_web_page_id: str | None,
     ) -> PostprocessorContext:
         dataset_uri = str(getattr(self.context.account, "dataset_uri", "")).rstrip("/")
         ids = IdAllocator(dataset_uri) if dataset_uri else None
@@ -212,6 +220,7 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             account=self.context.account,
             exports=self._template_exports or {},
             response=response,
+            existing_web_page_id=existing_web_page_id,
             settings=dict(self.profile.settings),
             ids=ids,
         )
@@ -242,3 +251,24 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         for subject, predicate, obj in list(graph.triples((None, None, old_iri))):
             graph.remove((subject, predicate, obj))
             graph.add((subject, predicate, new_iri))
+
+    def _set_source(self, graph: Graph, existing_web_page_id: str | None) -> None:
+        root_iri = URIRef(existing_web_page_id) if existing_web_page_id else None
+        if root_iri is None:
+            root_iri = self._find_web_page_iri(graph)
+        if root_iri is None:
+            return
+        graph.set((root_iri, SEOVOC_SOURCE, Literal("web-page-import")))
+
+    def _mapping_response(
+        self,
+        response: WebPageScrapeResponse,
+        existing_web_page_id: str | None,
+    ) -> Any:
+        if not existing_web_page_id:
+            return response
+        # Materialization runtime token __ID__ resolves from response.id.
+        return SimpleNamespace(
+            id=existing_web_page_id,
+            web_page=response.web_page,
+        )

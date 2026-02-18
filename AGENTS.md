@@ -35,8 +35,8 @@
 - `wordlift_sdk.kg_build` is integrated in the SDK with manifest-based
   postprocessor orchestration only; legacy `.py`/`*.command.toml` discovery
   is intentionally removed.
-- `wordlift_sdk.kg_build` URL handling keeps parity with the legacy workflow:
-  it always runs web page imports and conditionally runs Search Console refresh
-  when `GOOGLE_SEARCH_CONSOLE` is enabled.
+- `wordlift_sdk.kg_build` URL handling uses `WebPageScrapeApi` and conditionally
+  runs Search Console refresh when `GOOGLE_SEARCH_CONSOLE` is enabled, while
+  the legacy `ApplicationContainer` workflow continues to use web page imports.
 - `wordlift_sdk.kg_build` postprocessor subprocesses do not inject package paths
   into `PYTHONPATH`; configured interpreters must resolve their own dependencies.

@@ -25,14 +25,15 @@ Sequence:
 2. Resolve runtime settings (env interpolation + fallbacks).
 3. Build SDK temp configuration and run `KgImportWorkflow`.
    - URL handlers run as:
-     - `WebPageImportUrlHandler` always
+     - `WebPageScrapeUrlHandler` always (`kg_build` path)
      - optional `SearchConsoleUrlHandler` when `GOOGLE_SEARCH_CONSOLE=true`
 4. For each callback:
    - patch static entity templates once from `profiles/<name>/templates/*`
    - resolve URL-routed mapping from `profiles/<name>/mappings/*`
    - render mapping template with shared `exports`
    - materialize XHTML/XPath mapping
-   - reconcile root IRI
+   - optionally reconcile root IRI when URL source provides an existing ID
+   - set `seovoc:source` to `"web-page-import"` in host-generated graph output
    - run postprocessors declared in `profiles/_base/postprocessors.toml` + `profiles/<name>/postprocessors.toml`
    - patch generated graph to WordLift
 
@@ -49,13 +50,15 @@ File: `wordlift_sdk/kg_build/protocol.py`
 
 Responsibility:
 
-1. Receive callback HTML + root ID.
+1. Receive callback HTML plus optional `existing_web_page_id` from URL source.
 2. Load/patch static template graph once per workflow.
 3. Apply profile mapping template for current URL.
 4. Reconcile callback root IRI.
-5. Apply built-in canonical ID generation (standard policy).
-6. Apply profile postprocessors (no hardcoded customer extractor references).
-7. Patch graph triples, and optionally write debug Turtle files.
+   - only when `existing_web_page_id` is provided
+5. Set `seovoc:source` to `"web-page-import"` in the host-side graph before patching.
+6. Apply built-in canonical ID generation (standard policy).
+7. Apply profile postprocessors (no hardcoded customer extractor references).
+8. Patch graph triples, and optionally write debug Turtle files.
 
 Example profile convention for postprocessors (manifest classes):
 

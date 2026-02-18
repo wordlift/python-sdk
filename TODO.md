@@ -24,3 +24,4 @@
 - [x] 2026-02-12 Integrate `wordlift_sdk.kg_build` with manifest-only postprocessor runtime, SDK import surface updates, and dedicated postprocessor contract tests.
 - [x] 2026-02-12 Restore `kg_build` URL-handler parity with legacy workflow by honoring `GOOGLE_SEARCH_CONSOLE` and executing Search Console refresh when enabled.
 - [x] 2026-02-14 Stop injecting SDK package path into postprocessor subprocess `PYTHONPATH`; rely on interpreter-managed dependencies.
+- [x] 2026-02-18 Switch `kg_build` URL ingestion to `WebPageScrapeApi` (legacy workflow remains on imports), propagate `existing_web_page_id` through callback/postprocessor context, and set `seovoc:source` in host-side graph patching.
