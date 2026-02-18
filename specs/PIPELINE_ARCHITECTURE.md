@@ -89,7 +89,7 @@ Runtime-isolated execution:
 
 Current implementation status:
 
-- built-in canonical IDs: implemented in `wordlift_sdk.kg_build.id_generator` + `wordlift_sdk.kg_build.id_policy` + `wordlift_sdk.kg_build.id_postprocessor` (curated dependent policy + independent-by-default behavior)
+- built-in canonical IDs: implemented in `wordlift_sdk.kg_build.id_generator` + `wordlift_sdk.kg_build.id_policy` + `wordlift_sdk.kg_build.id_postprocessor` with policy-driven root scope (`page_root_types` vs `entity_root_types`), deterministic multi-type precedence, URL-preserving `schema:url` handling, and complete offer/priceSpecification rewrite traversal.
 - manifest-based postprocessor execution (base + profile manifests, subprocess isolation, N-Quads exchange): implemented in `wordlift_sdk.kg_build.postprocessors`.
 - profile-specific processors are external to the SDK and loaded by class path from manifests.
 

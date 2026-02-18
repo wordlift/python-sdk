@@ -27,6 +27,9 @@ class IdPolicy:
     dependent_rules: tuple[DependentRule, ...]
     type_aliases: dict[str, str]
     container_overrides: dict[str, str]
+    page_root_types: tuple[str, ...]
+    entity_root_types: tuple[str, ...]
+    root_type_precedence: tuple[str, ...]
 
     def normalize_type_name(self, type_name: str) -> str:
         return self.type_aliases.get(type_name, type_name)
@@ -46,6 +49,21 @@ class IdPolicy:
 
     def is_dependent(self, type_name: str) -> bool:
         return self.dependency_rule_for(type_name) is not None
+
+    def is_page_root_type(self, type_name: str) -> bool:
+        normalized = self.normalize_type_name(type_name)
+        return normalized in self.page_root_types
+
+    def is_entity_root_type(self, type_name: str) -> bool:
+        normalized = self.normalize_type_name(type_name)
+        return normalized in self.entity_root_types
+
+    def preferred_type(self, type_names: set[str]) -> str:
+        normalized = {self.normalize_type_name(name) for name in type_names}
+        for candidate in self.root_type_precedence:
+            if candidate in normalized:
+                return candidate
+        return sorted(normalized)[0] if normalized else "Thing"
 
 
 DEFAULT_ID_POLICY = IdPolicy(
@@ -99,4 +117,14 @@ DEFAULT_ID_POLICY = IdPolicy(
     # FinancialProduct follows Product ID rules by default.
     type_aliases={"FinancialProduct": "Product"},
     container_overrides={"Thing": "things"},
+    page_root_types=("WebPage",),
+    entity_root_types=("Product", "Service", "Brand"),
+    root_type_precedence=(
+        "WebPage",
+        "Product",
+        "Service",
+        "Brand",
+        "Offer",
+        "Thing",
+    ),
 )

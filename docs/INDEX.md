@@ -7,4 +7,5 @@
 - `docs/web_page_import.md`: Web page import handler behavior and fetch options.
 - `docs/google_sheets_lookup.md`: Google Sheets lookup utility.
 - `docs/html_converter.md`: HTML conversion helper behavior.
+- `docs/canonical_id_policy.md`: Canonical ID scope policy, type precedence, and URL/media rewrite guarantees.
 - `docs/CUSTOMER_PROJECT_CONTRACT.md`: Profile repository contract for `kg_build`.

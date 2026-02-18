@@ -1,0 +1,52 @@
+# Canonical ID Policy Migration Note
+
+## Scope Policy
+
+Canonical ID generation in `wordlift_sdk.kg_build.id_generator.CanonicalIdGenerator`
+is policy-driven and supports both graph styles:
+
+- page-centric roots: configured by `IdPolicy.page_root_types` (default: `WebPage`)
+- entity-centric roots: configured by `IdPolicy.entity_root_types` (default:
+  `Product`, `Service`, `Brand`, with `FinancialProduct` normalized to `Product`)
+
+Nodes are no longer considered page roots only because they have `schema:url`.
+Page scope requires explicit page typing/policy membership.
+
+## Deterministic Type Precedence
+
+Multi-typed roots are resolved deterministically using
+`IdPolicy.root_type_precedence`. The first matching type in precedence order
+selects the canonical container.
+
+Default precedence:
+
+1. `WebPage`
+2. `Product`
+3. `Service`
+4. `Brand`
+5. `Offer`
+6. `Thing`
+
+## URL Preservation Guarantees
+
+- `schema:url` values are preserved as canonical external URLs.
+- IRI rewrites do not rewrite object values of `schema:url`.
+- URL-hash suffixing still uses normalized URLs (sorted query parameters) for
+  deterministic IDs.
+
+## Media Rewrite Safety
+
+Media rewrites are constrained:
+
+- `schema:image` rewrites only typed `ImageObject` nodes (or already-local
+  dependent nodes).
+- `schema:video` rewrites only typed `VideoObject` nodes (or already-local
+  dependent nodes).
+- Arbitrary external IRIs referenced by `schema:image`/`schema:video` are not
+  rewritten into internal dataset IRIs.
+
+## Offer/PriceSpecification Completeness
+
+Entity-root canonicalization rewrites all linked `schema:offers` nodes and all
+`schema:priceSpecification` nodes per offer, preserving graph linkage across
+rewrites.

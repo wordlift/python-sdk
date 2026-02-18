@@ -32,13 +32,15 @@ class CanonicalIdGenerator:
             return graph
 
         self._rewrite_pages_and_children(graph, dataset_uri)
-        self._rewrite_products(graph, dataset_uri)
+        self._rewrite_entity_roots(graph, dataset_uri)
         return graph
 
     def _rewrite_pages_and_children(self, graph: Graph, dataset_uri: str) -> None:
-        page_nodes = set(graph.subjects(RDF.type, URIRef(f"{SCHEMA}WebPage")))
-        for subject in list(graph.subjects(URIRef(f"{SCHEMA}url"), None)):
-            page_nodes.add(subject)
+        page_nodes = {
+            subject
+            for subject in graph.subjects()
+            if self._has_page_root_type(graph, subject)
+        }
 
         for old_page in sorted(page_nodes, key=str):
             url = graph.value(old_page, URIRef(f"{SCHEMA}url"))
@@ -58,7 +60,10 @@ class CanonicalIdGenerator:
             self._rewrite_howto(graph, new_page)
 
     def _rewrite_faq(self, graph: Graph, page_iri: URIRef) -> None:
-        faq_nodes = set(graph.objects(page_iri, URIRef(f"{SCHEMA}hasPart")))
+        faq_nodes: set[URIRef] = set()
+        for obj in graph.objects(page_iri, URIRef(f"{SCHEMA}hasPart")):
+            if isinstance(obj, URIRef) and self._is_typed_as(graph, obj, "FAQPage"):
+                faq_nodes.add(obj)
         for subject in graph.subjects(RDF.type, URIRef(f"{SCHEMA}FAQPage")):
             faq_nodes.add(subject)
 
@@ -93,7 +98,13 @@ class CanonicalIdGenerator:
                     self._swap_iri(graph, answer, new_answer)
 
     def _rewrite_videos(self, graph: Graph, page_iri: URIRef) -> None:
-        videos = set(graph.objects(page_iri, URIRef(f"{SCHEMA}video")))
+        videos: set[URIRef] = set()
+        for obj in graph.objects(page_iri, URIRef(f"{SCHEMA}video")):
+            if isinstance(obj, URIRef) and (
+                self._is_typed_as(graph, obj, "VideoObject")
+                or self._is_local_dependent_node(obj, page_iri)
+            ):
+                videos.add(obj)
         for subject in graph.subjects(RDF.type, URIRef(f"{SCHEMA}VideoObject")):
             if str(subject).startswith(str(page_iri)):
                 videos.add(subject)
@@ -112,7 +123,13 @@ class CanonicalIdGenerator:
             self._swap_iri(graph, video, new_video)
 
     def _rewrite_images(self, graph: Graph, page_iri: URIRef) -> None:
-        images = set(graph.objects(page_iri, URIRef(f"{SCHEMA}image")))
+        images: set[URIRef] = set()
+        for obj in graph.objects(page_iri, URIRef(f"{SCHEMA}image")):
+            if isinstance(obj, URIRef) and (
+                self._is_typed_as(graph, obj, "ImageObject")
+                or self._is_local_dependent_node(obj, page_iri)
+            ):
+                images.add(obj)
         for subject in graph.subjects(RDF.type, URIRef(f"{SCHEMA}ImageObject")):
             if str(subject).startswith(str(page_iri)):
                 images.add(subject)
@@ -131,8 +148,13 @@ class CanonicalIdGenerator:
             self._swap_iri(graph, image, new_image)
 
     def _rewrite_howto(self, graph: Graph, page_iri: URIRef) -> None:
-        howtos = set(graph.objects(page_iri, URIRef(f"{SCHEMA}mainEntity")))
-        howtos.update(graph.objects(page_iri, URIRef(f"{SCHEMA}mentions")))
+        howtos: set[URIRef] = set()
+        for obj in graph.objects(page_iri, URIRef(f"{SCHEMA}mainEntity")):
+            if isinstance(obj, URIRef) and self._is_typed_as(graph, obj, "HowTo"):
+                howtos.add(obj)
+        for obj in graph.objects(page_iri, URIRef(f"{SCHEMA}mentions")):
+            if isinstance(obj, URIRef) and self._is_typed_as(graph, obj, "HowTo"):
+                howtos.add(obj)
         for subject in graph.subjects(RDF.type, URIRef(f"{SCHEMA}HowTo")):
             if str(subject).startswith(str(page_iri)):
                 howtos.add(subject)
@@ -152,11 +174,12 @@ class CanonicalIdGenerator:
                 )
                 self._swap_iri(graph, step, new_step)
 
-    def _rewrite_products(self, graph: Graph, dataset_uri: str) -> None:
-        products = set(graph.subjects(RDF.type, URIRef(f"{SCHEMA}Product")))
-        products.update(graph.subjects(RDF.type, URIRef(f"{SCHEMA}FinancialProduct")))
-        products.update(graph.subjects(RDF.type, URIRef(f"{SCHEMA}Brand")))
-
+    def _rewrite_entity_roots(self, graph: Graph, dataset_uri: str) -> None:
+        products = {
+            subject
+            for subject in graph.subjects()
+            if self._has_entity_root_type(graph, subject)
+        }
         seen: defaultdict[str, int] = defaultdict(int)
         for product in sorted(products, key=str):
             gtin = self._first_value(graph, product, "gtin")
@@ -164,43 +187,62 @@ class CanonicalIdGenerator:
                 product_iri = URIRef(f"{dataset_uri}/01/{normalize_slug(gtin)}")
             else:
                 product_url = self._first_value(graph, product, "url")
+                subject_type = self._preferred_type_name(graph, product)
                 product_slug = self._entity_slug(
                     graph,
                     product,
-                    default_base=self._type_name_or_thing(graph, product),
+                    default_base=subject_type,
                     url_value=product_url,
                 )
                 seen[product_slug] += 1
                 if not product_url and seen[product_slug] > 1:
                     product_slug = f"{product_slug}-{seen[product_slug]}"
 
-                if (product, RDF.type, URIRef(f"{SCHEMA}Brand")) in graph:
-                    container = self._policy.container_for_type("Brand")
-                else:
-                    subject_type = self._type_name_or_thing(graph, product)
-                    normalized_type = self._policy.normalize_type_name(subject_type)
-                    container = self._policy.container_for_type(normalized_type)
+                normalized_type = self._policy.normalize_type_name(subject_type)
+                container = self._policy.container_for_type(normalized_type)
                 product_iri = URIRef(f"{dataset_uri}/{container}/{product_slug}")
 
             self._swap_iri(graph, product, product_iri)
 
-            offer = graph.value(product_iri, URIRef(f"{SCHEMA}offers"))
-            if isinstance(offer, URIRef):
+            offers = sorted(
+                {
+                    offer
+                    for offer in graph.objects(product_iri, URIRef(f"{SCHEMA}offers"))
+                    if isinstance(offer, URIRef)
+                },
+                key=str,
+            )
+            for offer_idx, offer in enumerate(offers, start=1):
                 offer_container = self._policy.container_for_type("Offer")
-                new_offer = URIRef(f"{product_iri}/{offer_container}/offer-1")
+                new_offer = URIRef(f"{product_iri}/{offer_container}/offer-{offer_idx}")
                 self._swap_iri(graph, offer, new_offer)
-                graph.set((product_iri, URIRef(f"{SCHEMA}offers"), new_offer))
+                graph.remove((product_iri, URIRef(f"{SCHEMA}offers"), offer))
+                graph.add((product_iri, URIRef(f"{SCHEMA}offers"), new_offer))
 
-                price_spec = graph.value(
-                    new_offer, URIRef(f"{SCHEMA}priceSpecification")
+                price_specs = sorted(
+                    {
+                        price_spec
+                        for price_spec in graph.objects(
+                            new_offer, URIRef(f"{SCHEMA}priceSpecification")
+                        )
+                        if isinstance(price_spec, URIRef)
+                    },
+                    key=str,
                 )
-                if isinstance(price_spec, URIRef):
+                for price_idx, price_spec in enumerate(price_specs, start=1):
                     ps_container = self._policy.container_for_type("PriceSpecification")
                     new_price_spec = URIRef(
-                        f"{new_offer}/{ps_container}/price-specification-1"
+                        f"{new_offer}/{ps_container}/price-specification-{price_idx}"
                     )
                     self._swap_iri(graph, price_spec, new_price_spec)
-                    graph.set(
+                    graph.remove(
+                        (
+                            new_offer,
+                            URIRef(f"{SCHEMA}priceSpecification"),
+                            price_spec,
+                        )
+                    )
+                    graph.add(
                         (
                             new_offer,
                             URIRef(f"{SCHEMA}priceSpecification"),
@@ -238,10 +280,22 @@ class CanonicalIdGenerator:
 
     @staticmethod
     def _type_name_or_thing(graph: Graph, subject: URIRef) -> str:
+        types = CanonicalIdGenerator._schema_type_names(graph, subject)
+        return sorted(types)[0] if types else "Thing"
+
+    def _preferred_type_name(self, graph: Graph, subject: URIRef) -> str:
+        types = self._schema_type_names(graph, subject)
+        if not types:
+            return "Thing"
+        return self._policy.preferred_type(types)
+
+    @staticmethod
+    def _schema_type_names(graph: Graph, subject: URIRef) -> set[str]:
+        values: set[str] = set()
         for obj in graph.objects(subject, RDF.type):
             if isinstance(obj, URIRef) and str(obj).startswith(SCHEMA):
-                return str(obj).split("/")[-1]
-        return "Thing"
+                values.add(str(obj).split("/")[-1])
+        return values
 
     @staticmethod
     def _url_hash(value: str) -> str:
@@ -273,6 +327,8 @@ class CanonicalIdGenerator:
             graph.remove((subject, predicate, obj))
             graph.add((new_iri, predicate, obj))
         for subject, predicate, obj in list(graph.triples((None, None, old_iri))):
+            if predicate == URIRef(f"{SCHEMA}url"):
+                continue
             graph.remove((subject, predicate, obj))
             graph.add((subject, predicate, new_iri))
 
@@ -282,3 +338,19 @@ class CanonicalIdGenerator:
         if match:
             return int(match.group(1)), str(step)
         return 0, str(step)
+
+    def _has_page_root_type(self, graph: Graph, subject: URIRef) -> bool:
+        types = self._schema_type_names(graph, subject)
+        return any(self._policy.is_page_root_type(value) for value in types)
+
+    def _has_entity_root_type(self, graph: Graph, subject: URIRef) -> bool:
+        types = self._schema_type_names(graph, subject)
+        return any(self._policy.is_entity_root_type(value) for value in types)
+
+    @staticmethod
+    def _is_typed_as(graph: Graph, subject: URIRef, type_name: str) -> bool:
+        return (subject, RDF.type, URIRef(f"{SCHEMA}{type_name}")) in graph
+
+    @staticmethod
+    def _is_local_dependent_node(subject: URIRef, parent: URIRef) -> bool:
+        return str(subject).startswith(str(parent))

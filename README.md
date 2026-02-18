@@ -218,6 +218,7 @@ poetry run pytest
 - [Google Sheets Lookup](docs/google_sheets_lookup.md): Utility for O(1) lookups from Google Sheets.
 - [Web Page Import](docs/web_page_import.md): Configure fetch options, proxies, and JS rendering.
 - [Structured Data](docs/structured_data.md): Structured data architecture and pipeline behavior.
+- [Canonical ID Policy](docs/canonical_id_policy.md): Scope strategy, deterministic type precedence, and URL-preserving rewrite guarantees.
 - [Customer Project Contract](docs/CUSTOMER_PROJECT_CONTRACT.md): Profile repo contract and manifest-based postprocessor runtime.
 - [Structured Data Spec](specs/structured_data.md): Internal technical details for runtime placeholder resolution.
 - [Profile Config Spec](specs/PROFILE_CONFIG.md): Profile inheritance, environment interpolation, and manifest postprocessor contract.
