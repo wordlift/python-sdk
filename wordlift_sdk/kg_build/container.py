@@ -3,17 +3,16 @@ from __future__ import annotations
 import logging
 from typing import Optional
 
+from wordlift_client import WebPageImportFetchOptions
+
 from wordlift_sdk.container.application_container import ApplicationContainer
 from wordlift_sdk.protocol.web_page_import_protocol import (
     WebPageImportProtocolInterface,
 )
 from wordlift_sdk.workflow.kg_import_workflow import KgImportWorkflow
-from wordlift_sdk.workflow.url_handler import WebPageImportUrlHandler
+from wordlift_sdk.workflow.url_handler import WebPageScrapeUrlHandler
 from wordlift_sdk.workflow.url_handler.default_url_handler import DefaultUrlHandler
 from wordlift_sdk.workflow.url_handler.url_handler import UrlHandler
-from wordlift_sdk.workflow.url_handler.web_page_import_url_handler import (
-    WebPageImportFetchOptions,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -28,11 +27,7 @@ class KgBuildApplicationContainer(ApplicationContainer):
     def set_protocol(self, protocol: WebPageImportProtocolInterface):
         self.protocol = protocol
 
-    async def create_web_page_import_url_handler(self) -> WebPageImportUrlHandler:
-        write_strategy = self._configuration_provider.get_value(
-            "WEB_PAGE_IMPORT_WRITE_STRATEGY", "createOrUpdateModel"
-        )
-
+    async def create_web_page_scrape_url_handler(self) -> WebPageScrapeUrlHandler:
         fetch_options = WebPageImportFetchOptions(
             mode=self._configuration_provider.get_value(
                 "WEB_PAGE_IMPORT_MODE", "default"
@@ -58,22 +53,15 @@ class KgBuildApplicationContainer(ApplicationContainer):
         )
         logger.info("Using Cloud Fetch Options: %s", fetch_options)
 
-        return WebPageImportUrlHandler(
+        if self.protocol is None:
+            raise RuntimeError(
+                "KG build protocol is required before creating handlers."
+            )
+
+        return WebPageScrapeUrlHandler(
             context=await self.get_context(),
-            embedding_properties=self._configuration_provider.get_value(
-                "EMBEDDING_PROPERTIES",
-                [
-                    "http://schema.org/headline",
-                    "http://schema.org/abstract",
-                    "http://schema.org/text",
-                ],
-            ),
-            web_page_types=self._configuration_provider.get_value(
-                "WEB_PAGE_TYPES", ["http://schema.org/Article"]
-            ),
-            write_strategy=write_strategy,
             fetch_options=fetch_options,
-            web_page_import_callback=self.protocol,
+            web_page_scrape_callback=self.protocol,
         )
 
     async def create_kg_import_workflow(self) -> KgImportWorkflow:
@@ -89,7 +77,7 @@ class KgBuildApplicationContainer(ApplicationContainer):
 
     async def create_multi_url_handler(self) -> UrlHandler:
         handlers: list[UrlHandler] = [
-            await self.create_web_page_import_url_handler(),
+            await self.create_web_page_scrape_url_handler(),
         ]
         if (
             self._configuration_provider.get_value("GOOGLE_SEARCH_CONSOLE", True)

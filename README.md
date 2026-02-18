@@ -159,7 +159,8 @@ Customer-authored mappings can use runtime tokens:
 2. explicit `url` argument passed to materialization
 
 `__ID__` resolution source is:
-1. `response.id`
+1. `response.id` (legacy import callbacks)
+2. `existing_web_page_id` injected by `kg_build` scrape callbacks
 
 When unresolved:
 - strict mode (`strict_url_token=True`): fail fast
@@ -179,8 +180,9 @@ The SDK now includes a profile-driven cloud mapping module under `wordlift_sdk.k
 - Public module import: `wordlift_sdk.kg_build`
 - Postprocessor runner entrypoint: `python -m wordlift_sdk.kg_build.postprocessor_runner`
 - URL handling parity with legacy workflow:
-  - `WebPageImportUrlHandler` is always enabled
+  - `WebPageScrapeUrlHandler` is always enabled for `kg_build`
   - `SearchConsoleUrlHandler` is enabled when `GOOGLE_SEARCH_CONSOLE=True` (default)
+- Legacy `ApplicationContainer` workflow continues to use `WebPageImportUrlHandler`.
 - Postprocessor manifests are loaded from:
 1. `profiles/_base/postprocessors.toml`
 2. `profiles/<profile>/postprocessors.toml`

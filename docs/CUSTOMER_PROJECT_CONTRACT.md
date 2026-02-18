@@ -71,7 +71,11 @@ Execution contract:
   - `profile_name`, `url`
   - `dataset_uri`, `country_code`
   - `exports`, `settings`
-  - `response.id`, `response.web_page.url`, `response.web_page.html`
+  - `existing_web_page_id`, `response.id`, `response.web_page.url`, `response.web_page.html`
+
+For `kg_build`, page retrieval uses `WebPageScrapeApi`; the SDK host code injects
+`response.id` from `existing_web_page_id` when present to preserve `__ID__` token
+compatibility in materialization and postprocessor context.
 
 ## Dependency Contract
 

@@ -26,6 +26,7 @@ class PostprocessorContext:
     account: Any
     exports: dict[str, Any]
     response: Any
+    existing_web_page_id: str | None
     settings: dict[str, Any]
     ids: Any | None = None
 
@@ -139,8 +140,9 @@ def _build_runner_payload(context: PostprocessorContext) -> dict[str, Any]:
         "country_code": country_code,
         "exports": context.exports,
         "settings": context.settings,
+        "existing_web_page_id": context.existing_web_page_id,
         "response": {
-            "id": getattr(response, "id", None),
+            "id": getattr(response, "id", None) or context.existing_web_page_id,
             "web_page": {
                 "url": getattr(web_page, "url", None),
                 "html": getattr(web_page, "html", None),

@@ -101,6 +101,9 @@ Env-fallback runtime keys currently supported:
 - `google_search_console`
 - `service_account_file`
 
+`kg_build` uses `WebPageScrapeApi` for page retrieval. The fetch-option keys keep the
+`web_page_import_*` naming for backward configuration compatibility.
+
 ## Mapping Routing
 
 `profiles.<name>.mappings` is an ordered list; first regex match wins.

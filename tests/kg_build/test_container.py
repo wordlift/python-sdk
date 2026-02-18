@@ -8,8 +8,8 @@ from wordlift_sdk.workflow.url_handler.default_url_handler import DefaultUrlHand
 from wordlift_sdk.workflow.url_handler.search_console_url_handler import (
     SearchConsoleUrlHandler,
 )
-from wordlift_sdk.workflow.url_handler.web_page_import_url_handler import (
-    WebPageImportUrlHandler,
+from wordlift_sdk.workflow.url_handler.web_page_scrape_url_handler import (
+    WebPageScrapeUrlHandler,
 )
 
 
@@ -31,7 +31,7 @@ async def test_create_multi_url_handler_includes_search_console_by_default():
     container = KgBuildApplicationContainer(configuration_provider=_make_provider())
     web_handler = MagicMock()
     gsc_handler = MagicMock(spec=SearchConsoleUrlHandler)
-    container.create_web_page_import_url_handler = AsyncMock(return_value=web_handler)
+    container.create_web_page_scrape_url_handler = AsyncMock(return_value=web_handler)
     container.create_search_console_url_handler = AsyncMock(return_value=gsc_handler)
 
     handler = await container.create_multi_url_handler()
@@ -46,7 +46,7 @@ async def test_create_multi_url_handler_disables_search_console_when_configured(
         configuration_provider=_make_provider({"GOOGLE_SEARCH_CONSOLE": False})
     )
     web_handler = MagicMock()
-    container.create_web_page_import_url_handler = AsyncMock(return_value=web_handler)
+    container.create_web_page_scrape_url_handler = AsyncMock(return_value=web_handler)
     container.create_search_console_url_handler = AsyncMock()
 
     handler = await container.create_multi_url_handler()
@@ -57,13 +57,13 @@ async def test_create_multi_url_handler_disables_search_console_when_configured(
 
 
 @pytest.mark.asyncio
-async def test_create_web_page_import_url_handler_passes_protocol_callback():
+async def test_create_web_page_scrape_url_handler_passes_protocol_callback():
     protocol = MagicMock()
     container = KgBuildApplicationContainer(configuration_provider=_make_provider())
     container.set_protocol(protocol)
     container.get_context = AsyncMock(return_value=MagicMock())
 
-    handler = await container.create_web_page_import_url_handler()
+    handler = await container.create_web_page_scrape_url_handler()
 
-    assert isinstance(handler, WebPageImportUrlHandler)
-    assert handler._web_page_import_callback is protocol
+    assert isinstance(handler, WebPageScrapeUrlHandler)
+    assert handler._web_page_scrape_callback is protocol

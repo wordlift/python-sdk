@@ -2,8 +2,7 @@ from abc import abstractmethod
 
 from .context import Context
 
-from typing import Protocol
-from wordlift_client import WebPageImportResponse
+from typing import Any, Protocol
 
 
 class WebPageImportProtocolInterface(Protocol):
@@ -13,11 +12,18 @@ class WebPageImportProtocolInterface(Protocol):
         self.context = context
 
     @abstractmethod
-    async def callback(self, web_page_import_response: WebPageImportResponse) -> None:
+    async def callback(
+        self,
+        response: Any,
+        existing_web_page_id: str | None = None,
+    ) -> None:
         pass
 
 
 class DefaultWebPageImportProtocol(WebPageImportProtocolInterface):
-
-    async def callback(self, web_page_import_response: WebPageImportResponse) -> None:
+    async def callback(
+        self,
+        response: Any,
+        existing_web_page_id: str | None = None,
+    ) -> None:
         pass

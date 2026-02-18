@@ -35,6 +35,11 @@ def _build_context(payload: dict[str, Any]) -> PostprocessorContext:
         account=account,
         exports=dict(payload.get("exports", {}) or {}),
         response=response,
+        existing_web_page_id=(
+            str(payload.get("existing_web_page_id"))
+            if payload.get("existing_web_page_id")
+            else None
+        ),
         settings=dict(payload.get("settings", {}) or {}),
         ids=IdAllocator(dataset_uri) if dataset_uri else None,
     )
