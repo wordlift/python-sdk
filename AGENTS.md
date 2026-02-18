@@ -40,3 +40,6 @@
   the legacy `ApplicationContainer` workflow continues to use web page imports.
 - `wordlift_sdk.kg_build` postprocessor subprocesses do not inject package paths
   into `PYTHONPATH`; configured interpreters must resolve their own dependencies.
+- `wordlift_sdk.kg_build` postprocessor runtime is configurable via
+  `POSTPROCESSOR_RUNTIME`: `oneshot` (default, per-callback runner) or
+  `persistent` (one long-lived worker per class across callbacks).

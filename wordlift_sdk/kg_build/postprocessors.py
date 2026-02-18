@@ -2,10 +2,11 @@ from __future__ import annotations
 
 import json
 import logging
+import select
 import shutil
 import subprocess
 import tempfile
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Protocol, runtime_checkable
 
@@ -17,6 +18,9 @@ try:
     import tomllib
 except ModuleNotFoundError:  # pragma: no cover
     import tomli as tomllib
+
+_RUNTIME_ONESHOT = "oneshot"
+_RUNTIME_PERSISTENT = "persistent"
 
 
 @dataclass(frozen=True)
@@ -57,6 +61,316 @@ class PostprocessorSpec:
     keep_temp_on_error: bool
 
 
+class PersistentWorkerTransportError(RuntimeError):
+    pass
+
+
+class PersistentWorkerJobError(RuntimeError):
+    pass
+
+
+class PersistentPostprocessorClient:
+    def __init__(self, *, spec: PostprocessorSpec, root_dir: Path) -> None:
+        self._spec = spec
+        self._root_dir = root_dir
+        self._process: subprocess.Popen[str] | None = None
+        self._next_job_id = 0
+
+    def close(self) -> None:
+        process = self._process
+        self._process = None
+        if process is None:
+            return
+
+        try:
+            if process.poll() is None and process.stdin is not None:
+                process.stdin.write(json.dumps({"op": "shutdown"}) + "\n")
+                process.stdin.flush()
+        except Exception:
+            pass
+
+        self._terminate(process)
+
+    def process_graph(
+        self,
+        *,
+        input_graph_path: Path,
+        output_graph_path: Path,
+        context_payload: dict[str, Any],
+    ) -> None:
+        for attempt in range(2):
+            try:
+                self._process_graph_once(
+                    input_graph_path=input_graph_path,
+                    output_graph_path=output_graph_path,
+                    context_payload=context_payload,
+                )
+                return
+            except PersistentWorkerTransportError:
+                self.close()
+                if attempt == 1:
+                    raise
+
+    def _process_graph_once(
+        self,
+        *,
+        input_graph_path: Path,
+        output_graph_path: Path,
+        context_payload: dict[str, Any],
+    ) -> None:
+        process = self._ensure_started()
+        self._next_job_id += 1
+        job_id = self._next_job_id
+
+        payload = {
+            "op": "process",
+            "id": job_id,
+            "input_graph": str(input_graph_path),
+            "output_graph": str(output_graph_path),
+            "context": context_payload,
+        }
+
+        try:
+            assert process.stdin is not None
+            process.stdin.write(
+                json.dumps(payload, ensure_ascii=True, default=str) + "\n"
+            )
+            process.stdin.flush()
+        except Exception as exc:
+            raise PersistentWorkerTransportError(
+                f"Postprocessor worker stdin failed: {self._spec.class_path}"
+            ) from exc
+
+        message = self._read_message(
+            process, timeout_seconds=self._spec.timeout_seconds
+        )
+        if message.get("id") != job_id:
+            raise PersistentWorkerTransportError(
+                f"Postprocessor worker returned invalid response id for {self._spec.class_path}."
+            )
+        if message.get("ok") is True:
+            return
+
+        error = str(message.get("error") or "unknown worker error")
+        raise PersistentWorkerJobError(
+            f"Postprocessor failed: {self._spec.class_path}\n{error}".strip()
+        )
+
+    def _ensure_started(self) -> subprocess.Popen[str]:
+        process = self._process
+        if process is not None and process.poll() is None:
+            return process
+
+        cmd = [
+            self._spec.python,
+            "-m",
+            "wordlift_sdk.kg_build.postprocessor_worker",
+            "--class",
+            self._spec.class_path,
+        ]
+        process = subprocess.Popen(
+            cmd,
+            text=True,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            cwd=str(self._root_dir),
+            bufsize=1,
+        )
+
+        try:
+            ready = self._read_message(
+                process, timeout_seconds=min(self._spec.timeout_seconds, 10)
+            )
+        except Exception:
+            self._terminate(process)
+            raise
+
+        if ready.get("op") != "ready" or ready.get("ok") is not True:
+            stderr = self._read_stderr(process)
+            self._terminate(process)
+            raise PersistentWorkerTransportError(
+                f"Postprocessor worker failed to start: {self._spec.class_path}"
+                + (f"\n{stderr}" if stderr else "")
+            )
+
+        self._process = process
+        return process
+
+    def _read_message(
+        self,
+        process: subprocess.Popen[str],
+        *,
+        timeout_seconds: int,
+    ) -> dict[str, Any]:
+        if process.stdout is None:
+            raise PersistentWorkerTransportError("Worker stdout is unavailable.")
+
+        ready, _, _ = select.select([process.stdout], [], [], timeout_seconds)
+        if not ready:
+            self._terminate(process)
+            cmd = (
+                process.args if isinstance(process.args, list) else [str(process.args)]
+            )
+            raise subprocess.TimeoutExpired(cmd=cmd, timeout=timeout_seconds)
+
+        line = process.stdout.readline()
+        if not line:
+            stderr = self._read_stderr(process)
+            self._terminate(process)
+            raise PersistentWorkerTransportError(
+                f"Postprocessor worker exited unexpectedly: {self._spec.class_path}"
+                + (f"\n{stderr}" if stderr else "")
+            )
+
+        try:
+            return json.loads(line)
+        except json.JSONDecodeError as exc:
+            raise PersistentWorkerTransportError(
+                "Postprocessor worker returned invalid JSON response."
+            ) from exc
+
+    def _read_stderr(self, process: subprocess.Popen[str]) -> str:
+        if process.stderr is None:
+            return ""
+        try:
+            return (process.stderr.read() or "").strip()
+        except Exception:
+            return ""
+
+    def _terminate(self, process: subprocess.Popen[str]) -> None:
+        if process.poll() is None:
+            process.kill()
+            try:
+                process.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                pass
+
+
+@dataclass
+class SubprocessPostprocessor:
+    spec: PostprocessorSpec
+    root_dir: Path
+    runtime: str = _RUNTIME_ONESHOT
+    _persistent_client: PersistentPostprocessorClient | None = field(
+        init=False,
+        default=None,
+        repr=False,
+    )
+
+    def close(self) -> None:
+        if self._persistent_client is not None:
+            self._persistent_client.close()
+            self._persistent_client = None
+
+    def process_graph(
+        self, graph: Graph, context: PostprocessorContext
+    ) -> Graph | None:
+        payload = _build_runner_payload(context)
+        temp_dir_path = Path(tempfile.mkdtemp(prefix="worai_pp_"))
+        failed = False
+        try:
+            input_graph_path = temp_dir_path / "input_graph.nq"
+            output_graph_path = temp_dir_path / "output_graph.nq"
+            context_path = temp_dir_path / "context.json"
+
+            _write_graph_nquads(graph, input_graph_path)
+            context_path.write_text(
+                json.dumps(payload, ensure_ascii=True, default=str),
+                encoding="utf-8",
+            )
+
+            if self.runtime == _RUNTIME_PERSISTENT:
+                self._run_persistent(
+                    input_graph_path=input_graph_path,
+                    output_graph_path=output_graph_path,
+                    context_payload=payload,
+                )
+            else:
+                self._run_oneshot(
+                    input_graph_path=input_graph_path,
+                    output_graph_path=output_graph_path,
+                    context_path=context_path,
+                )
+
+            if not output_graph_path.exists():
+                failed = True
+                raise RuntimeError(
+                    "Postprocessor did not produce output graph: "
+                    f"{self.spec.class_path}"
+                )
+
+            return _read_graph_nquads(output_graph_path)
+        except Exception:
+            failed = True
+            raise
+        finally:
+            if failed and self.spec.keep_temp_on_error:
+                debug_dir = self.root_dir / "output" / "postprocessor_debug"
+                debug_dir.mkdir(parents=True, exist_ok=True)
+                target = debug_dir / (
+                    self.spec.class_path.replace(":", "_").replace(".", "_")
+                )
+                if target.exists():
+                    shutil.rmtree(target)
+                shutil.copytree(temp_dir_path, target)
+            if temp_dir_path.exists():
+                shutil.rmtree(temp_dir_path, ignore_errors=True)
+
+    def _run_oneshot(
+        self,
+        *,
+        input_graph_path: Path,
+        output_graph_path: Path,
+        context_path: Path,
+    ) -> None:
+        cmd = [
+            self.spec.python,
+            "-m",
+            "wordlift_sdk.kg_build.postprocessor_runner",
+            "--class",
+            self.spec.class_path,
+            "--input-graph",
+            str(input_graph_path),
+            "--output-graph",
+            str(output_graph_path),
+            "--context",
+            str(context_path),
+        ]
+        completed = subprocess.run(
+            cmd,
+            text=True,
+            capture_output=True,
+            cwd=str(self.root_dir),
+            timeout=self.spec.timeout_seconds,
+            check=False,
+        )
+        if completed.returncode != 0:
+            stderr = (completed.stderr or "").strip()
+            raise RuntimeError(
+                f"Postprocessor failed: {self.spec.class_path} "
+                f"(exit={completed.returncode})" + (f"\n{stderr}" if stderr else "")
+            )
+
+    def _run_persistent(
+        self,
+        *,
+        input_graph_path: Path,
+        output_graph_path: Path,
+        context_payload: dict[str, Any],
+    ) -> None:
+        if self._persistent_client is None:
+            self._persistent_client = PersistentPostprocessorClient(
+                spec=self.spec,
+                root_dir=self.root_dir,
+            )
+        self._persistent_client.process_graph(
+            input_graph_path=input_graph_path,
+            output_graph_path=output_graph_path,
+            context_payload=context_payload,
+        )
+
+
 def _as_bool(value: Any, default: bool) -> bool:
     if value is None:
         return default
@@ -79,6 +393,13 @@ def _as_positive_int(value: Any, default: int) -> int:
     if not isinstance(value, int) or value <= 0:
         raise TypeError("Expected positive integer value.")
     return value
+
+
+def _normalize_runtime(value: str | None) -> str:
+    runtime = (value or _RUNTIME_ONESHOT).strip().lower()
+    if runtime not in {_RUNTIME_ONESHOT, _RUNTIME_PERSISTENT}:
+        raise ValueError("POSTPROCESSOR_RUNTIME must be one of: oneshot, persistent.")
+    return runtime
 
 
 def _load_manifest_specs(manifest_path: Path) -> list[PostprocessorSpec]:
@@ -151,84 +472,11 @@ def _build_runner_payload(context: PostprocessorContext) -> dict[str, Any]:
     }
 
 
-@dataclass(frozen=True)
-class SubprocessPostprocessor:
-    spec: PostprocessorSpec
-    root_dir: Path
-
-    def process_graph(
-        self, graph: Graph, context: PostprocessorContext
-    ) -> Graph | None:
-        payload = _build_runner_payload(context)
-        temp_dir_path = Path(tempfile.mkdtemp(prefix="worai_pp_"))
-        failed = False
-        try:
-            input_graph_path = temp_dir_path / "input_graph.nq"
-            output_graph_path = temp_dir_path / "output_graph.nq"
-            context_path = temp_dir_path / "context.json"
-
-            _write_graph_nquads(graph, input_graph_path)
-            context_path.write_text(
-                json.dumps(payload, ensure_ascii=True, default=str),
-                encoding="utf-8",
-            )
-
-            cmd = [
-                self.spec.python,
-                "-m",
-                "wordlift_sdk.kg_build.postprocessor_runner",
-                "--class",
-                self.spec.class_path,
-                "--input-graph",
-                str(input_graph_path),
-                "--output-graph",
-                str(output_graph_path),
-                "--context",
-                str(context_path),
-            ]
-            completed = subprocess.run(
-                cmd,
-                text=True,
-                capture_output=True,
-                cwd=str(self.root_dir),
-                timeout=self.spec.timeout_seconds,
-                check=False,
-            )
-            if completed.returncode != 0:
-                failed = True
-                stderr = (completed.stderr or "").strip()
-                raise RuntimeError(
-                    f"Postprocessor failed: {self.spec.class_path} "
-                    f"(exit={completed.returncode})" + (f"\n{stderr}" if stderr else "")
-                )
-
-            if not output_graph_path.exists():
-                failed = True
-                raise RuntimeError(
-                    "Postprocessor did not produce output graph: "
-                    f"{self.spec.class_path}"
-                )
-
-            return _read_graph_nquads(output_graph_path)
-        except Exception:
-            failed = True
-            raise
-        finally:
-            if failed and self.spec.keep_temp_on_error:
-                debug_dir = self.root_dir / "output" / "postprocessor_debug"
-                debug_dir.mkdir(parents=True, exist_ok=True)
-                target = debug_dir / (
-                    self.spec.class_path.replace(":", "_").replace(".", "_")
-                )
-                if target.exists():
-                    shutil.rmtree(target)
-                shutil.copytree(temp_dir_path, target)
-            if temp_dir_path.exists():
-                shutil.rmtree(temp_dir_path, ignore_errors=True)
-
-
 def load_postprocessors_for_profile(
-    *, root_dir: Path, profile_name: str
+    *,
+    root_dir: Path,
+    profile_name: str,
+    runtime: str | None = None,
 ) -> list[LoadedPostprocessor]:
     base_manifest = root_dir / "profiles" / "_base" / "postprocessors.toml"
     profile_manifest = root_dir / "profiles" / profile_name / "postprocessors.toml"
@@ -237,6 +485,7 @@ def load_postprocessors_for_profile(
     specs.extend(_load_manifest_specs(base_manifest))
     specs.extend(_load_manifest_specs(profile_manifest))
 
+    resolved_runtime = _normalize_runtime(runtime)
     loaded: list[LoadedPostprocessor] = []
     for spec in specs:
         if not spec.enabled:
@@ -244,24 +493,33 @@ def load_postprocessors_for_profile(
         loaded.append(
             LoadedPostprocessor(
                 name=spec.class_path,
-                handler=SubprocessPostprocessor(spec=spec, root_dir=root_dir),
+                handler=SubprocessPostprocessor(
+                    spec=spec,
+                    root_dir=root_dir,
+                    runtime=resolved_runtime,
+                ),
             )
         )
 
     logger.info(
-        "Loaded %s postprocessors for profile '%s' from manifests: %s, %s",
+        "Loaded %s postprocessors for profile '%s' from manifests: %s, %s (runtime=%s)",
         len(loaded),
         profile_name,
         base_manifest,
         profile_manifest,
+        resolved_runtime,
     )
     return loaded
 
 
 def load_postprocessors(
-    manifest_path: Path, *, root_dir: Path
+    manifest_path: Path,
+    *,
+    root_dir: Path,
+    runtime: str | None = None,
 ) -> list[LoadedPostprocessor]:
     specs = _load_manifest_specs(manifest_path)
+    resolved_runtime = _normalize_runtime(runtime)
     loaded: list[LoadedPostprocessor] = []
     for spec in specs:
         if not spec.enabled:
@@ -269,10 +527,21 @@ def load_postprocessors(
         loaded.append(
             LoadedPostprocessor(
                 name=spec.class_path,
-                handler=SubprocessPostprocessor(spec=spec, root_dir=root_dir),
+                handler=SubprocessPostprocessor(
+                    spec=spec,
+                    root_dir=root_dir,
+                    runtime=resolved_runtime,
+                ),
             )
         )
     return loaded
+
+
+def close_loaded_postprocessors(postprocessors: list[LoadedPostprocessor]) -> None:
+    for processor in postprocessors:
+        close = getattr(processor.handler, "close", None)
+        if callable(close):
+            close()
 
 
 def _write_graph_nquads(graph: Graph, path: Path) -> None:

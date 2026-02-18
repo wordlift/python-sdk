@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import logging
+import os
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
@@ -17,12 +18,23 @@ from .config import ProfileDefinition
 from .entity_patcher import EntityPatcher
 from .id_allocator import IdAllocator
 from .id_postprocessor import CanonicalIdsPostprocessor
-from .postprocessors import PostprocessorContext, load_postprocessors_for_profile
+from .postprocessors import (
+    PostprocessorContext,
+    close_loaded_postprocessors,
+    load_postprocessors_for_profile,
+)
 from .rml_mapping import RmlMappingService
 from .templates import JinjaRdfTemplateReifier, TemplateTextRenderer
 
 logger = logging.getLogger(__name__)
 SEOVOC_SOURCE = URIRef("https://w3id.org/seovoc/source")
+
+
+def _resolve_postprocessor_runtime(settings: dict[str, Any]) -> str:
+    value = settings.get("POSTPROCESSOR_RUNTIME")
+    if value is None:
+        value = os.getenv("POSTPROCESSOR_RUNTIME")
+    return str(value or "oneshot")
 
 
 class ProfileImportProtocol(WebPageImportProtocolInterface):
@@ -54,9 +66,13 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         self._mapping_cache: dict[Path, str] = {}
         self._static_templates_patched = False
         self._core_ids = CanonicalIdsPostprocessor()
+        self._postprocessor_runtime = _resolve_postprocessor_runtime(
+            dict(self.profile.settings)
+        )
         self._postprocessors = load_postprocessors_for_profile(
             root_dir=self.root_dir,
             profile_name=self.profile.name,
+            runtime=self._postprocessor_runtime,
         )
 
     async def callback(
@@ -108,6 +124,9 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
 
         await self.patcher.patch_all(graph)
         logger.info("Patched %s triples for %s", len(graph), url)
+
+    def close(self) -> None:
+        close_loaded_postprocessors(self._postprocessors)
 
     def _resolve_path(self, raw_path: str) -> Path:
         path = Path(raw_path)

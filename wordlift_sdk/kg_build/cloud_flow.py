@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import tempfile
+from inspect import isawaitable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Awaitable, Callable, Mapping, Sequence
@@ -94,6 +95,7 @@ async def run_cloud_workflow(
 ) -> None:
     temp_sa_path: str | None = None
     temp_config_path: str | None = None
+    protocol = None
 
     try:
         debug_dir = get_debug_output_dir(config)
@@ -146,6 +148,12 @@ async def run_cloud_workflow(
         await workflow.run()
 
     finally:
+        if protocol is not None:
+            close = getattr(protocol, "close", None)
+            if callable(close):
+                result = close()
+                if isawaitable(result):
+                    await result
         if temp_config_path and os.path.exists(temp_config_path):
             os.remove(temp_config_path)
         if temp_sa_path and os.path.exists(temp_sa_path):
