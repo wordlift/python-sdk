@@ -37,3 +37,4 @@
 - [x] 2026-02-18 Relax `certifi` dependency constraint in `pyproject.toml` to always resolve the latest available release.
 - [x] 2026-02-18 Bump SDK minor version to `3.11.0` and publish release tag.
 - [x] 2026-02-18 Regenerate `poetry.lock` after version bump to fix GitHub Actions lock consistency check.
+- [x] 2026-02-18 Bump package version to `3.11.2` to align release tag and package metadata.
