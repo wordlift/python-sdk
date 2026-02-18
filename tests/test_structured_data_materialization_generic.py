@@ -683,6 +683,47 @@ mappings:
     assert graph
 
 
+def test_xpath_materialization_accepts_sanitized_xhtml_with_invalid_comments(
+    tmp_path: Path,
+) -> None:
+    raw_html = """
+<html><body><!--foo--bar--><h1>VPS</h1></body></html>
+"""
+    xhtml = HtmlConverter().convert(raw_html)
+    ET.fromstring(xhtml)
+
+    xhtml_path = tmp_path / "page.xhtml"
+    xhtml_path.write_text(xhtml)
+
+    mapping = """
+prefixes:
+  schema: 'https://schema.org/'
+mappings:
+  page:
+    sources:
+      - [__XHTML__~xpath, '/html/body']
+    s: __URL__~iri
+    po:
+      - [a, 'schema:WebPage']
+      - [schema:name, 'VPS']
+"""
+
+    materializer = MaterializationPipeline()
+    jsonld, _ = materializer.run(
+        yarrrml=mapping,
+        url="https://example.com/vps",
+        cleaned_xhtml=xhtml,
+        dataset_uri="urn:dataset",
+        xhtml_path=xhtml_path,
+        workdir=tmp_path / "work",
+        strict_url_token=True,
+    )
+
+    graph = jsonld.get("@graph", [])
+    assert isinstance(graph, list)
+    assert graph
+
+
 def test_id_smoke_materialization_uses_runtime_response_id(
     tmp_path: Path,
 ) -> None:

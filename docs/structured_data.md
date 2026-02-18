@@ -70,6 +70,8 @@ When XHTML input is produced by `wordlift_sdk.utils.html_converter.HtmlConverter
 undeclared namespace prefixes are sanitized (`prefix:tag` -> `tag`; undeclared
 prefixed attributes dropped) so XML/XPath materialization does not fail with
 `unbound prefix` parser errors.
+The converter also strips XML-invalid comment/PI nodes and validates serialized
+XHTML with `ElementTree.fromstring()` using a strict fallback sanitation pass.
 
 ## Workflows
 

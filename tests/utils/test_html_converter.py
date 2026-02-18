@@ -105,3 +105,15 @@ class TestHtmlConverter:
         assert "svg:width" in xhtml_output
 
         ET.fromstring(xhtml_output)
+
+    def test_convert_removes_xml_invalid_comments(self, converter):
+        """Comments with XML-invalid token patterns are removed."""
+        if lxml_html is None:
+            pytest.skip("lxml not installed")
+
+        html_input = "<html><body><!--foo--bar--><p>ok</p></body></html>"
+        xhtml_output = converter.convert(html_input)
+
+        assert "<!--" not in xhtml_output
+        assert "<p>ok</p>" in xhtml_output
+        ET.fromstring(xhtml_output)

@@ -42,3 +42,7 @@ safe for `morph-kgc` XPath sources:
 - undeclared prefixed element names are rewritten to their local name
 - undeclared prefixed attributes are removed
 - declared prefixes and reserved `xml:*` attributes are preserved
+- XML-invalid comments and processing instructions are removed
+- serialized XHTML is validated with `xml.etree.ElementTree.fromstring()`
+- on parse failure, converter runs a stricter fallback sanitation pass and
+  raises with precise line/column context if still invalid

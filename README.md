@@ -177,6 +177,9 @@ When preparing XHTML sources from raw HTML, `HtmlConverter` strips undeclared
 namespace prefixes from tag names and removes undeclared prefixed attributes to
 avoid `xml.etree.ElementTree.ParseError: unbound prefix` failures in XPath
 materialization flows.
+It also removes XML-invalid comments/processing instructions, validates output
+with `xml.etree.ElementTree.fromstring()`, and runs a strict fallback sanitation
+pass before surfacing a context-rich conversion error.
 
 ## KG Build Module
 

@@ -1,5 +1,20 @@
 # Changelog
 
+## 3.10.0 - 2026-02-18
+
+### Fixed
+
+- Hardened `HtmlConverter` sanitation for XML 1.0 safety in XPath materialization:
+  - removes comment/processing-instruction nodes that can produce XML-invalid tokens
+  - validates serialized XHTML with `ElementTree.fromstring()`
+  - runs strict fallback sanitation on parse failures
+  - raises context-rich line/column errors if output remains invalid
+
+### Added
+
+- Unit coverage for XML-invalid token sanitation in converter output.
+- Integration coverage for XPath materialization using converter-sanitized XHTML with invalid-token input patterns.
+
 ## 3.9.0 - 2026-02-18
 
 ### Fixed

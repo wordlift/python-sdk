@@ -9,6 +9,8 @@ The `HtmlConverter` utility class provides a mechanism to convert HTML strings i
 - **Attribute Sanitization**: Removes attributes with invalid XML names.
 - **Value Sanitization**: Strips invalid characters from attribute values.
 - **Namespace Safety**: Rewrites undeclared prefixed tags (e.g. `o:p` -> `p`) and removes undeclared prefixed attributes (e.g. `foo:bar`) to avoid XML parser `unbound prefix` failures.
+- **Malformed Node Cleanup**: Removes comment and processing-instruction nodes that can serialize into XML-invalid token sequences.
+- **Validation Guardrail**: Validates serialized XHTML with `xml.etree.ElementTree.fromstring()` and applies a stricter fallback sanitation pass before failing with line/column context.
 - **Encoding**: Produces UTF-8 encoded, recover-mode parsed XHTML.
 
 ## Usage
