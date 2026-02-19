@@ -1,5 +1,11 @@
 # Changelog
 
+## 4.0.2 - 2026-02-19
+
+### Fixed
+
+- Refreshed `poetry.lock` to use `virtualenv==20.38.0`, resolving GitHub Actions publish failures caused by unavailable `virtualenv==20.37.0` candidates.
+
 ## 4.0.1 - 2026-02-19
 
 ### Fixed
