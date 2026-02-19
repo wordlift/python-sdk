@@ -60,3 +60,8 @@ WEB_PAGE_IMPORT_BLOCK_ADS = True
 *   **`web_page_import_callback`**: Optional callback interface for handling the import response.
 *   **`write_strategy`**: The write strategy (`createOrUpdateModel` or `patchReplaceModel`).
 *   **`fetch_options`**: Optional `WebPageImportFetchOptions` object containing advanced fetch settings.
+
+## Retry Behavior
+
+Import/scrape/search-console URL handlers and protocol queues include retries for transport errors and WordLift service errors.
+For Pydantic validation failures, retries use `pydantic_core.ValidationError` from the public API path for Python 3.14 compatibility.

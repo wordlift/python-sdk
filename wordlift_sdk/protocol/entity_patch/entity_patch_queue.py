@@ -25,7 +25,7 @@ class EntityPatchQueue:
             | aiohttp.client_exceptions.ClientConnectorError
             | aiohttp.client_exceptions.ClientPayloadError
             | aiohttp.client_exceptions.ClientConnectorDNSError
-            | pydantic_core._pydantic_core.ValidationError
+            | pydantic_core.ValidationError
             | wordlift_client.exceptions.ServiceException
             | wordlift_client.exceptions.BadRequestException
             | aiohttp.client_exceptions.ClientOSError

@@ -75,7 +75,7 @@ class WebPageImportUrlHandler(UrlHandler):
             | aiohttp.client_exceptions.ClientConnectorError
             | aiohttp.client_exceptions.ClientPayloadError
             | aiohttp.client_exceptions.ClientConnectorDNSError
-            | pydantic_core._pydantic_core.ValidationError
+            | pydantic_core.ValidationError
             | wordlift_client.exceptions.ServiceException
             | gql.transport.exceptions.TransportServerError
             | wordlift_client.exceptions.BadRequestException

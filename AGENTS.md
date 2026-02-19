@@ -49,3 +49,6 @@
 - `wordlift_sdk.kg_build` postprocessor runtime is configurable via
   `POSTPROCESSOR_RUNTIME`: `oneshot` (default, per-callback runner) or
   `persistent` (one long-lived worker per class across callbacks).
+- Retry handlers reference `pydantic_core.ValidationError` via the public API
+  (not `pydantic_core._pydantic_core.ValidationError`) for Python 3.14
+  compatibility.

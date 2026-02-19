@@ -1,5 +1,6 @@
 # TODO
 
+- [x] 2026-02-19 Replace private `pydantic_core._pydantic_core.ValidationError` retry references with public `pydantic_core.ValidationError` for Python 3.14 warning compatibility.
 - [x] 2026-02-04 Scope carousel `ListItem` constraints under `ItemList` in the SHACL generator.
 - [x] 2026-02-04 Replace deprecated `datetime.utcnow()` with timezone-aware UTC timestamps.
 - [x] 2026-02-04 Scope `ListItem` constraints under `BreadcrumbList` in the SHACL generator.

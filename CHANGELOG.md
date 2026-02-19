@@ -1,5 +1,11 @@
 # Changelog
 
+## 4.0.1 - 2026-02-19
+
+### Fixed
+
+- Replaced private `pydantic_core._pydantic_core.ValidationError` retry exception references with the public `pydantic_core.ValidationError` path for Python 3.14 warning compatibility.
+
 ## 3.10.0 - 2026-02-18
 
 ### Fixed

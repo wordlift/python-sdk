@@ -6,6 +6,7 @@ A Python toolkit for orchestrating WordLift imports: fetch URLs from sitemaps, G
 - URL sources: XML sitemaps (with optional regex filtering), Google Sheets (`url` column), or Python lists.
 - Change detection: skips URLs that are already imported unless `OVERWRITE` is enabled; re-imports when `lastmod` is newer.
 - Web page imports: sends URLs to WordLift with embedding requests, output types, retry logic, and pluggable callbacks.
+- Python 3.14 compatibility: retry filters use `pydantic_core.ValidationError` via the public API.
 - Search Console refresh: triggers analytics imports when top queries are stale.
 - Graph templates: renders `.ttl.liquid` templates under `data/templates` with account data and uploads the resulting RDF graphs.
 - Extensible: override protocols via `WORDLIFT_OVERRIDE_DIR` without changing the library code.
