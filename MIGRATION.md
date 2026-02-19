@@ -57,3 +57,34 @@ If your integration relied on previous review-specific behavior, move that behav
 3. Validate transformed output against the shapes you require.
 
 This keeps the SDK customer-agnostic while preserving custom behavior in your project.
+
+## 5.0.0 Ingestion Model Update
+
+The SDK now provides a formal 2-axis ingestion model:
+
+- Source axis (`INGEST_SOURCE`): `auto|urls|sitemap|sheets|local`
+- Loader axis (`INGEST_LOADER`): `auto|simple|proxy|playwright|premium_scraper|web_scrape_api|passthrough`
+
+### Defaults
+
+- Global default loader is now `web_scrape_api`.
+- If `INGEST_LOADER` and `WEB_PAGE_IMPORT_MODE` are both unset, loader resolves to `web_scrape_api`.
+
+### Compatibility Mapping
+
+| Legacy `WEB_PAGE_IMPORT_MODE` | New behavior |
+| --- | --- |
+| `default` | `web_scrape_api` |
+| `proxy` | `proxy` |
+| `premium_scraper` | `premium_scraper` |
+
+### Precedence
+
+1. `INGEST_*` keys win over legacy keys.
+2. If `INGEST_*` is unset, SDK resolves using legacy keys.
+3. If both are set and disagree, SDK uses `INGEST_*` and emits machine-parseable warning `INGEST_CFG_CONFLICT`.
+
+### Passthrough Policy
+
+If an item includes embedded HTML and `INGEST_PASSTHROUGH_WHEN_HTML=true`, SDK
+uses `passthrough` before network loaders.

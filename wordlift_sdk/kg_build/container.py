@@ -10,8 +10,10 @@ from wordlift_sdk.protocol.web_page_import_protocol import (
     WebPageImportProtocolInterface,
 )
 from wordlift_sdk.workflow.kg_import_workflow import KgImportWorkflow
-from wordlift_sdk.workflow.url_handler import WebPageScrapeUrlHandler
 from wordlift_sdk.workflow.url_handler.default_url_handler import DefaultUrlHandler
+from wordlift_sdk.workflow.url_handler.ingestion_web_page_scrape_url_handler import (
+    IngestionWebPageScrapeUrlHandler,
+)
 from wordlift_sdk.workflow.url_handler.url_handler import UrlHandler
 
 logger = logging.getLogger(__name__)
@@ -27,7 +29,9 @@ class KgBuildApplicationContainer(ApplicationContainer):
     def set_protocol(self, protocol: WebPageImportProtocolInterface):
         self.protocol = protocol
 
-    async def create_web_page_scrape_url_handler(self) -> WebPageScrapeUrlHandler:
+    async def create_web_page_scrape_url_handler(
+        self,
+    ) -> IngestionWebPageScrapeUrlHandler:
         fetch_options = WebPageImportFetchOptions(
             mode=self._configuration_provider.get_value(
                 "WEB_PAGE_IMPORT_MODE", "default"
@@ -51,16 +55,15 @@ class KgBuildApplicationContainer(ApplicationContainer):
                 "WEB_PAGE_IMPORT_TIMEOUT", None
             ),
         )
-        logger.info("Using Cloud Fetch Options: %s", fetch_options)
-
+        logger.info("Using Cloud Fetch Options (ingestion bridge): %s", fetch_options)
         if self.protocol is None:
             raise RuntimeError(
                 "KG build protocol is required before creating handlers."
             )
 
-        return WebPageScrapeUrlHandler(
+        return IngestionWebPageScrapeUrlHandler(
             context=await self.get_context(),
-            fetch_options=fetch_options,
+            configuration_provider=self._configuration_provider,
             web_page_scrape_callback=self.protocol,
         )
 

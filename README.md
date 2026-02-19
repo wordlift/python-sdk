@@ -205,6 +205,38 @@ The SDK now includes a profile-driven cloud mapping module under `wordlift_sdk.k
   - supported return values: `Graph`, `None`, or an awaitable resolving to `Graph | None`
   - in persistent mode, each worker instance processes one job at a time (callbacks can still run concurrently across different workers/classes)
 
+## Ingestion Module
+
+The SDK now includes a reusable 2-axis ingestion module under `wordlift_sdk.ingestion`:
+
+- Axis A (`INGEST_SOURCE`): `auto|urls|sitemap|sheets|local`
+- Axis B (`INGEST_LOADER`): `auto|simple|proxy|playwright|premium_scraper|web_scrape_api|passthrough`
+
+Default loader is `web_scrape_api`. If an item already includes embedded HTML and
+`INGEST_PASSTHROUGH_WHEN_HTML=True` (default), ingestion uses `passthrough`
+before network loaders.
+
+Legacy compatibility is preserved:
+
+- Source keys: `URLS`, `SITEMAP_URL`, `SHEETS_*`
+- Loader key: `WEB_PAGE_IMPORT_MODE`
+- Mapping: `default -> web_scrape_api`, `proxy -> proxy`, `premium_scraper -> premium_scraper`
+
+Quick start:
+
+```python
+from wordlift_sdk.ingestion import run_ingestion
+
+result = run_ingestion(
+    {
+        "INGEST_SOURCE": "urls",
+        "URLS": ["https://example.com"],
+        "INGEST_LOADER": "web_scrape_api",
+        "WORDLIFT_KEY": "your-api-key",
+    }
+)
+```
+
 ## Testing
 
 ```bash
@@ -215,6 +247,7 @@ poetry run pytest
 ## Documentation
 
 - [Documentation Index](docs/INDEX.md): Quick index for all user and agent-facing docs.
+- [Ingestion Pipeline](docs/ingestion_pipeline.md): 2-axis source/loader architecture and compatibility rules.
 - [Public Entry Points](docs/public_entry_points.md): Task-oriented inventory of client APIs by module file.
 - [Google Sheets Lookup](docs/google_sheets_lookup.md): Utility for O(1) lookups from Google Sheets.
 - [Web Page Import](docs/web_page_import.md): Configure fetch options, proxies, and JS rendering.
@@ -222,6 +255,7 @@ poetry run pytest
 - [Canonical ID Policy](docs/canonical_id_policy.md): Scope strategy, deterministic type precedence, and URL-preserving rewrite guarantees.
 - [Customer Project Contract](docs/CUSTOMER_PROJECT_CONTRACT.md): Profile repo contract and manifest-based postprocessor runtime.
 - [Structured Data Spec](specs/structured_data.md): Internal technical details for runtime placeholder resolution.
+- [Ingestion Pipeline Spec](specs/INGESTION_PIPELINE.md): Internal source/loader contract and precedence rules.
 - [Profile Config Spec](specs/PROFILE_CONFIG.md): Profile inheritance, environment interpolation, and manifest postprocessor contract.
 - [Pipeline Architecture Spec](specs/PIPELINE_ARCHITECTURE.md): `kg_build` runtime flow and callback architecture.
 - [Migration Guide](MIGRATION.md): Breaking changes for structured data refactor.

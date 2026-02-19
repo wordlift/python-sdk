@@ -52,3 +52,11 @@
 - Retry handlers reference `pydantic_core.ValidationError` via the public API
   (not `pydantic_core._pydantic_core.ValidationError`) for Python 3.14
   compatibility.
+- SDK ingestion now supports a 2-axis adapter model (`source` + `loader`) with
+  registry-based resolution, deterministic auto rules, and legacy compatibility
+  mapping (`WEB_PAGE_IMPORT_MODE default -> web_scrape_api`, `proxy -> proxy`,
+  `premium_scraper -> premium_scraper`); `local` and `debug-cloud` source names
+  are treated as aliases.
+- Legacy container/workflow integration now bridges source selection through the
+  ingestion resolver/registry, and `kg_build` web-page scrape handling runs via
+  ingestion loader execution before invoking profile callbacks.
