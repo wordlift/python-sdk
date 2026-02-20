@@ -1,5 +1,17 @@
 # Changelog
 
+## 5.1.0 - 2026-02-20
+
+### Fixed
+
+- Preserved `account.key` in `kg_build` postprocessor runtime payload/context reconstruction so postprocessors can perform authenticated SDK/client API calls in both `oneshot` and `persistent` runtimes.
+- Kept API base URL responsibility in profile settings by enforcing `context.settings["api_url"]` fallback to `https://api.wordlift.io` during runner payload/context handling.
+- Redacted postprocessor `account_key` from preserved debug payload artifacts (`output/postprocessor_debug/**/context.json`) to prevent secret leakage.
+
+### Added
+
+- Unit and integration coverage for postprocessor auth context propagation, `api_url` fallback behavior, and debug-payload secret redaction/log non-leak assertions.
+
 ## 5.0.0 - 2026-02-19
 
 ### Breaking

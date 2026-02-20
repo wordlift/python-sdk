@@ -314,6 +314,7 @@ class SubprocessPostprocessor:
                 if target.exists():
                     shutil.rmtree(target)
                 shutil.copytree(temp_dir_path, target)
+                _redact_debug_context(target / "context.json")
             if temp_dir_path.exists():
                 shutil.rmtree(temp_dir_path, ignore_errors=True)
 
@@ -452,15 +453,19 @@ def _build_runner_payload(context: PostprocessorContext) -> dict[str, Any]:
     account = getattr(context, "account", None)
     dataset_uri = str(getattr(account, "dataset_uri", "")).rstrip("/")
     country_code = str(getattr(account, "country_code", "")).strip().lower()
+    account_key = getattr(account, "key", None)
     response = getattr(context, "response", None)
     web_page = getattr(response, "web_page", None) if response else None
+    settings = dict(getattr(context, "settings", {}) or {})
+    settings.setdefault("api_url", "https://api.wordlift.io")
     return {
         "profile_name": context.profile_name,
         "url": context.url,
         "dataset_uri": dataset_uri,
         "country_code": country_code,
+        "account_key": account_key,
         "exports": context.exports,
-        "settings": context.settings,
+        "settings": settings,
         "existing_web_page_id": context.existing_web_page_id,
         "response": {
             "id": getattr(response, "id", None) or context.existing_web_page_id,
@@ -558,3 +563,20 @@ def _read_graph_nquads(path: Path) -> Graph:
     for triple in dataset.triples((None, None, None)):
         graph.add(triple)
     return graph
+
+
+def _redact_debug_context(path: Path) -> None:
+    if not path.exists():
+        return
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return
+    if not isinstance(payload, dict):
+        return
+    if payload.get("account_key"):
+        payload["account_key"] = "***REDACTED***"
+        path.write_text(
+            json.dumps(payload, ensure_ascii=True, default=str),
+            encoding="utf-8",
+        )

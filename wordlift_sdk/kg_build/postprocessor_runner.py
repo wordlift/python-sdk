@@ -16,9 +16,12 @@ from .postprocessors import PostprocessorContext
 
 def _build_context(payload: dict[str, Any]) -> PostprocessorContext:
     dataset_uri = str(payload.get("dataset_uri", "")).rstrip("/")
+    settings = dict(payload.get("settings", {}) or {})
+    settings.setdefault("api_url", "https://api.wordlift.io")
     account = SimpleNamespace(
         dataset_uri=dataset_uri,
         country_code=str(payload.get("country_code", "")).strip().lower(),
+        key=payload.get("account_key"),
     )
     response_payload = payload.get("response", {}) or {}
     web_page_payload = response_payload.get("web_page", {}) or {}
@@ -40,7 +43,7 @@ def _build_context(payload: dict[str, Any]) -> PostprocessorContext:
             if payload.get("existing_web_page_id")
             else None
         ),
-        settings=dict(payload.get("settings", {}) or {}),
+        settings=settings,
         ids=IdAllocator(dataset_uri) if dataset_uri else None,
     )
 

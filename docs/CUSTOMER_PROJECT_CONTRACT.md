@@ -76,8 +76,8 @@ Execution contract:
   - output: `output_graph.nq`
 - context exchange uses temp JSON file (`context.json`) with:
   - `profile_name`, `url`
-  - `dataset_uri`, `country_code`
-  - `exports`, `settings`
+  - `dataset_uri`, `country_code`, `account_key` (when configured)
+  - `exports`, `settings` (`settings.api_url` defaults to `https://api.wordlift.io`)
   - `existing_web_page_id`, `response.id`, `response.web_page.url`, `response.web_page.html`
 
 For `kg_build`, page retrieval uses `WebPageScrapeApi`; the SDK host code injects

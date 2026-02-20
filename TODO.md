@@ -1,5 +1,6 @@
 # TODO
 
+- [x] 2026-02-20 Preserve `account.key` in `kg_build` postprocessor runtime payload/context, keep API base URL sourced from `settings.api_url` (with default fallback), and redact keys from debug payload artifacts.
 - [x] 2026-02-19 Implement SDK 2-axis ingestion pipeline (`INGEST_SOURCE`/`INGEST_LOADER`) with adapter registries, passthrough precedence, legacy compatibility mappings, structured warnings/events, and contract tests.
 - [x] 2026-02-19 Bridge legacy SDK container/workflow source+scrape resolution through ingestion runtime and bump package version to `5.0.0` with migration/changelog/docs updates.
 - [x] 2026-02-19 Refresh `poetry.lock` to replace unavailable `virtualenv==20.37.0` with `20.38.0` for GitHub Actions publish stability.

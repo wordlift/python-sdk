@@ -1,20 +1,26 @@
 from __future__ import annotations
 
 import json
+import logging
 import subprocess
 import sys
 import textwrap
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 from rdflib import Dataset, Graph, Literal, URIRef
 
-from wordlift_sdk.kg_build.postprocessor_runner import _read_graph_nquads
+from wordlift_sdk.kg_build.postprocessor_runner import (
+    _build_context,
+    _read_graph_nquads,
+)
 from wordlift_sdk.kg_build.postprocessors import (
     LoadedPostprocessor,
     PostprocessorContext,
     PostprocessorSpec,
     SubprocessPostprocessor,
+    _build_runner_payload,
     close_loaded_postprocessors,
     load_postprocessors_for_profile,
 )
@@ -37,17 +43,69 @@ def _sample_graph() -> Graph:
     return graph
 
 
-def _sample_context() -> PostprocessorContext:
+def _sample_context(
+    *,
+    key: str | None = None,
+    settings: dict[str, object] | None = None,
+) -> PostprocessorContext:
     return PostprocessorContext(
         profile_name="test_profile",
         url="https://example.com/page",
-        account=object(),
+        account=SimpleNamespace(
+            dataset_uri="https://data.example.com",
+            country_code="us",
+            key=key,
+        ),
         exports={},
-        response=object(),
+        response=SimpleNamespace(
+            id="id-1",
+            web_page=SimpleNamespace(
+                url="https://example.com/page", html="<html></html>"
+            ),
+        ),
         existing_web_page_id=None,
-        settings={},
+        settings=settings or {},
         ids=None,
     )
+
+
+def test_build_runner_payload_includes_account_key_and_default_api_url() -> None:
+    payload = _build_runner_payload(_sample_context(key="secret-key"))
+    assert payload["account_key"] == "secret-key"
+    assert payload["settings"]["api_url"] == "https://api.wordlift.io"
+
+
+def test_build_context_restores_account_key_and_default_api_url() -> None:
+    context = _build_context(
+        {
+            "profile_name": "runner_profile",
+            "url": "https://example.com/page",
+            "dataset_uri": "https://data.example.com/",
+            "country_code": "US",
+            "account_key": "secret-key",
+            "exports": {},
+            "settings": {},
+            "response": {"id": "id-1", "web_page": {"url": "", "html": ""}},
+        }
+    )
+    assert context.account.key == "secret-key"
+    assert context.settings["api_url"] == "https://api.wordlift.io"
+
+
+def test_build_context_accepts_missing_account_key() -> None:
+    context = _build_context(
+        {
+            "profile_name": "runner_profile",
+            "url": "https://example.com/page",
+            "dataset_uri": "https://data.example.com/",
+            "country_code": "US",
+            "exports": {},
+            "settings": {"api_url": "https://profile.example.com"},
+            "response": {"id": "id-1", "web_page": {"url": "", "html": ""}},
+        }
+    )
+    assert context.account.key is None
+    assert context.settings["api_url"] == "https://profile.example.com"
 
 
 def test_manifest_merge_order_and_flags(tmp_path: Path) -> None:
@@ -226,6 +284,113 @@ def test_persistent_runtime_reuses_postprocessor_instance(tmp_path: Path) -> Non
     ) in second
 
 
+@pytest.mark.parametrize("runtime", ["oneshot", "persistent"])
+def test_postprocessor_context_exposes_account_key_and_profile_api_url(
+    tmp_path: Path, runtime: str
+) -> None:
+    root = tmp_path
+    _write(
+        root / "test_pp.py",
+        """
+        from rdflib import Literal, URIRef
+
+        class ReadAuthContext:
+            def process_graph(self, graph, context):
+                graph.set(
+                    (
+                        URIRef("https://example.com/auth"),
+                        URIRef("https://example.com/key"),
+                        Literal(context.account.key or ""),
+                    )
+                )
+                graph.set(
+                    (
+                        URIRef("https://example.com/auth"),
+                        URIRef("https://example.com/api_url"),
+                        Literal(context.settings.get("api_url", "")),
+                    )
+                )
+                return graph
+        """,
+    )
+    spec = PostprocessorSpec(
+        class_path="test_pp:ReadAuthContext",
+        python=sys.executable,
+        timeout_seconds=30,
+        enabled=True,
+        keep_temp_on_error=False,
+    )
+    processor = SubprocessPostprocessor(spec=spec, root_dir=root, runtime=runtime)
+    try:
+        output = processor.process_graph(
+            _sample_graph(),
+            _sample_context(
+                key="secret-key",
+                settings={"api_url": "https://profile-api.example.com"},
+            ),
+        )
+    finally:
+        processor.close()
+
+    assert output is not None
+    assert (
+        URIRef("https://example.com/auth"),
+        URIRef("https://example.com/key"),
+        Literal("secret-key"),
+    ) in output
+    assert (
+        URIRef("https://example.com/auth"),
+        URIRef("https://example.com/api_url"),
+        Literal("https://profile-api.example.com"),
+    ) in output
+
+
+@pytest.mark.parametrize("runtime", ["oneshot", "persistent"])
+def test_postprocessor_context_defaults_api_url_when_missing(
+    tmp_path: Path, runtime: str
+) -> None:
+    root = tmp_path
+    _write(
+        root / "test_pp.py",
+        """
+        from rdflib import Literal, URIRef
+
+        class ReadDefaultApiUrl:
+            def process_graph(self, graph, context):
+                graph.set(
+                    (
+                        URIRef("https://example.com/auth"),
+                        URIRef("https://example.com/api_url"),
+                        Literal(context.settings.get("api_url", "")),
+                    )
+                )
+                return graph
+        """,
+    )
+    spec = PostprocessorSpec(
+        class_path="test_pp:ReadDefaultApiUrl",
+        python=sys.executable,
+        timeout_seconds=30,
+        enabled=True,
+        keep_temp_on_error=False,
+    )
+    processor = SubprocessPostprocessor(spec=spec, root_dir=root, runtime=runtime)
+    try:
+        output = processor.process_graph(
+            _sample_graph(),
+            _sample_context(key="secret-key", settings={}),
+        )
+    finally:
+        processor.close()
+
+    assert output is not None
+    assert (
+        URIRef("https://example.com/auth"),
+        URIRef("https://example.com/api_url"),
+        Literal("https://api.wordlift.io"),
+    ) in output
+
+
 def test_runner_module_is_runnable_via_python_m(tmp_path: Path) -> None:
     root = tmp_path
     _write(
@@ -389,6 +554,64 @@ def test_keep_temp_on_error_preserves_debug_files(tmp_path: Path) -> None:
     assert debug_target.exists()
     assert (debug_target / "input_graph.nq").exists()
     assert (debug_target / "context.json").exists()
+
+
+def test_keep_temp_on_error_redacts_account_key_in_debug_context(
+    tmp_path: Path,
+) -> None:
+    root = tmp_path
+    _write(
+        root / "test_pp.py",
+        """
+        class BrokenPostprocessor:
+            def process_graph(self, graph, context):
+                raise RuntimeError("boom")
+        """,
+    )
+    class_path = "test_pp:BrokenPostprocessor"
+    spec = PostprocessorSpec(
+        class_path=class_path,
+        python=sys.executable,
+        timeout_seconds=30,
+        enabled=True,
+        keep_temp_on_error=True,
+    )
+    processor = SubprocessPostprocessor(spec=spec, root_dir=root)
+    secret = "top-secret-key"
+
+    with pytest.raises(RuntimeError):
+        processor.process_graph(_sample_graph(), _sample_context(key=secret))
+
+    context_path = (
+        root
+        / "output"
+        / "postprocessor_debug"
+        / class_path.replace(":", "_").replace(".", "_")
+        / "context.json"
+    )
+    context_doc = json.loads(context_path.read_text(encoding="utf-8"))
+    assert context_doc["account_key"] == "***REDACTED***"
+    assert secret not in context_path.read_text(encoding="utf-8")
+
+
+def test_account_key_is_never_written_to_logs(
+    caplog: pytest.LogCaptureFixture, tmp_path: Path
+) -> None:
+    root = tmp_path
+    _write(
+        root / "profiles" / "_base" / "postprocessors.toml",
+        """
+        [[postprocessors]]
+        class = "test_pp:BaseOne"
+        """,
+    )
+    secret = "top-secret-key"
+
+    caplog.set_level(logging.INFO)
+    _ = _build_runner_payload(_sample_context(key=secret))
+    load_postprocessors_for_profile(root_dir=root, profile_name="alpha")
+
+    assert secret not in caplog.text
 
 
 def test_fail_fast_stops_after_first_postprocessor_error() -> None:
