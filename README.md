@@ -204,8 +204,10 @@ The SDK now includes a profile-driven cloud mapping module under `wordlift_sdk.k
   - supported method: `process_graph(self, graph, context)`
   - supported return values: `Graph`, `None`, or an awaitable resolving to `Graph | None`
   - in persistent mode, each worker instance processes one job at a time (callbacks can still run concurrently across different workers/classes)
-  - `context.account.key` is available when profile/API key is configured
-  - API base URL should be read from `context.settings["api_url"]` (defaults to `https://api.wordlift.io`)
+  - `context.profile` contains the resolved/interpolated profile object (including inherited fields)
+  - `context.account_key` contains the runtime API key and is required for postprocessor execution
+  - keep `context.account` as the clean `/me` account object (no injected key)
+  - API base URL should be read from `context.profile["settings"]["api_url"]` (defaults to `https://api.wordlift.io`)
 
 ## Ingestion Module
 

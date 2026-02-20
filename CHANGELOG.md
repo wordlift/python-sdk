@@ -1,16 +1,22 @@
 # Changelog
 
-## 5.1.0 - 2026-02-20
+## 5.1.1 - 2026-02-20
+
+### Breaking
+
+- `kg_build` postprocessor context contract now exposes auth via `context.account_key` and no longer injects credentials into `context.account.key`.
+- `context.settings` has been removed from postprocessor context. Use `context.profile["settings"]` instead.
 
 ### Fixed
 
-- Preserved `account.key` in `kg_build` postprocessor runtime payload/context reconstruction so postprocessors can perform authenticated SDK/client API calls in both `oneshot` and `persistent` runtimes.
-- Kept API base URL responsibility in profile settings by enforcing `context.settings["api_url"]` fallback to `https://api.wordlift.io` during runner payload/context handling.
-- Redacted postprocessor `account_key` from preserved debug payload artifacts (`output/postprocessor_debug/**/context.json`) to prevent secret leakage.
+- Ensured `kg_build` postprocessor context always carries runtime auth in `context.account_key` (resolved from profile/runtime config) and fails fast before processor execution when missing.
+- Preserved full resolved/interpolated profile payload in postprocessor context (`context.profile`) across oneshot and persistent runtimes.
+- Kept API base URL fallback on `context.profile["settings"]["api_url"]` with default `https://api.wordlift.io`.
+- Redacted postprocessor credential fields from preserved debug payload artifacts (`output/postprocessor_debug/**/context.json`) to prevent secret leakage.
 
 ### Added
 
-- Unit and integration coverage for postprocessor auth context propagation, `api_url` fallback behavior, and debug-payload secret redaction/log non-leak assertions.
+- Unit and integration coverage for postprocessor `account_key` propagation, profile-payload propagation, runner context reconstruction, fail-fast missing-key behavior, and debug-payload secret redaction/log non-leak assertions.
 
 ## 5.0.0 - 2026-02-19
 

@@ -26,12 +26,13 @@ _RUNTIME_PERSISTENT = "persistent"
 @dataclass(frozen=True)
 class PostprocessorContext:
     profile_name: str
+    profile: dict[str, Any]
     url: str
     account: Any
+    account_key: str | None
     exports: dict[str, Any]
     response: Any
     existing_web_page_id: str | None
-    settings: dict[str, Any]
     ids: Any | None = None
 
 
@@ -453,19 +454,27 @@ def _build_runner_payload(context: PostprocessorContext) -> dict[str, Any]:
     account = getattr(context, "account", None)
     dataset_uri = str(getattr(account, "dataset_uri", "")).rstrip("/")
     country_code = str(getattr(account, "country_code", "")).strip().lower()
-    account_key = getattr(account, "key", None)
+    account_key = (
+        str(context.account_key).strip()
+        if getattr(context, "account_key", None) is not None
+        else ""
+    )
+    profile = dict(getattr(context, "profile", {}) or {})
+    if "settings" not in profile or not isinstance(profile.get("settings"), dict):
+        profile["settings"] = {}
+    profile_settings = dict(profile.get("settings", {}) or {})
+    profile_settings.setdefault("api_url", "https://api.wordlift.io")
+    profile["settings"] = profile_settings
     response = getattr(context, "response", None)
     web_page = getattr(response, "web_page", None) if response else None
-    settings = dict(getattr(context, "settings", {}) or {})
-    settings.setdefault("api_url", "https://api.wordlift.io")
     return {
         "profile_name": context.profile_name,
+        "profile": profile,
         "url": context.url,
         "dataset_uri": dataset_uri,
         "country_code": country_code,
-        "account_key": account_key,
+        "account_key": account_key or None,
         "exports": context.exports,
-        "settings": settings,
         "existing_web_page_id": context.existing_web_page_id,
         "response": {
             "id": getattr(response, "id", None) or context.existing_web_page_id,
@@ -576,7 +585,24 @@ def _redact_debug_context(path: Path) -> None:
         return
     if payload.get("account_key"):
         payload["account_key"] = "***REDACTED***"
-        path.write_text(
-            json.dumps(payload, ensure_ascii=True, default=str),
-            encoding="utf-8",
-        )
+    profile = payload.get("profile")
+    if isinstance(profile, dict) and profile.get("api_key"):
+        profile["api_key"] = "***REDACTED***"
+    settings = (
+        profile.get("settings")
+        if isinstance(profile, dict) and isinstance(profile.get("settings"), dict)
+        else None
+    )
+    if settings and settings.get("api_key"):
+        settings["api_key"] = "***REDACTED***"
+    if settings and settings.get("wordlift_key"):
+        settings["wordlift_key"] = "***REDACTED***"
+    if settings and settings.get("WORDLIFT_KEY"):
+        settings["WORDLIFT_KEY"] = "***REDACTED***"
+    if settings and settings.get("WORDLIFT_API_KEY"):
+        settings["WORDLIFT_API_KEY"] = "***REDACTED***"
+    payload["profile"] = profile
+    path.write_text(
+        json.dumps(payload, ensure_ascii=True, default=str),
+        encoding="utf-8",
+    )

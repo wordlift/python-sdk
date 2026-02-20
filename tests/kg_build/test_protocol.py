@@ -42,10 +42,14 @@ def _make_profile_with_settings(settings: dict[str, object]) -> ProfileDefinitio
     )
 
 
-def _make_context() -> MagicMock:
-    context = MagicMock()
-    context.account = SimpleNamespace(dataset_uri="https://data.example.com/dataset")
-    return context
+def _make_context() -> SimpleNamespace:
+    return SimpleNamespace(
+        account=SimpleNamespace(dataset_uri="https://data.example.com/dataset"),
+        client_configuration=SimpleNamespace(api_key={}),
+        configuration_provider=SimpleNamespace(
+            get_value=lambda *_args, **_kwargs: None
+        ),
+    )
 
 
 def _make_graph(subject: str) -> Graph:
@@ -143,3 +147,71 @@ def test_protocol_uses_profile_postprocessor_runtime_setting(
     )
     assert protocol._postprocessor_runtime == "persistent"
     assert captured["runtime"] == "persistent"
+
+
+def test_build_pp_context_exposes_resolved_profile_and_account_key() -> None:
+    profile = _make_profile_with_settings(
+        {"api_url": "https://profile-api.example.com"}
+    )
+    profile = ProfileDefinition(
+        name=profile.name,
+        inherit=profile.inherit,
+        api_key="profile-secret",
+        mapping_mode=profile.mapping_mode,
+        strict_mapping=profile.strict_mapping,
+        mapping=profile.mapping,
+        templates_dir=profile.templates_dir,
+        mappings_dir=profile.mappings_dir,
+        routes=profile.routes,
+        settings=profile.settings,
+    )
+    protocol = ProfileImportProtocol(
+        context=_make_context(),
+        profile=profile,
+        root_dir=Path.cwd(),
+    )
+    response = WebPageScrapeResponse(
+        web_page=WebPage(url="https://example.com/page", html="<html></html>")
+    )
+
+    context = protocol._build_pp_context(
+        "https://example.com/page", response, existing_web_page_id=None
+    )
+
+    assert context.account_key == "profile-secret"
+    assert context.profile["name"] == "test-profile"
+    assert context.profile["settings"]["api_url"] == "https://profile-api.example.com"
+
+
+def test_apply_postprocessors_fails_fast_when_account_key_missing() -> None:
+    protocol = ProfileImportProtocol(
+        context=_make_context(),
+        profile=_make_profile(),
+        root_dir=Path.cwd(),
+    )
+
+    class _NeverRun:
+        name = "never-run"
+        called = False
+
+        def run(self, graph, context):
+            self.called = True
+            return graph
+
+    handler = _NeverRun()
+    protocol._postprocessors = [handler]  # type: ignore[assignment]
+
+    response = WebPageScrapeResponse(
+        web_page=WebPage(url="https://example.com/page", html="<html></html>")
+    )
+    graph = _make_graph("https://example.com/mapped-web-page")
+
+    with pytest.raises(RuntimeError, match="Postprocessor runtime requires an API key"):
+        protocol._apply_postprocessors(
+            graph,
+            "https://example.com/page",
+            response,
+            existing_web_page_id=None,
+        )
+
+    assert handler.called is False

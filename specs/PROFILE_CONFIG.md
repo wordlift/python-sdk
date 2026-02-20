@@ -187,10 +187,12 @@ Postprocessor `context` includes:
 
 - `profile_name`
 - `url`
-- `account` (`dataset_uri`, `country_code`, and `key` when configured)
+- `profile` (resolved/interpolated profile object including inherited/custom keys)
+- `account` (`dataset_uri`, `country_code`; clean API account object shape)
+- `account_key` (runtime API key; required before postprocessor execution)
 - `exports`
 - `response`
-- `settings` (resolved profile runtime settings from config/env; `api_url` defaults to `https://api.wordlift.io`)
+- `existing_web_page_id`
 - `ids` (canonical ID allocator helper)
 
 ### Optional Rules Dataset Convention

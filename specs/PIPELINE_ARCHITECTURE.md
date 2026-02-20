@@ -84,7 +84,7 @@ Runtime-isolated execution:
   - return: `Graph`, `None`, or awaitable resolving to `Graph | None`
 - persistent workers handle one in-flight job at a time per worker instance
 - graph exchange uses temp `nquads` files
-- context exchange uses temp JSON (includes account metadata + optional `account_key`; API base URL comes from `settings.api_url` with `https://api.wordlift.io` fallback)
+- context exchange uses temp JSON (includes account metadata + required `account_key`, plus resolved/interpolated `profile`; API base URL comes from `profile.settings.api_url` with `https://api.wordlift.io` fallback)
 - failures are fail-fast
 
 Current implementation status:

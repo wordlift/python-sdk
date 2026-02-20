@@ -49,9 +49,11 @@
 - `wordlift_sdk.kg_build` postprocessor runtime is configurable via
   `POSTPROCESSOR_RUNTIME`: `oneshot` (default, per-callback runner) or
   `persistent` (one long-lived worker per class across callbacks).
-- `wordlift_sdk.kg_build` postprocessor context preserves `account.key` when
-  configured, and API base URL must be read from `context.settings["api_url"]`
-  (default `https://api.wordlift.io`); debug payload copies redact keys.
+- `wordlift_sdk.kg_build` postprocessor context keeps `account` as the clean
+  API `/me` object, exposes auth as `context.account_key`, and provides resolved
+  profile config via `context.profile`; API base URL must be read from
+  `context.profile["settings"]["api_url"]` (default `https://api.wordlift.io`).
+  Debug payload copies redact key fields.
 - Retry handlers reference `pydantic_core.ValidationError` via the public API
   (not `pydantic_core._pydantic_core.ValidationError`) for Python 3.14
   compatibility.

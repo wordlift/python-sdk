@@ -16,12 +16,18 @@ from .postprocessors import PostprocessorContext
 
 def _build_context(payload: dict[str, Any]) -> PostprocessorContext:
     dataset_uri = str(payload.get("dataset_uri", "")).rstrip("/")
-    settings = dict(payload.get("settings", {}) or {})
-    settings.setdefault("api_url", "https://api.wordlift.io")
+    profile_payload = payload.get("profile", {})
+    if not isinstance(profile_payload, dict):
+        profile_payload = {}
+    profile = dict(profile_payload)
+    if "settings" not in profile or not isinstance(profile.get("settings"), dict):
+        profile["settings"] = {}
+    profile_settings = dict(profile.get("settings", {}) or {})
+    profile_settings.setdefault("api_url", "https://api.wordlift.io")
+    profile["settings"] = profile_settings
     account = SimpleNamespace(
         dataset_uri=dataset_uri,
         country_code=str(payload.get("country_code", "")).strip().lower(),
-        key=payload.get("account_key"),
     )
     response_payload = payload.get("response", {}) or {}
     web_page_payload = response_payload.get("web_page", {}) or {}
@@ -33,9 +39,11 @@ def _build_context(payload: dict[str, Any]) -> PostprocessorContext:
         ),
     )
     return PostprocessorContext(
-        profile_name=str(payload.get("profile_name", "")),
+        profile_name=str(payload.get("profile_name", "") or profile.get("name", "")),
+        profile=profile,
         url=str(payload.get("url", "")),
         account=account,
+        account_key=payload.get("account_key"),
         exports=dict(payload.get("exports", {}) or {}),
         response=response,
         existing_web_page_id=(
@@ -43,7 +51,6 @@ def _build_context(payload: dict[str, Any]) -> PostprocessorContext:
             if payload.get("existing_web_page_id")
             else None
         ),
-        settings=settings,
         ids=IdAllocator(dataset_uri) if dataset_uri else None,
     )
 

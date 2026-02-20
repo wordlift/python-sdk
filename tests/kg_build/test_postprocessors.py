@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import subprocess
 import sys
 import textwrap
@@ -25,6 +26,13 @@ from wordlift_sdk.kg_build.postprocessors import (
     load_postprocessors_for_profile,
 )
 
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+_current_pythonpath = os.environ.get("PYTHONPATH", "")
+if _current_pythonpath:
+    os.environ["PYTHONPATH"] = f"{PROJECT_ROOT}{os.pathsep}{_current_pythonpath}"
+else:
+    os.environ["PYTHONPATH"] = str(PROJECT_ROOT)
+
 
 def _write(path: Path, content: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -45,17 +53,24 @@ def _sample_graph() -> Graph:
 
 def _sample_context(
     *,
-    key: str | None = None,
-    settings: dict[str, object] | None = None,
+    account_key: str | None = "test-key",
+    profile: dict[str, object] | None = None,
 ) -> PostprocessorContext:
+    profile_payload = {
+        "name": "test_profile",
+        "settings": {"api_url": "https://api.wordlift.io"},
+    }
+    if profile:
+        profile_payload.update(profile)
     return PostprocessorContext(
         profile_name="test_profile",
+        profile=profile_payload,
         url="https://example.com/page",
         account=SimpleNamespace(
             dataset_uri="https://data.example.com",
             country_code="us",
-            key=key,
         ),
+        account_key=account_key,
         exports={},
         response=SimpleNamespace(
             id="id-1",
@@ -64,15 +79,19 @@ def _sample_context(
             ),
         ),
         existing_web_page_id=None,
-        settings=settings or {},
         ids=None,
     )
 
 
 def test_build_runner_payload_includes_account_key_and_default_api_url() -> None:
-    payload = _build_runner_payload(_sample_context(key="secret-key"))
+    payload = _build_runner_payload(
+        _sample_context(
+            account_key="secret-key",
+            profile={"settings": {}},
+        )
+    )
     assert payload["account_key"] == "secret-key"
-    assert payload["settings"]["api_url"] == "https://api.wordlift.io"
+    assert payload["profile"]["settings"]["api_url"] == "https://api.wordlift.io"
 
 
 def test_build_context_restores_account_key_and_default_api_url() -> None:
@@ -84,12 +103,12 @@ def test_build_context_restores_account_key_and_default_api_url() -> None:
             "country_code": "US",
             "account_key": "secret-key",
             "exports": {},
-            "settings": {},
+            "profile": {"name": "runner_profile", "settings": {}},
             "response": {"id": "id-1", "web_page": {"url": "", "html": ""}},
         }
     )
-    assert context.account.key == "secret-key"
-    assert context.settings["api_url"] == "https://api.wordlift.io"
+    assert context.account_key == "secret-key"
+    assert context.profile["settings"]["api_url"] == "https://api.wordlift.io"
 
 
 def test_build_context_accepts_missing_account_key() -> None:
@@ -100,12 +119,15 @@ def test_build_context_accepts_missing_account_key() -> None:
             "dataset_uri": "https://data.example.com/",
             "country_code": "US",
             "exports": {},
-            "settings": {"api_url": "https://profile.example.com"},
+            "profile": {
+                "name": "runner_profile",
+                "settings": {"api_url": "https://profile.example.com"},
+            },
             "response": {"id": "id-1", "web_page": {"url": "", "html": ""}},
         }
     )
-    assert context.account.key is None
-    assert context.settings["api_url"] == "https://profile.example.com"
+    assert context.account_key is None
+    assert context.profile["settings"]["api_url"] == "https://profile.example.com"
 
 
 def test_manifest_merge_order_and_flags(tmp_path: Path) -> None:
@@ -299,15 +321,15 @@ def test_postprocessor_context_exposes_account_key_and_profile_api_url(
                 graph.set(
                     (
                         URIRef("https://example.com/auth"),
-                        URIRef("https://example.com/key"),
-                        Literal(context.account.key or ""),
+                        URIRef("https://example.com/account_key"),
+                        Literal(context.account_key or ""),
                     )
                 )
                 graph.set(
                     (
                         URIRef("https://example.com/auth"),
                         URIRef("https://example.com/api_url"),
-                        Literal(context.settings.get("api_url", "")),
+                        Literal(context.profile.get("settings", {}).get("api_url", "")),
                     )
                 )
                 return graph
@@ -325,8 +347,8 @@ def test_postprocessor_context_exposes_account_key_and_profile_api_url(
         output = processor.process_graph(
             _sample_graph(),
             _sample_context(
-                key="secret-key",
-                settings={"api_url": "https://profile-api.example.com"},
+                account_key="secret-key",
+                profile={"settings": {"api_url": "https://profile-api.example.com"}},
             ),
         )
     finally:
@@ -335,7 +357,7 @@ def test_postprocessor_context_exposes_account_key_and_profile_api_url(
     assert output is not None
     assert (
         URIRef("https://example.com/auth"),
-        URIRef("https://example.com/key"),
+        URIRef("https://example.com/account_key"),
         Literal("secret-key"),
     ) in output
     assert (
@@ -361,7 +383,7 @@ def test_postprocessor_context_defaults_api_url_when_missing(
                     (
                         URIRef("https://example.com/auth"),
                         URIRef("https://example.com/api_url"),
-                        Literal(context.settings.get("api_url", "")),
+                        Literal(context.profile.get("settings", {}).get("api_url", "")),
                     )
                 )
                 return graph
@@ -378,7 +400,7 @@ def test_postprocessor_context_defaults_api_url_when_missing(
     try:
         output = processor.process_graph(
             _sample_graph(),
-            _sample_context(key="secret-key", settings={}),
+            _sample_context(account_key="secret-key", profile={"settings": {}}),
         )
     finally:
         processor.close()
@@ -429,7 +451,7 @@ def test_runner_module_is_runnable_via_python_m(tmp_path: Path) -> None:
                 "dataset_uri": "https://data.example.com",
                 "country_code": "us",
                 "exports": {},
-                "settings": {},
+                "profile": {"name": "runner_profile", "settings": {}},
                 "response": {"id": "id-1", "web_page": {"url": "", "html": ""}},
             }
         ),
@@ -580,7 +602,7 @@ def test_keep_temp_on_error_redacts_account_key_in_debug_context(
     secret = "top-secret-key"
 
     with pytest.raises(RuntimeError):
-        processor.process_graph(_sample_graph(), _sample_context(key=secret))
+        processor.process_graph(_sample_graph(), _sample_context(account_key=secret))
 
     context_path = (
         root
@@ -608,7 +630,7 @@ def test_account_key_is_never_written_to_logs(
     secret = "top-secret-key"
 
     caplog.set_level(logging.INFO)
-    _ = _build_runner_payload(_sample_context(key=secret))
+    _ = _build_runner_payload(_sample_context(account_key=secret))
     load_postprocessors_for_profile(root_dir=root, profile_name="alpha")
 
     assert secret not in caplog.text

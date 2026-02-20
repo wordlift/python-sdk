@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import logging
 import os
+from dataclasses import asdict
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
@@ -219,6 +220,11 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             return graph
 
         pp_context = self._build_pp_context(url, response, existing_web_page_id)
+        if not pp_context.account_key:
+            raise RuntimeError(
+                "Postprocessor runtime requires an API key. Configure one via profile "
+                "'api_key', WORDLIFT_KEY, or WORDLIFT_API_KEY."
+            )
 
         for processor in self._postprocessors:
             graph = processor.run(graph, pp_context)
@@ -233,16 +239,58 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
     ) -> PostprocessorContext:
         dataset_uri = str(getattr(self.context.account, "dataset_uri", "")).rstrip("/")
         ids = IdAllocator(dataset_uri) if dataset_uri else None
+        profile_payload = asdict(self.profile)
+        profile_settings = dict(profile_payload.get("settings", {}) or {})
+        profile_settings.setdefault("api_url", "https://api.wordlift.io")
+        profile_payload["settings"] = profile_settings
         return PostprocessorContext(
             profile_name=self.profile.name,
+            profile=profile_payload,
             url=url,
             account=self.context.account,
+            account_key=self._resolve_postprocessor_account_key(),
             exports=self._template_exports or {},
             response=response,
             existing_web_page_id=existing_web_page_id,
-            settings=dict(self.profile.settings),
             ids=ids,
         )
+
+    def _resolve_postprocessor_account_key(self) -> str | None:
+        profile_key = self._clean_key(self.profile.api_key)
+        if profile_key:
+            return profile_key
+
+        client_config = getattr(self.context, "client_configuration", None)
+        if client_config is not None:
+            api_key_map = getattr(client_config, "api_key", None)
+            if isinstance(api_key_map, dict):
+                runtime_key = self._clean_key(api_key_map.get("ApiKey"))
+                if runtime_key:
+                    return runtime_key
+
+        provider = getattr(self.context, "configuration_provider", None)
+        if provider is not None:
+            for name in ("WORDLIFT_KEY", "WORDLIFT_API_KEY"):
+                try:
+                    key = self._clean_key(provider.get_value(name))
+                except Exception:
+                    key = None
+                if key:
+                    return key
+
+        for name in ("WORDLIFT_KEY", "WORDLIFT_API_KEY"):
+            key = self._clean_key(os.getenv(name))
+            if key:
+                return key
+
+        return None
+
+    @staticmethod
+    def _clean_key(value: Any) -> str | None:
+        if value is None:
+            return None
+        key = str(value).strip()
+        return key or None
 
     def _write_debug_graph(self, graph: Graph, url: str) -> None:
         assert self.debug_dir is not None
