@@ -5,11 +5,11 @@ import pytest
 from wordlift_sdk.configuration import ConfigurationProvider
 from wordlift_sdk.kg_build.container import KgBuildApplicationContainer
 from wordlift_sdk.workflow.url_handler.default_url_handler import DefaultUrlHandler
+from wordlift_sdk.workflow.url_handler.ingestion_web_page_scrape_url_handler import (
+    IngestionWebPageScrapeUrlHandler,
+)
 from wordlift_sdk.workflow.url_handler.search_console_url_handler import (
     SearchConsoleUrlHandler,
-)
-from wordlift_sdk.workflow.url_handler.web_page_scrape_url_handler import (
-    WebPageScrapeUrlHandler,
 )
 
 
@@ -65,5 +65,5 @@ async def test_create_web_page_scrape_url_handler_passes_protocol_callback():
 
     handler = await container.create_web_page_scrape_url_handler()
 
-    assert isinstance(handler, WebPageScrapeUrlHandler)
+    assert isinstance(handler, IngestionWebPageScrapeUrlHandler)
     assert handler._web_page_scrape_callback is protocol

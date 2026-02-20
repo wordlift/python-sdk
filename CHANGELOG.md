@@ -1,5 +1,35 @@
 # Changelog
 
+## 5.0.0 - 2026-02-19
+
+### Breaking
+
+- Introduced a formal 2-axis ingestion model in SDK:
+  - source axis (`INGEST_SOURCE`)
+  - loader axis (`INGEST_LOADER`)
+- Global default loader is now `web_scrape_api`.
+- Added deterministic source auto-priority (`URLS > SITEMAP_URL > SHEETS_* > local`).
+- Added explicit passthrough precedence rule for embedded HTML (`INGEST_PASSTHROUGH_WHEN_HTML=true`).
+
+### Added
+
+- New ingestion module: `wordlift_sdk.ingestion`
+  - adapter contracts (`SourceAdapter`, `LoaderAdapter`)
+  - shared models (`SourceItem`, `LoadedPage`)
+  - source/loader registries and orchestrator
+  - source adapters (`urls`, `sitemap`, `sheets`, `local`)
+  - loader adapters (`simple`, `proxy`, `playwright`, `premium_scraper`, `web_scrape_api`, `passthrough`)
+- Structured, machine-parseable warnings/events and typed config/runtime errors.
+- Compatibility mapping and alias support:
+  - `WEB_PAGE_IMPORT_MODE`: `default -> web_scrape_api`, `proxy -> proxy`, `premium_scraper -> premium_scraper`
+  - source alias `debug-cloud <-> local`
+- New ingestion docs/specs and contract tests.
+
+### Changed
+
+- `ApplicationContainer.create_url_source()` now resolves source selection through the ingestion resolver/registry bridge.
+- `KgBuildApplicationContainer` web-page scrape path now bridges through ingestion execution while preserving protocol callback behavior.
+
 ## 4.0.2 - 2026-02-19
 
 ### Fixed

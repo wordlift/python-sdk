@@ -1,26 +1,19 @@
-import re
-from dataclasses import dataclass
 from os import cpu_count
-from typing import Optional, Union
-
-import gspread
-from google.auth.credentials import Credentials
-from gspread import Client
 from wordlift_client import Configuration, AccountInfo, WebPageImportFetchOptions
 
 from ..client.client_configuration_factory import ClientConfigurationFactory
 from ..configuration import ConfigurationProvider
 from ..graphql.client import GraphQlClientFactory, GraphQlClient, GqlClientProvider
+from ..ingestion.factory import create_source_registry
+from ..ingestion.resolver import resolve_ingestion_config_from_provider
 from ..id_generator import IdGenerator
 from ..protocol import Context
 from ..protocol.entity_patch import EntityPatchQueue
 from ..protocol.graph import GraphQueue
 from ..url_source import (
-    SitemapUrlSource,
-    GoogleSheetsUrlSource,
-    ListUrlSource,
     UrlSource,
 )
+from ..url_source.adapter_url_source import AdapterUrlSource
 from ..url_source.new_or_changed_url_source import NewOrChangedUrlSource
 from ..utils import get_me
 from ..workflow.kg_import_workflow import KgImportWorkflow
@@ -28,23 +21,6 @@ from ..workflow.url_handler import WebPageImportUrlHandler
 from ..workflow.url_handler.default_url_handler import DefaultUrlHandler
 from ..workflow.url_handler.search_console_url_handler import SearchConsoleUrlHandler
 from ..workflow.url_handler.url_handler import UrlHandler
-
-
-@dataclass
-class UrlSourceInput:
-    """
-    Input structure for the UrlProviderFactory.
-
-    This class holds all possible parameters needed to create any of the supported URL providers.
-    The factory will use these parameters to determine which provider to create based on availability.
-    """
-
-    sitemap_url: Optional[str] = None
-    sitemap_url_pattern: Optional[str] = None
-    sheets_url: Optional[str] = None
-    sheets_name: Optional[str] = None
-    sheets_creds_or_client: Optional[Union[Credentials, Client]] = None
-    urls: Optional[list[str]] = None
 
 
 class ApplicationContainer:
@@ -176,75 +152,9 @@ class ApplicationContainer:
         return self._graphql_client
 
     async def create_url_source(self) -> UrlSource:
-        # Try to read the configuration from the `config/default.py` file.
-        sitemap_url = self._configuration_provider.get_value("SITEMAP_URL")
-        sitemap_url_pattern = self._configuration_provider.get_value(
-            "SITEMAP_URL_PATTERN", None
-        )
-        sheets_url = self._configuration_provider.get_value("SHEETS_URL")
-        sheets_name = self._configuration_provider.get_value("SHEETS_NAME")
-        sheets_service_account = self._configuration_provider.get_value(
-            "SHEETS_SERVICE_ACCOUNT"
-        )
-        urls = self._configuration_provider.get_value("URLS")
-
-        if (
-            sitemap_url is None
-            and urls is None
-            and (
-                sheets_url is None
-                or sheets_name is None
-                or sheets_service_account is None
-            )
-        ):
-            raise ValueError(
-                "One of `sitemap_url` or `sheets_url`/`sheets_name`/`sheets_service_account` is required."
-            )
-
-        input_params = UrlSourceInput(
-            sitemap_url=sitemap_url,
-            sitemap_url_pattern=sitemap_url_pattern,
-            sheets_url=sheets_url,
-            sheets_name=sheets_name,
-            sheets_creds_or_client=(
-                gspread.service_account(filename=sheets_service_account)
-                if sheets_service_account
-                else None
-            ),
-            urls=urls,
-        )
-
-        # Try to create a SitemapUrlProvider if sitemap_url is provided
-        if input_params.sitemap_url:
-            return SitemapUrlSource(
-                input_params.sitemap_url,
-                re.compile(input_params.sitemap_url_pattern)
-                if input_params.sitemap_url_pattern
-                else None,
-            )
-
-        # Try to create a GoogleSheetsUrlProvider if all required sheets parameters are provided
-        if (
-            input_params.sheets_url
-            and input_params.sheets_name
-            and input_params.sheets_creds_or_client
-        ):
-            return GoogleSheetsUrlSource(
-                input_params.sheets_creds_or_client,
-                input_params.sheets_url,
-                input_params.sheets_name,
-            )
-
-        # Try to create a ListUrlProvider if urls is provided
-        if input_params.urls:
-            return ListUrlSource(input_params.urls)
-
-        # If we get here, none of the required parameters were provided
-        raise ValueError(
-            "No valid parameters provided to create a URL provider. "
-            "Please provide either sitemap_url, all sheets parameters "
-            "(sheets_url, sheets_name, sheets_creds_or_client), or urls."
-        )
+        resolved = resolve_ingestion_config_from_provider(self._configuration_provider)
+        adapter = create_source_registry().resolve(resolved.source_name)
+        return AdapterUrlSource(adapter=adapter, config=resolved)
 
     async def create_new_or_changed_source(self) -> UrlSource:
         overwrite = self._configuration_provider.get_value("OVERWRITE", False)
