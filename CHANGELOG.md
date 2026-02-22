@@ -1,5 +1,16 @@
 # Changelog
 
+## 5.1.2 - 2026-02-22
+
+### Fixed
+
+- Ingestion resolver now bypasses legacy `SHEETS_*` completeness validation when `INGEST_SOURCE` is explicitly set to a non-`sheets` source (for example `sitemap` or `urls`), preventing false `INGEST_SRC_SHEETS_CONFIG_INVALID` failures.
+- Preserved strict sheets validation for explicit `INGEST_SOURCE=sheets` and auto/legacy source resolution.
+
+### Added
+
+- Resolver regression tests covering explicit non-sheets source bypass behavior and auto/sheets validation paths.
+
 ## 5.1.1 - 2026-02-20
 
 ### Breaking

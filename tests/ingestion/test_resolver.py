@@ -107,6 +107,39 @@ def test_incomplete_sheets_fails_fast() -> None:
     assert exc.value.code == "INGEST_SRC_SHEETS_CONFIG_INVALID"
 
 
+def test_explicit_sitemap_skips_legacy_sheets_validation() -> None:
+    cfg = resolve_ingestion_config_from_mapping(
+        {
+            "INGEST_SOURCE": "sitemap",
+            "SITEMAP_URL": "https://example.com/sitemap.xml",
+            "SHEETS_SERVICE_ACCOUNT": "sa.json",
+        }
+    )
+    assert cfg.source_name == "sitemap"
+
+
+def test_explicit_urls_skips_legacy_sheets_validation() -> None:
+    cfg = resolve_ingestion_config_from_mapping(
+        {
+            "INGEST_SOURCE": "urls",
+            "URLS": ["https://example.com"],
+            "SHEETS_URL": "https://docs.google.com/spreadsheets/d/123",
+        }
+    )
+    assert cfg.source_name == "urls"
+
+
+def test_ingest_source_auto_keeps_incomplete_sheets_validation() -> None:
+    with pytest.raises(SourceConfigError) as exc:
+        resolve_ingestion_config_from_mapping(
+            {
+                "INGEST_SOURCE": "auto",
+                "SHEETS_SERVICE_ACCOUNT": "sa.json",
+            }
+        )
+    assert exc.value.code == "INGEST_SRC_SHEETS_CONFIG_INVALID"
+
+
 def test_premium_options_require_premium_loader() -> None:
     with pytest.raises(IngestionConfigError) as exc:
         resolve_ingestion_config_from_mapping(

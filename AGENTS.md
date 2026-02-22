@@ -62,6 +62,9 @@
   mapping (`WEB_PAGE_IMPORT_MODE default -> web_scrape_api`, `proxy -> proxy`,
   `premium_scraper -> premium_scraper`); `local` and `debug-cloud` source names
   are treated as aliases.
+- Ingestion resolver skips legacy `SHEETS_*` completeness validation when
+  `INGEST_SOURCE` is explicitly set to a non-`sheets` source; strict sheets
+  validation is still enforced for explicit `sheets` and auto/legacy detection.
 - Legacy container/workflow integration now bridges source selection through the
   ingestion resolver/registry, and `kg_build` web-page scrape handling runs via
   ingestion loader execution before invoking profile callbacks.

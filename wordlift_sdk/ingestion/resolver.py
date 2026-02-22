@@ -230,7 +230,8 @@ def resolve_ingestion_config_from_getter(
 
     if ingest_source not in {None, "auto"}:
         source_name = ingest_source
-        _resolve_legacy_source_errors_only(get_value)
+        if source_name == "sheets":
+            _resolve_legacy_source_errors_only(get_value)
         legacy_source_name, _legacy_candidates = _resolve_legacy_source_if_present(
             get_value
         )

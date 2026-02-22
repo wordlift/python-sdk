@@ -225,6 +225,9 @@ Legacy compatibility is preserved:
 - Source keys: `URLS`, `SITEMAP_URL`, `SHEETS_*`
 - Loader key: `WEB_PAGE_IMPORT_MODE`
 - Mapping: `default -> web_scrape_api`, `proxy -> proxy`, `premium_scraper -> premium_scraper`
+- Resolver guard: when `INGEST_SOURCE` is explicitly non-`sheets`, legacy
+  `SHEETS_*` completeness checks are skipped. Strict `SHEETS_*` validation still
+  applies for `INGEST_SOURCE=sheets` and legacy/auto source detection.
 
 Quick start:
 

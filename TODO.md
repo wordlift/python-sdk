@@ -1,5 +1,6 @@
 # TODO
 
+- [x] 2026-02-22 Guard ingestion resolver legacy sheets validation so explicit non-`sheets` `INGEST_SOURCE` values bypass `SHEETS_*` completeness checks, with resolver regression tests.
 - [x] 2026-02-20 Switch `kg_build` postprocessor auth/context contract to `context.account_key` + `context.profile`, remove `context.settings` and `context.account.key`, enforce preprocessor fail-fast on missing API key, and redact key fields from debug payload artifacts.
 - [x] 2026-02-19 Implement SDK 2-axis ingestion pipeline (`INGEST_SOURCE`/`INGEST_LOADER`) with adapter registries, passthrough precedence, legacy compatibility mappings, structured warnings/events, and contract tests.
 - [x] 2026-02-19 Bridge legacy SDK container/workflow source+scrape resolution through ingestion runtime and bump package version to `5.0.0` with migration/changelog/docs updates.

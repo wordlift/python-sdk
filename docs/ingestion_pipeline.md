@@ -56,6 +56,9 @@ The orchestrator resolves adapters via registries and emits uniform events.
 1. If `INGEST_*` is set, it wins over legacy keys.
 2. If `INGEST_*` is unset, resolve from legacy keys.
 3. If both new+legacy disagree, use `INGEST_*` and emit `INGEST_CFG_CONFLICT` warning with parseable payload.
+4. Legacy `SHEETS_*` completeness checks run only when source resolution is
+   legacy/auto or explicit `INGEST_SOURCE=sheets`; explicit non-`sheets`
+   sources ignore partial `SHEETS_*` values.
 
 ### Auto Resolution
 

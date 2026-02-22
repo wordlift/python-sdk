@@ -44,6 +44,9 @@ Alias support:
 - `INGEST_*` overrides legacy keys.
 - If `INGEST_*` is unset, resolver uses legacy keys.
 - On disagreement, winner is `INGEST_*` and warning code `INGEST_CFG_CONFLICT` is emitted.
+- Legacy `SHEETS_*` completeness validation must not run for explicit non-`sheets`
+  `INGEST_SOURCE` values; it still runs for auto/legacy source resolution and
+  explicit `INGEST_SOURCE=sheets`.
 - Source auto priority: `URLS > SITEMAP_URL > SHEETS_* > local`.
 - Loader auto resolves to `web_scrape_api`.
 - Default loader is `web_scrape_api` when neither new nor legacy loader is set.
