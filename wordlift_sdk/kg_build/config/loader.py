@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import re
 from copy import deepcopy
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable
 from urllib.parse import urlparse
@@ -44,6 +44,9 @@ class ProfileDefinition:
     mappings_dir: str
     routes: tuple[ProfileMappingRoute, ...]
     settings: dict[str, Any]
+    template_overlay_dirs: tuple[str, ...] = field(default_factory=tuple)
+    mapping_overlay_dirs: tuple[str, ...] = field(default_factory=tuple)
+    origins: dict[str, str] = field(default_factory=dict)
 
     def resolve_mapping(self, url: str) -> str:
         for route in self.routes:
@@ -87,6 +90,7 @@ ENV_PARSERS: dict[str, Callable[[str], Any]] = {
     "web_page_import_timeout": lambda v: int(v.strip()),
     "google_search_console": lambda v: v.strip().lower() in {"1", "true", "yes", "on"},
     "service_account_file": str,
+    "postprocessor_runtime": str,
 }
 
 
@@ -195,9 +199,6 @@ def _profile_defaults(name: str, raw: dict[str, Any], has_base: bool) -> dict[st
 
     if name != "_base":
         result.setdefault("inherit", "_base" if has_base else None)
-        result.setdefault("mapping", "default.yarrrml")
-        result.setdefault("templates_dir", f"profiles/{name}/templates")
-        result.setdefault("mappings_dir", f"profiles/{name}/mappings")
     else:
         result.setdefault("mapping", "default.yarrrml")
 
@@ -205,6 +206,42 @@ def _profile_defaults(name: str, raw: dict[str, Any], has_base: bool) -> dict[st
     result.setdefault("strict_mapping", True)
 
     return result
+
+
+def _key_origin(
+    *,
+    name: str,
+    key: str,
+    selected_node: dict[str, Any],
+    base_node: dict[str, Any] | None,
+) -> str:
+    if key in selected_node:
+        return "selected"
+    if name != "_base" and base_node is not None and key in base_node:
+        return "_base"
+    return "default"
+
+
+def _build_overlay_dirs(
+    *,
+    name: str,
+    kind: str,
+    selected_node: dict[str, Any],
+    base_node: dict[str, Any] | None,
+) -> tuple[str, ...]:
+    if kind not in {"templates_dir", "mappings_dir"}:
+        raise ValueError(f"Unsupported overlay kind: {kind}")
+
+    default_selected = f"profiles/{name}/{kind.removesuffix('_dir')}"
+    if name == "_base":
+        return (str(selected_node.get(kind, default_selected)),)
+
+    default_base = f"profiles/_base/{kind.removesuffix('_dir')}"
+    base_dir = str((base_node or {}).get(kind, default_base))
+    selected_dir = str(selected_node.get(kind, default_selected))
+    if selected_dir == base_dir:
+        return (base_dir,)
+    return (base_dir, selected_dir)
 
 
 def load_profile_config(
@@ -257,7 +294,15 @@ def load_profile_config(
 
     resolved_profiles: dict[str, ProfileDefinition] = {}
     for name in raw_profiles:
+        selected_node = raw_profiles[name]
+        assert isinstance(selected_node, dict)
+        base_node = raw_profiles.get("_base")
+        if not isinstance(base_node, dict):
+            base_node = None
+
         merged = resolve_raw(name, [])
+        if "postprocessor_runtime" not in merged and "POSTPROCESSOR_RUNTIME" in merged:
+            merged["postprocessor_runtime"] = merged["POSTPROCESSOR_RUNTIME"]
         strict = bool(merged.get("strict_mapping", True))
         merged = _interpolate(merged, env_dict, strict, name)
         _apply_env_fallbacks(merged, env_dict)
@@ -273,6 +318,59 @@ def load_profile_config(
 
         settings = {key: merged[key] for key in ENV_PARSERS if key in merged}
         settings["api_url"] = merged.get("api_url", "https://api.wordlift.io")
+        origins = {
+            "mapping": _key_origin(
+                name=name,
+                key="mapping",
+                selected_node=selected_node,
+                base_node=base_node,
+            ),
+            "mappings_dir": _key_origin(
+                name=name,
+                key="mappings_dir",
+                selected_node=selected_node,
+                base_node=base_node,
+            ),
+            "routes": _key_origin(
+                name=name,
+                key="mappings",
+                selected_node=selected_node,
+                base_node=base_node,
+            ),
+            "postprocessor_runtime": (
+                "selected"
+                if (
+                    "postprocessor_runtime" in selected_node
+                    or "POSTPROCESSOR_RUNTIME" in selected_node
+                )
+                else (
+                    "_base"
+                    if name != "_base"
+                    and base_node is not None
+                    and (
+                        "postprocessor_runtime" in base_node
+                        or "POSTPROCESSOR_RUNTIME" in base_node
+                    )
+                    else (
+                        "env"
+                        if env_dict.get("POSTPROCESSOR_RUNTIME") is not None
+                        else "default"
+                    )
+                )
+            ),
+        }
+        template_overlay_dirs = _build_overlay_dirs(
+            name=name,
+            kind="templates_dir",
+            selected_node=selected_node,
+            base_node=base_node,
+        )
+        mapping_overlay_dirs = _build_overlay_dirs(
+            name=name,
+            kind="mappings_dir",
+            selected_node=selected_node,
+            base_node=base_node,
+        )
 
         resolved_profiles[name] = ProfileDefinition(
             name=name,
@@ -287,6 +385,9 @@ def load_profile_config(
             mappings_dir=str(merged.get("mappings_dir", f"profiles/{name}/mappings")),
             routes=routes,
             settings=settings,
+            template_overlay_dirs=template_overlay_dirs,
+            mapping_overlay_dirs=mapping_overlay_dirs,
+            origins=origins,
         )
 
     return ProfileConfig(profiles=resolved_profiles)

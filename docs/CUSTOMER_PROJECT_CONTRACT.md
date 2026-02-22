@@ -42,8 +42,8 @@ Minimum profile requirements:
 Execution order:
 
 1. Built-in core ID postprocessor
-2. entries from `profiles/_base/postprocessors.toml`
-3. entries from `profiles/<profile>/postprocessors.toml`
+2. entries from `profiles/<profile>/postprocessors.toml` when present
+3. otherwise entries from `profiles/_base/postprocessors.toml`
 
 Manifest contract:
 
@@ -55,13 +55,16 @@ Manifest contract:
 - each entry is a `[[postprocessors]]` table:
   - required: `class = "package.module:ClassName"`
   - optional overrides: `python`, `timeout_seconds`, `enabled`, `keep_temp_on_error`
-- list order is execution order.
+- list order inside the chosen manifest is execution order.
 - on failure, workflow fails fast.
 
 Execution contract:
 
 - `wordlift_sdk.kg_build` runs each class in a subprocess.
-- runtime mode is selected by `POSTPROCESSOR_RUNTIME`:
+- runtime mode resolves by profile inheritance:
+  - `profiles.<profile>.postprocessor_runtime`
+  - `profiles._base.postprocessor_runtime`
+  - SDK default `oneshot`
   - `oneshot` (default): one subprocess invocation per callback
   - `persistent`: one long-lived subprocess worker per class reused across callbacks
 - class method contract:

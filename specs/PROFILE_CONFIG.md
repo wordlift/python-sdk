@@ -66,9 +66,9 @@ mapping = "video.yarrrml"
 If omitted:
 
 - `inherit`: defaults to `_base` (except profile `_base` itself).
-- `templates_dir`: defaults to `profiles/<profile_name>/templates`.
-- `mappings_dir`: defaults to `profiles/<profile_name>/mappings`.
-- `mapping`: defaults to `default.yarrrml`.
+- `mapping`: resolves `selected -> _base -> "default.yarrrml"`.
+- `templates_dir`: resolves `selected -> _base -> profiles/<profile_name>/templates`.
+- `mappings_dir`: resolves `selected -> _base -> profiles/<profile_name>/mappings`.
 - `mapping_mode`: defaults to `xpath` and currently only `xpath` is valid.
 
 Runtime key fallback:
@@ -100,6 +100,7 @@ Env-fallback runtime keys currently supported:
 - `web_page_import_timeout`
 - `google_search_console`
 - `service_account_file`
+- `postprocessor_runtime`
 
 `kg_build` uses `WebPageScrapeApi` for page retrieval. The fetch-option keys keep the
 `web_page_import_*` naming for backward configuration compatibility.
@@ -116,6 +117,12 @@ Default behavior:
   - `pattern = ".*"`, `mapping = "default.yarrrml"`
 
 Mapping paths are resolved relative to `mappings_dir` unless absolute.
+
+Mapping file discovery also applies `_base` + selected overlay by relative path:
+
+- lookup order for relative mapping files: `profiles/<profile>/mappings` first, then `profiles/_base/mappings`
+- same relative path in selected profile overrides `_base`
+- route evaluation remains ordered and deterministic; first matching regex wins
 
 ## Inheritance
 
@@ -142,18 +149,22 @@ Postprocessor loading is manifest-based.
 
 Expected behavior:
 
-1. Load base postprocessors from `profiles/_base/postprocessors.toml` first.
-2. Load profile postprocessors from `profiles/<profile>/postprocessors.toml` second.
-3. Apply resolved processors to RDFLib graph after mapping materialization.
-4. Graph postprocessing is part of runtime flow; no config toggle is required to disable it.
-5. Manifest contract:
+1. If `profiles/<profile>/postprocessors.toml` exists, use it exclusively.
+2. Else if `profiles/_base/postprocessors.toml` exists, use `_base`.
+3. Else load no postprocessors.
+4. Apply resolved processors to RDFLib graph after mapping materialization.
+5. Graph postprocessing is part of runtime flow; no config toggle is required to disable it.
+6. Manifest contract:
    - top-level optional defaults: `python`, `timeout_seconds`, `enabled`, `keep_temp_on_error`
    - entries are `[[postprocessors]]` tables
    - required entry field: `class = "package.module:ClassName"`
    - optional per-entry overrides: `python`, `timeout_seconds`, `enabled`, `keep_temp_on_error`
-6. Runtime execution contract:
+7. Runtime execution contract:
    - each entry runs in subprocess using configured interpreter (`python`)
-   - runtime mode is selected by `POSTPROCESSOR_RUNTIME` from profile settings or process environment:
+   - runtime mode resolves as:
+     - `profiles.<selected>.postprocessor_runtime`
+     - `profiles._base.postprocessor_runtime`
+     - SDK default `oneshot`
      - `oneshot` (default): start `postprocessor_runner` on each callback invocation
      - `persistent`: keep one `postprocessor_worker` process per class for protocol lifetime
    - postprocessor method contract:
@@ -203,7 +214,7 @@ The SDK does not prescribe rule-table names, columns, or matching semantics.
 
 ## RDF Templates
 
-Profile templates live in `templates_dir` and are rendered/parsed as RDF using any RDFLib-supported format.
+Profile templates are resolved using `_base` + selected overlay and rendered/parsed as RDF using any RDFLib-supported format.
 
 Current convention:
 
@@ -212,13 +223,15 @@ Current convention:
 - Jinja templates (`*.j2`), Liquid templates (`*.liquid`), and static RDF files are supported
 - RDF format is inferred from file extension (or extension before `.j2` / `.liquid`) and parsed with RDFLib
 - runtime context includes `account` and `dataset_uri` (from `/me`), so templates should use `{{ dataset_uri }}` for dataset-bound IRIs
+- source overlay is path-based: same relative template path in selected profile overrides `_base`
 
 Sidecar exports:
 
-- profiles define exports in `profiles/<name>/exports.toml`, `profiles/<name>/exports.toml.j2`, or `profiles/<name>/exports.toml.liquid`
+- profiles may define exports in `profiles/_base/templates/exports.toml(.j2|.liquid)` and/or `profiles/<name>/templates/exports.toml(.j2|.liquid)`
 - final exports are injected into mapping template context as `exports`
 - exports are also available in entity template context (`templates_dir`) to keep shared identifiers in one source
 - mapping templates can reference values like `{{ exports.organization_iri }}`
+- merge semantics are key-based: selected profile keys override `_base` keys
 
 ## Non-Goals
 

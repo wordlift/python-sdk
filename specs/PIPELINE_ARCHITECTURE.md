@@ -28,13 +28,13 @@ Sequence:
      - `WebPageScrapeUrlHandler` always (`kg_build` path)
      - optional `SearchConsoleUrlHandler` when `GOOGLE_SEARCH_CONSOLE=true`
 4. For each callback:
-   - patch static entity templates once from `profiles/<name>/templates/*`
-   - resolve URL-routed mapping from `profiles/<name>/mappings/*`
+   - patch static entity templates once from `_base` + selected template overlay
+   - resolve URL-routed mapping from `_base` + selected mapping overlay (selected path wins)
    - render mapping template with shared `exports`
    - materialize XHTML/XPath mapping
    - optionally reconcile root IRI when URL source provides an existing ID
    - set `seovoc:source` to `"web-page-import"` in host-generated graph output
-   - run postprocessors declared in `profiles/_base/postprocessors.toml` + `profiles/<name>/postprocessors.toml`
+   - run postprocessors from selected manifest precedence (`profiles/<name>/postprocessors.toml`, else `_base`, else none)
    - patch generated graph to WordLift
 
 Debug output convention:
@@ -68,15 +68,17 @@ Example profile convention for postprocessors (manifest classes):
 
 Loading order:
 
-1. `profiles/_base/postprocessors.toml` (shared defaults)
-2. `profiles/<name>/postprocessors.toml` (profile additions/overrides by explicit list)
-
-Entries are executed in list order (base first, then profile).
+1. `profiles/<name>/postprocessors.toml` when present (exclusive)
+2. fallback: `profiles/_base/postprocessors.toml`
+3. fallback: no postprocessors
 
 Runtime-isolated execution:
 
 - each class runs in subprocess using configured interpreter (default `./.venv/bin/python`)
-- runtime mode is selected by `POSTPROCESSOR_RUNTIME` (`oneshot` default, `persistent` optional)
+- runtime mode resolves from profile settings with inheritance:
+  - `profiles.<name>.postprocessor_runtime`
+  - `profiles._base.postprocessor_runtime`
+  - SDK default `oneshot`
 - `oneshot`: launch runner per callback
 - `persistent`: launch one worker process per class and reuse it across callbacks
 - postprocessor contract:
@@ -90,7 +92,7 @@ Runtime-isolated execution:
 Current implementation status:
 
 - built-in canonical IDs: implemented in `wordlift_sdk.kg_build.id_generator` + `wordlift_sdk.kg_build.id_policy` + `wordlift_sdk.kg_build.id_postprocessor` with policy-driven root scope (`page_root_types` vs `entity_root_types`), deterministic multi-type precedence, URL-preserving `schema:url` handling, and complete offer/priceSpecification rewrite traversal.
-- manifest-based postprocessor execution (base + profile manifests, subprocess isolation, N-Quads exchange): implemented in `wordlift_sdk.kg_build.postprocessors`.
+- manifest-based postprocessor execution (selected-manifest precedence, subprocess isolation, N-Quads exchange): implemented in `wordlift_sdk.kg_build.postprocessors`.
 - profile-specific processors are external to the SDK and loaded by class path from manifests.
 
 ## Cloud Mapping Runtime Status
@@ -107,7 +109,7 @@ Implemented:
 Pending migration work:
 
 - validate XPath selector robustness across country/site variants and document fallback policy
-- static profile entities are loaded from per-entity Jinja Turtle templates (`profiles/<name>/templates/*.ttl.j2`) using account-aware runtime reification (`dataset_uri` from `/me`)
+- static profile entities are loaded from per-entity Jinja Turtle templates with `_base` + selected path override semantics using account-aware runtime reification (`dataset_uri` from `/me`)
 - finalize extractor role as enrichment/postprocessing contract only
 - validate schema URI normalization and `@context` handling against parity requirements
 
@@ -123,9 +125,7 @@ Primary file:
   - inheritance via `_base`
   - `${ENV_VAR}` interpolation for keys/secrets
   - optional URL-based mapping routing with implicit fallback to `default.yarrrml`
-  - manifest-based postprocessors loaded from
-    `profiles/_base/postprocessors.toml` and
-    `profiles/<profile>/postprocessors.toml`
+  - manifest-based postprocessors loaded by selected-manifest precedence
 
 ## Current Non-Functional Constraints
 

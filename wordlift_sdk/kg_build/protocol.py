@@ -32,9 +32,9 @@ SEOVOC_SOURCE = URIRef("https://w3id.org/seovoc/source")
 
 
 def _resolve_postprocessor_runtime(settings: dict[str, Any]) -> str:
-    value = settings.get("POSTPROCESSOR_RUNTIME")
+    value = settings.get("postprocessor_runtime")
     if value is None:
-        value = os.getenv("POSTPROCESSOR_RUNTIME")
+        value = settings.get("POSTPROCESSOR_RUNTIME")
     return str(value or "oneshot")
 
 
@@ -56,10 +56,16 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         self.profile_dir = self.root_dir / "profiles" / self.profile.name
         self.templates_dir = self._resolve_path(self.profile.templates_dir)
         self.mappings_dir = self._resolve_path(self.profile.mappings_dir)
+        self._template_dirs = self._resolve_overlay_paths(
+            self.profile.template_overlay_dirs or (self.profile.templates_dir,)
+        )
+        self._mapping_dirs = self._resolve_overlay_paths(
+            self.profile.mapping_overlay_dirs or (self.profile.mappings_dir,)
+        )
 
         self.rml_service = RmlMappingService(context)
         self.patcher = EntityPatcher(context)
-        self.template_reifier = JinjaRdfTemplateReifier(self.templates_dir)
+        self.template_reifier = JinjaRdfTemplateReifier(self._template_dirs)
         self.text_renderer = TemplateTextRenderer()
 
         self._template_graph: Graph | None = None
@@ -70,10 +76,25 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         self._postprocessor_runtime = _resolve_postprocessor_runtime(
             dict(self.profile.settings)
         )
+        logger.info(
+            "Resolved postprocessor runtime for profile '%s': %s (origin=%s)",
+            self.profile.name,
+            self._postprocessor_runtime,
+            self.profile.origins.get("postprocessor_runtime", "default"),
+        )
         self._postprocessors = load_postprocessors_for_profile(
             root_dir=self.root_dir,
             profile_name=self.profile.name,
             runtime=self._postprocessor_runtime,
+        )
+        logger.debug(
+            "Resolved mappings for profile '%s': effective_dir=%s (origin=%s), routes=%s (origin=%s), overlay_dirs=%s",
+            self.profile.name,
+            self.mappings_dir,
+            self.profile.origins.get("mappings_dir", "default"),
+            len(self.profile.routes),
+            self.profile.origins.get("routes", "default"),
+            [str(p) for p in self._mapping_dirs],
         )
 
     async def callback(
@@ -135,12 +156,22 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             return path
         return self.root_dir / path
 
+    def _resolve_overlay_paths(self, raw_paths: tuple[str, ...]) -> tuple[Path, ...]:
+        return tuple(self._resolve_path(p) for p in raw_paths)
+
     def _resolve_mapping_path(self, url: str) -> Path:
         mapping = self.profile.resolve_mapping(url)
         path = Path(mapping)
         if path.is_absolute():
             return path
-        return self.mappings_dir / path
+        for mapping_dir in reversed(self._mapping_dirs):
+            candidate = mapping_dir / path
+            if candidate.exists():
+                return candidate
+            templated = self.text_renderer.resolve_mapping_template(candidate)
+            if templated.exists():
+                return templated
+        return self._mapping_dirs[-1] / path
 
     async def _patch_static_templates_once(self) -> None:
         if self._static_templates_patched:
@@ -171,16 +202,33 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             "account": self.context.account,
             "dataset_uri": str(dataset_uri).rstrip("/"),
         }
-        exports = self.text_renderer.load_exports(self.profile_dir, base_context)
+        exports, exports_summary = self.text_renderer.load_exports_with_summary(
+            self._template_dirs, base_context
+        )
         context = {**base_context, "exports": exports}
 
         self._template_exports = exports
+        template_paths, template_summary = (
+            self.template_reifier.resolve_template_paths()
+        )
         self._template_graph = (
-            self.template_reifier.reify(context)
-            if self.template_reifier.has_templates()
-            else Graph()
+            self.template_reifier.reify(context) if template_paths else Graph()
         )
 
+        logger.info(
+            "Template resolution for profile '%s': source_files=%s effective_files=%s overrides=%s",
+            self.profile.name,
+            template_summary["source_files"],
+            template_summary["effective_files"],
+            template_summary["overrides"],
+        )
+        logger.info(
+            "Exports merge for profile '%s': source_keys=%s effective_keys=%s overrides=%s",
+            self.profile.name,
+            exports_summary["source_keys"],
+            exports_summary["effective_keys"],
+            exports_summary["overrides"],
+        )
         logger.info(
             "Loaded %s static template triples and %s exports for profile '%s'",
             len(self._template_graph),

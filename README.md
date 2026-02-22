@@ -193,13 +193,16 @@ The SDK now includes a profile-driven cloud mapping module under `wordlift_sdk.k
   - `WebPageScrapeUrlHandler` is always enabled for `kg_build`
   - `SearchConsoleUrlHandler` is enabled when `GOOGLE_SEARCH_CONSOLE=True` (default)
 - Legacy `ApplicationContainer` workflow continues to use `WebPageImportUrlHandler`.
-- Postprocessor manifests are loaded from:
-1. `profiles/_base/postprocessors.toml`
-2. `profiles/<profile>/postprocessors.toml`
+- Postprocessor manifest precedence:
+1. `profiles/<profile>/postprocessors.toml` (exclusive when present)
+2. fallback `profiles/_base/postprocessors.toml`
+3. otherwise no postprocessors
 - Execution is manifest-based only (hard cutover): no legacy `.py` or `*.command.toml` discovery.
 - Postprocessor runtime mode:
-  - `POSTPROCESSOR_RUNTIME=oneshot` (default): start one subprocess per callback call.
-  - `POSTPROCESSOR_RUNTIME=persistent`: keep one long-lived subprocess per configured class and reuse it across callbacks.
+  - `profiles.<profile>.postprocessor_runtime` overrides `_base`.
+  - `_base.postprocessor_runtime` is used when profile value is missing.
+  - SDK default is `oneshot`.
+  - `persistent` keeps one long-lived subprocess per configured class and reuses it across callbacks.
 - Postprocessor authoring contract:
   - supported method: `process_graph(self, graph, context)`
   - supported return values: `Graph`, `None`, or an awaitable resolving to `Graph | None`

@@ -495,9 +495,15 @@ def load_postprocessors_for_profile(
     base_manifest = root_dir / "profiles" / "_base" / "postprocessors.toml"
     profile_manifest = root_dir / "profiles" / profile_name / "postprocessors.toml"
 
-    specs: list[PostprocessorSpec] = []
-    specs.extend(_load_manifest_specs(base_manifest))
-    specs.extend(_load_manifest_specs(profile_manifest))
+    selected_manifest: Path | None
+    if profile_manifest.exists():
+        selected_manifest = profile_manifest
+    elif base_manifest.exists():
+        selected_manifest = base_manifest
+    else:
+        selected_manifest = None
+
+    specs = _load_manifest_specs(selected_manifest) if selected_manifest else []
 
     resolved_runtime = _normalize_runtime(runtime)
     loaded: list[LoadedPostprocessor] = []
@@ -516,12 +522,18 @@ def load_postprocessors_for_profile(
         )
 
     logger.info(
-        "Loaded %s postprocessors for profile '%s' from manifests: %s, %s (runtime=%s)",
+        "Loaded %s postprocessors for profile '%s' from manifest: %s (runtime=%s)",
         len(loaded),
         profile_name,
-        base_manifest,
-        profile_manifest,
+        selected_manifest or "none",
         resolved_runtime,
+    )
+    logger.debug(
+        "Postprocessor manifest precedence for profile '%s': selected=%s base=%s chosen=%s",
+        profile_name,
+        profile_manifest,
+        base_manifest,
+        selected_manifest or "none",
     )
     return loaded
 

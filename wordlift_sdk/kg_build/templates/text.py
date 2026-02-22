@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import tomllib
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any, Mapping, Sequence
 
 from jinja2 import Environment, StrictUndefined
 from liquid import Environment as LiquidEnvironment
@@ -26,7 +26,14 @@ class TemplateTextRenderer:
             return self._liquid.from_string(source).render(**context)
         return source
 
-    def load_exports(
+    def _coerce_directories(
+        self, directories: Path | Sequence[Path]
+    ) -> tuple[Path, ...]:
+        if isinstance(directories, Path):
+            return (directories,)
+        return tuple(directories)
+
+    def _load_exports_for_directory(
         self, directory: Path, context: Mapping[str, Any]
     ) -> dict[str, Any]:
         candidates = (
@@ -43,6 +50,31 @@ class TemplateTextRenderer:
                 raise ValueError(f"Invalid exports manifest: {path}")
             return data
         return {}
+
+    def load_exports(
+        self, directories: Path | Sequence[Path], context: Mapping[str, Any]
+    ) -> dict[str, Any]:
+        exports, _summary = self.load_exports_with_summary(directories, context)
+        return exports
+
+    def load_exports_with_summary(
+        self, directories: Path | Sequence[Path], context: Mapping[str, Any]
+    ) -> tuple[dict[str, Any], dict[str, int]]:
+        merged: dict[str, Any] = {}
+        overrides = 0
+        source_keys = 0
+        for directory in self._coerce_directories(directories):
+            current = self._load_exports_for_directory(directory, context)
+            source_keys += len(current)
+            for key, value in current.items():
+                if key in merged:
+                    overrides += 1
+                merged[key] = value
+        return merged, {
+            "source_keys": source_keys,
+            "effective_keys": len(merged),
+            "overrides": overrides,
+        }
 
     @staticmethod
     def resolve_mapping_template(path: Path) -> Path:

@@ -1,5 +1,20 @@
 # Changelog
 
+## 5.2.0 - 2026-02-22
+
+### Changed
+
+- Standardized `kg_build` profile inheritance/override semantics across runtime settings and profile assets:
+  - `postprocessor_runtime`: `profiles.<selected>` overrides `_base`, then SDK default.
+  - `postprocessors.toml`: selected profile manifest is exclusive when present, else `_base`, else none.
+  - templates and mappings: `_base` + selected path overlays with selected-file precedence by relative path.
+  - exports: `_base` + selected key merge with selected key override.
+- Added deterministic profile-resolution observability logs for effective runtime, selected postprocessor manifest, template/export merge summaries, and effective mapping configuration.
+
+### Added
+
+- Regression coverage for runtime inheritance, postprocessor manifest precedence, template/file overrides, exports key overrides, mappings inheritance/override behavior, and profile-specific backward compatibility.
+
 ## 5.1.2 - 2026-02-22
 
 ### Fixed

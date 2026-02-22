@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any, Mapping, Sequence
 
 from jinja2 import Environment, StrictUndefined
 from liquid import Environment as LiquidEnvironment
@@ -13,8 +13,11 @@ from rdflib.util import guess_format
 class JinjaRdfTemplateReifier:
     """Render RDF templates (`*.j2`, `*.liquid`, or static RDF files) into one graph."""
 
-    def __init__(self, template_dir: Path) -> None:
-        self._template_dir = template_dir
+    def __init__(self, template_dirs: Path | Sequence[Path]) -> None:
+        if isinstance(template_dirs, Path):
+            self._template_dirs = (template_dirs,)
+        else:
+            self._template_dirs = tuple(template_dirs)
         self._jinja = Environment(
             autoescape=False,
             undefined=StrictUndefined,
@@ -23,12 +26,30 @@ class JinjaRdfTemplateReifier:
         self._liquid = LiquidEnvironment(undefined=LiquidStrictUndefined)
 
     def has_templates(self) -> bool:
-        return self._template_dir.exists() and any(self._iter_template_paths())
+        paths, _summary = self.resolve_template_paths()
+        return len(paths) > 0
 
-    def _iter_template_paths(self) -> list[Path]:
-        if not self._template_dir.exists():
-            return []
-        return sorted(path for path in self._template_dir.iterdir() if path.is_file())
+    def resolve_template_paths(self) -> tuple[list[Path], dict[str, int]]:
+        resolved: dict[Path, Path] = {}
+        overrides = 0
+        source_files = 0
+        for template_dir in self._template_dirs:
+            if not template_dir.exists():
+                continue
+            files = sorted(path for path in template_dir.rglob("*") if path.is_file())
+            source_files += len(files)
+            for path in files:
+                rel = path.relative_to(template_dir)
+                if rel in resolved:
+                    overrides += 1
+                resolved[rel] = path
+
+        effective_paths = [resolved[k] for k in sorted(resolved, key=lambda p: str(p))]
+        return effective_paths, {
+            "source_files": source_files,
+            "effective_files": len(effective_paths),
+            "overrides": overrides,
+        }
 
     @staticmethod
     def _infer_rdf_format(path: Path) -> str | None:
@@ -40,7 +61,8 @@ class JinjaRdfTemplateReifier:
 
     def reify(self, context: Mapping[str, Any]) -> Graph:
         graph = Graph()
-        if not self._template_dir.exists():
+        template_paths, _summary = self.resolve_template_paths()
+        if not template_paths:
             return graph
 
         resolved_context = dict(context)
@@ -56,7 +78,7 @@ class JinjaRdfTemplateReifier:
 
         resolved_context["dataset_uri"] = str(dataset_uri).rstrip("/")
 
-        for template_path in self._iter_template_paths():
+        for template_path in template_paths:
             rdf_format = self._infer_rdf_format(template_path)
             if rdf_format is None:
                 continue

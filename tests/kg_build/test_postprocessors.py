@@ -130,21 +130,13 @@ def test_build_context_accepts_missing_account_key() -> None:
     assert context.profile["settings"]["api_url"] == "https://profile.example.com"
 
 
-def test_manifest_merge_order_and_flags(tmp_path: Path) -> None:
+def test_manifest_precedence_prefers_selected_profile_file(tmp_path: Path) -> None:
     root = tmp_path
     _write(
         root / "profiles" / "_base" / "postprocessors.toml",
         """
-        python = "/base/python"
-        timeout_seconds = 11
-        keep_temp_on_error = false
-
         [[postprocessors]]
         class = "test_pp:BaseOne"
-
-        [[postprocessors]]
-        class = "test_pp:BaseDisabled"
-        enabled = false
         """,
     )
     _write(
@@ -164,26 +156,44 @@ def test_manifest_merge_order_and_flags(tmp_path: Path) -> None:
 
     loaded = load_postprocessors_for_profile(root_dir=root, profile_name="alpha")
     assert [item.name for item in loaded] == [
-        "test_pp:BaseOne",
         "test_pp:ProfileOne",
         "test_pp:ProfileTwo",
     ]
 
     first = loaded[0].handler
     second = loaded[1].handler
-    third = loaded[2].handler
-    assert isinstance(first, SubprocessPostprocessor)
     assert isinstance(second, SubprocessPostprocessor)
-    assert isinstance(third, SubprocessPostprocessor)
+    assert isinstance(first, SubprocessPostprocessor)
+    assert first.spec.python == "/profile/python"
+    assert first.spec.timeout_seconds == 17
+    assert first.spec.keep_temp_on_error is True
+    assert second.spec.python == "./.venv/bin/python"
+    assert second.spec.timeout_seconds == 17
+    assert second.spec.keep_temp_on_error is True
+
+
+def test_manifest_precedence_uses_base_when_selected_missing(tmp_path: Path) -> None:
+    root = tmp_path
+    _write(
+        root / "profiles" / "_base" / "postprocessors.toml",
+        """
+        python = "/base/python"
+        timeout_seconds = 11
+        keep_temp_on_error = false
+
+        [[postprocessors]]
+        class = "test_pp:BaseOne"
+        """,
+    )
+
+    loaded = load_postprocessors_for_profile(root_dir=root, profile_name="alpha")
+    assert [item.name for item in loaded] == ["test_pp:BaseOne"]
+
+    first = loaded[0].handler
+    assert isinstance(first, SubprocessPostprocessor)
     assert first.spec.python == "/base/python"
     assert first.spec.timeout_seconds == 11
     assert first.spec.keep_temp_on_error is False
-    assert second.spec.python == "/profile/python"
-    assert second.spec.timeout_seconds == 17
-    assert second.spec.keep_temp_on_error is True
-    assert third.spec.python == "./.venv/bin/python"
-    assert third.spec.timeout_seconds == 17
-    assert third.spec.keep_temp_on_error is True
 
 
 def test_manifest_runtime_selection(tmp_path: Path) -> None:
@@ -208,10 +218,9 @@ def test_manifest_runtime_selection(tmp_path: Path) -> None:
         profile_name="alpha",
         runtime="persistent",
     )
-    assert len(loaded) == 2
+    assert len(loaded) == 1
     assert isinstance(loaded[0].handler, SubprocessPostprocessor)
     assert loaded[0].handler.runtime == "persistent"
-    assert loaded[1].handler.runtime == "persistent"
 
 
 def test_subprocess_execution_and_nquads_exchange(tmp_path: Path) -> None:

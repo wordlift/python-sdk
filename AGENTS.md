@@ -47,8 +47,12 @@
 - `wordlift_sdk.kg_build` postprocessor subprocesses do not inject package paths
   into `PYTHONPATH`; configured interpreters must resolve their own dependencies.
 - `wordlift_sdk.kg_build` postprocessor runtime is configurable via
-  `POSTPROCESSOR_RUNTIME`: `oneshot` (default, per-callback runner) or
-  `persistent` (one long-lived worker per class across callbacks).
+  `postprocessor_runtime` with deterministic inheritance
+  (`profiles.<name>` -> `profiles._base` -> `oneshot` default); `persistent`
+  keeps one long-lived worker per class across callbacks.
+- `wordlift_sdk.kg_build` postprocessor manifests use file-level precedence:
+  profile manifest (`profiles/<name>/postprocessors.toml`) is exclusive when
+  present, otherwise `_base` is used.
 - `wordlift_sdk.kg_build` postprocessor context keeps `account` as the clean
   API `/me` object, exposes auth as `context.account_key`, and provides resolved
   profile config via `context.profile`; API base URL must be read from
