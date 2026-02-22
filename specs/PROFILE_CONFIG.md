@@ -227,11 +227,13 @@ Current convention:
 
 Sidecar exports:
 
-- profiles may define exports in `profiles/_base/templates/exports.toml(.j2|.liquid)` and/or `profiles/<name>/templates/exports.toml(.j2|.liquid)`
+- profiles may define exports in either profile root or templates directories:
+- `profiles/_base/exports.toml(.j2|.liquid)` and/or `profiles/<name>/exports.toml(.j2|.liquid)`
+- `profiles/_base/templates/exports.toml(.j2|.liquid)` and/or `profiles/<name>/templates/exports.toml(.j2|.liquid)` (backward compatible)
 - final exports are injected into mapping template context as `exports`
 - exports are also available in entity template context (`templates_dir`) to keep shared identifiers in one source
 - mapping templates can reference values like `{{ exports.organization_iri }}`
-- merge semantics are key-based: selected profile keys override `_base` keys
+- merge semantics are key-based and deterministic: `_base` loads first, selected profile loads second, selected keys override `_base` keys
 
 ## Non-Goals
 

@@ -8,6 +8,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
 
+from jinja2 import UndefinedError
 from rdflib import Graph, Literal, RDF, URIRef
 from wordlift_client.models.web_page_scrape_response import WebPageScrapeResponse
 from wordlift_sdk.protocol import Context
@@ -29,6 +30,10 @@ from .templates import JinjaRdfTemplateReifier, TemplateTextRenderer
 
 logger = logging.getLogger(__name__)
 SEOVOC_SOURCE = URIRef("https://w3id.org/seovoc/source")
+
+
+def _path_contains_part(path: str, part: str) -> bool:
+    return part in Path(path).parts
 
 
 def _resolve_postprocessor_runtime(settings: dict[str, Any]) -> str:
@@ -205,15 +210,33 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         exports, exports_summary = self.text_renderer.load_exports_with_summary(
             self._template_dirs, base_context
         )
+        loaded_files = exports_summary.get("loaded_files", [])
+        base_exports_loaded = any(
+            isinstance(path, str) and _path_contains_part(path, "_base")
+            for path in loaded_files
+        )
         context = {**base_context, "exports": exports}
 
         self._template_exports = exports
         template_paths, template_summary = (
             self.template_reifier.resolve_template_paths()
         )
-        self._template_graph = (
-            self.template_reifier.reify(context) if template_paths else Graph()
-        )
+        try:
+            self._template_graph = (
+                self.template_reifier.reify(context) if template_paths else Graph()
+            )
+        except Exception as exc:
+            if isinstance(exc, (UndefinedError, KeyError, AttributeError)):
+                searched_paths = exports_summary.get("searched_paths", [])
+                raise RuntimeError(
+                    "Template rendering failed due to missing template context "
+                    f"for profile '{self.profile.name}'. "
+                    f"Original error: {exc}. "
+                    f"Searched exports files: {searched_paths}. "
+                    f"Loaded exports files: {loaded_files}. "
+                    f"_base exports loaded: {base_exports_loaded}."
+                ) from exc
+            raise
 
         logger.info(
             "Template resolution for profile '%s': source_files=%s effective_files=%s overrides=%s",
@@ -228,6 +251,13 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             exports_summary["source_keys"],
             exports_summary["effective_keys"],
             exports_summary["overrides"],
+        )
+        logger.debug(
+            "Exports lookup for profile '%s': searched=%s loaded=%s base_loaded=%s",
+            self.profile.name,
+            exports_summary.get("searched_paths", []),
+            loaded_files,
+            base_exports_loaded,
         )
         logger.info(
             "Loaded %s static template triples and %s exports for profile '%s'",

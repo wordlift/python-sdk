@@ -29,6 +29,13 @@ profiles/
     postprocessors.toml   # optional
 ```
 
+Optional exports manifests for template/mapping rendering can be declared in either:
+
+- `profiles/_base/exports.toml(.j2|.liquid)` and `profiles/<profile>/exports.toml(.j2|.liquid)`
+- `profiles/_base/templates/exports.toml(.j2|.liquid)` and `profiles/<profile>/templates/exports.toml(.j2|.liquid)` (backward compatible)
+
+Merge order is deterministic: `_base` first, selected profile second, selected keys override `_base`.
+
 Minimum profile requirements:
 
 - `api_key` (direct or env interpolation)

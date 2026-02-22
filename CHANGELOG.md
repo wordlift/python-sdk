@@ -1,5 +1,16 @@
 # Changelog
 
+## 5.2.1 - 2026-02-22
+
+### Fixed
+
+- `kg_build` exports inheritance now propagates `_base` manifests for graph-sync static template rendering when exports are defined at profile root (`profiles/_base/exports.toml(.j2|.liquid)`) with deterministic `_base` -> selected override precedence.
+- Missing export-key template failures now include profile-aware lookup diagnostics (active profile, searched exports paths, loaded exports files, and `_base` load status).
+
+### Added
+
+- Regression coverage for `_base`-only exports inheritance, empty selected exports fallback, selected-key override precedence, and missing-export diagnostic failures.
+
 ## 5.2.0 - 2026-02-22
 
 ### Changed

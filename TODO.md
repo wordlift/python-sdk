@@ -1,6 +1,7 @@
 # TODO
 
 - [x] 2026-02-22 Implement consistent `_base` inheritance/override semantics across `kg_build` profile assets/settings (`postprocessor_runtime`, postprocessor manifest precedence, template/export/mapping overlays) with deterministic logging and regression coverage.
+- [x] 2026-02-22 Fix `kg_build` exports inheritance for graph-sync static template rendering by propagating `_base` profile-root exports, enforcing deterministic `_base` -> selected override precedence, and surfacing export lookup diagnostics on missing keys.
 - [x] 2026-02-22 Guard ingestion resolver legacy sheets validation so explicit non-`sheets` `INGEST_SOURCE` values bypass `SHEETS_*` completeness checks, with resolver regression tests.
 - [x] 2026-02-20 Switch `kg_build` postprocessor auth/context contract to `context.account_key` + `context.profile`, remove `context.settings` and `context.account.key`, enforce preprocessor fail-fast on missing API key, and redact key fields from debug payload artifacts.
 - [x] 2026-02-19 Implement SDK 2-axis ingestion pipeline (`INGEST_SOURCE`/`INGEST_LOADER`) with adapter registries, passthrough precedence, legacy compatibility mappings, structured warnings/events, and contract tests.

@@ -203,6 +203,10 @@ The SDK now includes a profile-driven cloud mapping module under `wordlift_sdk.k
   - `_base.postprocessor_runtime` is used when profile value is missing.
   - SDK default is `oneshot`.
   - `persistent` keeps one long-lived subprocess per configured class and reuses it across callbacks.
+- Template exports inheritance:
+  - supported files: `exports.toml`, `exports.toml.j2`, `exports.toml.liquid`
+  - lookup locations: profile root (`profiles/_base`, `profiles/<profile>`) and templates directories (backward compatible)
+  - precedence: `_base` first, selected profile second; selected keys override `_base`
 - Postprocessor authoring contract:
   - supported method: `process_graph(self, graph, context)`
   - supported return values: `Graph`, `None`, or an awaitable resolving to `Graph | None`

@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from types import SimpleNamespace
 
+import pytest
 from rdflib import Literal, URIRef
 
 from wordlift_sdk.kg_build.config.loader import load_profile_config
@@ -199,3 +200,180 @@ def test_profile_specific_only_projects_keep_existing_behavior(tmp_path: Path) -
     assert profile.mapping == "custom.yarrrml"
     assert resolved == tmp_path / "profiles" / "alpha" / "mappings" / "custom.yarrrml"
     assert protocol._template_exports == {"only": "alpha"}
+
+
+def test_base_root_exports_available_to_selected_templates(tmp_path: Path) -> None:
+    _write(
+        tmp_path / "worai.toml",
+        """
+        [profiles._base]
+
+        [profiles.alpha]
+        """,
+    )
+    _write(
+        tmp_path / "profiles" / "_base" / "exports.toml.j2",
+        """
+        organization_iri = "{{ dataset_uri }}/organizations/base-org"
+        """,
+    )
+    _write(
+        tmp_path / "profiles" / "alpha" / "templates" / "entity.ttl.j2",
+        """
+        @prefix ex: <https://example.com/> .
+        ex:s ex:p <{{ exports.organization_iri }}> .
+        """,
+    )
+
+    profile = load_profile_config(tmp_path / "worai.toml").get("alpha")
+    protocol = ProfileImportProtocol(
+        context=_context(),
+        profile=profile,
+        root_dir=tmp_path,
+    )
+    protocol._ensure_templates_loaded()
+
+    assert protocol._template_exports is not None
+    assert protocol._template_exports["organization_iri"].endswith(
+        "/organizations/base-org"
+    )
+    assert protocol._template_graph is not None
+    assert (
+        URIRef("https://example.com/s"),
+        URIRef("https://example.com/p"),
+        URIRef("https://data.example.com/dataset/organizations/base-org"),
+    ) in protocol._template_graph
+
+
+def test_base_templates_with_empty_selected_exports_still_use_base(
+    tmp_path: Path,
+) -> None:
+    _write(
+        tmp_path / "worai.toml",
+        """
+        [profiles._base]
+
+        [profiles.alpha]
+        """,
+    )
+    _write(
+        tmp_path / "profiles" / "_base" / "exports.toml",
+        """
+        organization_iri = "https://example.com/base-org"
+        """,
+    )
+    _write(
+        tmp_path / "profiles" / "_base" / "templates" / "entity.ttl.j2",
+        """
+        @prefix ex: <https://example.com/> .
+        ex:s ex:p <{{ exports.organization_iri }}> .
+        """,
+    )
+    _write(
+        tmp_path / "profiles" / "alpha" / "exports.toml",
+        """
+        """,
+    )
+
+    profile = load_profile_config(tmp_path / "worai.toml").get("alpha")
+    protocol = ProfileImportProtocol(
+        context=_context(),
+        profile=profile,
+        root_dir=tmp_path,
+    )
+    protocol._ensure_templates_loaded()
+
+    assert protocol._template_exports == {
+        "organization_iri": "https://example.com/base-org"
+    }
+    assert protocol._template_graph is not None
+    assert (
+        URIRef("https://example.com/s"),
+        URIRef("https://example.com/p"),
+        URIRef("https://example.com/base-org"),
+    ) in protocol._template_graph
+
+
+def test_selected_root_exports_override_base_key(tmp_path: Path) -> None:
+    _write(
+        tmp_path / "worai.toml",
+        """
+        [profiles._base]
+
+        [profiles.alpha]
+        """,
+    )
+    _write(
+        tmp_path / "profiles" / "_base" / "exports.toml",
+        """
+        organization_iri = "https://example.com/base-org"
+        """,
+    )
+    _write(
+        tmp_path / "profiles" / "alpha" / "exports.toml",
+        """
+        organization_iri = "https://example.com/selected-org"
+        """,
+    )
+    _write(
+        tmp_path / "profiles" / "_base" / "templates" / "entity.ttl.j2",
+        """
+        @prefix ex: <https://example.com/> .
+        ex:s ex:p <{{ exports.organization_iri }}> .
+        """,
+    )
+
+    profile = load_profile_config(tmp_path / "worai.toml").get("alpha")
+    protocol = ProfileImportProtocol(
+        context=_context(),
+        profile=profile,
+        root_dir=tmp_path,
+    )
+    protocol._ensure_templates_loaded()
+
+    assert protocol._template_exports is not None
+    assert (
+        protocol._template_exports["organization_iri"]
+        == "https://example.com/selected-org"
+    )
+    assert protocol._template_graph is not None
+    assert (
+        URIRef("https://example.com/s"),
+        URIRef("https://example.com/p"),
+        URIRef("https://example.com/selected-org"),
+    ) in protocol._template_graph
+
+
+def test_missing_export_key_reports_lookup_diagnostics(tmp_path: Path) -> None:
+    _write(
+        tmp_path / "worai.toml",
+        """
+        [profiles._base]
+
+        [profiles.alpha]
+        """,
+    )
+    _write(
+        tmp_path / "profiles" / "_base" / "templates" / "entity.ttl.j2",
+        """
+        @prefix ex: <https://example.com/> .
+        ex:s ex:p <{{ exports.organization_iri }}> .
+        """,
+    )
+
+    profile = load_profile_config(tmp_path / "worai.toml").get("alpha")
+    protocol = ProfileImportProtocol(
+        context=_context(),
+        profile=profile,
+        root_dir=tmp_path,
+    )
+
+    with pytest.raises(RuntimeError) as exc_info:
+        protocol._ensure_templates_loaded()
+
+    message = str(exc_info.value)
+    assert "profile 'alpha'" in message
+    assert "Searched exports files:" in message
+    assert "profiles/_base/exports.toml" in message
+    assert "Loaded exports files: []" in message
+    assert "_base exports loaded: False" in message

@@ -29,6 +29,7 @@ Sequence:
      - optional `SearchConsoleUrlHandler` when `GOOGLE_SEARCH_CONSOLE=true`
 4. For each callback:
    - patch static entity templates once from `_base` + selected template overlay
+   - load exports with `_base` -> selected precedence from `exports.toml(.j2|.liquid)` at profile root and (compatibly) under each templates directory
    - resolve URL-routed mapping from `_base` + selected mapping overlay (selected path wins)
    - render mapping template with shared `exports`
    - materialize XHTML/XPath mapping

@@ -53,6 +53,11 @@
 - `wordlift_sdk.kg_build` postprocessor manifests use file-level precedence:
   profile manifest (`profiles/<name>/postprocessors.toml`) is exclusive when
   present, otherwise `_base` is used.
+- `wordlift_sdk.kg_build` exports inheritance for template/mapping rendering
+  loads `_base` then selected profile manifests with key-level selected override;
+  supported files remain `exports.toml`, `exports.toml.j2`, and
+  `exports.toml.liquid` in profile root and (backward-compatible) templates
+  directories.
 - `wordlift_sdk.kg_build` postprocessor context keeps `account` as the clean
   API `/me` object, exposes auth as `context.account_key`, and provides resolved
   profile config via `context.profile`; API base URL must be read from

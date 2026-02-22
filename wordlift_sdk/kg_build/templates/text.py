@@ -33,14 +33,30 @@ class TemplateTextRenderer:
             return (directories,)
         return tuple(directories)
 
+    @staticmethod
+    def _exports_candidates(directory: Path) -> tuple[Path, ...]:
+        files = ("exports.toml", "exports.toml.j2", "exports.toml.liquid")
+        candidates: list[Path] = []
+        seen: set[Path] = set()
+
+        roots = [directory]
+        if directory.name == "templates":
+            roots.insert(0, directory.parent)
+
+        for root in roots:
+            for filename in files:
+                candidate = root / filename
+                if candidate in seen:
+                    continue
+                seen.add(candidate)
+                candidates.append(candidate)
+
+        return tuple(candidates)
+
     def _load_exports_for_directory(
         self, directory: Path, context: Mapping[str, Any]
-    ) -> dict[str, Any]:
-        candidates = (
-            directory / "exports.toml",
-            directory / "exports.toml.j2",
-            directory / "exports.toml.liquid",
-        )
+    ) -> tuple[dict[str, Any], Path | None, tuple[Path, ...]]:
+        candidates = self._exports_candidates(directory)
         for path in candidates:
             if not path.exists():
                 continue
@@ -48,8 +64,8 @@ class TemplateTextRenderer:
             data = tomllib.loads(rendered)
             if not isinstance(data, dict):
                 raise ValueError(f"Invalid exports manifest: {path}")
-            return data
-        return {}
+            return data, path, candidates
+        return {}, None, candidates
 
     def load_exports(
         self, directories: Path | Sequence[Path], context: Mapping[str, Any]
@@ -59,12 +75,25 @@ class TemplateTextRenderer:
 
     def load_exports_with_summary(
         self, directories: Path | Sequence[Path], context: Mapping[str, Any]
-    ) -> tuple[dict[str, Any], dict[str, int]]:
+    ) -> tuple[dict[str, Any], dict[str, Any]]:
         merged: dict[str, Any] = {}
         overrides = 0
         source_keys = 0
+        searched_paths: list[str] = []
+        loaded_files: list[str] = []
+        seen_search_paths: set[str] = set()
         for directory in self._coerce_directories(directories):
-            current = self._load_exports_for_directory(directory, context)
+            current, loaded_path, candidates = self._load_exports_for_directory(
+                directory, context
+            )
+            for candidate in candidates:
+                candidate_str = str(candidate)
+                if candidate_str in seen_search_paths:
+                    continue
+                seen_search_paths.add(candidate_str)
+                searched_paths.append(candidate_str)
+            if loaded_path is not None:
+                loaded_files.append(str(loaded_path))
             source_keys += len(current)
             for key, value in current.items():
                 if key in merged:
@@ -74,6 +103,8 @@ class TemplateTextRenderer:
             "source_keys": source_keys,
             "effective_keys": len(merged),
             "overrides": overrides,
+            "searched_paths": searched_paths,
+            "loaded_files": loaded_files,
         }
 
     @staticmethod
