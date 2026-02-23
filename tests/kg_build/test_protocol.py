@@ -3,7 +3,7 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-from rdflib import Graph, Literal, RDF, URIRef
+from rdflib import BNode, Graph, Literal, RDF, URIRef
 from wordlift_client import WebPage, WebPageScrapeResponse
 
 from wordlift_sdk.kg_build.config.loader import ProfileDefinition, ProfileMappingRoute
@@ -57,6 +57,23 @@ def _make_graph(subject: str) -> Graph:
     s = URIRef(subject)
     graph.add((s, RDF.type, URIRef("http://schema.org/WebPage")))
     graph.add((s, URIRef("http://schema.org/url"), Literal("https://example.com/page")))
+    return graph
+
+
+def _make_multi_entity_graph() -> Graph:
+    graph = Graph()
+    web_page = URIRef("https://example.com/entities/web-page")
+    article = URIRef("https://example.com/entities/article")
+    product = URIRef("https://example.com/entities/product")
+    review = URIRef("https://example.com/entities/review")
+
+    graph.add((web_page, RDF.type, URIRef("http://schema.org/WebPage")))
+    graph.add((article, RDF.type, URIRef("http://schema.org/Article")))
+    graph.add((product, RDF.type, URIRef("http://schema.org/Product")))
+    graph.add((review, RDF.type, URIRef("http://schema.org/Review")))
+    graph.add((web_page, URIRef("http://schema.org/mainEntity"), article))
+    graph.add((article, URIRef("http://schema.org/review"), review))
+    graph.add((article, URIRef("http://schema.org/about"), product))
     return graph
 
 
@@ -127,6 +144,118 @@ async def test_profile_protocol_sets_source_on_mapped_subject_when_existing_id_m
         URIRef("https://w3id.org/seovoc/source"),
         Literal("web-page-import"),
     ) in patched_graph
+
+
+@pytest.mark.asyncio
+async def test_profile_protocol_sets_source_on_all_uri_subjects_in_graph():
+    protocol = ProfileImportProtocol(
+        context=_make_context(),
+        profile=_make_profile(),
+        root_dir=Path.cwd(),
+    )
+    protocol._patch_static_templates_once = AsyncMock()
+    protocol._resolve_mapping_path = MagicMock(return_value=Path("mapping.yarrrml"))
+    protocol._get_mapping_content = MagicMock(return_value="mapping")
+    protocol._core_ids.process_graph = MagicMock(side_effect=lambda g, _: g)
+    protocol._apply_postprocessors = MagicMock(side_effect=lambda g, *_: g)
+    protocol.patcher.patch_all = AsyncMock()
+    protocol.rml_service.apply_mapping = AsyncMock(
+        return_value=_make_multi_entity_graph()
+    )
+
+    response = WebPageScrapeResponse(
+        web_page=WebPage(url="https://example.com/page", html="<html></html>")
+    )
+
+    await protocol.callback(response)
+
+    patched_graph = protocol.patcher.patch_all.call_args.args[0]
+    for iri in (
+        URIRef("https://example.com/entities/web-page"),
+        URIRef("https://example.com/entities/article"),
+        URIRef("https://example.com/entities/product"),
+        URIRef("https://example.com/entities/review"),
+    ):
+        assert (
+            iri,
+            URIRef("https://w3id.org/seovoc/source"),
+            Literal("web-page-import"),
+        ) in patched_graph
+
+
+@pytest.mark.asyncio
+async def test_profile_protocol_sets_source_when_web_page_absent_but_uri_subjects_exist():
+    protocol = ProfileImportProtocol(
+        context=_make_context(),
+        profile=_make_profile(),
+        root_dir=Path.cwd(),
+    )
+    protocol._patch_static_templates_once = AsyncMock()
+    protocol._resolve_mapping_path = MagicMock(return_value=Path("mapping.yarrrml"))
+    protocol._get_mapping_content = MagicMock(return_value="mapping")
+    protocol._core_ids.process_graph = MagicMock(side_effect=lambda g, _: g)
+    protocol._apply_postprocessors = MagicMock(side_effect=lambda g, *_: g)
+    protocol.patcher.patch_all = AsyncMock()
+
+    graph = Graph()
+    article = URIRef("https://example.com/entities/article-only")
+    graph.add((article, RDF.type, URIRef("http://schema.org/Article")))
+    graph.add((article, URIRef("http://schema.org/headline"), Literal("Title")))
+    protocol.rml_service.apply_mapping = AsyncMock(return_value=graph)
+
+    response = WebPageScrapeResponse(
+        web_page=WebPage(url="https://example.com/page", html="<html></html>")
+    )
+
+    await protocol.callback(response)
+
+    patched_graph = protocol.patcher.patch_all.call_args.args[0]
+    assert (
+        article,
+        URIRef("https://w3id.org/seovoc/source"),
+        Literal("web-page-import"),
+    ) in patched_graph
+
+
+@pytest.mark.asyncio
+async def test_profile_protocol_does_not_set_source_on_blank_nodes():
+    protocol = ProfileImportProtocol(
+        context=_make_context(),
+        profile=_make_profile(),
+        root_dir=Path.cwd(),
+    )
+    protocol._patch_static_templates_once = AsyncMock()
+    protocol._resolve_mapping_path = MagicMock(return_value=Path("mapping.yarrrml"))
+    protocol._get_mapping_content = MagicMock(return_value="mapping")
+    protocol._core_ids.process_graph = MagicMock(side_effect=lambda g, _: g)
+    protocol._apply_postprocessors = MagicMock(side_effect=lambda g, *_: g)
+    protocol.patcher.patch_all = AsyncMock()
+
+    graph = Graph()
+    article = URIRef("https://example.com/entities/article")
+    blank = BNode()
+    graph.add((article, RDF.type, URIRef("http://schema.org/Article")))
+    graph.add((blank, RDF.type, URIRef("http://schema.org/Thing")))
+    graph.add((article, URIRef("http://schema.org/mentions"), blank))
+    protocol.rml_service.apply_mapping = AsyncMock(return_value=graph)
+
+    response = WebPageScrapeResponse(
+        web_page=WebPage(url="https://example.com/page", html="<html></html>")
+    )
+
+    await protocol.callback(response)
+
+    patched_graph = protocol.patcher.patch_all.call_args.args[0]
+    assert (
+        article,
+        URIRef("https://w3id.org/seovoc/source"),
+        Literal("web-page-import"),
+    ) in patched_graph
+    assert (
+        blank,
+        URIRef("https://w3id.org/seovoc/source"),
+        Literal("web-page-import"),
+    ) not in patched_graph
 
 
 def test_protocol_uses_profile_postprocessor_runtime_setting(

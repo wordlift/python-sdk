@@ -1,5 +1,6 @@
 # TODO
 
+- [x] 2026-02-23 Update `kg_build` callback graph source annotation to set `seovoc:source = "web-page-import"` on all URI subjects (not only root), exclude blank nodes, and add protocol/docs/changelog coverage.
 - [x] 2026-02-22 Implement consistent `_base` inheritance/override semantics across `kg_build` profile assets/settings (`postprocessor_runtime`, postprocessor manifest precedence, template/export/mapping overlays) with deterministic logging and regression coverage.
 - [x] 2026-02-22 Fix `kg_build` exports inheritance for graph-sync static template rendering by propagating `_base` profile-root exports, enforcing deterministic `_base` -> selected override precedence, and surfacing export lookup diagnostics on missing keys.
 - [x] 2026-02-22 Guard ingestion resolver legacy sheets validation so explicit non-`sheets` `INGEST_SOURCE` values bypass `SHEETS_*` completeness checks, with resolver regression tests.

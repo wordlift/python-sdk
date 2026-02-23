@@ -1,5 +1,20 @@
 # Changelog
 
+## 5.3.0 - 2026-02-23
+
+### Changed
+
+- `kg_build` callback graph source annotation now sets `seovoc:source = "web-page-import"` on all URI-subject entities produced in the current callback payload, instead of only the root WebPage entity.
+- Existing root annotation behavior is preserved as part of the broader URI-subject annotation pass; blank-node subjects remain excluded.
+
+### Added
+
+- Protocol regression coverage for source annotation on root and non-root entities, callback graphs without `WebPage`, and blank-node exclusion.
+
+### Migration
+
+- To backfill legacy entities that were previously patched without `seovoc:source`, re-run import/overwrite so entities are re-patched with the new annotation behavior.
+
 ## 5.2.1 - 2026-02-22
 
 ### Fixed

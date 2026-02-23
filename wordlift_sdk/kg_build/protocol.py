@@ -398,12 +398,12 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             graph.add((subject, predicate, new_iri))
 
     def _set_source(self, graph: Graph, existing_web_page_id: str | None) -> None:
-        root_iri = URIRef(existing_web_page_id) if existing_web_page_id else None
-        if root_iri is None:
-            root_iri = self._find_web_page_iri(graph)
-        if root_iri is None:
-            return
-        graph.set((root_iri, SEOVOC_SOURCE, Literal("web-page-import")))
+        del existing_web_page_id
+        subjects = {
+            subject for subject in graph.subjects() if isinstance(subject, URIRef)
+        }
+        for subject in subjects:
+            graph.set((subject, SEOVOC_SOURCE, Literal("web-page-import")))
 
     def _mapping_response(
         self,

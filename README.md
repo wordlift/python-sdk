@@ -198,6 +198,7 @@ The SDK now includes a profile-driven cloud mapping module under `wordlift_sdk.k
 2. fallback `profiles/_base/postprocessors.toml`
 3. otherwise no postprocessors
 - Execution is manifest-based only (hard cutover): no legacy `.py` or `*.command.toml` discovery.
+- During callback patch preparation, the SDK annotates all URI-subject nodes in the generated graph with `seovoc:source "web-page-import"` (blank nodes are not annotated).
 - Postprocessor runtime mode:
   - `profiles.<profile>.postprocessor_runtime` overrides `_base`.
   - `_base.postprocessor_runtime` is used when profile value is missing.

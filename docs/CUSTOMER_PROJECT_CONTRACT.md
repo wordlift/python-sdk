@@ -93,6 +93,8 @@ Execution contract:
 For `kg_build`, page retrieval uses `WebPageScrapeApi`; the SDK host code injects
 `response.id` from `existing_web_page_id` when present to preserve `__ID__` token
 compatibility in materialization and postprocessor context.
+Before patching, callback graph URI subjects are annotated with
+`seovoc:source "web-page-import"`; blank-node subjects are intentionally skipped.
 
 ## Dependency Contract
 

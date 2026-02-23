@@ -34,7 +34,7 @@ Sequence:
    - render mapping template with shared `exports`
    - materialize XHTML/XPath mapping
    - optionally reconcile root IRI when URL source provides an existing ID
-   - set `seovoc:source` to `"web-page-import"` in host-generated graph output
+   - set `seovoc:source` to `"web-page-import"` on all URI-subject entities in host-generated callback graph output
    - run postprocessors from selected manifest precedence (`profiles/<name>/postprocessors.toml`, else `_base`, else none)
    - patch generated graph to WordLift
 
@@ -56,7 +56,7 @@ Responsibility:
 3. Apply profile mapping template for current URL.
 4. Reconcile callback root IRI.
    - only when `existing_web_page_id` is provided
-5. Set `seovoc:source` to `"web-page-import"` in the host-side graph before patching.
+5. Set `seovoc:source` to `"web-page-import"` on all URI subjects in the host-side callback graph before patching (blank nodes are excluded).
 6. Apply built-in canonical ID generation (standard policy).
 7. Apply profile postprocessors (no hardcoded customer extractor references).
 8. Patch graph triples, and optionally write debug Turtle files.
