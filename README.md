@@ -278,6 +278,7 @@ poetry run pytest
 - [Public Entry Points](docs/public_entry_points.md): Task-oriented inventory of client APIs by module file.
 - [Google Sheets Lookup](docs/google_sheets_lookup.md): Utility for O(1) lookups from Google Sheets.
 - [Web Page Import](docs/web_page_import.md): Configure fetch options, proxies, and JS rendering.
+- [KG Build KPI + Validation Callbacks](docs/kg_build_kpi_and_validation.md): Client contract and payload examples for `on_progress` and `on_kpi`.
 - [Structured Data](docs/structured_data.md): Structured data architecture and pipeline behavior.
 - [Canonical ID Policy](docs/canonical_id_policy.md): Scope strategy, deterministic type precedence, and URL-preserving rewrite guarantees.
 - [Customer Project Contract](docs/CUSTOMER_PROJECT_CONTRACT.md): Profile repo contract and manifest-based postprocessor runtime.
