@@ -802,6 +802,7 @@ def test_resolve_mapping_path_absolute_and_templated(tmp_path: Path) -> None:
 
 @pytest.mark.asyncio
 async def test_patch_static_templates_strict_validation_raises() -> None:
+    events: list[dict[str, object]] = []
     profile = _make_profile_with_overrides(
         settings={
             "shacl_validate_sync": True,
@@ -812,6 +813,7 @@ async def test_patch_static_templates_strict_validation_raises() -> None:
         context=_make_context(),
         profile=profile,
         root_dir=Path.cwd(),
+        on_progress=lambda payload: events.append(payload),
     )
     graph = Graph()
     graph.add(
@@ -823,6 +825,7 @@ async def test_patch_static_templates_strict_validation_raises() -> None:
     )
     protocol._template_graph = graph
     protocol._template_exports = {}
+    protocol.patcher.patch_all = AsyncMock()
     protocol._validate_graph = MagicMock(
         return_value=_make_validation_result(conforms=False)
     )
@@ -831,6 +834,11 @@ async def test_patch_static_templates_strict_validation_raises() -> None:
         RuntimeError, match="SHACL validation failed for static templates"
     ):
         await protocol._patch_static_templates_once()
+    assert len(events) == 1
+    assert events[0]["kind"] == "static_templates"
+    assert events[0]["validation"] is not None
+    assert events[0]["validation"]["pass"] is False
+    protocol.patcher.patch_all.assert_not_called()
 
 
 def test_find_web_page_iri_returns_none_when_missing() -> None:
@@ -972,10 +980,14 @@ async def test_profile_protocol_emits_progress_and_validation_in_warn_mode() -> 
         "warnings": {"count": 1, "sources": {"google-article": 1}},
         "errors": {"count": 1, "sources": {"google-product": 1}},
     }
+    assert summary["validation"]["total"] == (
+        summary["validation"]["pass"] + summary["validation"]["fail"]
+    )
 
 
 @pytest.mark.asyncio
 async def test_profile_protocol_validation_strict_mode_raises() -> None:
+    events: list[dict[str, object]] = []
     profile = _make_profile_with_overrides(
         settings={
             "shacl_validate_sync": True,
@@ -986,6 +998,7 @@ async def test_profile_protocol_validation_strict_mode_raises() -> None:
         context=_make_context(),
         profile=profile,
         root_dir=Path.cwd(),
+        on_progress=lambda payload: events.append(payload),
     )
     protocol._patch_static_templates_once = AsyncMock()
     protocol._resolve_mapping_path = MagicMock(return_value=Path("mapping.yarrrml"))
@@ -1005,6 +1018,74 @@ async def test_profile_protocol_validation_strict_mode_raises() -> None:
     )
     with pytest.raises(RuntimeError, match="SHACL validation failed"):
         await protocol.callback(response)
+    assert len(events) == 1
+    assert events[0]["kind"] == "graph"
+    assert events[0]["url"] == "https://example.com/page"
+    assert events[0]["validation"] is not None
+    assert events[0]["validation"]["pass"] is False
+    protocol.patcher.patch_all.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_profile_protocol_emits_null_validation_when_disabled() -> None:
+    events: list[dict[str, object]] = []
+    protocol = ProfileImportProtocol(
+        context=_make_context(),
+        profile=_make_profile(),
+        root_dir=Path.cwd(),
+        on_progress=lambda payload: events.append(payload),
+    )
+    protocol._patch_static_templates_once = AsyncMock()
+    protocol._resolve_mapping_path = MagicMock(return_value=Path("mapping.yarrrml"))
+    protocol._get_mapping_content = MagicMock(return_value="mapping")
+    protocol._core_ids.process_graph = MagicMock(side_effect=lambda g, _: g)
+    protocol._apply_postprocessors = MagicMock(side_effect=lambda g, *_: g)
+    protocol.patcher.patch_all = AsyncMock()
+    protocol.rml_service.apply_mapping = AsyncMock(
+        return_value=_make_dataset_scoped_graph()
+    )
+
+    response = WebPageScrapeResponse(
+        web_page=WebPage(url="https://example.com/page", html="<html></html>")
+    )
+    await protocol.callback(response)
+
+    assert len(events) == 1
+    assert events[0]["kind"] == "graph"
+    assert events[0]["validation"] is None
+    summary = protocol.get_kpi_summary()
+    assert summary["validation"] is None
+
+
+@pytest.mark.asyncio
+async def test_profile_protocol_emits_graph_and_static_template_events() -> None:
+    events: list[dict[str, object]] = []
+    protocol = ProfileImportProtocol(
+        context=_make_context(),
+        profile=_make_profile(),
+        root_dir=Path.cwd(),
+        on_progress=lambda payload: events.append(payload),
+    )
+    template_graph = Graph()
+    template_subject = URIRef("https://data.example.com/dataset/entities/template")
+    template_graph.add((template_subject, RDF.type, URIRef("https://schema.org/Thing")))
+    protocol._template_graph = template_graph
+    protocol._template_exports = {}
+    protocol._resolve_mapping_path = MagicMock(return_value=Path("mapping.yarrrml"))
+    protocol._get_mapping_content = MagicMock(return_value="mapping")
+    protocol._core_ids.process_graph = MagicMock(side_effect=lambda g, _: g)
+    protocol._apply_postprocessors = MagicMock(side_effect=lambda g, *_: g)
+    protocol.patcher.patch_all = AsyncMock()
+    protocol.rml_service.apply_mapping = AsyncMock(
+        return_value=_make_dataset_scoped_graph()
+    )
+
+    response = WebPageScrapeResponse(
+        web_page=WebPage(url="https://example.com/page", html="<html></html>")
+    )
+    await protocol.callback(response)
+
+    assert [event["kind"] for event in events] == ["static_templates", "graph"]
 
 
 @pytest.mark.asyncio
@@ -1047,10 +1128,4 @@ async def test_profile_protocol_collects_run_level_kpis() -> None:
         "https://schema.org/name": 1,
         "https://w3id.org/seovoc/source": 2,
     }
-    assert summary["validation"] == {
-        "total": 0,
-        "pass": 0,
-        "fail": 0,
-        "warnings": {"count": 0, "sources": {}},
-        "errors": {"count": 0, "sources": {}},
-    }
+    assert summary["validation"] is None

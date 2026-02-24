@@ -1,5 +1,6 @@
 # TODO
 
+- [x] 2026-02-24 Align `kg_build` KPI/progress callback contract: emit strict-mode failing `on_progress` events before raise, set final `on_kpi.validation = null` when validation is disabled, and extend protocol/KPI coverage for mixed graph kinds and KPI invariant checks.
 - [x] 2026-02-24 Add `kg_build` run-level KPI aggregation for graph sync payloads (dataset-scoped `total_entities`, `type_assertions_total`, `property_assertions_total`, `entities_by_type`, `properties_by_predicate`) and expose end-of-run delivery via `run_cloud_workflow(..., on_kpi=...)` + protocol getter.
 - [x] 2026-02-24 Add optional per-graph SHACL validation in `kg_build` (`warn|strict`, configurable shape specs), aggregate validation KPIs in final payload (`validation.total/pass/fail`, warnings/errors count+sources), and stream in-run graph progress via `run_cloud_workflow(..., on_progress=...)`.
 - [x] 2026-02-24 Add client-facing docs for `kg_build` KPI/validation callback contracts with concrete `on_progress` and `on_kpi` payload examples, and index links for discoverability.

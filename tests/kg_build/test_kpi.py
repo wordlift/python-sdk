@@ -4,7 +4,9 @@ from wordlift_sdk.kg_build.kpi import KgBuildKpiCollector
 
 
 def test_kpi_collector_records_graph_and_validation() -> None:
-    collector = KgBuildKpiCollector(dataset_uri="https://data.example.com/dataset")
+    collector = KgBuildKpiCollector(
+        dataset_uri="https://data.example.com/dataset", validation_enabled=True
+    )
     graph = Graph()
     s = URIRef("https://data.example.com/dataset/entities/1")
     graph.add((s, RDF.type, URIRef("https://schema.org/Thing")))
@@ -48,3 +50,9 @@ def test_kpi_collector_graph_metrics_are_dataset_scoped() -> None:
         "type_assertions": 1,
         "property_assertions": 1,
     }
+
+
+def test_kpi_collector_validation_is_null_when_disabled() -> None:
+    collector = KgBuildKpiCollector(dataset_uri="https://data.example.com/dataset")
+    summary = collector.summary("demo")
+    assert summary["validation"] is None

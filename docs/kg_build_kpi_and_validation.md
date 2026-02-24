@@ -10,6 +10,8 @@ Use `wordlift_sdk.kg_build.cloud_flow.run_cloud_workflow`:
 
 - `on_progress(dict) | None`: called during sync for each graph processed.
 - `on_kpi(dict) | None`: called once at run end with cumulative KPIs.
+- `on_info(str) | None`: legacy informational stream; fully supported and can be
+  used together with `on_progress` and `on_kpi`.
 
 ## Validation Settings
 
@@ -22,7 +24,8 @@ Validation is optional and controlled by profile settings:
 Behavior:
 
 - `warn`: validation results are included in payloads; sync continues on failures.
-- `strict`: validation failures (`validation.pass = false`) raise and stop sync for that graph.
+- `strict`: failing graph/static-template events are emitted first with
+  `validation.pass = false`, then sync raises and stops that graph path.
 
 ## In-Run Progress Payload (`on_progress`)
 
@@ -118,4 +121,4 @@ Notes:
 }
 ```
 
-`validation.total == validation.pass + validation.fail`.
+When `validation` is present: `validation.total == validation.pass + validation.fail`.

@@ -12,6 +12,7 @@ class KgBuildKpiCollector:
     """Aggregate run-level graph sync KPIs for dataset-scoped entities."""
 
     dataset_uri: str | None
+    validation_enabled: bool = False
     run_id: str = field(
         default_factory=lambda: datetime.now(timezone.utc)
         .replace(microsecond=0)
@@ -126,17 +127,9 @@ class KgBuildKpiCollector:
         properties_by_predicate = dict(
             sorted(self._properties_by_predicate.items(), key=lambda item: item[0])
         )
-        return {
-            "run_id": self.run_id,
-            "profile": profile_name,
-            "totals": {
-                "total_entities": len(self._entities),
-                "type_assertions_total": self._type_assertions_total,
-                "property_assertions_total": self._property_assertions_total,
-            },
-            "entities_by_type": entities_by_type,
-            "properties_by_predicate": properties_by_predicate,
-            "validation": {
+        validation_summary: dict[str, object] | None
+        if self.validation_enabled:
+            validation_summary = {
                 "total": self._validation_total,
                 "pass": self._validation_pass,
                 "fail": self._validation_fail,
@@ -152,5 +145,18 @@ class KgBuildKpiCollector:
                         sorted(self._error_sources.items(), key=lambda item: item[0])
                     ),
                 },
+            }
+        else:
+            validation_summary = None
+        return {
+            "run_id": self.run_id,
+            "profile": profile_name,
+            "totals": {
+                "total_entities": len(self._entities),
+                "type_assertions_total": self._type_assertions_total,
+                "property_assertions_total": self._property_assertions_total,
             },
+            "entities_by_type": entities_by_type,
+            "properties_by_predicate": properties_by_predicate,
+            "validation": validation_summary,
         }

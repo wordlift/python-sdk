@@ -83,9 +83,6 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         self._mapping_cache: dict[Path, str] = {}
         self._static_templates_patched = False
         self._core_ids = CanonicalIdsPostprocessor()
-        self._kpi = KgBuildKpiCollector(
-            dataset_uri=getattr(self.context.account, "dataset_uri", None)
-        )
         self._postprocessor_runtime = _resolve_postprocessor_runtime(
             dict(self.profile.settings)
         )
@@ -117,6 +114,10 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             self.profile.settings.get(
                 "shacl_shape_specs", self.profile.settings.get("SHACL_SHAPE_SPECS")
             )
+        )
+        self._kpi = KgBuildKpiCollector(
+            dataset_uri=getattr(self.context.account, "dataset_uri", None),
+            validation_enabled=self._shacl_validate,
         )
         logger.debug(
             "Resolved mappings for profile '%s': effective_dir=%s (origin=%s), routes=%s (origin=%s), overlay_dirs=%s",
@@ -176,10 +177,6 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             self._write_debug_graph(graph, url)
 
         validation_payload = self._validate_graph_if_enabled(graph, url)
-        if validation_payload is not None and self._shacl_mode == "strict":
-            if not validation_payload["pass"]:
-                raise RuntimeError(f"SHACL validation failed for {url} in strict mode.")
-
         graph_metrics = self._kpi.graph_metrics(graph)
         self._emit_progress(
             {
@@ -191,6 +188,12 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             }
         )
         self._kpi.record_graph(graph)
+        if (
+            validation_payload is not None
+            and self._shacl_mode == "strict"
+            and not validation_payload["pass"]
+        ):
+            raise RuntimeError(f"SHACL validation failed for {url} in strict mode.")
         await self.patcher.patch_all(graph)
         logger.info("Patched %s triples for %s", len(graph), url)
 
@@ -232,11 +235,6 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             validation_payload = self._validate_graph_if_enabled(
                 self._template_graph, "static_templates"
             )
-            if validation_payload is not None and self._shacl_mode == "strict":
-                if not validation_payload["pass"]:
-                    raise RuntimeError(
-                        "SHACL validation failed for static templates in strict mode."
-                    )
             self._emit_progress(
                 {
                     "kind": "static_templates",
@@ -246,6 +244,14 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
                 }
             )
             self._kpi.record_graph(self._template_graph)
+            if (
+                validation_payload is not None
+                and self._shacl_mode == "strict"
+                and not validation_payload["pass"]
+            ):
+                raise RuntimeError(
+                    "SHACL validation failed for static templates in strict mode."
+                )
             await self.patcher.patch_all(self._template_graph)
             if self.debug_dir:
                 static_debug = self.debug_dir / "static_templates.ttl"

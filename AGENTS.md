@@ -57,6 +57,10 @@
 - `wordlift_sdk.kg_build` can stream in-run per-graph progress payloads
   (graph metrics and optional validation summary) via cloud-flow
   `on_progress` callback.
+- In `wordlift_sdk.kg_build` strict SHACL mode, failing graph/static-template
+  progress payloads are emitted before raising so failure context is available
+  in telemetry; final KPI payload uses `validation = null` when SHACL sync
+  validation is disabled.
 - `wordlift_sdk.kg_build` postprocessor subprocesses do not inject package paths
   into `PYTHONPATH`; configured interpreters must resolve their own dependencies.
 - `wordlift_sdk.kg_build` postprocessor runtime is configurable via

@@ -1,5 +1,16 @@
 # Changelog
 
+## 5.4.1 - 2026-02-24
+
+### Changed
+
+- `kg_build` strict SHACL mode now emits failing `on_progress` payloads before raising, so graph/static-template failure context is available in telemetry while still stopping the strict sync path.
+- Final `on_kpi` payload now uses `validation: null` when SHACL sync validation is disabled.
+
+### Compatibility
+
+- Legacy `on_info` callback support is unchanged and coexists with `on_progress` and `on_kpi`.
+
 ## 5.4.0 - 2026-02-24
 
 ### Added
