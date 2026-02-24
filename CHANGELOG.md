@@ -1,5 +1,35 @@
 # Changelog
 
+## 6.0.0 - 2026-02-24
+
+### Breaking
+
+- Canonical worai execution path is now `wordlift_sdk.kg_build.cloud_flow.run_cloud_workflow` only.
+- `run_cloud_workflow` source selection now requires exactly one explicit source mode:
+  - `urls`
+  - `sitemap_url` (optional `sitemap_url_pattern`)
+  - `sheets_url` + `sheets_name`
+- SDK default postprocessor runtime is now `persistent` (previously `oneshot`).
+- Legacy ingestion resolver fallback naming is removed:
+  - no fallback from `WEB_PAGE_IMPORT_MODE` to loader
+  - no fallback from `WEB_PAGE_IMPORT_TIMEOUT` to timeout
+  - `INGEST_SOURCE` and `INGEST_LOADER` are now required for ingestion resolution.
+
+### Added
+
+- Canonical-path conformance coverage for `run_cloud_workflow` across `urls`, `sitemap_url` (+ pattern), and `sheets` source modes.
+- Source/loader matrix conformance tests across `INGEST_SOURCE` (`urls|sitemap|sheets`) and loader set (`simple|proxy|playwright|premium_scraper|web_scrape_api|passthrough`).
+- Added `docs/worai_sdk_integration_contract_v6.md` and packaged docs/changelog artifacts for version-locked SDK distribution via PyPI.
+
+### Deprecation Window
+
+- Legacy non-canonical orchestration behavior is deprecated as of `6.0.0` on February 24, 2026.
+- Final removal window closes with `7.0.0` on or before June 30, 2026.
+
+### Migration
+
+- See `docs/kg_build_cloud_workflow_migration.md` for migration steps to canonical `run_cloud_workflow`.
+
 ## 5.4.1 - 2026-02-24
 
 ### Changed

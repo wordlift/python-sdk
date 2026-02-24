@@ -41,21 +41,10 @@ Alias support:
 
 ### Deterministic Rules
 
-- `INGEST_*` overrides legacy keys.
-- If `INGEST_*` is unset, resolver uses legacy keys.
-- On disagreement, winner is `INGEST_*` and warning code `INGEST_CFG_CONFLICT` is emitted.
-- Legacy `SHEETS_*` completeness validation must not run for explicit non-`sheets`
-  `INGEST_SOURCE` values; it still runs for auto/legacy source resolution and
-  explicit `INGEST_SOURCE=sheets`.
-- Source auto priority: `URLS > SITEMAP_URL > SHEETS_* > local`.
-- Loader auto resolves to `web_scrape_api`.
-- Default loader is `web_scrape_api` when neither new nor legacy loader is set.
-
-### Legacy Mode Mapping
-
-- `default -> web_scrape_api`
-- `proxy -> proxy`
-- `premium_scraper -> premium_scraper`
+- `INGEST_SOURCE` is required and must be one of `urls|sitemap|sheets|local`.
+- `INGEST_LOADER` is required and must be one of `simple|proxy|playwright|premium_scraper|web_scrape_api|passthrough`.
+- Legacy resolver fallback from `WEB_PAGE_IMPORT_*` and implicit source auto-priority is not supported.
+- Source-specific required fields are validated strictly (`URLS`, `SITEMAP_URL`, or full `SHEETS_*` tuple, depending on `INGEST_SOURCE`).
 
 ## Passthrough Precedence
 
@@ -87,12 +76,9 @@ Machine-parseable events:
 - `ingest.summary`
 
 `ingest.warning` conflict payload includes:
-
-- `new_key`
-- `new_value`
-- `legacy_key`
-- `legacy_value`
-- `winner`
+- `code`
+- `message`
+- `meta`
 
 ## web_scrape_api Semantics
 

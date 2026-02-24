@@ -389,7 +389,7 @@ def test_apply_postprocessors_fails_fast_when_account_key_missing() -> None:
 def test_protocol_helpers_runtime_and_path_part() -> None:
     assert _path_contains_part("profiles/_base/templates", "_base") is True
     assert _path_contains_part("profiles/demo/templates", "_base") is False
-    assert _resolve_postprocessor_runtime({}) == "oneshot"
+    assert _resolve_postprocessor_runtime({}) == "persistent"
     assert (
         _resolve_postprocessor_runtime({"POSTPROCESSOR_RUNTIME": "persistent"})
         == "persistent"

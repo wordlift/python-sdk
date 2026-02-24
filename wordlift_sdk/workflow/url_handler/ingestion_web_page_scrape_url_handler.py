@@ -61,13 +61,11 @@ class IngestionWebPageScrapeUrlHandler(UrlHandler):
             "INGEST_TIMEOUT_MS",
             "INGEST_RETRY_ATTEMPTS",
             "INGEST_RETRY_BACKOFF_MS",
-            "WEB_PAGE_IMPORT_MODE",
             "WEB_PAGE_IMPORT_RENDER_JS",
             "WEB_PAGE_IMPORT_WAIT_FOR",
             "WEB_PAGE_IMPORT_COUNTRY_CODE",
             "WEB_PAGE_IMPORT_PREMIUM_PROXY",
             "WEB_PAGE_IMPORT_BLOCK_ADS",
-            "WEB_PAGE_IMPORT_TIMEOUT",
             "PLAYWRIGHT_WAIT_UNTIL",
             "PLAYWRIGHT_HEADLESS",
         ]

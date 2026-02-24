@@ -78,7 +78,7 @@ ENV_PARSERS: dict[str, Callable[[str], Any]] = {
     "web_page_import_write_strategy": str,
     "web_page_types": lambda v: [s.strip() for s in v.split(",") if s.strip()],
     "embedding_properties": lambda v: [s.strip() for s in v.split(",") if s.strip()],
-    "web_page_import_mode": str,
+    "ingest_loader": str,
     "web_page_import_render_js": lambda v: v.strip().lower()
     in {"1", "true", "yes", "on"},
     "web_page_import_wait_for": str,
@@ -87,7 +87,7 @@ ENV_PARSERS: dict[str, Callable[[str], Any]] = {
     in {"1", "true", "yes", "on"},
     "web_page_import_block_ads": lambda v: v.strip().lower()
     in {"1", "true", "yes", "on"},
-    "web_page_import_timeout": lambda v: int(v.strip()),
+    "ingest_timeout_ms": lambda v: int(v.strip()),
     "google_search_console": lambda v: v.strip().lower() in {"1", "true", "yes", "on"},
     "service_account_file": str,
     "postprocessor_runtime": str,

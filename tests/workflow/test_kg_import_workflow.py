@@ -134,6 +134,8 @@ def application_container(
     monkeypatch,
 ) -> ApplicationContainer:
     monkeypatch.setenv("API_URL", test_api_url)
+    monkeypatch.setenv("INGEST_SOURCE", "sitemap")
+    monkeypatch.setenv("INGEST_LOADER", "web_scrape_api")
     monkeypatch.setenv("SITEMAP_URL", test_sitemap_url)
     monkeypatch.setenv("SITEMAP_URL_PATTERN", test_sitemap_url_pattern)
     monkeypatch.setenv("WORDLIFT_KEY", test_key)

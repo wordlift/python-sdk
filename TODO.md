@@ -1,5 +1,8 @@
 # TODO
 
+- [x] 2026-02-24 Publish a version-locked worai integration contract doc (`docs/worai_sdk_integration_contract_v6.md`) and package docs/changelog artifacts in SDK distribution metadata for PyPI consumers.
+- [x] 2026-02-24 Remove ingestion legacy naming fallback (`WEB_PAGE_IMPORT_MODE` / `WEB_PAGE_IMPORT_TIMEOUT`), require explicit `INGEST_SOURCE` + `INGEST_LOADER`, and add source/loader matrix conformance tests.
+- [x] 2026-02-24 Canonicalize worai cloud path on `run_cloud_workflow` with explicit source-mode contract (`urls|sitemap|sheets`), set `postprocessor_runtime` SDK default to `persistent`, add source-mode conformance tests, and publish major-version migration/deprecation notes.
 - [x] 2026-02-24 Align `kg_build` KPI/progress callback contract: emit strict-mode failing `on_progress` events before raise, set final `on_kpi.validation = null` when validation is disabled, and extend protocol/KPI coverage for mixed graph kinds and KPI invariant checks.
 - [x] 2026-02-24 Add `kg_build` run-level KPI aggregation for graph sync payloads (dataset-scoped `total_entities`, `type_assertions_total`, `property_assertions_total`, `entities_by_type`, `properties_by_predicate`) and expose end-of-run delivery via `run_cloud_workflow(..., on_kpi=...)` + protocol getter.
 - [x] 2026-02-24 Add optional per-graph SHACL validation in `kg_build` (`warn|strict`, configurable shape specs), aggregate validation KPIs in final payload (`validation.total/pass/fail`, warnings/errors count+sources), and stream in-run graph progress via `run_cloud_workflow(..., on_progress=...)`.

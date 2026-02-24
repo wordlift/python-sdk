@@ -3,8 +3,6 @@ from __future__ import annotations
 import logging
 from typing import Optional
 
-from wordlift_client import WebPageImportFetchOptions
-
 from wordlift_sdk.container.application_container import ApplicationContainer
 from wordlift_sdk.protocol.web_page_import_protocol import (
     WebPageImportProtocolInterface,
@@ -32,30 +30,17 @@ class KgBuildApplicationContainer(ApplicationContainer):
     async def create_web_page_scrape_url_handler(
         self,
     ) -> IngestionWebPageScrapeUrlHandler:
-        fetch_options = WebPageImportFetchOptions(
-            mode=self._configuration_provider.get_value(
-                "WEB_PAGE_IMPORT_MODE", "default"
-            ),
-            render_js=self._configuration_provider.get_value(
-                "WEB_PAGE_IMPORT_RENDER_JS", None
-            ),
-            wait_for=self._configuration_provider.get_value(
-                "WEB_PAGE_IMPORT_WAIT_FOR", None
-            ),
-            country_code=self._configuration_provider.get_value(
-                "WEB_PAGE_IMPORT_COUNTRY_CODE", None
-            ),
-            premium_proxy=self._configuration_provider.get_value(
-                "WEB_PAGE_IMPORT_PREMIUM_PROXY", None
-            ),
-            block_ads=self._configuration_provider.get_value(
-                "WEB_PAGE_IMPORT_BLOCK_ADS", None
-            ),
-            timeout=self._configuration_provider.get_value(
-                "WEB_PAGE_IMPORT_TIMEOUT", None
-            ),
+        ingest_loader = self._configuration_provider.get_value(
+            "INGEST_LOADER", "web_scrape_api"
         )
-        logger.info("Using Cloud Fetch Options (ingestion bridge): %s", fetch_options)
+        ingest_timeout_ms = self._configuration_provider.get_value(
+            "INGEST_TIMEOUT_MS", 30000
+        )
+        logger.info(
+            "Using ingestion bridge config: loader=%s timeout_ms=%s",
+            ingest_loader,
+            ingest_timeout_ms,
+        )
         if self.protocol is None:
             raise RuntimeError(
                 "KG build protocol is required before creating handlers."

@@ -214,9 +214,10 @@ File: `wordlift_sdk/kg_build/cloud_flow.py`
 - `CloudWorkflowConfig(...)`
 - Aim: Configuration contract for `run_cloud_workflow`.
 - Parameters:
-  - required: `wordlift_key: str`, `sheets_service_account_json: str`.
-  - URL source: `urls: Sequence[str] | None` or `sheets_url: str | None` + `sheets_name: str | None`.
-  - execution: `overwrite: bool`, `concurrency: int`, `web_page_import_mode: str`, `web_page_import_timeout: int`.
+  - required: `wordlift_key: str`.
+  - conditional: `sheets_service_account_json: str | None` (required only for sheets source mode).
+  - source (exactly one mode): `urls: Sequence[str] | None`, or `sitemap_url: str | None` (+ optional `sitemap_url_pattern: str | None`), or `sheets_url: str | None` + `sheets_name: str | None`.
+  - execution: `overwrite: bool`, `concurrency: int`, `ingest_loader: str`, `ingest_timeout_ms: int`.
   - optional: `extra_settings`, `debug`, `debug_profile_name`.
 
 - `get_debug_output_dir(config, root_dir=None) -> Path | None`

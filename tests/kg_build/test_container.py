@@ -67,3 +67,23 @@ async def test_create_web_page_scrape_url_handler_passes_protocol_callback():
 
     assert isinstance(handler, IngestionWebPageScrapeUrlHandler)
     assert handler._web_page_scrape_callback is protocol
+
+
+@pytest.mark.asyncio
+async def test_create_web_page_scrape_url_handler_requires_protocol():
+    container = KgBuildApplicationContainer(configuration_provider=_make_provider())
+    container.get_context = AsyncMock(return_value=MagicMock())
+    with pytest.raises(RuntimeError, match="KG build protocol is required"):
+        await container.create_web_page_scrape_url_handler()
+
+
+@pytest.mark.asyncio
+async def test_create_kg_import_workflow_uses_concurrency_override():
+    container = KgBuildApplicationContainer(
+        configuration_provider=_make_provider({"CONCURRENCY": 7})
+    )
+    container.get_context = AsyncMock(return_value=MagicMock())
+    container.create_new_or_changed_source = AsyncMock(return_value=MagicMock())
+    container.create_multi_url_handler = AsyncMock(return_value=MagicMock())
+    workflow = await container.create_kg_import_workflow()
+    assert workflow._concurrency == 7

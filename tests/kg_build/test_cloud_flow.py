@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -42,6 +43,7 @@ class _Container:
 class _Protocol:
     def __init__(self):
         self.closed = False
+        self.progress_cb = None
 
     def close(self):
         self.closed = True
@@ -59,6 +61,14 @@ class _AwaitableProtocol:
 
     def get_kpi_summary(self):
         return {"totals": {"total_entities": 2}}
+
+
+class _AsyncCloseProtocol(_AwaitableProtocol):
+    def close(self):
+        async def _close():
+            self.closed = True
+
+        return _close()
 
 
 @pytest.mark.asyncio
@@ -158,13 +168,31 @@ def test_build_settings_lines_with_sheets_and_extra_settings() -> None:
         extra_settings={"A": 1},
     )
     lines = _build_settings_lines(config, "/tmp/sa.json")
+    assert "INGEST_SOURCE = 'sheets'" in lines
     assert "SHEETS_URL = 'https://docs.google.com/sheets/d/x'" in lines
     assert "SHEETS_NAME = 'Sheet1'" in lines
+    assert "INGEST_LOADER = 'web_scrape_api'" in lines
+    assert "INGEST_TIMEOUT_MS = 60000" in lines
     assert "A = 1" in lines
 
 
+def test_build_settings_lines_with_sitemap_and_pattern() -> None:
+    config = CloudWorkflowConfig(
+        wordlift_key="k",
+        sheets_service_account_json="{}",
+        sitemap_url="https://example.com/sitemap.xml",
+        sitemap_url_pattern=r"^https://example.com/blog/",
+    )
+    lines = _build_settings_lines(config, "/tmp/sa.json")
+    assert "INGEST_SOURCE = 'sitemap'" in lines
+    assert "SITEMAP_URL = 'https://example.com/sitemap.xml'" in lines
+    assert "SITEMAP_URL_PATTERN = '^https://example.com/blog/'" in lines
+
+
 def test_build_settings_lines_requires_source_fields() -> None:
-    with pytest.raises(CloudWorkflowConfigError, match="Either urls or sheets_url"):
+    with pytest.raises(
+        CloudWorkflowConfigError, match="Exactly one source is required"
+    ):
         _build_settings_lines(
             CloudWorkflowConfig(wordlift_key="k", sheets_service_account_json="{}"),
             "/tmp/sa.json",
@@ -176,6 +204,47 @@ def test_build_settings_lines_requires_source_fields() -> None:
                 wordlift_key="k",
                 sheets_service_account_json="{}",
                 sheets_url="https://docs.google.com/sheets/d/x",
+            ),
+            "/tmp/sa.json",
+        )
+
+    with pytest.raises(
+        CloudWorkflowConfigError, match="sheets_service_account_json is required"
+    ):
+        _build_settings_lines(
+            CloudWorkflowConfig(
+                wordlift_key="k",
+                sheets_service_account_json=None,
+                sheets_url="https://docs.google.com/sheets/d/x",
+                sheets_name="Sheet1",
+            ),
+            None,
+        )
+
+
+def test_build_settings_lines_rejects_multiple_sources() -> None:
+    with pytest.raises(CloudWorkflowConfigError, match="Exactly one source is allowed"):
+        _build_settings_lines(
+            CloudWorkflowConfig(
+                wordlift_key="k",
+                sheets_service_account_json="{}",
+                urls=["https://example.com"],
+                sitemap_url="https://example.com/sitemap.xml",
+            ),
+            "/tmp/sa.json",
+        )
+
+
+def test_build_settings_lines_requires_sitemap_url_for_pattern() -> None:
+    with pytest.raises(
+        CloudWorkflowConfigError, match="sitemap_url_pattern requires sitemap_url"
+    ):
+        _build_settings_lines(
+            CloudWorkflowConfig(
+                wordlift_key="k",
+                sheets_service_account_json="{}",
+                urls=["https://example.com"],
+                sitemap_url_pattern=r"^https://example.com/",
             ),
             "/tmp/sa.json",
         )
@@ -252,3 +321,133 @@ async def test_cloud_flow_passes_on_progress_to_protocol_factory() -> None:
 
     assert "on_progress" in captured_kwargs
     assert callable(captured_kwargs["on_progress"])
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("config", "expected_source_lines"),
+    [
+        (
+            CloudWorkflowConfig(
+                wordlift_key="key",
+                sheets_service_account_json="{}",
+                urls=["https://example.com/a"],
+            ),
+            ["INGEST_SOURCE = 'urls'", "URLS = ['https://example.com/a']"],
+        ),
+        (
+            CloudWorkflowConfig(
+                wordlift_key="key",
+                sheets_service_account_json="{}",
+                sitemap_url="https://example.com/sitemap.xml",
+                sitemap_url_pattern=r"^https://example.com/articles/",
+            ),
+            [
+                "INGEST_SOURCE = 'sitemap'",
+                "SITEMAP_URL = 'https://example.com/sitemap.xml'",
+                "SITEMAP_URL_PATTERN = '^https://example.com/articles/'",
+            ],
+        ),
+        (
+            CloudWorkflowConfig(
+                wordlift_key="key",
+                sheets_service_account_json="{}",
+                sheets_url="https://docs.google.com/sheets/d/x",
+                sheets_name="Sheet1",
+            ),
+            [
+                "INGEST_SOURCE = 'sheets'",
+                "SHEETS_URL = 'https://docs.google.com/sheets/d/x'",
+                "SHEETS_NAME = 'Sheet1'",
+            ],
+        ),
+    ],
+)
+async def test_cloud_flow_canonical_path_source_mode_conformance(
+    config: CloudWorkflowConfig,
+    expected_source_lines: list[str],
+) -> None:
+    protocol = _Protocol()
+    captured_config_lines: list[str] = []
+    info_events: list[str] = []
+    kpi_events: list[dict[str, object]] = []
+    protocol_factory_kwargs: dict[str, Any] = {}
+
+    def configuration_provider_create(path: str):
+        captured_config_lines.extend(
+            Path(path).read_text(encoding="utf-8").splitlines()
+        )
+        return object()
+
+    def protocol_factory(*args, **kwargs):
+        del args
+        protocol_factory_kwargs.update(kwargs)
+        protocol.progress_cb = kwargs.get("on_progress")
+        return protocol
+
+    await run_cloud_workflow(
+        config=config,
+        configuration_provider_create=configuration_provider_create,
+        container_factory=lambda _: _Container(_Workflow()),
+        protocol_factory=protocol_factory,
+        on_info=lambda message: info_events.append(message),
+        on_progress=lambda payload: None,
+        on_kpi=lambda payload: kpi_events.append(payload),
+    )
+
+    for expected_line in expected_source_lines:
+        assert expected_line in captured_config_lines
+    assert "INGEST_LOADER = 'web_scrape_api'" in captured_config_lines
+    assert "INGEST_TIMEOUT_MS = 60000" in captured_config_lines
+    assert any("Initializing SDK with dynamic config" in msg for msg in info_events)
+    assert any("Creating Cloud Import Workflow..." in msg for msg in info_events)
+    assert any(
+        "Running Workflow (this may take several minutes)..." in msg
+        for msg in info_events
+    )
+    assert kpi_events == [{"totals": {"total_entities": 1}}]
+    assert "on_progress" in protocol_factory_kwargs
+    assert callable(protocol_factory_kwargs["on_progress"])
+
+
+@pytest.mark.asyncio
+async def test_cloud_flow_debug_info_and_async_close(tmp_path: Path) -> None:
+    protocol = _AsyncCloseProtocol()
+    info: list[str] = []
+
+    await run_cloud_workflow(
+        config=CloudWorkflowConfig(
+            wordlift_key="key",
+            sheets_service_account_json="{}",
+            urls=["https://example.com"],
+            debug=True,
+            debug_profile_name="dbg",
+        ),
+        configuration_provider_create=lambda _: object(),
+        container_factory=lambda _: _Container(_Workflow()),
+        protocol_factory=lambda *_args, **_kwargs: protocol,
+        on_info=lambda msg: info.append(msg),
+    )
+
+    assert protocol.closed is True
+    assert any(
+        "Debug mode enabled. Saving intermediate graphs to:" in msg for msg in info
+    )
+
+
+@pytest.mark.asyncio
+async def test_cloud_flow_sheets_requires_service_account_in_run() -> None:
+    with pytest.raises(
+        CloudWorkflowConfigError, match="sheets_service_account_json is required"
+    ):
+        await run_cloud_workflow(
+            config=CloudWorkflowConfig(
+                wordlift_key="key",
+                sheets_service_account_json=None,
+                sheets_url="https://docs.google.com/sheets/d/x",
+                sheets_name="Sheet1",
+            ),
+            configuration_provider_create=lambda _: object(),
+            container_factory=lambda _: _Container(_Workflow()),
+            protocol_factory=lambda *_args, **_kwargs: _Protocol(),
+        )

@@ -22,12 +22,14 @@ logger = logging.getLogger(__name__)
 @dataclass(frozen=True)
 class CloudWorkflowConfig:
     wordlift_key: str
-    sheets_service_account_json: str
+    sheets_service_account_json: str | None = None
     overwrite: bool = False
     concurrency: int = 4
-    web_page_import_mode: str = "premium_scraper"
-    web_page_import_timeout: int = 60000
+    ingest_loader: str = "web_scrape_api"
+    ingest_timeout_ms: int = 60000
     urls: Sequence[str] | None = None
+    sitemap_url: str | None = None
+    sitemap_url_pattern: str | None = None
     sheets_url: str | None = None
     sheets_name: str | None = None
     extra_settings: Mapping[str, Any] | None = None
@@ -57,29 +59,64 @@ def get_debug_output_dir(
 
 
 def _build_settings_lines(
-    config: CloudWorkflowConfig, service_account_path: str
+    config: CloudWorkflowConfig, service_account_path: str | None
 ) -> list[str]:
+    if config.sitemap_url_pattern and not config.sitemap_url:
+        raise CloudWorkflowConfigError(
+            "sitemap_url_pattern requires sitemap_url source."
+        )
+
+    source_kinds: list[str] = []
     if config.urls:
-        source_lines = [f"URLS = {repr(list(config.urls))}"]
+        source_kinds.append("urls")
+    if config.sitemap_url:
+        source_kinds.append("sitemap")
+    if config.sheets_url:
+        source_kinds.append("sheets")
+
+    if len(source_kinds) == 0:
+        raise CloudWorkflowConfigError(
+            "Exactly one source is required: urls, sitemap_url, or sheets_url."
+        )
+    if len(source_kinds) > 1:
+        raise CloudWorkflowConfigError(
+            "Exactly one source is allowed: urls, sitemap_url, or sheets_url."
+        )
+
+    if source_kinds[0] == "urls":
+        source_lines = [
+            "INGEST_SOURCE = 'urls'",
+            f"URLS = {repr(list(config.urls or []))}",
+        ]
+    elif source_kinds[0] == "sitemap":
+        source_lines = [
+            "INGEST_SOURCE = 'sitemap'",
+            f"SITEMAP_URL = {repr(config.sitemap_url)}",
+        ]
+        if config.sitemap_url_pattern:
+            source_lines.append(
+                f"SITEMAP_URL_PATTERN = {repr(config.sitemap_url_pattern)}"
+            )
     else:
-        if not config.sheets_url:
+        if not service_account_path:
             raise CloudWorkflowConfigError(
-                "Either urls or sheets_url must be provided for cloud workflow."
+                "sheets_service_account_json is required when using sheets_url source."
             )
         if not config.sheets_name:
             raise CloudWorkflowConfigError(
                 "sheets_name is required when using sheets_url source."
             )
         source_lines = [
+            "INGEST_SOURCE = 'sheets'",
             f"SHEETS_URL = {repr(config.sheets_url)}",
             f"SHEETS_NAME = {repr(config.sheets_name)}",
+            f"SHEETS_SERVICE_ACCOUNT = {repr(service_account_path)}",
         ]
 
     lines = [f"WORDLIFT_KEY = {repr(config.wordlift_key)}"]
     lines.extend(source_lines)
-    lines.append(f"SHEETS_SERVICE_ACCOUNT = {repr(service_account_path)}")
-    lines.append(f"WEB_PAGE_IMPORT_MODE = {repr(config.web_page_import_mode)}")
-    lines.append(f"WEB_PAGE_IMPORT_TIMEOUT = {repr(config.web_page_import_timeout)}")
+    lines.append(f"INGEST_LOADER = {repr(config.ingest_loader)}")
+    lines.append(f"INGEST_TIMEOUT_MS = {repr(config.ingest_timeout_ms)}")
     lines.append(f"CONCURRENCY = {repr(config.concurrency)}")
     lines.append(f"OVERWRITE = {repr(config.overwrite)}")
 
@@ -113,11 +150,16 @@ async def run_cloud_workflow(
                     f"Debug mode enabled. Saving intermediate graphs to: {debug_dir}"
                 )
 
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json", delete=False
-        ) as f_sa:
-            f_sa.write(config.sheets_service_account_json)
-            temp_sa_path = f_sa.name
+        if config.sheets_url:
+            if not config.sheets_service_account_json:
+                raise CloudWorkflowConfigError(
+                    "sheets_service_account_json is required when using sheets_url source."
+                )
+            with tempfile.NamedTemporaryFile(
+                mode="w", suffix=".json", delete=False
+            ) as f_sa:
+                f_sa.write(config.sheets_service_account_json)
+                temp_sa_path = f_sa.name
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f_cfg:
             settings = _build_settings_lines(config, temp_sa_path)

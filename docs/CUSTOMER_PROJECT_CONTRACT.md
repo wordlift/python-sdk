@@ -71,8 +71,8 @@ Execution contract:
 - runtime mode resolves by profile inheritance:
   - `profiles.<profile>.postprocessor_runtime`
   - `profiles._base.postprocessor_runtime`
-  - SDK default `oneshot`
-  - `oneshot` (default): one subprocess invocation per callback
+  - SDK default `persistent`
+  - `oneshot`: one subprocess invocation per callback
   - `persistent`: one long-lived subprocess worker per class reused across callbacks
 - class method contract:
   - implement `process_graph(self, graph, context)`

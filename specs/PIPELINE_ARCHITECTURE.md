@@ -12,6 +12,11 @@ Cloud workflow is implemented in the SDK under `wordlift_sdk.kg_build`.
 
 Entry point: host application code that invokes `wordlift_sdk.kg_build.cloud_flow.run_cloud_workflow`.
 
+Canonical integration contract:
+
+- use `run_cloud_workflow` as the single worai orchestration path
+- configure exactly one source mode per run: `urls`, `sitemap_url` (+ optional pattern), or `sheets_url` + `sheets_name`
+
 Core modules:
 
 - `wordlift_sdk/kg_build/cloud_flow.py`
@@ -85,7 +90,7 @@ Runtime-isolated execution:
 - runtime mode resolves from profile settings with inheritance:
   - `profiles.<name>.postprocessor_runtime`
   - `profiles._base.postprocessor_runtime`
-  - SDK default `oneshot`
+  - SDK default `persistent`
 - `oneshot`: launch runner per callback
 - `persistent`: launch one worker process per class and reuse it across callbacks
 - postprocessor contract:

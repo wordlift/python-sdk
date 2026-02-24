@@ -36,13 +36,13 @@ sheets_service_account = "${SHEETS_SERVICE_ACCOUNT}"
 web_page_import_write_strategy = "${WEB_PAGE_IMPORT_WRITE_STRATEGY}"
 web_page_types = "${WEB_PAGE_TYPES}"
 embedding_properties = "${EMBEDDING_PROPERTIES}"
-web_page_import_mode = "${WEB_PAGE_IMPORT_MODE}"
+ingest_loader = "${INGEST_LOADER}"
 web_page_import_render_js = "${WEB_PAGE_IMPORT_RENDER_JS}"
 web_page_import_wait_for = "${WEB_PAGE_IMPORT_WAIT_FOR}"
 web_page_import_country_code = "${WEB_PAGE_IMPORT_COUNTRY_CODE}"
 web_page_import_premium_proxy = "${WEB_PAGE_IMPORT_PREMIUM_PROXY}"
 web_page_import_block_ads = "${WEB_PAGE_IMPORT_BLOCK_ADS}"
-web_page_import_timeout = "${WEB_PAGE_IMPORT_TIMEOUT}"
+ingest_timeout_ms = "${INGEST_TIMEOUT_MS}"
 google_search_console = "${GOOGLE_SEARCH_CONSOLE}"
 service_account_file = "${SERVICE_ACCOUNT_FILE}"
 
@@ -91,19 +91,16 @@ Env-fallback runtime keys currently supported:
 - `web_page_import_write_strategy`
 - `web_page_types`
 - `embedding_properties`
-- `web_page_import_mode`
+- `ingest_loader`
 - `web_page_import_render_js`
 - `web_page_import_wait_for`
 - `web_page_import_country_code`
 - `web_page_import_premium_proxy`
 - `web_page_import_block_ads`
-- `web_page_import_timeout`
+- `ingest_timeout_ms`
 - `google_search_console`
 - `service_account_file`
 - `postprocessor_runtime`
-
-`kg_build` uses `WebPageScrapeApi` for page retrieval. The fetch-option keys keep the
-`web_page_import_*` naming for backward configuration compatibility.
 
 ## Mapping Routing
 
@@ -164,8 +161,8 @@ Expected behavior:
    - runtime mode resolves as:
      - `profiles.<selected>.postprocessor_runtime`
      - `profiles._base.postprocessor_runtime`
-     - SDK default `oneshot`
-     - `oneshot` (default): start `postprocessor_runner` on each callback invocation
+     - SDK default `persistent`
+     - `oneshot`: start `postprocessor_runner` on each callback invocation
      - `persistent`: keep one `postprocessor_worker` process per class for protocol lifetime
    - postprocessor method contract:
      - implement `process_graph(self, graph, context)`

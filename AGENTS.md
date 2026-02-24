@@ -44,6 +44,9 @@
 - `wordlift_sdk.kg_build` URL handling uses `WebPageScrapeApi` and conditionally
   runs Search Console refresh when `GOOGLE_SEARCH_CONSOLE` is enabled, while
   the legacy `ApplicationContainer` workflow continues to use web page imports.
+- Ingestion resolver requires explicit `INGEST_SOURCE` and `INGEST_LOADER`;
+  legacy fallback from `WEB_PAGE_IMPORT_MODE`/`WEB_PAGE_IMPORT_TIMEOUT` and
+  implicit source auto-priority are intentionally removed.
 - `wordlift_sdk.kg_build` callback patch preparation annotates every URI-subject
   node in the generated callback graph with `seovoc:source = "web-page-import"`
   (blank nodes are excluded), so source-filtered lookups continue to work when
@@ -65,8 +68,10 @@
   into `PYTHONPATH`; configured interpreters must resolve their own dependencies.
 - `wordlift_sdk.kg_build` postprocessor runtime is configurable via
   `postprocessor_runtime` with deterministic inheritance
-  (`profiles.<name>` -> `profiles._base` -> `oneshot` default); `persistent`
+  (`profiles.<name>` -> `profiles._base` -> `persistent` default); `persistent`
   keeps one long-lived worker per class across callbacks.
+- Worai-facing cloud orchestration is standardized on
+  `wordlift_sdk.kg_build.cloud_flow.run_cloud_workflow` as canonical path.
 - `wordlift_sdk.kg_build` postprocessor manifests use file-level precedence:
   profile manifest (`profiles/<name>/postprocessors.toml`) is exclusive when
   present, otherwise `_base` is used.

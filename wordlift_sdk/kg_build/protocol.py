@@ -43,7 +43,7 @@ def _resolve_postprocessor_runtime(settings: dict[str, Any]) -> str:
     value = settings.get("postprocessor_runtime")
     if value is None:
         value = settings.get("POSTPROCESSOR_RUNTIME")
-    return str(value or "oneshot")
+    return str(value or "persistent")
 
 
 class ProfileImportProtocol(WebPageImportProtocolInterface):

@@ -44,8 +44,8 @@ The orchestrator resolves adapters via registries and emits uniform events.
 
 ### New Global Keys
 
-- `INGEST_SOURCE`: `auto|urls|sitemap|sheets|local`
-- `INGEST_LOADER`: `auto|simple|proxy|playwright|premium_scraper|web_scrape_api|passthrough`
+- `INGEST_SOURCE`: `urls|sitemap|sheets|local` (required)
+- `INGEST_LOADER`: `simple|proxy|playwright|premium_scraper|web_scrape_api|passthrough` (required)
 - `INGEST_PASSTHROUGH_WHEN_HTML`: bool (default `true`)
 - `INGEST_TIMEOUT_MS`: int milliseconds (default `30000`)
 - `INGEST_RETRY_ATTEMPTS`: int (default `5`)
@@ -53,26 +53,9 @@ The orchestrator resolves adapters via registries and emits uniform events.
 
 ### Precedence
 
-1. If `INGEST_*` is set, it wins over legacy keys.
-2. If `INGEST_*` is unset, resolve from legacy keys.
-3. If both new+legacy disagree, use `INGEST_*` and emit `INGEST_CFG_CONFLICT` warning with parseable payload.
-4. Legacy `SHEETS_*` completeness checks run only when source resolution is
-   legacy/auto or explicit `INGEST_SOURCE=sheets`; explicit non-`sheets`
-   sources ignore partial `SHEETS_*` values.
-
-### Auto Resolution
-
-- Source priority: `URLS > SITEMAP_URL > SHEETS_* > local`
-- Loader auto: `web_scrape_api`
+1. `INGEST_SOURCE` and `INGEST_LOADER` are explicit and required.
+2. Legacy resolver fallback (`WEB_PAGE_IMPORT_MODE`, `WEB_PAGE_IMPORT_TIMEOUT`, implicit source auto-priority) is removed.
 - Passthrough shortcut: if item has embedded HTML and `INGEST_PASSTHROUGH_WHEN_HTML=true`, effective loader is `passthrough`.
-
-### Legacy Compatibility Mapping
-
-| Legacy `WEB_PAGE_IMPORT_MODE` | Canonical loader |
-| --- | --- |
-| `default` | `web_scrape_api` |
-| `proxy` | `proxy` |
-| `premium_scraper` | `premium_scraper` |
 
 Source alias compatibility:
 
@@ -140,12 +123,7 @@ for page in result.pages:
 
 ### Deprecated/Internal APIs
 
-No hard removals in this change.
-
-Legacy URL ingestion internals remain for compatibility and are now considered compatibility-layer surfaces:
-
-- `wordlift_sdk.url_source.*`
-- `wordlift_sdk.workflow.url_handler.*`
+Legacy resolver compatibility mapping from `WEB_PAGE_IMPORT_*` to `INGEST_*` is removed.
 
 ### Compatibility Table (Exact)
 

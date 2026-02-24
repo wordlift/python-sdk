@@ -7,7 +7,7 @@ def test_run_ingestion_with_mapping_and_passthrough() -> None:
     result = run_ingestion(
         {
             "INGEST_SOURCE": "local",
-            "INGEST_LOADER": "auto",
+            "INGEST_LOADER": "web_scrape_api",
             "INGEST_LOCAL_ITEMS": [
                 {"id": "1", "url": "https://example.com", "html": "<html>ok</html>"}
             ],

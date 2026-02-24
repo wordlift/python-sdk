@@ -1,11 +1,19 @@
 [tool.poetry]
 name = "wordlift-sdk"
-version = "5.4.1"
+version = "6.0.0"
 description = "Python toolkit for orchestrating WordLift imports and structured data workflows."
 authors = ["David Riccitelli <david@wordlift.io>"]
 readme = "README.md"
 packages = [{ include = "wordlift_sdk" }]
-include = ["wordlift_sdk/graphql/data/**"]
+include = [
+    "wordlift_sdk/graphql/data/**",
+    "docs/**",
+    "CHANGELOG.md",
+]
+
+[tool.poetry.urls]
+Documentation = "https://github.com/wordlift/python-sdk/blob/main/docs/INDEX.md"
+Changelog = "https://github.com/wordlift/python-sdk/blob/main/CHANGELOG.md"
 
 [tool.poetry.dependencies]
 python = ">=3.10, <3.15"

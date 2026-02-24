@@ -36,13 +36,11 @@ def _normalize_loader_name(value: str) -> str:
     return {
         "web_scrape_api": "web_scrape_api",
         "webscrapeapi": "web_scrape_api",
-        "default": "web_scrape_api",
         "simple": "simple",
         "proxy": "proxy",
         "playwright": "playwright",
         "premium_scraper": "premium_scraper",
         "passthrough": "passthrough",
-        "auto": "auto",
     }.get(key, key)
 
 
@@ -54,7 +52,6 @@ def _normalize_source_name(value: str) -> str:
         "sheets": "sheets",
         "local": "local",
         "debug-cloud": "local",
-        "auto": "auto",
     }.get(key, key)
     return mapped
 
@@ -138,59 +135,6 @@ def _build_source_config(
     )
 
 
-def _resolve_legacy_source(
-    get_value: Callable[[str, Any], Any],
-) -> tuple[str, list[str]]:
-    candidates: list[str] = []
-
-    urls = get_value("URLS")
-    if urls:
-        candidates.append("urls")
-
-    sitemap_url = get_value("SITEMAP_URL")
-    if sitemap_url:
-        candidates.append("sitemap")
-
-    sheets_url = get_value("SHEETS_URL")
-    sheets_name = get_value("SHEETS_NAME")
-    sheets_service_account = get_value("SHEETS_SERVICE_ACCOUNT")
-    if sheets_url or sheets_name or sheets_service_account:
-        if not (sheets_url and sheets_name and sheets_service_account):
-            raise SourceConfigError(
-                "Incomplete sheets configuration",
-                code="INGEST_SRC_SHEETS_CONFIG_INVALID",
-                details={
-                    "required": [
-                        "SHEETS_URL",
-                        "SHEETS_NAME",
-                        "SHEETS_SERVICE_ACCOUNT",
-                    ]
-                },
-            )
-        candidates.append("sheets")
-
-    local_items = get_value("INGEST_LOCAL_ITEMS", get_value("DEBUG_CLOUD_ITEMS"))
-    local_file = get_value("INGEST_LOCAL_FILE", get_value("DEBUG_CLOUD_FILE"))
-    if local_items or local_file:
-        candidates.append("local")
-
-    if not candidates:
-        raise IngestionConfigError(
-            "No source configured",
-            code="INGEST_CFG_MISSING_SOURCE",
-        )
-
-    priority = ["urls", "sitemap", "sheets", "local"]
-    for name in priority:
-        if name in candidates:
-            return name, candidates
-
-    raise IngestionConfigError(
-        "Unable to resolve source",
-        code="INGEST_CFG_MISSING_SOURCE",
-    )
-
-
 def _create_client_configuration(get_value: Callable[[str, Any], Any]) -> Any | None:
     key = get_value("WORDLIFT_KEY")
     if not key:
@@ -211,73 +155,18 @@ def resolve_ingestion_config_from_getter(
 
     ingest_source_raw = get_value("INGEST_SOURCE")
     ingest_loader_raw = get_value("INGEST_LOADER")
-
-    ingest_source = (
-        _normalize_source_name(str(ingest_source_raw))
-        if ingest_source_raw is not None
-        else None
-    )
-    ingest_loader = (
-        _normalize_loader_name(str(ingest_loader_raw))
-        if ingest_loader_raw is not None
-        else None
-    )
-
-    legacy_mode = get_value("WEB_PAGE_IMPORT_MODE")
-    legacy_loader = (
-        _normalize_loader_name(str(legacy_mode)) if legacy_mode is not None else None
-    )
-
-    if ingest_source not in {None, "auto"}:
-        source_name = ingest_source
-        if source_name == "sheets":
-            _resolve_legacy_source_errors_only(get_value)
-        legacy_source_name, _legacy_candidates = _resolve_legacy_source_if_present(
-            get_value
+    if ingest_source_raw is None:
+        raise IngestionConfigError(
+            "INGEST_SOURCE is required.",
+            code="INGEST_CFG_MISSING_SOURCE",
         )
-        if legacy_source_name and legacy_source_name != source_name:
-            warnings.append(
-                IngestionWarning(
-                    code="INGEST_CFG_CONFLICT",
-                    message="New source key overrides legacy source settings.",
-                    new_key="INGEST_SOURCE",
-                    new_value=source_name,
-                    legacy_key="legacy_source",
-                    legacy_value=legacy_source_name,
-                    winner="INGEST_SOURCE",
-                )
-            )
-    else:
-        source_name, legacy_candidates = _resolve_legacy_source(get_value)
-        if len(legacy_candidates) > 1:
-            warnings.append(
-                IngestionWarning(
-                    code="INGEST_CFG_MULTIPLE_LEGACY_SOURCES",
-                    message="Multiple legacy sources are set; deterministic priority applied.",
-                    winner=source_name,
-                    details={"candidates": legacy_candidates},
-                )
-            )
-
-    if ingest_loader not in {None, "auto"}:
-        loader_name = ingest_loader
-        if legacy_loader and legacy_loader != loader_name:
-            warnings.append(
-                IngestionWarning(
-                    code="INGEST_CFG_CONFLICT",
-                    message="New loader key overrides legacy loader settings.",
-                    new_key="INGEST_LOADER",
-                    new_value=loader_name,
-                    legacy_key="WEB_PAGE_IMPORT_MODE",
-                    legacy_value=legacy_mode,
-                    winner="INGEST_LOADER",
-                )
-            )
-    else:
-        loader_name = legacy_loader or "web_scrape_api"
-
-    if loader_name == "auto":
-        loader_name = "web_scrape_api"
+    if ingest_loader_raw is None:
+        raise IngestionConfigError(
+            "INGEST_LOADER is required.",
+            code="INGEST_CFG_MISSING_LOADER",
+        )
+    source_name = _normalize_source_name(str(ingest_source_raw))
+    loader_name = _normalize_loader_name(str(ingest_loader_raw))
 
     if loader_name not in {
         "simple",
@@ -295,10 +184,7 @@ def resolve_ingestion_config_from_getter(
     passthrough_when_html = _parse_bool(
         get_value("INGEST_PASSTHROUGH_WHEN_HTML"), default=True
     )
-    timeout_ms = _parse_int(
-        get_value("INGEST_TIMEOUT_MS", get_value("WEB_PAGE_IMPORT_TIMEOUT")),
-        default=30000,
-    )
+    timeout_ms = _parse_int(get_value("INGEST_TIMEOUT_MS"), default=30000)
     retry_attempts = _parse_int(get_value("INGEST_RETRY_ATTEMPTS"), default=5)
     retry_backoff_ms = _parse_int(get_value("INGEST_RETRY_BACKOFF_MS"), default=2000)
 
@@ -343,35 +229,6 @@ def resolve_ingestion_config_from_mapping(
 
 def resolve_ingestion_config_from_provider(provider: Any) -> ResolvedIngestionConfig:
     return resolve_ingestion_config_from_getter(provider.get_value)
-
-
-def _resolve_legacy_source_if_present(
-    get_value: Callable[[str, Any], Any],
-) -> tuple[str | None, list[str]]:
-    try:
-        name, candidates = _resolve_legacy_source(get_value)
-        return name, candidates
-    except IngestionConfigError:
-        return None, []
-
-
-def _resolve_legacy_source_errors_only(get_value: Callable[[str, Any], Any]) -> None:
-    sheets_url = get_value("SHEETS_URL")
-    sheets_name = get_value("SHEETS_NAME")
-    sheets_service_account = get_value("SHEETS_SERVICE_ACCOUNT")
-    if sheets_url or sheets_name or sheets_service_account:
-        if not (sheets_url and sheets_name and sheets_service_account):
-            raise SourceConfigError(
-                "Incomplete sheets configuration",
-                code="INGEST_SRC_SHEETS_CONFIG_INVALID",
-                details={
-                    "required": [
-                        "SHEETS_URL",
-                        "SHEETS_NAME",
-                        "SHEETS_SERVICE_ACCOUNT",
-                    ]
-                },
-            )
 
 
 def _validate_loader_option_combinations(

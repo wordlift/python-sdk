@@ -187,12 +187,16 @@ pass before surfacing a context-rich conversion error.
 The SDK now includes a profile-driven cloud mapping module under `wordlift_sdk.kg_build`.
 
 - Public module import: `wordlift_sdk.kg_build`
+- Canonical cloud orchestration path: `wordlift_sdk.kg_build.cloud_flow.run_cloud_workflow`
+- Supported cloud source modes in canonical path:
+  - `urls`
+  - `sitemap_url` (optional `sitemap_url_pattern`)
+  - `sheets_url` + `sheets_name`
 - Postprocessor runner entrypoint: `python -m wordlift_sdk.kg_build.postprocessor_runner`
 - Persistent postprocessor worker entrypoint: `python -m wordlift_sdk.kg_build.postprocessor_worker`
 - URL handling parity with legacy workflow:
   - `WebPageScrapeUrlHandler` is always enabled for `kg_build`
   - `SearchConsoleUrlHandler` is enabled when `GOOGLE_SEARCH_CONSOLE=True` (default)
-- Legacy `ApplicationContainer` workflow continues to use `WebPageImportUrlHandler`.
 - Postprocessor manifest precedence:
 1. `profiles/<profile>/postprocessors.toml` (exclusive when present)
 2. fallback `profiles/_base/postprocessors.toml`
@@ -202,7 +206,7 @@ The SDK now includes a profile-driven cloud mapping module under `wordlift_sdk.k
 - Postprocessor runtime mode:
   - `profiles.<profile>.postprocessor_runtime` overrides `_base`.
   - `_base.postprocessor_runtime` is used when profile value is missing.
-  - SDK default is `oneshot`.
+  - SDK default is `persistent`.
   - `persistent` keeps one long-lived subprocess per configured class and reuses it across callbacks.
 - Template exports inheritance:
   - supported files: `exports.toml`, `exports.toml.j2`, `exports.toml.liquid`
@@ -230,26 +234,21 @@ The SDK now includes a profile-driven cloud mapping module under `wordlift_sdk.k
   - `run_cloud_workflow(..., on_progress=...)` emits per-graph progress payloads during sync, including graph metrics and (when enabled) validation summaries.
   - `run_cloud_workflow(..., on_info=...)` remains supported and can be used together with `on_progress`/`on_kpi`.
   - final KPI payload uses `validation = null` when SHACL sync validation is disabled.
+  - migration notes and deprecation window for non-canonical behavior are documented in `docs/kg_build_cloud_workflow_migration.md`.
 
 ## Ingestion Module
 
 The SDK now includes a reusable 2-axis ingestion module under `wordlift_sdk.ingestion`:
 
-- Axis A (`INGEST_SOURCE`): `auto|urls|sitemap|sheets|local`
-- Axis B (`INGEST_LOADER`): `auto|simple|proxy|playwright|premium_scraper|web_scrape_api|passthrough`
+- Axis A (`INGEST_SOURCE`): `urls|sitemap|sheets|local`
+- Axis B (`INGEST_LOADER`): `simple|proxy|playwright|premium_scraper|web_scrape_api|passthrough`
 
 Default loader is `web_scrape_api`. If an item already includes embedded HTML and
 `INGEST_PASSTHROUGH_WHEN_HTML=True` (default), ingestion uses `passthrough`
 before network loaders.
 
-Legacy compatibility is preserved:
-
-- Source keys: `URLS`, `SITEMAP_URL`, `SHEETS_*`
-- Loader key: `WEB_PAGE_IMPORT_MODE`
-- Mapping: `default -> web_scrape_api`, `proxy -> proxy`, `premium_scraper -> premium_scraper`
-- Resolver guard: when `INGEST_SOURCE` is explicitly non-`sheets`, legacy
-  `SHEETS_*` completeness checks are skipped. Strict `SHEETS_*` validation still
-  applies for `INGEST_SOURCE=sheets` and legacy/auto source detection.
+`INGEST_SOURCE` and `INGEST_LOADER` are required. Legacy resolver fallback from
+`WEB_PAGE_IMPORT_MODE`/`WEB_PAGE_IMPORT_TIMEOUT` is removed.
 
 Quick start:
 
@@ -281,6 +280,8 @@ poetry run pytest
 - [Google Sheets Lookup](docs/google_sheets_lookup.md): Utility for O(1) lookups from Google Sheets.
 - [Web Page Import](docs/web_page_import.md): Configure fetch options, proxies, and JS rendering.
 - [KG Build KPI + Validation Callbacks](docs/kg_build_kpi_and_validation.md): Client contract and payload examples for `on_progress` and `on_kpi`.
+- [KG Build Cloud Workflow Migration](docs/kg_build_cloud_workflow_migration.md): Canonical `run_cloud_workflow` migration steps, deprecation window, and source/runtime expectations.
+- [Worai SDK Integration Contract v6](docs/worai_sdk_integration_contract_v6.md): Version-locked implementation contract for worai integrations on SDK 6.x.
 - [Structured Data](docs/structured_data.md): Structured data architecture and pipeline behavior.
 - [Canonical ID Policy](docs/canonical_id_policy.md): Scope strategy, deterministic type precedence, and URL-preserving rewrite guarantees.
 - [Customer Project Contract](docs/CUSTOMER_PROJECT_CONTRACT.md): Profile repo contract and manifest-based postprocessor runtime.
