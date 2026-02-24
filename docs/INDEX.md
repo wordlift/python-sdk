@@ -6,6 +6,7 @@
 - `docs/validation.md`: SHACL validation usage and shape handling.
 - `docs/render.md`: Page rendering and XHTML cleanup options.
 - `docs/web_page_import.md`: Web page import handler behavior and fetch options.
+- `docs/kg_build_kpi_and_validation.md`: Client contract for `kg_build` in-run progress (`on_progress`) and final KPI (`on_kpi`) payloads, including SHACL validation fields.
 - `docs/google_sheets_lookup.md`: Google Sheets lookup utility.
 - `docs/html_converter.md`: HTML conversion helper behavior.
 - `docs/canonical_id_policy.md`: Canonical ID scope policy, type precedence, and URL/media rewrite guarantees.

@@ -1,5 +1,8 @@
 # TODO
 
+- [x] 2026-02-24 Add `kg_build` run-level KPI aggregation for graph sync payloads (dataset-scoped `total_entities`, `type_assertions_total`, `property_assertions_total`, `entities_by_type`, `properties_by_predicate`) and expose end-of-run delivery via `run_cloud_workflow(..., on_kpi=...)` + protocol getter.
+- [x] 2026-02-24 Add optional per-graph SHACL validation in `kg_build` (`warn|strict`, configurable shape specs), aggregate validation KPIs in final payload (`validation.total/pass/fail`, warnings/errors count+sources), and stream in-run graph progress via `run_cloud_workflow(..., on_progress=...)`.
+- [x] 2026-02-24 Add client-facing docs for `kg_build` KPI/validation callback contracts with concrete `on_progress` and `on_kpi` payload examples, and index links for discoverability.
 - [x] 2026-02-23 Update `kg_build` callback graph source annotation to set `seovoc:source = "web-page-import"` on all URI subjects (not only root), exclude blank nodes, and add protocol/docs/changelog coverage.
 - [x] 2026-02-22 Implement consistent `_base` inheritance/override semantics across `kg_build` profile assets/settings (`postprocessor_runtime`, postprocessor manifest precedence, template/export/mapping overlays) with deterministic logging and regression coverage.
 - [x] 2026-02-22 Fix `kg_build` exports inheritance for graph-sync static template rendering by propagating `_base` profile-root exports, enforcing deterministic `_base` -> selected override precedence, and surfacing export lookup diagnostics on missing keys.

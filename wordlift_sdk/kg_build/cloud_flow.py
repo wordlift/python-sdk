@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import os
 import tempfile
 from inspect import isawaitable
@@ -12,6 +13,10 @@ ProviderFactory = Callable[[str], Any]
 ContainerFactory = Callable[[Any], Any]
 ProtocolFactory = Callable[[Any], Any | Awaitable[Any]]
 Reporter = Callable[[str], None]
+KpiReporter = Callable[[dict[str, Any]], None]
+ProgressReporter = Callable[[dict[str, Any]], None]
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -92,6 +97,8 @@ async def run_cloud_workflow(
     container_factory: ContainerFactory,
     protocol_factory: ProtocolFactory,
     on_info: Reporter | None = None,
+    on_kpi: KpiReporter | None = None,
+    on_progress: ProgressReporter | None = None,
 ) -> None:
     temp_sa_path: str | None = None
     temp_config_path: str | None = None
@@ -129,6 +136,7 @@ async def run_cloud_workflow(
                 context,
                 debug_dir=debug_dir,
                 workflow_config=config,
+                on_progress=on_progress,
             )
         except TypeError:
             protocol = protocol_factory(context)
@@ -148,6 +156,16 @@ async def run_cloud_workflow(
         await workflow.run()
 
     finally:
+        if protocol is not None and on_kpi is not None:
+            get_kpi_summary = getattr(protocol, "get_kpi_summary", None)
+            if callable(get_kpi_summary):
+                try:
+                    on_kpi(get_kpi_summary())
+                except Exception:
+                    logger.warning(
+                        "Failed to emit kg_build KPI summary via on_kpi callback.",
+                        exc_info=True,
+                    )
         if protocol is not None:
             close = getattr(protocol, "close", None)
             if callable(close):
