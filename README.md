@@ -216,6 +216,18 @@ The SDK now includes a profile-driven cloud mapping module under `wordlift_sdk.k
   - `context.account_key` contains the runtime API key and is required for postprocessor execution
   - keep `context.account` as the clean `/me` account object (no injected key)
   - API base URL should be read from `context.profile["settings"]["api_url"]` (defaults to `https://api.wordlift.io`)
+- Run-level sync KPIs:
+  - `ProfileImportProtocol.get_kpi_summary()` returns:
+    - graph totals: `total_entities`, `type_assertions_total`, `property_assertions_total`
+    - graph breakdowns: `entities_by_type`, `properties_by_predicate`
+    - validation totals: `validation.total`, `validation.pass`, `validation.fail`
+    - validation breakdowns: `validation.warnings.{count,sources}`, `validation.errors.{count,sources}`
+  - Validation can be enabled per profile with:
+    - `shacl_validate_sync` / `SHACL_VALIDATE_SYNC` (`true|false`, default `false`)
+    - `shacl_validate_mode` / `SHACL_VALIDATE_MODE` (`warn|strict`, default `warn`)
+    - `shacl_shape_specs` / `SHACL_SHAPE_SPECS` (optional list or comma-separated shape names/files)
+  - `run_cloud_workflow(..., on_kpi=...)` emits the final KPI summary once at run end (including failed runs with partial data).
+  - `run_cloud_workflow(..., on_progress=...)` emits per-graph progress payloads during sync, including graph metrics and (when enabled) validation summaries.
 
 ## Ingestion Module
 

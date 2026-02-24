@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import logging
 import os
+import tempfile
 from dataclasses import asdict
 from pathlib import Path
 from types import SimpleNamespace
@@ -15,11 +16,13 @@ from wordlift_sdk.protocol import Context
 from wordlift_sdk.protocol.web_page_import_protocol import (
     WebPageImportProtocolInterface,
 )
+from wordlift_sdk.validation.shacl import ValidationResult, validate_file
 
 from .config import ProfileDefinition
 from .entity_patcher import EntityPatcher
 from .id_allocator import IdAllocator
 from .id_postprocessor import CanonicalIdsPostprocessor
+from .kpi import KgBuildKpiCollector
 from .postprocessors import (
     PostprocessorContext,
     close_loaded_postprocessors,
@@ -52,11 +55,13 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         profile: ProfileDefinition,
         root_dir: Path | None = None,
         debug_dir: Path | None = None,
+        on_progress: Any | None = None,
     ) -> None:
         super().__init__(context)
         self.profile = profile
         self.root_dir = root_dir or Path.cwd()
         self.debug_dir = debug_dir
+        self._on_progress = on_progress
 
         self.profile_dir = self.root_dir / "profiles" / self.profile.name
         self.templates_dir = self._resolve_path(self.profile.templates_dir)
@@ -78,6 +83,9 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         self._mapping_cache: dict[Path, str] = {}
         self._static_templates_patched = False
         self._core_ids = CanonicalIdsPostprocessor()
+        self._kpi = KgBuildKpiCollector(
+            dataset_uri=getattr(self.context.account, "dataset_uri", None)
+        )
         self._postprocessor_runtime = _resolve_postprocessor_runtime(
             dict(self.profile.settings)
         )
@@ -91,6 +99,24 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             root_dir=self.root_dir,
             profile_name=self.profile.name,
             runtime=self._postprocessor_runtime,
+        )
+        self._shacl_validate = self._resolve_bool_setting(
+            "shacl_validate_sync", "SHACL_VALIDATE_SYNC", False
+        )
+        self._shacl_mode = (
+            str(
+                self.profile.settings.get(
+                    "shacl_validate_mode",
+                    self.profile.settings.get("SHACL_VALIDATE_MODE", "warn"),
+                )
+            )
+            .strip()
+            .lower()
+        )
+        self._shacl_shape_specs = self._resolve_shape_specs(
+            self.profile.settings.get(
+                "shacl_shape_specs", self.profile.settings.get("SHACL_SHAPE_SPECS")
+            )
         )
         logger.debug(
             "Resolved mappings for profile '%s': effective_dir=%s (origin=%s), routes=%s (origin=%s), overlay_dirs=%s",
@@ -149,11 +175,30 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         if self.debug_dir:
             self._write_debug_graph(graph, url)
 
+        validation_payload = self._validate_graph_if_enabled(graph, url)
+        if validation_payload is not None and self._shacl_mode == "strict":
+            if not validation_payload["pass"]:
+                raise RuntimeError(f"SHACL validation failed for {url} in strict mode.")
+
+        graph_metrics = self._kpi.graph_metrics(graph)
+        self._emit_progress(
+            {
+                "kind": "graph",
+                "profile": self.profile.name,
+                "url": url,
+                "graph": graph_metrics,
+                "validation": validation_payload,
+            }
+        )
+        self._kpi.record_graph(graph)
         await self.patcher.patch_all(graph)
         logger.info("Patched %s triples for %s", len(graph), url)
 
     def close(self) -> None:
         close_loaded_postprocessors(self._postprocessors)
+
+    def get_kpi_summary(self) -> dict[str, object]:
+        return self._kpi.summary(self.profile.name)
 
     def _resolve_path(self, raw_path: str) -> Path:
         path = Path(raw_path)
@@ -184,6 +229,23 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
 
         self._ensure_templates_loaded()
         if self._template_graph and len(self._template_graph) > 0:
+            validation_payload = self._validate_graph_if_enabled(
+                self._template_graph, "static_templates"
+            )
+            if validation_payload is not None and self._shacl_mode == "strict":
+                if not validation_payload["pass"]:
+                    raise RuntimeError(
+                        "SHACL validation failed for static templates in strict mode."
+                    )
+            self._emit_progress(
+                {
+                    "kind": "static_templates",
+                    "profile": self.profile.name,
+                    "graph": self._kpi.graph_metrics(self._template_graph),
+                    "validation": validation_payload,
+                }
+            )
+            self._kpi.record_graph(self._template_graph)
             await self.patcher.patch_all(self._template_graph)
             if self.debug_dir:
                 static_debug = self.debug_dir / "static_templates.ttl"
@@ -417,3 +479,122 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             id=existing_web_page_id,
             web_page=response.web_page,
         )
+
+    def _validate_graph_if_enabled(
+        self, graph: Graph, url: str
+    ) -> dict[str, Any] | None:
+        if not self._shacl_validate:
+            return None
+        result = self._validate_graph(graph)
+        summary = self._summarize_validation(result)
+        self._kpi.record_validation(
+            passed=summary["pass"],
+            warning_count=summary["warnings"]["count"],
+            error_count=summary["errors"]["count"],
+            warning_sources=summary["warnings"]["sources"],
+            error_sources=summary["errors"]["sources"],
+        )
+        logger.info(
+            "SHACL validation for %s: pass=%s warnings=%s errors=%s",
+            url,
+            summary["pass"],
+            summary["warnings"]["count"],
+            summary["errors"]["count"],
+        )
+        return summary
+
+    def _validate_graph(self, graph: Graph) -> ValidationResult:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".ttl", delete=False) as f:
+            tmp = Path(f.name)
+        try:
+            graph.serialize(destination=tmp, format="turtle")
+            return validate_file(
+                str(tmp),
+                shape_specs=self._shacl_shape_specs
+                if self._shacl_shape_specs
+                else None,
+            )
+        finally:
+            try:
+                tmp.unlink(missing_ok=True)
+            except Exception:
+                logger.debug("Failed to remove temporary SHACL graph file: %s", tmp)
+
+    def _summarize_validation(self, result: ValidationResult) -> dict[str, Any]:
+        sh = URIRef("http://www.w3.org/ns/shacl#")
+        sh_warning = URIRef(f"{sh}Warning")
+        sh_violation = URIRef(f"{sh}Violation")
+        sh_source_shape = URIRef(f"{sh}sourceShape")
+
+        warning_sources: dict[str, int] = {}
+        error_sources: dict[str, int] = {}
+        warning_count = 0
+        error_count = 0
+
+        for report_node in result.report_graph.subjects(
+            URIRef(f"{sh}resultSeverity"), sh_warning
+        ):
+            warning_count += 1
+            shape = next(
+                result.report_graph.objects(report_node, sh_source_shape), None
+            )
+            label = result.shape_source_map.get(shape, "unknown")
+            warning_sources[str(label)] = warning_sources.get(str(label), 0) + 1
+
+        for report_node in result.report_graph.subjects(
+            URIRef(f"{sh}resultSeverity"), sh_violation
+        ):
+            error_count += 1
+            shape = next(
+                result.report_graph.objects(report_node, sh_source_shape), None
+            )
+            label = result.shape_source_map.get(shape, "unknown")
+            error_sources[str(label)] = error_sources.get(str(label), 0) + 1
+
+        return {
+            "total": 1,
+            "pass": bool(result.conforms),
+            "fail": not bool(result.conforms),
+            "warnings": {
+                "count": warning_count,
+                "sources": dict(
+                    sorted(warning_sources.items(), key=lambda item: item[0])
+                ),
+            },
+            "errors": {
+                "count": error_count,
+                "sources": dict(
+                    sorted(error_sources.items(), key=lambda item: item[0])
+                ),
+            },
+        }
+
+    def _emit_progress(self, payload: dict[str, Any]) -> None:
+        if not callable(self._on_progress):
+            return
+        try:
+            self._on_progress(payload)
+        except Exception:
+            logger.warning("Failed to emit kg_build progress payload.", exc_info=True)
+
+    def _resolve_bool_setting(self, key: str, legacy_key: str, default: bool) -> bool:
+        value = self.profile.settings.get(key, self.profile.settings.get(legacy_key))
+        if value is None:
+            return default
+        if isinstance(value, bool):
+            return value
+        return str(value).strip().lower() in {"1", "true", "yes", "on"}
+
+    def _resolve_shape_specs(self, value: Any) -> list[str]:
+        if value is None:
+            return []
+        if isinstance(value, str):
+            return [part.strip() for part in value.split(",") if part.strip()]
+        if isinstance(value, (list, tuple)):
+            specs: list[str] = []
+            for item in value:
+                text = str(item).strip()
+                if text:
+                    specs.append(text)
+            return specs
+        return [str(value).strip()] if str(value).strip() else []

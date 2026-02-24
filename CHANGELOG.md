@@ -1,5 +1,43 @@
 # Changelog
 
+## 5.4.0 - 2026-02-24
+
+### Added
+
+- Added optional SHACL validation during `kg_build` graph sync (per graph) controlled by profile settings:
+  - `shacl_validate_sync` / `SHACL_VALIDATE_SYNC`
+  - `shacl_validate_mode` / `SHACL_VALIDATE_MODE` (`warn|strict`)
+  - `shacl_shape_specs` / `SHACL_SHAPE_SPECS`
+- Added in-run progress streaming hook on cloud workflow:
+  - `run_cloud_workflow(..., on_progress=...)`
+  - emits per-graph payloads with graph metrics and validation summary (when enabled).
+
+### Changed
+
+- `kg_build` KPI payload now includes validation aggregates with clear pass/fail naming:
+  - `validation.total`
+  - `validation.pass`
+  - `validation.fail`
+  - `validation.warnings.{count,sources}`
+  - `validation.errors.{count,sources}`
+
+## 5.3.1 - 2026-02-24
+
+### Added
+
+- Added `kg_build` run-level sync KPI aggregation for dataset-scoped entities patched during static template and callback graph writes:
+  - `totals.total_entities`
+  - `totals.type_assertions_total`
+  - `totals.property_assertions_total`
+  - `entities_by_type`
+  - `properties_by_predicate`
+- Added `ProfileImportProtocol.get_kpi_summary()` for direct protocol consumers.
+- Added optional `on_kpi` callback argument to `run_cloud_workflow(...)` to emit a single end-of-run KPI payload.
+
+### Changed
+
+- `run_cloud_workflow(..., on_kpi=...)` now emits KPI summaries in both successful and failed runs (failed runs may emit partial aggregates).
+
 ## 5.3.0 - 2026-02-23
 
 ### Changed

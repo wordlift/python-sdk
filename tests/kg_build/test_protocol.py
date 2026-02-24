@@ -3,12 +3,18 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from jinja2 import UndefinedError
 from rdflib import BNode, Graph, Literal, RDF, URIRef
 from wordlift_client import WebPage, WebPageScrapeResponse
+from wordlift_sdk.validation.shacl import ValidationResult
 
 from wordlift_sdk.kg_build.config.loader import ProfileDefinition, ProfileMappingRoute
 import wordlift_sdk.kg_build.protocol as protocol_module
-from wordlift_sdk.kg_build.protocol import ProfileImportProtocol
+from wordlift_sdk.kg_build.protocol import (
+    ProfileImportProtocol,
+    _path_contains_part,
+    _resolve_postprocessor_runtime,
+)
 
 
 def _make_profile() -> ProfileDefinition:
@@ -42,9 +48,26 @@ def _make_profile_with_settings(settings: dict[str, object]) -> ProfileDefinitio
     )
 
 
+def _make_profile_with_overrides(**kwargs) -> ProfileDefinition:
+    base = _make_profile()
+    data = dict(base.__dict__)
+    data.update(kwargs)
+    return ProfileDefinition(**data)
+
+
 def _make_context() -> SimpleNamespace:
     return SimpleNamespace(
         account=SimpleNamespace(dataset_uri="https://data.example.com/dataset"),
+        client_configuration=SimpleNamespace(api_key={}),
+        configuration_provider=SimpleNamespace(
+            get_value=lambda *_args, **_kwargs: None
+        ),
+    )
+
+
+def _make_context_without_dataset() -> SimpleNamespace:
+    return SimpleNamespace(
+        account=SimpleNamespace(dataset_uri=None),
         client_configuration=SimpleNamespace(api_key={}),
         configuration_provider=SimpleNamespace(
             get_value=lambda *_args, **_kwargs: None
@@ -74,6 +97,23 @@ def _make_multi_entity_graph() -> Graph:
     graph.add((web_page, URIRef("http://schema.org/mainEntity"), article))
     graph.add((article, URIRef("http://schema.org/review"), review))
     graph.add((article, URIRef("http://schema.org/about"), product))
+    return graph
+
+
+def _make_dataset_scoped_graph() -> Graph:
+    graph = Graph()
+    page = URIRef("https://data.example.com/dataset/web-pages/1")
+    article = URIRef("https://data.example.com/dataset/entities/article-1")
+    external = URIRef("https://external.example.com/entities/ignore-me")
+
+    graph.add((page, RDF.type, URIRef("https://schema.org/WebPage")))
+    graph.add((page, RDF.type, URIRef("https://schema.org/CreativeWork")))
+    graph.add((page, URIRef("https://schema.org/name"), Literal("Page 1")))
+    graph.add((page, URIRef("https://schema.org/mainEntity"), article))
+    graph.add((article, RDF.type, URIRef("https://schema.org/Article")))
+    graph.add((article, URIRef("https://schema.org/headline"), Literal("Hello")))
+    graph.add((external, RDF.type, URIRef("https://schema.org/Thing")))
+    graph.add((external, URIRef("https://schema.org/name"), Literal("External")))
     return graph
 
 
@@ -344,3 +384,673 @@ def test_apply_postprocessors_fails_fast_when_account_key_missing() -> None:
         )
 
     assert handler.called is False
+
+
+def test_protocol_helpers_runtime_and_path_part() -> None:
+    assert _path_contains_part("profiles/_base/templates", "_base") is True
+    assert _path_contains_part("profiles/demo/templates", "_base") is False
+    assert _resolve_postprocessor_runtime({}) == "oneshot"
+    assert (
+        _resolve_postprocessor_runtime({"POSTPROCESSOR_RUNTIME": "persistent"})
+        == "persistent"
+    )
+
+
+@pytest.mark.asyncio
+async def test_callback_returns_early_on_errors() -> None:
+    protocol = ProfileImportProtocol(
+        context=_make_context(),
+        profile=_make_profile(),
+        root_dir=Path.cwd(),
+    )
+    protocol.patcher.patch_all = AsyncMock()
+    response = SimpleNamespace(
+        web_page=SimpleNamespace(url="https://x", html="<html></html>"),
+        errors=["boom"],
+    )
+
+    await protocol.callback(response)
+
+    protocol.patcher.patch_all.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_callback_returns_early_when_html_missing() -> None:
+    protocol = ProfileImportProtocol(
+        context=_make_context(),
+        profile=_make_profile(),
+        root_dir=Path.cwd(),
+    )
+    protocol.patcher.patch_all = AsyncMock()
+    response = WebPageScrapeResponse(web_page=WebPage(url="https://x", html=None))
+
+    await protocol.callback(response)
+
+    protocol.patcher.patch_all.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_callback_returns_early_when_mapping_has_no_triples() -> None:
+    protocol = ProfileImportProtocol(
+        context=_make_context(),
+        profile=_make_profile(),
+        root_dir=Path.cwd(),
+    )
+    protocol._patch_static_templates_once = AsyncMock()
+    protocol._resolve_mapping_path = MagicMock(return_value=Path("mapping.yarrrml"))
+    protocol._get_mapping_content = MagicMock(return_value="mapping")
+    protocol.rml_service.apply_mapping = AsyncMock(return_value=Graph())
+    protocol.patcher.patch_all = AsyncMock()
+
+    response = WebPageScrapeResponse(
+        web_page=WebPage(url="https://example.com/page", html="<html></html>")
+    )
+    await protocol.callback(response)
+
+    protocol.patcher.patch_all.assert_not_called()
+
+
+def test_close_invokes_postprocessor_cleanup(monkeypatch: pytest.MonkeyPatch) -> None:
+    called: dict[str, object] = {}
+
+    def fake_close(postprocessors):
+        called["value"] = postprocessors
+
+    monkeypatch.setattr(protocol_module, "close_loaded_postprocessors", fake_close)
+    protocol = ProfileImportProtocol(
+        context=_make_context(),
+        profile=_make_profile(),
+        root_dir=Path.cwd(),
+    )
+    protocol._postprocessors = ["x"]  # type: ignore[assignment]
+    protocol.close()
+    assert called["value"] == ["x"]
+
+
+def test_resolve_path_and_overlay_paths(tmp_path: Path) -> None:
+    protocol = ProfileImportProtocol(
+        context=_make_context(),
+        profile=_make_profile(),
+        root_dir=tmp_path,
+    )
+    absolute = Path("/tmp/abs-demo")
+    assert protocol._resolve_path(str(absolute)) == absolute
+    overlay = protocol._resolve_overlay_paths(("a", "b"))
+    assert overlay == (tmp_path / "a", tmp_path / "b")
+
+
+def test_resolve_mapping_path_prefers_existing_file(tmp_path: Path) -> None:
+    protocol = ProfileImportProtocol(
+        context=_make_context(),
+        profile=_make_profile(),
+        root_dir=tmp_path,
+    )
+    mapping_name = "default.yarrrml"
+    protocol.profile = ProfileDefinition(
+        **{
+            **protocol.profile.__dict__,
+            "routes": (ProfileMappingRoute(pattern=".*", mapping=mapping_name),),
+        }
+    )
+    d1 = tmp_path / "m1"
+    d2 = tmp_path / "m2"
+    d1.mkdir()
+    d2.mkdir()
+    (d2 / mapping_name).write_text("x", encoding="utf-8")
+    protocol._mapping_dirs = (d1, d2)
+    assert protocol._resolve_mapping_path("https://example.com") == d2 / mapping_name
+
+
+def test_resolve_mapping_path_falls_back_to_last_dir(tmp_path: Path) -> None:
+    protocol = ProfileImportProtocol(
+        context=_make_context(),
+        profile=_make_profile(),
+        root_dir=tmp_path,
+    )
+    d1 = tmp_path / "m1"
+    d2 = tmp_path / "m2"
+    d1.mkdir()
+    d2.mkdir()
+    protocol._mapping_dirs = (d1, d2)
+    protocol.text_renderer.resolve_mapping_template = MagicMock(side_effect=lambda p: p)
+    resolved = protocol._resolve_mapping_path("https://example.com")
+    assert resolved == d2 / "default.yarrrml"
+
+
+@pytest.mark.asyncio
+async def test_patch_static_templates_once_records_and_writes_debug(
+    tmp_path: Path,
+) -> None:
+    protocol = ProfileImportProtocol(
+        context=_make_context(),
+        profile=_make_profile(),
+        root_dir=tmp_path,
+        debug_dir=tmp_path / "debug",
+    )
+    graph = Graph()
+    s = URIRef("https://data.example.com/dataset/entities/x")
+    graph.add((s, RDF.type, URIRef("https://schema.org/Thing")))
+    protocol._template_graph = graph
+    protocol._template_exports = {}
+    protocol.patcher.patch_all = AsyncMock()
+
+    await protocol._patch_static_templates_once()
+    await protocol._patch_static_templates_once()
+
+    protocol.patcher.patch_all.assert_called_once()
+    assert (tmp_path / "debug" / "static_templates.ttl").exists()
+
+
+def test_ensure_templates_loaded_requires_dataset_uri() -> None:
+    protocol = ProfileImportProtocol(
+        context=_make_context_without_dataset(),
+        profile=_make_profile(),
+        root_dir=Path.cwd(),
+    )
+    with pytest.raises(RuntimeError, match="Dataset URI not available"):
+        protocol._ensure_templates_loaded()
+
+
+def test_ensure_templates_loaded_handles_empty_templates() -> None:
+    protocol = ProfileImportProtocol(
+        context=_make_context(),
+        profile=_make_profile(),
+        root_dir=Path.cwd(),
+    )
+    protocol.text_renderer.load_exports_with_summary = MagicMock(
+        return_value=(
+            {"k": "v"},
+            {
+                "loaded_files": [],
+                "source_keys": [],
+                "effective_keys": [],
+                "overrides": [],
+                "searched_paths": [],
+            },
+        )
+    )
+    protocol.template_reifier.resolve_template_paths = MagicMock(
+        return_value=([], {"source_files": [], "effective_files": [], "overrides": []})
+    )
+    protocol._ensure_templates_loaded()
+    assert isinstance(protocol._template_graph, Graph)
+    assert protocol._template_exports == {"k": "v"}
+
+
+def test_ensure_templates_loaded_raises_runtime_for_missing_context() -> None:
+    protocol = ProfileImportProtocol(
+        context=_make_context(),
+        profile=_make_profile(),
+        root_dir=Path.cwd(),
+    )
+    protocol.text_renderer.load_exports_with_summary = MagicMock(
+        return_value=(
+            {},
+            {
+                "loaded_files": ["profiles/_base/exports.toml"],
+                "source_keys": [],
+                "effective_keys": [],
+                "overrides": [],
+                "searched_paths": ["profiles/_base/exports.toml"],
+            },
+        )
+    )
+    protocol.template_reifier.resolve_template_paths = MagicMock(
+        return_value=(
+            ["x"],
+            {"source_files": [], "effective_files": [], "overrides": []},
+        )
+    )
+    protocol.template_reifier.reify = MagicMock(
+        side_effect=UndefinedError("missing value")
+    )
+
+    with pytest.raises(RuntimeError, match="Template rendering failed"):
+        protocol._ensure_templates_loaded()
+
+
+def test_get_mapping_content_uses_cache_and_requires_dataset() -> None:
+    protocol = ProfileImportProtocol(
+        context=_make_context(),
+        profile=_make_profile(),
+        root_dir=Path.cwd(),
+    )
+    path = Path("m.yarrrml")
+    protocol._mapping_cache[path] = "cached"
+    assert protocol._get_mapping_content(path) == "cached"
+
+    protocol2 = ProfileImportProtocol(
+        context=_make_context_without_dataset(),
+        profile=_make_profile(),
+        root_dir=Path.cwd(),
+    )
+    with pytest.raises(RuntimeError, match="Dataset URI not available"):
+        protocol2._get_mapping_content(path)
+
+
+def test_apply_postprocessors_runs_all_processors() -> None:
+    protocol = ProfileImportProtocol(
+        context=_make_context(),
+        profile=_make_profile_with_settings({"api_key": "x"}),
+        root_dir=Path.cwd(),
+    )
+    response = WebPageScrapeResponse(
+        web_page=WebPage(url="https://example.com/page", html="<html></html>")
+    )
+    graph = _make_graph("https://example.com/page")
+
+    class _P1:
+        name = "p1"
+
+        def run(self, g, _ctx):
+            g.add(
+                (
+                    URIRef("https://example.com/page"),
+                    URIRef("https://schema.org/name"),
+                    Literal("a"),
+                )
+            )
+            return g
+
+    class _P2:
+        name = "p2"
+
+        def run(self, g, _ctx):
+            return g
+
+    protocol._postprocessors = [_P1(), _P2()]  # type: ignore[assignment]
+    protocol._resolve_postprocessor_account_key = MagicMock(return_value="secret")
+    out = protocol._apply_postprocessors(
+        graph, "https://example.com/page", response, None
+    )
+    assert len(out) >= len(graph)
+
+
+def test_resolve_postprocessor_account_key_priority(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    protocol = ProfileImportProtocol(
+        context=_make_context(),
+        profile=_make_profile(),
+        root_dir=Path.cwd(),
+    )
+    protocol.profile = ProfileDefinition(
+        **{**protocol.profile.__dict__, "api_key": "profile-key"}
+    )
+    assert protocol._resolve_postprocessor_account_key() == "profile-key"
+
+    protocol.profile = ProfileDefinition(
+        **{**protocol.profile.__dict__, "api_key": None}
+    )
+    protocol.context.client_configuration.api_key = {"ApiKey": "runtime-key"}
+    assert protocol._resolve_postprocessor_account_key() == "runtime-key"
+
+    protocol.context.client_configuration.api_key = {}
+    protocol.context.configuration_provider = SimpleNamespace(
+        get_value=lambda name: "provider-key" if name == "WORDLIFT_KEY" else None
+    )
+    assert protocol._resolve_postprocessor_account_key() == "provider-key"
+
+    protocol.context.configuration_provider = SimpleNamespace(
+        get_value=lambda _name: (_ for _ in ()).throw(RuntimeError("nope"))
+    )
+    monkeypatch.setenv("WORDLIFT_API_KEY", "env-key")
+    assert protocol._resolve_postprocessor_account_key() == "env-key"
+    monkeypatch.delenv("WORDLIFT_API_KEY", raising=False)
+
+
+def test_clean_key_write_debug_and_reconcile(tmp_path: Path) -> None:
+    protocol = ProfileImportProtocol(
+        context=_make_context(),
+        profile=_make_profile(),
+        root_dir=tmp_path,
+        debug_dir=tmp_path / "debug",
+    )
+    assert protocol._clean_key(None) is None
+    assert protocol._clean_key("  ") is None
+    assert protocol._clean_key(" x ") == "x"
+
+    graph = _make_graph("https://example.com/old")
+    protocol._write_debug_graph(graph, "https://example.com/page")
+    assert any((tmp_path / "debug").iterdir())
+
+    https_graph = Graph()
+    old = URIRef("https://example.com/old")
+    new = URIRef("https://example.com/new")
+    child = URIRef("https://example.com/child")
+    https_graph.add((old, RDF.type, URIRef("https://schema.org/WebPage")))
+    https_graph.add((child, URIRef("https://schema.org/about"), old))
+    assert protocol._find_web_page_iri(https_graph) == old
+    protocol._reconcile_root_id(https_graph, str(new))
+    assert (new, RDF.type, URIRef("https://schema.org/WebPage")) in https_graph
+    assert (child, URIRef("https://schema.org/about"), new) in https_graph
+
+
+def test_mapping_response_with_existing_id() -> None:
+    protocol = ProfileImportProtocol(
+        context=_make_context(),
+        profile=_make_profile(),
+        root_dir=Path.cwd(),
+    )
+    response = WebPageScrapeResponse(
+        web_page=WebPage(url="https://example.com/page", html="<html></html>")
+    )
+    mapped = protocol._mapping_response(response, "https://example.com/id")
+    assert mapped.id == "https://example.com/id"
+    assert mapped.web_page.url == "https://example.com/page"
+
+
+def test_protocol_setting_parsers_and_progress_error_logging(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    profile = _make_profile_with_overrides(
+        settings={
+            "SHACL_VALIDATE_SYNC": "true",
+            "SHACL_SHAPE_SPECS": "google-article, google-product",
+        }
+    )
+    protocol = ProfileImportProtocol(
+        context=_make_context(),
+        profile=profile,
+        root_dir=Path.cwd(),
+    )
+    assert protocol._shacl_validate is True
+    assert protocol._shacl_shape_specs == ["google-article", "google-product"]
+    assert protocol._resolve_shape_specs(["a", " ", "b"]) == ["a", "b"]
+    assert protocol._resolve_shape_specs(123) == ["123"]
+
+    protocol._on_progress = lambda _payload: (_ for _ in ()).throw(RuntimeError("boom"))
+    with caplog.at_level("WARNING"):
+        protocol._emit_progress({"kind": "graph"})
+    assert "Failed to emit kg_build progress payload." in caplog.text
+
+
+def test_resolve_mapping_path_absolute_and_templated(tmp_path: Path) -> None:
+    protocol = ProfileImportProtocol(
+        context=_make_context(),
+        profile=_make_profile(),
+        root_dir=tmp_path,
+    )
+    absolute = Path("/tmp/absolute.yarrrml")
+    protocol.profile = _make_profile_with_overrides(
+        routes=(ProfileMappingRoute(pattern=".*", mapping=str(absolute)),)
+    )
+    assert protocol._resolve_mapping_path("https://example.com") == absolute
+
+    mapping_name = "templated.yarrrml"
+    protocol.profile = _make_profile_with_overrides(
+        routes=(ProfileMappingRoute(pattern=".*", mapping=mapping_name),)
+    )
+    d1 = tmp_path / "m1"
+    d2 = tmp_path / "m2"
+    d1.mkdir()
+    d2.mkdir()
+    templated = d2 / "templated.generated.yarrrml"
+
+    def _resolve_template(candidate: Path) -> Path:
+        if candidate == d2 / mapping_name:
+            return templated
+        return candidate
+
+    protocol._mapping_dirs = (d1, d2)
+    protocol.text_renderer.resolve_mapping_template = MagicMock(
+        side_effect=_resolve_template
+    )
+    templated.write_text("x", encoding="utf-8")
+    assert protocol._resolve_mapping_path("https://example.com") == templated
+
+
+@pytest.mark.asyncio
+async def test_patch_static_templates_strict_validation_raises() -> None:
+    profile = _make_profile_with_overrides(
+        settings={
+            "shacl_validate_sync": True,
+            "shacl_validate_mode": "strict",
+        }
+    )
+    protocol = ProfileImportProtocol(
+        context=_make_context(),
+        profile=profile,
+        root_dir=Path.cwd(),
+    )
+    graph = Graph()
+    graph.add(
+        (
+            URIRef("https://data.example.com/dataset/entities/x"),
+            RDF.type,
+            URIRef("https://schema.org/Thing"),
+        )
+    )
+    protocol._template_graph = graph
+    protocol._template_exports = {}
+    protocol._validate_graph = MagicMock(
+        return_value=_make_validation_result(conforms=False)
+    )
+
+    with pytest.raises(
+        RuntimeError, match="SHACL validation failed for static templates"
+    ):
+        await protocol._patch_static_templates_once()
+
+
+def test_find_web_page_iri_returns_none_when_missing() -> None:
+    protocol = ProfileImportProtocol(
+        context=_make_context(),
+        profile=_make_profile(),
+        root_dir=Path.cwd(),
+    )
+    graph = Graph()
+    graph.add(
+        (
+            URIRef("https://example.com/entities/x"),
+            RDF.type,
+            URIRef("https://schema.org/Thing"),
+        )
+    )
+    assert protocol._find_web_page_iri(graph) is None
+
+
+def _make_validation_result(
+    *,
+    conforms: bool,
+    warning_shapes: list[URIRef] | None = None,
+    error_shapes: list[URIRef] | None = None,
+    shape_map: dict[URIRef, str] | None = None,
+) -> ValidationResult:
+    warning_shapes = warning_shapes or []
+    error_shapes = error_shapes or []
+    shape_map = shape_map or {}
+    report = Graph()
+    sh_result_severity = URIRef("http://www.w3.org/ns/shacl#resultSeverity")
+    sh_warning = URIRef("http://www.w3.org/ns/shacl#Warning")
+    sh_violation = URIRef("http://www.w3.org/ns/shacl#Violation")
+    sh_source_shape = URIRef("http://www.w3.org/ns/shacl#sourceShape")
+
+    for index, shape in enumerate(warning_shapes):
+        node = URIRef(f"https://example.com/report/w/{index}")
+        report.add((node, sh_result_severity, sh_warning))
+        report.add((node, sh_source_shape, shape))
+    for index, shape in enumerate(error_shapes):
+        node = URIRef(f"https://example.com/report/e/{index}")
+        report.add((node, sh_result_severity, sh_violation))
+        report.add((node, sh_source_shape, shape))
+
+    return ValidationResult(
+        conforms=conforms,
+        report_text="report",
+        report_graph=report,
+        data_graph=Graph(),
+        shape_source_map=shape_map,
+        warning_count=len(warning_shapes),
+    )
+
+
+def test_summarize_validation_aggregates_sources() -> None:
+    protocol = ProfileImportProtocol(
+        context=_make_context(),
+        profile=_make_profile(),
+        root_dir=Path.cwd(),
+    )
+    article_shape = URIRef("https://shape.example/article")
+    product_shape = URIRef("https://shape.example/product")
+    result = _make_validation_result(
+        conforms=False,
+        warning_shapes=[article_shape],
+        error_shapes=[article_shape, product_shape],
+        shape_map={article_shape: "google-article", product_shape: "google-product"},
+    )
+    summary = protocol._summarize_validation(result)
+    assert summary == {
+        "total": 1,
+        "pass": False,
+        "fail": True,
+        "warnings": {"count": 1, "sources": {"google-article": 1}},
+        "errors": {
+            "count": 2,
+            "sources": {"google-article": 1, "google-product": 1},
+        },
+    }
+
+
+@pytest.mark.asyncio
+async def test_profile_protocol_emits_progress_and_validation_in_warn_mode() -> None:
+    events: list[dict[str, object]] = []
+    profile = _make_profile_with_overrides(
+        settings={
+            "shacl_validate_sync": True,
+            "shacl_validate_mode": "warn",
+        }
+    )
+    protocol = ProfileImportProtocol(
+        context=_make_context(),
+        profile=profile,
+        root_dir=Path.cwd(),
+        on_progress=lambda payload: events.append(payload),
+    )
+    protocol._patch_static_templates_once = AsyncMock()
+    protocol._resolve_mapping_path = MagicMock(return_value=Path("mapping.yarrrml"))
+    protocol._get_mapping_content = MagicMock(return_value="mapping")
+    protocol._core_ids.process_graph = MagicMock(side_effect=lambda g, _: g)
+    protocol._apply_postprocessors = MagicMock(side_effect=lambda g, *_: g)
+    protocol.patcher.patch_all = AsyncMock()
+    protocol.rml_service.apply_mapping = AsyncMock(
+        return_value=_make_dataset_scoped_graph()
+    )
+    protocol._validate_graph = MagicMock(
+        return_value=_make_validation_result(
+            conforms=False,
+            warning_shapes=[URIRef("https://shape.example/w")],
+            error_shapes=[URIRef("https://shape.example/e")],
+            shape_map={
+                URIRef("https://shape.example/w"): "google-article",
+                URIRef("https://shape.example/e"): "google-product",
+            },
+        )
+    )
+
+    response = WebPageScrapeResponse(
+        web_page=WebPage(url="https://example.com/page", html="<html></html>")
+    )
+    await protocol.callback(response)
+
+    assert events
+    payload = events[-1]
+    assert payload["kind"] == "graph"
+    assert payload["url"] == "https://example.com/page"
+    assert payload["validation"] == {
+        "total": 1,
+        "pass": False,
+        "fail": True,
+        "warnings": {"count": 1, "sources": {"google-article": 1}},
+        "errors": {"count": 1, "sources": {"google-product": 1}},
+    }
+    summary = protocol.get_kpi_summary()
+    assert summary["validation"] == {
+        "total": 1,
+        "pass": 0,
+        "fail": 1,
+        "warnings": {"count": 1, "sources": {"google-article": 1}},
+        "errors": {"count": 1, "sources": {"google-product": 1}},
+    }
+
+
+@pytest.mark.asyncio
+async def test_profile_protocol_validation_strict_mode_raises() -> None:
+    profile = _make_profile_with_overrides(
+        settings={
+            "shacl_validate_sync": True,
+            "shacl_validate_mode": "strict",
+        }
+    )
+    protocol = ProfileImportProtocol(
+        context=_make_context(),
+        profile=profile,
+        root_dir=Path.cwd(),
+    )
+    protocol._patch_static_templates_once = AsyncMock()
+    protocol._resolve_mapping_path = MagicMock(return_value=Path("mapping.yarrrml"))
+    protocol._get_mapping_content = MagicMock(return_value="mapping")
+    protocol._core_ids.process_graph = MagicMock(side_effect=lambda g, _: g)
+    protocol._apply_postprocessors = MagicMock(side_effect=lambda g, *_: g)
+    protocol.patcher.patch_all = AsyncMock()
+    protocol.rml_service.apply_mapping = AsyncMock(
+        return_value=_make_dataset_scoped_graph()
+    )
+    protocol._validate_graph = MagicMock(
+        return_value=_make_validation_result(conforms=False)
+    )
+
+    response = WebPageScrapeResponse(
+        web_page=WebPage(url="https://example.com/page", html="<html></html>")
+    )
+    with pytest.raises(RuntimeError, match="SHACL validation failed"):
+        await protocol.callback(response)
+
+
+@pytest.mark.asyncio
+async def test_profile_protocol_collects_run_level_kpis() -> None:
+    protocol = ProfileImportProtocol(
+        context=_make_context(),
+        profile=_make_profile(),
+        root_dir=Path.cwd(),
+    )
+    protocol._patch_static_templates_once = AsyncMock()
+    protocol._resolve_mapping_path = MagicMock(return_value=Path("mapping.yarrrml"))
+    protocol._get_mapping_content = MagicMock(return_value="mapping")
+    protocol._core_ids.process_graph = MagicMock(side_effect=lambda g, _: g)
+    protocol._apply_postprocessors = MagicMock(side_effect=lambda g, *_: g)
+    protocol.patcher.patch_all = AsyncMock()
+    protocol.rml_service.apply_mapping = AsyncMock(
+        return_value=_make_dataset_scoped_graph()
+    )
+
+    response = WebPageScrapeResponse(
+        web_page=WebPage(url="https://example.com/page", html="<html></html>")
+    )
+    await protocol.callback(response)
+
+    summary = protocol.get_kpi_summary()
+    assert summary["profile"] == "test-profile"
+    assert summary["totals"] == {
+        "total_entities": 2,
+        "type_assertions_total": 3,
+        "property_assertions_total": 5,
+    }
+    assert summary["entities_by_type"] == {
+        "https://schema.org/Article": 1,
+        "https://schema.org/CreativeWork": 1,
+        "https://schema.org/WebPage": 1,
+    }
+    assert summary["properties_by_predicate"] == {
+        "https://schema.org/headline": 1,
+        "https://schema.org/mainEntity": 1,
+        "https://schema.org/name": 1,
+        "https://w3id.org/seovoc/source": 2,
+    }
+    assert summary["validation"] == {
+        "total": 0,
+        "pass": 0,
+        "fail": 0,
+        "warnings": {"count": 0, "sources": {}},
+        "errors": {"count": 0, "sources": {}},
+    }

@@ -36,6 +36,9 @@ Sequence:
    - optionally reconcile root IRI when URL source provides an existing ID
    - set `seovoc:source` to `"web-page-import"` on all URI-subject entities in host-generated callback graph output
    - run postprocessors from selected manifest precedence (`profiles/<name>/postprocessors.toml`, else `_base`, else none)
+   - aggregate run-level KPI counters for dataset-scoped entities in the patched graph (`total_entities`, type/property totals, and by-type/by-predicate breakdowns)
+   - optionally run SHACL validation for each graph (`warn`/`strict`) and aggregate validation KPI counters (`total`, `pass`, `fail`, warnings/errors counts and per-shape sources)
+   - optionally emit per-graph progress payloads to host callback (`on_progress`) with graph metrics and validation summary
    - patch generated graph to WordLift
 
 Debug output convention:
@@ -60,6 +63,8 @@ Responsibility:
 6. Apply built-in canonical ID generation (standard policy).
 7. Apply profile postprocessors (no hardcoded customer extractor references).
 8. Patch graph triples, and optionally write debug Turtle files.
+9. Expose cumulative run KPIs via `get_kpi_summary()` for host emission/reporting.
+10. Cloud workflow can stream progress events (`on_progress`) and emit final KPI payload (`on_kpi`).
 
 Example profile convention for postprocessors (manifest classes):
 

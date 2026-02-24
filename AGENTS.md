@@ -48,6 +48,15 @@
   node in the generated callback graph with `seovoc:source = "web-page-import"`
   (blank nodes are excluded), so source-filtered lookups continue to work when
   profile postprocessing removes/rewrites `WebPage` root nodes.
+- `wordlift_sdk.kg_build` tracks run-level graph-sync KPIs from dataset-scoped
+  entities actually patched in callback/static graphs (`total_entities`,
+  `type_assertions_total`, `property_assertions_total`, `entities_by_type`,
+  `properties_by_predicate`) plus optional SHACL validation aggregates
+  (`validation.total/pass/fail`, warnings/errors count+sources), exposed via
+  protocol `get_kpi_summary()` and cloud-flow `on_kpi` callback.
+- `wordlift_sdk.kg_build` can stream in-run per-graph progress payloads
+  (graph metrics and optional validation summary) via cloud-flow
+  `on_progress` callback.
 - `wordlift_sdk.kg_build` postprocessor subprocesses do not inject package paths
   into `PYTHONPATH`; configured interpreters must resolve their own dependencies.
 - `wordlift_sdk.kg_build` postprocessor runtime is configurable via

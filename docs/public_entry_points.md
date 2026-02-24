@@ -37,7 +37,7 @@ File: `wordlift_sdk/structured_data/orchestrator.py`
 - Returns: Summary dict with totals, successes, failures, output directory, and errors.
 
 File: `wordlift_sdk/kg_build/cloud_flow.py`
-- `run_cloud_workflow(*, config, configuration_provider_create, container_factory, protocol_factory, on_info=None) -> None`
+- `run_cloud_workflow(*, config, configuration_provider_create, container_factory, protocol_factory, on_info=None, on_kpi=None, on_progress=None) -> None`
 - Aim: Run profile-driven cloud import flow with URL routing and mapping execution.
 - Parameters:
   - `config: CloudWorkflowConfig`: runtime setup (credentials, URL source, concurrency, scraper settings).
@@ -45,6 +45,8 @@ File: `wordlift_sdk/kg_build/cloud_flow.py`
   - `container_factory(provider)`: application container factory.
   - `protocol_factory(context, ...)`: callback protocol factory.
   - `on_info(str) | None`: optional progress callback.
+  - `on_kpi(dict) | None`: optional end-of-run KPI callback.
+  - `on_progress(dict) | None`: optional in-run graph progress callback.
 - Returns: `None`.
 
 ## Validate YARRRML before runtime
@@ -517,7 +519,7 @@ methods:
   - id: kg_build.cloud_flow.run_cloud_workflow
     task: profile_cloud_run
     file: wordlift_sdk/kg_build/cloud_flow.py
-    signature: run_cloud_workflow(*, config, configuration_provider_create, container_factory, protocol_factory, on_info=None) -> None
+    signature: run_cloud_workflow(*, config, configuration_provider_create, container_factory, protocol_factory, on_info=None, on_kpi=None, on_progress=None) -> None
     sync_async: async
     side_effects: [network_calls, filesystem_writes, temp_files]
     raises: raises
