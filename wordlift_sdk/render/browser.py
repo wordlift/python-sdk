@@ -21,6 +21,12 @@ class PageFetch:
     resources: list[dict]
 
 
+class BrowserOperationError(RuntimeError):
+    def __init__(self, phase: str, message: str) -> None:
+        super().__init__(message)
+        self.phase = phase
+
+
 class Browser(AbstractContextManager):
     _DEFAULT_HEADERS = {
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
@@ -61,35 +67,43 @@ class Browser(AbstractContextManager):
             raise RuntimeError(
                 "Playwright is not installed. Run: uv pip install playwright && playwright install"
             )
-        self._playwright = sync_playwright().start()
-        self._browser = self._playwright.chromium.launch(headless=self.headless)
-        context_kwargs: dict[str, object] = {}
-        context_kwargs["locale"] = self.locale or "en-US"
-        context_kwargs["timezone_id"] = "America/New_York"
-        if self.user_agent:
-            context_kwargs["user_agent"] = self.user_agent
-        if self.viewport_width and self.viewport_height:
-            viewport = {"width": self.viewport_width, "height": self.viewport_height}
-        else:
-            viewport = {"width": 1365, "height": 768}
-        context_kwargs["viewport"] = viewport
-        context_kwargs["ignore_https_errors"] = self.ignore_https_errors
-        context_kwargs["extra_http_headers"] = dict(self._DEFAULT_HEADERS)
-        self._context = self._browser.new_context(**context_kwargs)
-        self._context.add_init_script(
-            """
-            Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
-            Object.defineProperty(navigator, 'languages', { get: () => ['en-US', 'en'] });
-            Object.defineProperty(navigator, 'plugins', { get: () => [1, 2, 3, 4, 5] });
-            window.chrome = window.chrome || { runtime: {} };
-            const originalQuery = window.navigator.permissions.query;
-            window.navigator.permissions.query = (parameters) => (
-                parameters.name === 'notifications'
-                    ? Promise.resolve({ state: Notification.permission })
-                    : originalQuery(parameters)
-            );
-            """
-        )
+        try:
+            self._playwright = sync_playwright().start()
+            self._browser = self._playwright.chromium.launch(headless=self.headless)
+            context_kwargs: dict[str, object] = {}
+            context_kwargs["locale"] = self.locale or "en-US"
+            context_kwargs["timezone_id"] = "America/New_York"
+            if self.user_agent:
+                context_kwargs["user_agent"] = self.user_agent
+            if self.viewport_width and self.viewport_height:
+                viewport = {
+                    "width": self.viewport_width,
+                    "height": self.viewport_height,
+                }
+            else:
+                viewport = {"width": 1365, "height": 768}
+            context_kwargs["viewport"] = viewport
+            context_kwargs["ignore_https_errors"] = self.ignore_https_errors
+            context_kwargs["extra_http_headers"] = dict(self._DEFAULT_HEADERS)
+            self._context = self._browser.new_context(**context_kwargs)
+            self._context.add_init_script(
+                """
+                Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+                Object.defineProperty(navigator, 'languages', { get: () => ['en-US', 'en'] });
+                Object.defineProperty(navigator, 'plugins', { get: () => [1, 2, 3, 4, 5] });
+                window.chrome = window.chrome || { runtime: {} };
+                const originalQuery = window.navigator.permissions.query;
+                window.navigator.permissions.query = (parameters) => (
+                    parameters.name === 'notifications'
+                        ? Promise.resolve({ state: Notification.permission })
+                        : originalQuery(parameters)
+                );
+                """
+            )
+        except Exception as exc:
+            raise BrowserOperationError(
+                "launch", "Failed to launch Playwright browser"
+            ) from exc
         return self
 
     def __exit__(self, exc_type, exc, tb) -> None:
@@ -126,7 +140,9 @@ class Browser(AbstractContextManager):
             response = page.goto(
                 url, wait_until=self.wait_until, timeout=self.timeout_ms
             )
-        except PlaywrightError:
-            pass
+        except PlaywrightError as exc:
+            raise BrowserOperationError(
+                "navigate", f"Failed to navigate to page: {url}"
+            ) from exc
         elapsed_ms = (perf_counter() - start) * 1000
         return page, response, elapsed_ms, resources

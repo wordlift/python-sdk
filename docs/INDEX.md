@@ -1,7 +1,7 @@
 # Docs Index
 
 - `docs/public_entry_points.md`: Task-oriented public API inventory for clients/agents.
-- `docs/ingestion_pipeline.md`: Two-axis ingestion architecture, config precedence, and compatibility mapping.
+- `docs/ingestion_pipeline.md`: Two-axis ingestion architecture, config precedence, compatibility mapping, and Playwright failure diagnostics in `ingest.item_failed.meta`.
 - `docs/structured_data.md`: Structured data architecture and workflows.
 - `docs/validation.md`: SHACL validation usage and shape handling.
 - `docs/render.md`: Page rendering and XHTML cleanup options.

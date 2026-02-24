@@ -8,7 +8,7 @@ from urllib.parse import urlparse
 
 from wordlift_sdk.utils import HtmlConverter
 
-from .browser import Browser
+from .browser import Browser, BrowserOperationError
 
 from .render_options import RenderOptions
 from .rendered_page import RenderedPage
@@ -30,25 +30,33 @@ class HtmlRenderer:
         ignore_https_errors = options.ignore_https_errors or self._is_localhost_url(
             options.url
         )
-        with Browser(
-            headless=options.headless,
-            timeout_ms=options.timeout_ms,
-            wait_until=options.wait_until,
-            locale=options.locale,
-            user_agent=options.user_agent,
-            viewport_width=options.viewport_width,
-            viewport_height=options.viewport_height,
-            ignore_https_errors=ignore_https_errors,
-        ) as browser:
-            page, response, _elapsed_ms, resources = browser.open(options.url)
-            if page is None:
-                raise RuntimeError("Failed to open page in browser.")
-            try:
-                html = self._safe_page_content(page, options.timeout_ms)
-            finally:
-                page.close()
+        try:
+            with Browser(
+                headless=options.headless,
+                timeout_ms=options.timeout_ms,
+                wait_until=options.wait_until,
+                locale=options.locale,
+                user_agent=options.user_agent,
+                viewport_width=options.viewport_width,
+                viewport_height=options.viewport_height,
+                ignore_https_errors=ignore_https_errors,
+            ) as browser:
+                page, response, _elapsed_ms, resources = browser.open(options.url)
+                if page is None:
+                    raise RuntimeError("Failed to open page in browser.")
+                try:
+                    html = self._safe_page_content(page, options.timeout_ms)
+                finally:
+                    page.close()
+        except BrowserOperationError:
+            raise
 
-        xhtml = HtmlConverter().convert(html)
+        try:
+            xhtml = HtmlConverter().convert(html)
+        except Exception as exc:
+            raise RenderOperationError(
+                "convert", "Failed to convert rendered HTML to XHTML"
+            ) from exc
 
         status_code = None
         if response is not None:
@@ -72,9 +80,11 @@ class HtmlRenderer:
         for attempt in range(retries + 1):
             try:
                 return page.content()
-            except Exception:
+            except Exception as exc:
                 if attempt >= retries:
-                    raise
+                    raise RenderOperationError(
+                        "content", "Failed to extract page content after retries"
+                    ) from exc
                 try:
                     page.wait_for_load_state("networkidle", timeout=timeout_ms)
                 except Exception:
@@ -83,4 +93,15 @@ class HtmlRenderer:
                     except Exception:
                         pass
                 time.sleep(0.2)
-        return page.content()
+        try:
+            return page.content()
+        except Exception as exc:
+            raise RenderOperationError(
+                "content", "Failed to extract page content"
+            ) from exc
+
+
+class RenderOperationError(RuntimeError):
+    def __init__(self, phase: str, message: str) -> None:
+        super().__init__(message)
+        self.phase = phase

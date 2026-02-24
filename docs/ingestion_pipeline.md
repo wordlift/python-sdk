@@ -76,6 +76,17 @@ Managed API loader mode. SDK treats it as a single loader mode and does not add 
 ### `playwright`
 
 If Playwright is unavailable, loader raises typed error `INGEST_LOAD_PLAYWRIGHT_UNAVAILABLE`.
+For browser/runtime failures, loader preserves compatibility (`code=INGEST_LOAD_BROWSER_ERROR`,
+message `Playwright loader failed for <url>`) and includes structured root-cause details in
+`ingest.item_failed.meta`:
+
+- `root_exception_type`
+- `root_exception_message` (truncated to 2KB)
+- `phase` (`launch|navigate|content|convert|unknown`)
+- `url`
+- `wait_until`
+- `timeout_ms`
+- `headless`
 
 ## Events
 

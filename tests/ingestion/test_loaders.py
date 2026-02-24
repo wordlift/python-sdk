@@ -16,6 +16,8 @@ from wordlift_sdk.ingestion.loaders import (
 )
 from wordlift_sdk.ingestion.models import SourceItem
 from wordlift_sdk.ingestion.resolver import ResolvedIngestionConfig
+from wordlift_sdk.render.browser import BrowserOperationError
+from wordlift_sdk.render.html_renderer import RenderOperationError
 
 
 def _config(**kwargs) -> ResolvedIngestionConfig:
@@ -122,6 +124,90 @@ def test_playwright_loader_raises_typed_error_when_unavailable(
     with pytest.raises(LoaderConfigError) as exc:
         loader.load(SourceItem(id="1", url="https://example.com"), _config())
     assert exc.value.code == "INGEST_LOAD_PLAYWRIGHT_UNAVAILABLE"
+
+
+def test_playwright_loader_navigation_failure_includes_root_diagnostics(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    loader = PlaywrightLoaderAdapter()
+
+    def _raise(_options):
+        raise BrowserOperationError(
+            "navigate", "Failed to navigate to page: https://example.com"
+        ) from TimeoutError("Navigation timeout")
+
+    monkeypatch.setattr(loader, "_renderer", SimpleNamespace(render=_raise))
+
+    cfg = _config(
+        loader_name="playwright",
+        timeout_ms=45000,
+        retry_attempts=1,
+        loader_config={"headless": False, "wait_until": "domcontentloaded"},
+    )
+    with pytest.raises(LoaderRuntimeError) as exc:
+        loader.load(SourceItem(id="1", url="https://example.com"), cfg)
+
+    assert exc.value.code == "INGEST_LOAD_BROWSER_ERROR"
+    assert str(exc.value) == "Playwright loader failed for https://example.com"
+    assert exc.value.details["phase"] == "navigate"
+    assert exc.value.details["root_exception_type"] == "TimeoutError"
+    assert exc.value.details["root_exception_message"] == "Navigation timeout"
+    assert exc.value.details["url"] == "https://example.com"
+    assert exc.value.details["wait_until"] == "domcontentloaded"
+    assert exc.value.details["timeout_ms"] == 45000
+    assert exc.value.details["headless"] is False
+
+
+def test_playwright_loader_content_failure_includes_phase(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    loader = PlaywrightLoaderAdapter()
+
+    def _raise(_options):
+        raise RenderOperationError(
+            "content", "Failed to extract page content after retries"
+        ) from RuntimeError("content() failed")
+
+    monkeypatch.setattr(loader, "_renderer", SimpleNamespace(render=_raise))
+
+    cfg = _config(
+        loader_name="playwright",
+        retry_attempts=1,
+        loader_config={"headless": True, "wait_until": "networkidle"},
+    )
+    with pytest.raises(LoaderRuntimeError) as exc:
+        loader.load(SourceItem(id="1", url="https://example.com"), cfg)
+
+    assert exc.value.code == "INGEST_LOAD_BROWSER_ERROR"
+    assert exc.value.details["phase"] == "content"
+    assert exc.value.details["root_exception_type"] == "RuntimeError"
+    assert exc.value.details["root_exception_message"] == "content() failed"
+
+
+def test_playwright_loader_convert_failure_includes_phase(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    loader = PlaywrightLoaderAdapter()
+
+    def _raise(_options):
+        raise RenderOperationError(
+            "convert", "Failed to convert rendered HTML to XHTML"
+        ) from ValueError("Bad XHTML")
+
+    monkeypatch.setattr(loader, "_renderer", SimpleNamespace(render=_raise))
+
+    cfg = _config(
+        loader_name="playwright",
+        retry_attempts=1,
+        loader_config={"headless": True, "wait_until": "load"},
+    )
+    with pytest.raises(LoaderRuntimeError) as exc:
+        loader.load(SourceItem(id="1", url="https://example.com"), cfg)
+
+    assert exc.value.code == "INGEST_LOAD_BROWSER_ERROR"
+    assert exc.value.details["phase"] == "convert"
+    assert exc.value.details["root_exception_type"] == "ValueError"
+    assert exc.value.details["root_exception_message"] == "Bad XHTML"
 
 
 @pytest.mark.parametrize(

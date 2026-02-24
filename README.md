@@ -249,6 +249,9 @@ before network loaders.
 
 `INGEST_SOURCE` and `INGEST_LOADER` are required. Legacy resolver fallback from
 `WEB_PAGE_IMPORT_MODE`/`WEB_PAGE_IMPORT_TIMEOUT` is removed.
+Playwright ingestion failures keep stable top-level code/message and expose root-cause
+diagnostics (`root_exception_type`, `root_exception_message`, `phase`, `url`,
+`wait_until`, `timeout_ms`, `headless`) in `ingest.item_failed.meta`.
 
 Quick start:
 

@@ -1,13 +1,16 @@
 from __future__ import annotations
 
 from typing import Iterator
+from types import SimpleNamespace
 
 from wordlift_sdk.ingestion.errors import LoaderRuntimeError
+from wordlift_sdk.ingestion.loaders import PlaywrightLoaderAdapter
 from wordlift_sdk.ingestion.events import IngestionWarning
 from wordlift_sdk.ingestion.models import LoadedPage, SourceItem
 from wordlift_sdk.ingestion.orchestrator import IngestionOrchestrator
 from wordlift_sdk.ingestion.registry import AdapterRegistry
 from wordlift_sdk.ingestion.resolver import ResolvedIngestionConfig
+from wordlift_sdk.render.browser import BrowserOperationError
 
 
 class _Source:
@@ -143,3 +146,53 @@ def test_warning_event_shape_is_machine_parseable() -> None:
     assert warnings[0]["new_key"] == "INGEST_LOADER"
     assert warnings[0]["legacy_key"] == "WEB_PAGE_IMPORT_MODE"
     assert warnings[0]["winner"] == "INGEST_LOADER"
+
+
+def test_item_failed_meta_preserves_playwright_root_cause_details() -> None:
+    source_registry: AdapterRegistry[object] = AdapterRegistry(kind="source")
+    source_registry.register(
+        "urls", _Source([SourceItem(id="1", url="https://example.com/1")])
+    )
+
+    loader = PlaywrightLoaderAdapter()
+
+    def _raise(_options):
+        raise BrowserOperationError(
+            "navigate", "Failed to navigate to page: https://example.com/1"
+        ) from TimeoutError("Timed out while waiting for load state")
+
+    loader._renderer = SimpleNamespace(render=_raise)
+
+    loader_registry: AdapterRegistry[object] = AdapterRegistry(kind="loader")
+    loader_registry.register("playwright", loader)
+    loader_registry.register("passthrough", _Loader("passthrough"))
+
+    orchestrator = IngestionOrchestrator(
+        source_registry=source_registry,
+        loader_registry=loader_registry,
+    )
+    result = orchestrator.run(
+        _config(
+            loader_name="playwright",
+            passthrough_when_html=False,
+            timeout_ms=12000,
+            loader_config={"headless": True, "wait_until": "networkidle"},
+            retry_attempts=1,
+        )
+    )
+
+    failed = [e for e in result.events if e["event"] == "ingest.item_failed"]
+    assert len(failed) == 1
+    event = failed[0]
+    assert event["code"] == "INGEST_LOAD_BROWSER_ERROR"
+    assert event["message"] == "Playwright loader failed for https://example.com/1"
+    assert event["meta"]["root_exception_type"] == "TimeoutError"
+    assert (
+        event["meta"]["root_exception_message"]
+        == "Timed out while waiting for load state"
+    )
+    assert event["meta"]["phase"] == "navigate"
+    assert event["meta"]["url"] == "https://example.com/1"
+    assert event["meta"]["wait_until"] == "networkidle"
+    assert event["meta"]["timeout_ms"] == 12000
+    assert event["meta"]["headless"] is True

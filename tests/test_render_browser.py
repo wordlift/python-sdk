@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 
 import wordlift_sdk.render.browser as browser_module
-from wordlift_sdk.render.browser import Browser
+from wordlift_sdk.render.browser import Browser, BrowserOperationError
 
 
 class _FakePage:
@@ -123,11 +123,9 @@ def test_browser_open_handles_playwright_error(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setattr(browser_module, "sync_playwright", lambda: _Manager(pw))
 
     with Browser(headless=True, timeout_ms=50, wait_until="load") as browser:
-        page, response, elapsed, resources = browser.open("https://example.org")
-        assert page is not None
-        assert response is None
-        assert elapsed >= 0
-        assert resources == []
+        with pytest.raises(BrowserOperationError) as exc:
+            browser.open("https://example.org")
+        assert exc.value.phase == "navigate"
 
 
 def test_browser_open_requires_initialized_context():

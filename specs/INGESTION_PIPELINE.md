@@ -56,6 +56,13 @@ If item includes embedded HTML and `INGEST_PASSTHROUGH_WHEN_HTML=true`, orchestr
 - Fail fast on unsupported loader/source names.
 - Fail fast on invalid option combinations (premium-only options without `premium_scraper`).
 - No secret logging in warnings/events.
+- Playwright loader must keep error compatibility (`INGEST_LOAD_BROWSER_ERROR` + `Playwright loader failed for <url>`)
+  while attaching structured diagnostics in `LoaderRuntimeError.details`/`ingest.item_failed.meta`:
+  - `root_exception_type`
+  - `root_exception_message` (max 2KB)
+  - `phase` (`launch|navigate|content|convert|unknown`)
+  - `url`, `wait_until`, `timeout_ms`, `headless`
+- `INGEST_LOAD_PLAYWRIGHT_UNAVAILABLE` remains reserved for missing Playwright install/runtime availability.
 
 ## Retry/Timeout Policy
 

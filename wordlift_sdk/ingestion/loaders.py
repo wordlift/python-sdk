@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import threading
 import time
 import urllib.error
@@ -14,7 +15,9 @@ from wordlift_client import (
     WebPageScrapeRequest,
 )
 
+from wordlift_sdk.render.browser import BrowserOperationError
 from wordlift_sdk.render import HtmlRenderer, RenderOptions
+from wordlift_sdk.render.html_renderer import RenderOperationError
 
 from .errors import IngestionError, LoaderConfigError, LoaderRuntimeError
 from .models import LoadedPage, SourceItem
@@ -137,16 +140,32 @@ class PlaywrightLoaderAdapter(BaseLoaderAdapter):
                         code="INGEST_LOAD_PLAYWRIGHT_UNAVAILABLE",
                         retryable=False,
                     ) from exc
+                logger.debug(
+                    "Playwright loader failed for %s with RuntimeError",
+                    item.url,
+                    exc_info=True,
+                )
                 raise LoaderRuntimeError(
                     f"Playwright loader failed for {item.url}",
                     code="INGEST_LOAD_BROWSER_ERROR",
                     retryable=True,
+                    details=_build_playwright_error_details(
+                        item_url=item.url, options=options, exc=exc
+                    ),
                 ) from exc
             except Exception as exc:
+                logger.debug(
+                    "Playwright loader failed for %s with unexpected exception",
+                    item.url,
+                    exc_info=True,
+                )
                 raise LoaderRuntimeError(
                     f"Playwright loader failed for {item.url}",
                     code="INGEST_LOAD_BROWSER_ERROR",
                     retryable=True,
+                    details=_build_playwright_error_details(
+                        item_url=item.url, options=options, exc=exc
+                    ),
                 ) from exc
 
             return LoadedPage(
@@ -163,6 +182,70 @@ class PlaywrightLoaderAdapter(BaseLoaderAdapter):
             attempts=config.retry_attempts,
             backoff_ms=config.retry_backoff_ms,
         )
+
+
+logger = logging.getLogger(__name__)
+_MAX_ROOT_EXCEPTION_MESSAGE_LEN = 2048
+_PHASES = {"launch", "navigate", "content", "convert", "unknown"}
+
+
+def _build_playwright_error_details(
+    *, item_url: str, options: RenderOptions, exc: Exception
+) -> dict[str, Any]:
+    root_exc = _root_exception(exc)
+    root_message = str(root_exc) if str(root_exc) else repr(root_exc)
+    return {
+        "root_exception_type": root_exc.__class__.__name__,
+        "root_exception_message": _truncate(
+            root_message, _MAX_ROOT_EXCEPTION_MESSAGE_LEN
+        ),
+        "phase": _classify_playwright_error_phase(exc),
+        "url": item_url,
+        "wait_until": options.wait_until,
+        "timeout_ms": options.timeout_ms,
+        "headless": options.headless,
+    }
+
+
+def _root_exception(exc: Exception) -> Exception:
+    current = exc
+    seen: set[int] = set()
+    while True:
+        marker = id(current)
+        if marker in seen:
+            return current
+        seen.add(marker)
+        next_exc = current.__cause__ or current.__context__
+        if not isinstance(next_exc, Exception):
+            return current
+        current = next_exc
+
+
+def _classify_playwright_error_phase(exc: Exception) -> str:
+    current: Exception | None = exc
+    seen: set[int] = set()
+    while current is not None:
+        marker = id(current)
+        if marker in seen:
+            break
+        seen.add(marker)
+
+        phase = getattr(current, "phase", None)
+        if isinstance(phase, str) and phase in _PHASES:
+            return phase
+        if isinstance(current, BrowserOperationError):
+            return current.phase if current.phase in _PHASES else "unknown"
+        if isinstance(current, RenderOperationError):
+            return current.phase if current.phase in _PHASES else "unknown"
+        next_exc = current.__cause__ or current.__context__
+        current = next_exc if isinstance(next_exc, Exception) else None
+    return "unknown"
+
+
+def _truncate(value: str, max_len: int) -> str:
+    if len(value) <= max_len:
+        return value
+    return value[:max_len]
 
 
 class WebScrapeApiLoaderAdapter(BaseLoaderAdapter):

@@ -99,3 +99,9 @@
 - Legacy container/workflow integration now bridges source selection through the
   ingestion resolver/registry, and `kg_build` web-page scrape handling runs via
   ingestion loader execution before invoking profile callbacks.
+- Playwright ingestion failures preserve existing top-level loader error
+  code/message (`INGEST_LOAD_BROWSER_ERROR`, `Playwright loader failed for <url>`)
+  while attaching structured root-cause diagnostics in `LoaderRuntimeError.details`
+  and emitted `ingest.item_failed.meta` (`root_exception_type`,
+  `root_exception_message` capped to 2KB, `phase`, `url`, `wait_until`,
+  `timeout_ms`, `headless`).

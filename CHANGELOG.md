@@ -1,5 +1,11 @@
 # Changelog
 
+## 6.0.1 - 2026-02-24
+
+### Changed
+
+- Improve Playwright ingestion diagnostics by surfacing root cause details in ingest.item_failed.meta while preserving existing error codes/messages.
+
 ## 6.0.0 - 2026-02-24
 
 ### Breaking
