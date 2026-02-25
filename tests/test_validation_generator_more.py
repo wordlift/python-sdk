@@ -32,9 +32,10 @@ def test_html_parsing_helpers_cover_core_patterns():
         "<table><tr><td><code>name</code></td><td>required</td></tr>"
         "<tr><td><code>offers</code><code>review</code></td><td>one of the following</td></tr></table>"
     )
-    props, groups = generator._extract_table_properties(table_html)
+    props, groups, option_groups = generator._extract_table_properties(table_html)
     assert "name" in props
     assert any("offers" in group and "review" in group for group in groups)
+    assert option_groups == []
 
     list_html = "<ul><li><code>name</code></li><li><code>offers</code></li></ul>"
     assert generator._extract_list_properties(list_html) == ["name", "offers"]
@@ -59,6 +60,27 @@ def test_parse_feature_extracts_types_and_one_of():
     assert "Product" in feature.types
     assert "name" in feature.types["Product"]["required"]
     assert any("offers" in group for group in feature.one_of["Product"])
+
+
+def test_extract_table_properties_handles_option_branches_and_ignores_urls():
+    table_html = """
+<table>
+  <th>Required properties (choose the option that best suits your use case)</th>
+  <tr><td>Option A</td></tr>
+  <tr><td><code>applicableCountry</code></td><td>Text</td></tr>
+  <tr><td><code>returnPolicyCategory</code></td><td><ul><li><code>https://schema.org/MerchantReturnFiniteReturnWindow</code></li></ul></td></tr>
+  <tr><td>Option B</td></tr>
+  <tr><td><code>merchantReturnLink</code></td><td>URL</td></tr>
+</table>
+"""
+    props, groups, option_groups = generator._extract_table_properties(table_html)
+
+    assert props == []
+    assert groups == []
+    assert option_groups
+    assert len(option_groups[0]) == 2
+    assert {"applicableCountry", "returnPolicyCategory"} in option_groups[0]
+    assert {"merchantReturnLink"} in option_groups[0]
 
 
 def test_property_and_schema_helpers():

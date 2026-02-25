@@ -3,7 +3,7 @@
 @prefix schema: <http://schema.org/> .
 
 # Source: https://developers.google.com/search/docs/appearance/structured-data/merchant-listing
-# Generated: 2026-02-06T07:25:17Z
+# Generated: 2026-02-25T16:12:05Z
 # Notes: required properties => errors; recommended properties => warnings.
 
 :google_3DModelShape
@@ -71,10 +71,20 @@
     sh:minCount 1 ;
   ] ;
   sh:property [
+    sh:path schema:returnPolicyCategory ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
     sh:path schema:merchantReturnDays ;
     sh:minCount 1 ;
     sh:severity sh:Warning ;
     sh:message "Recommended by Google: merchantReturnDays." ;
+  ] ;
+  sh:property [
+    sh:path schema:returnFees ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: returnFees." ;
   ] ;
   sh:property [
     sh:path schema:returnMethod ;
@@ -88,34 +98,6 @@
     sh:severity sh:Warning ;
     sh:message "Recommended by Google: returnShippingFeesAmount." ;
   ] ;
-  sh:or (
-    [
-      sh:property [
-        sh:path schema:https ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-    [
-      sh:property [
-        sh:path ( schema:schema schema:org ) ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-  ) ;
-  sh:or (
-    [
-      sh:property [
-        sh:path schema:https ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-    [
-      sh:property [
-        sh:path ( schema:schema schema:org ) ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-  ) ;
 .
 
 :google_OfferShippingDetailsShape
@@ -169,6 +151,12 @@
     sh:message "Recommended by Google: suggestedAge.minValue." ;
   ] ;
   sh:property [
+    sh:path schema:suggestedGender ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: suggestedGender." ;
+  ] ;
+  sh:property [
     sh:path schema:suggestedMaxAge ;
     sh:minCount 1 ;
     sh:severity sh:Warning ;
@@ -180,20 +168,6 @@
     sh:severity sh:Warning ;
     sh:message "Recommended by Google: suggestedMinAge." ;
   ] ;
-  sh:or (
-    [
-      sh:property [
-        sh:path schema:https ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-    [
-      sh:property [
-        sh:path ( schema:schema schema:org ) ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-  ) ;
 .
 
 :google_ProductShape

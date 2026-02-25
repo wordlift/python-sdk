@@ -87,4 +87,6 @@ errors_only = filter_validation_issues(issues, level="error")
 ## Generator
 
 `wordlift_sdk.validation.generator` contains the helper scripts used to generate the bundled
-SHACL files from the schema.org grammar.
+SHACL files from the schema.org grammar and Google Search Gallery feature pages.
+Google-table parsing supports both property-level "one of" alternatives and explicit
+option branches (`Option A` / `Option B`) where each branch can require multiple properties.

@@ -44,6 +44,7 @@ class FeatureData:
     url: str
     types: dict[str, dict[str, set[str]]]
     one_of: dict[str, list[set[str]]] = field(default_factory=dict)
+    one_of_option_groups: dict[str, list[list[set[str]]]] = field(default_factory=dict)
 
 
 @dataclass
@@ -99,29 +100,73 @@ def _table_kind(table_html: str) -> str | None:
     return None
 
 
-def _extract_table_properties(table_html: str) -> tuple[list[str], list[set[str]]]:
+def _extract_property_tokens(raw: str) -> list[str]:
+    value = _strip_tags(raw)
+    if "://" in value or "schema.org/" in value or "/" in value:
+        return []
+
+    tokens: list[str] = []
+    for token in re.findall(r"[A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z][A-Za-z0-9]*)*", value):
+        if token.startswith("@"):
+            continue
+        if token[0].isupper() and "." not in token:
+            continue
+        tokens.append(token)
+    return _unique(tokens)
+
+
+def _expand_option_branches(
+    base_props: set[str], one_of_groups: list[set[str]]
+) -> list[set[str]]:
+    branches: list[set[str]] = [set(base_props)]
+    for group in one_of_groups:
+        if not group:
+            continue
+        expanded: list[set[str]] = []
+        for branch in branches:
+            for prop in sorted(group):
+                expanded.append(set(branch) | {prop})
+        branches = expanded
+    return branches
+
+
+def _extract_table_properties(
+    table_html: str,
+) -> tuple[list[str], list[set[str]], list[list[set[str]]]]:
     props: list[str] = []
     one_of_groups: list[set[str]] = []
+    option_groups: list[list[set[str]]] = []
+    option_order: list[str] = []
+    option_props: dict[str, set[str]] = {}
+    option_one_of_groups: dict[str, list[set[str]]] = {}
+
+    option_label_re = re.compile(r"^\s*option\s+([a-z0-9]+)\s*$", re.IGNORECASE)
+    current_option: str | None = None
+
     for row in ROW_RE.findall(table_html):
         row_text = _strip_tags(row).lower()
         tds = re.findall(r"<td[^>]*>(.*?)</td>", row, re.DOTALL | re.IGNORECASE)
         if not tds:
             continue
+        if len(tds) == 1:
+            option_label = _strip_tags(tds[0])
+            option_match = option_label_re.match(option_label)
+            if option_match:
+                current_option = option_match.group(1).upper()
+                if current_option not in option_props:
+                    option_order.append(current_option)
+                    option_props[current_option] = set()
+                    option_one_of_groups[current_option] = []
+                continue
+
         primary_tokens: list[str] = []
         code_matches = re.findall(
             r"<code[^>]*>(.*?)</code>", tds[0], re.DOTALL | re.IGNORECASE
         )
         for match in code_matches:
-            raw = _strip_tags(match)
-            for token in re.findall(
-                r"[A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z][A-Za-z0-9]*)*", raw
-            ):
-                if token.startswith("@"):
-                    continue
-                if token[0].isupper() and "." not in token:
-                    continue
-                primary_tokens.append(token)
+            primary_tokens.extend(_extract_property_tokens(match))
         primary_tokens = _unique(primary_tokens)
+
         if ONE_OF_RE.search(row_text):
             list_props: list[str] = []
             for td in tds:
@@ -131,34 +176,61 @@ def _extract_table_properties(table_html: str) -> tuple[list[str], list[set[str]
                     re.DOTALL | re.IGNORECASE,
                 ):
                     list_props.extend(_extract_list_properties(list_html))
-            if not list_props:
-                list_props = primary_tokens
-            if list_props:
-                one_of_groups.append(set(_unique(list_props)))
+            candidate_props = _unique(list_props)
+            if len(candidate_props) >= 2:
+                group = set(candidate_props)
+                if current_option:
+                    option_one_of_groups[current_option].append(group)
+                else:
+                    one_of_groups.append(group)
+            elif not candidate_props and len(primary_tokens) >= 2:
+                group = set(primary_tokens)
+                if current_option:
+                    option_one_of_groups[current_option].append(group)
+                else:
+                    one_of_groups.append(group)
+            else:
+                if current_option:
+                    option_props[current_option].update(primary_tokens)
+                else:
+                    props.extend(primary_tokens)
         elif len(primary_tokens) > 1 and " or " in row_text:
-            one_of_groups.append(set(primary_tokens))
+            if current_option:
+                option_one_of_groups[current_option].append(set(primary_tokens))
+            else:
+                one_of_groups.append(set(primary_tokens))
         else:
-            props.extend(primary_tokens)
-    return _unique(props), one_of_groups
+            if current_option:
+                option_props[current_option].update(primary_tokens)
+            else:
+                props.extend(primary_tokens)
+
+    if len(option_order) >= 2:
+        branches: list[set[str]] = []
+        for option_name in option_order:
+            branches.extend(
+                _expand_option_branches(
+                    option_props[option_name], option_one_of_groups[option_name]
+                )
+            )
+        if branches:
+            option_groups.append(branches)
+    elif len(option_order) == 1:
+        option_name = option_order[0]
+        props.extend(option_props[option_name])
+        one_of_groups.extend(option_one_of_groups[option_name])
+
+    return _unique(props), one_of_groups, option_groups
 
 
 def _extract_list_properties(list_html: str) -> list[str]:
     props: list[str] = []
     for item in LIST_ITEM_RE.findall(list_html):
-        code_match = re.search(
+        code_matches = re.findall(
             r"<code[^>]*>(.*?)</code>", item, re.DOTALL | re.IGNORECASE
         )
-        if not code_match:
-            continue
-        raw = _strip_tags(code_match.group(1))
-        for token in re.findall(
-            r"[A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z][A-Za-z0-9]*)*", raw
-        ):
-            if token.startswith("@"):
-                continue
-            if token[0].isupper() and "." not in token:
-                continue
-            props.append(token)
+        for match in code_matches:
+            props.extend(_extract_property_tokens(match))
     return _unique(props)
 
 
@@ -179,6 +251,7 @@ def _parse_feature(html: str, url: str) -> FeatureData:
     current_types: list[str] = []
     type_data: dict[str, dict[str, set[str]]] = {}
     one_of: dict[str, list[set[str]]] = {}
+    one_of_option_groups: dict[str, list[list[set[str]]]] = {}
     pending_one_of_types: list[str] | None = None
 
     for token in TOKEN_RE.findall(html):
@@ -210,8 +283,8 @@ def _parse_feature(html: str, url: str) -> FeatureData:
             kind = _table_kind(token)
             if not kind:
                 continue
-            props, groups = _extract_table_properties(token)
-            if not props and not groups:
+            props, groups, option_groups = _extract_table_properties(token)
+            if not props and not groups and not option_groups:
                 continue
             target_types = current_types or ["Thing"]
             for t in target_types:
@@ -221,6 +294,8 @@ def _parse_feature(html: str, url: str) -> FeatureData:
                 bucket[kind].update(props)
                 if groups:
                     one_of.setdefault(t, []).extend(groups)
+                if option_groups:
+                    one_of_option_groups.setdefault(t, []).extend(option_groups)
 
     for t, bucket in type_data.items():
         bucket["recommended"].difference_update(bucket["required"])
@@ -231,7 +306,19 @@ def _parse_feature(html: str, url: str) -> FeatureData:
             bucket["required"].difference_update(group)
             bucket["recommended"].difference_update(group)
 
-    return FeatureData(url=url, types=type_data, one_of=one_of)
+    for t, option_sets in one_of_option_groups.items():
+        bucket = type_data.setdefault(t, {"required": set(), "recommended": set()})
+        for branches in option_sets:
+            for branch in branches:
+                bucket["required"].difference_update(branch)
+                bucket["recommended"].difference_update(branch)
+
+    return FeatureData(
+        url=url,
+        types=type_data,
+        one_of=one_of,
+        one_of_option_groups=one_of_option_groups,
+    )
 
 
 def _prop_path(prop: str) -> str:
@@ -280,6 +367,7 @@ def _emit_property(
     buckets: dict[str, dict[str, set[str]]],
     visited: set[str],
     one_of_map: dict[str, list[set[str]]],
+    one_of_option_map: dict[str, list[list[set[str]]]],
 ) -> None:
     sp = " " * indent
     path = _prop_path(prop)
@@ -310,6 +398,8 @@ def _emit_property(
                 visited | {child_type},
                 one_of_map.get(child_type, []),
                 one_of_map,
+                one_of_option_map.get(child_type, []),
+                one_of_option_map,
             )
             lines.append(f"{node_sp}] ;")
         elif len(valid_children) > 1:
@@ -328,6 +418,8 @@ def _emit_property(
                     visited | {child_type},
                     one_of_map.get(child_type, []),
                     one_of_map,
+                    one_of_option_map.get(child_type, []),
+                    one_of_option_map,
                 )
                 lines.append(f"{or_sp}  ]")
             lines.append(f"{or_sp}) ;")
@@ -342,6 +434,7 @@ def _emit_one_of_groups(
     buckets: dict[str, dict[str, set[str]]],
     visited: set[str],
     one_of_map: dict[str, list[set[str]]],
+    one_of_option_map: dict[str, list[list[set[str]]]],
 ) -> None:
     if not groups:
         return
@@ -377,6 +470,8 @@ def _emit_one_of_groups(
                         visited | {child_type},
                         one_of_map.get(child_type, []),
                         one_of_map,
+                        one_of_option_map.get(child_type, []),
+                        one_of_option_map,
                     )
                     lines.append(f"{node_sp}] ;")
                 elif len(valid_children) > 1:
@@ -395,10 +490,51 @@ def _emit_one_of_groups(
                             visited | {child_type},
                             one_of_map.get(child_type, []),
                             one_of_map,
+                            one_of_option_map.get(child_type, []),
+                            one_of_option_map,
                         )
                         lines.append(f"{or_sp}  ]")
                     lines.append(f"{or_sp}) ;")
             lines.append(f"{sp}    ] ;")
+            lines.append(f"{sp}  ]")
+        lines.append(f"{sp}) ;")
+
+
+def _emit_one_of_option_groups(
+    lines: list[str],
+    groups: list[list[set[str]]],
+    parent_type: str,
+    indent: int,
+    buckets: dict[str, dict[str, set[str]]],
+    visited: set[str],
+    one_of_map: dict[str, list[set[str]]],
+    one_of_option_map: dict[str, list[list[set[str]]]],
+) -> None:
+    if not groups:
+        return
+    sp = " " * indent
+    child_rules = _SCOPED_CHILD_RULES.get(parent_type, {})
+    for branches in groups:
+        if not branches:
+            continue
+        lines.append(f"{sp}sh:or (")
+        for branch in branches:
+            if not branch:
+                continue
+            lines.append(f"{sp}  [")
+            for prop in sorted(branch):
+                child_types = child_rules.get(prop)
+                _emit_property(
+                    lines,
+                    prop,
+                    required=True,
+                    child_types=child_types,
+                    indent=indent + 4,
+                    buckets=buckets,
+                    visited=visited,
+                    one_of_map=one_of_map,
+                    one_of_option_map=one_of_option_map,
+                )
             lines.append(f"{sp}  ]")
         lines.append(f"{sp}) ;")
 
@@ -412,6 +548,8 @@ def _emit_node(
     visited: set[str],
     one_of_groups: list[set[str]] | None,
     one_of_map: dict[str, list[set[str]]],
+    one_of_option_groups: list[list[set[str]]] | None,
+    one_of_option_map: dict[str, list[list[set[str]]]],
 ) -> None:
     sp = " " * indent
     lines.append(f"{sp}a sh:NodeShape ;")
@@ -429,6 +567,7 @@ def _emit_node(
             buckets=buckets,
             visited=visited,
             one_of_map=one_of_map,
+            one_of_option_map=one_of_option_map,
         )
 
     for prop in sorted(bucket["recommended"]):
@@ -442,6 +581,7 @@ def _emit_node(
             buckets=buckets,
             visited=visited,
             one_of_map=one_of_map,
+            one_of_option_map=one_of_option_map,
         )
 
     _emit_one_of_groups(
@@ -452,6 +592,17 @@ def _emit_node(
         buckets,
         visited,
         one_of_map,
+        one_of_option_map,
+    )
+    _emit_one_of_option_groups(
+        lines,
+        one_of_option_groups or [],
+        type_name,
+        indent,
+        buckets,
+        visited,
+        one_of_map,
+        one_of_option_map,
     )
 
 
@@ -507,6 +658,7 @@ def _write_feature(feature: FeatureData, output_path: Path, overwrite: bool) -> 
                 buckets=feature.types,
                 visited={type_name},
                 one_of_map=feature.one_of,
+                one_of_option_map=feature.one_of_option_groups,
             )
 
         for prop in sorted(bucket["recommended"]):
@@ -520,6 +672,7 @@ def _write_feature(feature: FeatureData, output_path: Path, overwrite: bool) -> 
                 buckets=feature.types,
                 visited={type_name},
                 one_of_map=feature.one_of,
+                one_of_option_map=feature.one_of_option_groups,
             )
 
         _emit_one_of_groups(
@@ -530,6 +683,17 @@ def _write_feature(feature: FeatureData, output_path: Path, overwrite: bool) -> 
             feature.types,
             {type_name},
             feature.one_of,
+            feature.one_of_option_groups,
+        )
+        _emit_one_of_option_groups(
+            lines,
+            feature.one_of_option_groups.get(type_name, []),
+            type_name,
+            2,
+            feature.types,
+            {type_name},
+            feature.one_of,
+            feature.one_of_option_groups,
         )
 
         lines.append(".")

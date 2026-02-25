@@ -1,5 +1,6 @@
 # TODO
 
+- [x] 2026-02-25 Fix SHACL generator Google-table parsing for option branches (`Option A`/`Option B`) and prevent enum URL literals from being emitted as property alternatives.
 - [x] 2026-02-25 Add SDK-level SHACL shape composition helpers (`resolve_shape_specs`) plus stable issue extraction/filtering (`rule_id`, `rule_set`) for host-provided validation UX/CLI layers.
 - [x] 2026-02-25 Add per-node `seovoc:importHash` handling in `kg_build` patching (hash excludes `seovoc:importHash`, node value is updated before patch, unchanged nodes with matching provided hash are skipped).
 - [x] 2026-02-25 Refine `kg_build` import metadata controls: use first-level-only `seovoc:source` tagging and add `import_hash_mode=on|write|off` for hash write/skip behavior.

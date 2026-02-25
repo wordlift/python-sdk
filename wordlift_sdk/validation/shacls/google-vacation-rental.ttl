@@ -3,7 +3,7 @@
 @prefix schema: <http://schema.org/> .
 
 # Source: https://developers.google.com/search/docs/appearance/structured-data/vacation-rental
-# Generated: 2026-02-06T07:25:25Z
+# Generated: 2026-02-25T16:12:16Z
 # Notes: required properties => errors; recommended properties => warnings.
 
 :google_VacationRentalShape
@@ -138,6 +138,18 @@
     sh:minCount 1 ;
     sh:severity sh:Warning ;
     sh:message "Recommended by Google: childFriendly." ;
+  ] ;
+  sh:property [
+    sh:path ( schema:containsPlace schema:additionalType ) ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: containsPlace.additionalType." ;
+  ] ;
+  sh:property [
+    sh:path ( schema:containsPlace schema:amenityFeature ) ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: containsPlace.amenityFeature." ;
   ] ;
   sh:property [
     sh:path schema:crib ;
@@ -277,20 +289,4 @@
     sh:severity sh:Warning ;
     sh:message "Recommended by Google: wifi." ;
   ] ;
-  sh:or (
-    [
-      sh:property [
-        sh:path ( schema:containsPlace schema:additionalType ) ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-  ) ;
-  sh:or (
-    [
-      sh:property [
-        sh:path ( schema:containsPlace schema:amenityFeature ) ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-  ) ;
 .

@@ -3,7 +3,7 @@
 @prefix schema: <http://schema.org/> .
 
 # Source: https://developers.google.com/search/docs/appearance/structured-data/factcheck
-# Generated: 2026-02-06T07:25:08Z
+# Generated: 2026-02-25T16:11:56Z
 # Notes: required properties => errors; recommended properties => warnings.
 
 :google_ClaimShape
@@ -44,14 +44,12 @@
     sh:path schema:url ;
     sh:minCount 1 ;
   ] ;
-  sh:or (
-    [
-      sh:property [
-        sh:path schema:author ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-  ) ;
+  sh:property [
+    sh:path schema:author ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: author." ;
+  ] ;
 .
 
 :google_RatingShape

@@ -11,6 +11,9 @@
   from firing on unrelated nodes.
 - The SHACL generator detects "one of" requirements in Google Search Gallery docs
   and emits `sh:or` constraints so any listed property satisfies the requirement.
+- The SHACL generator treats explicit table option branches (for example
+  `Option A` / `Option B`) as branch-level alternatives, supports multi-property
+  branches, and ignores enum URL literals when extracting property alternatives.
 - Python support is validated against 3.10–3.14; ensure tests pass on 3.14 before
   bumping the range.
 - Schema.org grammar checks are deliberately permissive, accepting URL/text literals

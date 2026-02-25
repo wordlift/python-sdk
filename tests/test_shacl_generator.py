@@ -271,6 +271,33 @@ def test_scopes_review_under_product_with_notes(tmp_path: Path) -> None:
     assert "sh:class schema:ListItem" in content
 
 
+def test_emits_option_branches_for_required_property_sets(tmp_path: Path) -> None:
+    feature = FeatureData(
+        url="https://example.com",
+        types={
+            "MerchantReturnPolicy": {
+                "required": set(),
+                "recommended": set(),
+            }
+        },
+        one_of_option_groups={
+            "MerchantReturnPolicy": [
+                [
+                    {"applicableCountry", "returnPolicyCategory"},
+                    {"merchantReturnLink"},
+                ]
+            ]
+        },
+    )
+
+    content = _read_output(tmp_path, feature)
+
+    assert "sh:targetClass schema:MerchantReturnPolicy" in content
+    assert "sh:path schema:applicableCountry" in content
+    assert "sh:path schema:returnPolicyCategory" in content
+    assert "sh:path schema:merchantReturnLink" in content
+
+
 def test_schemaorg_range_allows_literals(tmp_path: Path) -> None:
     from wordlift_sdk.validation.generator import _render_property_shape
 

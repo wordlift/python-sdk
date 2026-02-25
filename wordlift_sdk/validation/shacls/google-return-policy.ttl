@@ -3,33 +3,18 @@
 @prefix schema: <http://schema.org/> .
 
 # Source: https://developers.google.com/search/docs/appearance/structured-data/return-policy
-# Generated: 2026-02-06T07:25:19Z
+# Generated: 2026-02-25T16:12:07Z
 # Notes: required properties => errors; recommended properties => warnings.
-
-:google_MerchantReturnEnumerationShape
-  a sh:NodeShape ;
-  sh:targetClass schema:MerchantReturnEnumeration ;
-  sh:or (
-    [
-      sh:property [
-        sh:path schema:https ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-    [
-      sh:property [
-        sh:path ( schema:schema schema:org ) ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-  ) ;
-.
 
 :google_URLShape
   a sh:NodeShape ;
   sh:targetClass schema:URL ;
   sh:property [
     sh:path schema:returnPolicySeasonalOverride ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path ( schema:returnPolicySeasonalOverride schema:returnPolicyCategory ) ;
     sh:minCount 1 ;
   ] ;
   sh:property [
@@ -93,6 +78,18 @@
     sh:message "Recommended by Google: restockingFee." ;
   ] ;
   sh:property [
+    sh:path schema:returnFees ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: returnFees." ;
+  ] ;
+  sh:property [
+    sh:path schema:returnLabelSource ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: returnLabelSource." ;
+  ] ;
+  sh:property [
     sh:path schema:returnMethod ;
     sh:minCount 1 ;
     sh:severity sh:Warning ;
@@ -128,46 +125,4 @@
     sh:severity sh:Warning ;
     sh:message "Recommended by Google: returnShippingFeesAmount." ;
   ] ;
-  sh:or (
-    [
-      sh:property [
-        sh:path schema:https ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-    [
-      sh:property [
-        sh:path ( schema:schema schema:org ) ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-  ) ;
-  sh:or (
-    [
-      sh:property [
-        sh:path schema:https ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-    [
-      sh:property [
-        sh:path ( schema:schema schema:org ) ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-  ) ;
-  sh:or (
-    [
-      sh:property [
-        sh:path schema:https ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-    [
-      sh:property [
-        sh:path ( schema:schema schema:org ) ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-  ) ;
 .

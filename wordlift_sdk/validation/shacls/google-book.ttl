@@ -3,7 +3,7 @@
 @prefix schema: <http://schema.org/> .
 
 # Source: https://developers.google.com/search/docs/appearance/structured-data/book
-# Generated: 2026-02-06T07:25:03Z
+# Generated: 2026-02-25T16:11:50Z
 # Notes: required properties => errors; recommended properties => warnings.
 
 :google_AndroidPlatformShape
@@ -51,6 +51,10 @@
   ] ;
   sh:property [
     sh:path schema:target ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path ( schema:target schema:actionPlatform ) ;
     sh:minCount 1 ;
   ] ;
   sh:property [
@@ -117,34 +121,6 @@
     [
       sh:property [
         sh:path schema:subscription ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-  ) ;
-  sh:or (
-    [
-      sh:property [
-        sh:path schema:https ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-    [
-      sh:property [
-        sh:path ( schema:schema schema:org ) ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-  ) ;
-  sh:or (
-    [
-      sh:property [
-        sh:path schema:https ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-    [
-      sh:property [
-        sh:path ( schema:schema schema:org ) ;
         sh:minCount 1 ;
       ] ;
     ]
@@ -270,17 +246,13 @@
     sh:minCount 1 ;
   ] ;
   sh:property [
+    sh:path schema:dataFeedElement ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
     sh:path schema:type ;
     sh:minCount 1 ;
   ] ;
-  sh:or (
-    [
-      sh:property [
-        sh:path schema:dataFeedElement ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-  ) ;
 .
 
 :google_DesktopWebPlatformShape
@@ -328,6 +300,10 @@
   ] ;
   sh:property [
     sh:path schema:target ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path ( schema:target schema:actionPlatform ) ;
     sh:minCount 1 ;
   ] ;
   sh:property [
@@ -394,34 +370,6 @@
     [
       sh:property [
         sh:path schema:subscription ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-  ) ;
-  sh:or (
-    [
-      sh:property [
-        sh:path schema:https ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-    [
-      sh:property [
-        sh:path ( schema:schema schema:org ) ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-  ) ;
-  sh:or (
-    [
-      sh:property [
-        sh:path schema:https ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-    [
-      sh:property [
-        sh:path ( schema:schema schema:org ) ;
         sh:minCount 1 ;
       ] ;
     ]
@@ -592,6 +540,10 @@
     sh:minCount 1 ;
   ] ;
   sh:property [
+    sh:path ( schema:target schema:actionPlatform ) ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
     sh:path ( schema:target schema:urlTemplate ) ;
     sh:minCount 1 ;
   ] ;
@@ -665,20 +617,6 @@
       ] ;
     ]
   ) ;
-  sh:or (
-    [
-      sh:property [
-        sh:path schema:https ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-    [
-      sh:property [
-        sh:path ( schema:schema schema:org ) ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-  ) ;
 .
 
 :google_IOSPlatformShape
@@ -726,6 +664,10 @@
   ] ;
   sh:property [
     sh:path schema:target ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path ( schema:target schema:actionPlatform ) ;
     sh:minCount 1 ;
   ] ;
   sh:property [
@@ -792,34 +734,6 @@
     [
       sh:property [
         sh:path schema:subscription ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-  ) ;
-  sh:or (
-    [
-      sh:property [
-        sh:path schema:https ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-    [
-      sh:property [
-        sh:path ( schema:schema schema:org ) ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-  ) ;
-  sh:or (
-    [
-      sh:property [
-        sh:path schema:https ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-    [
-      sh:property [
-        sh:path ( schema:schema schema:org ) ;
         sh:minCount 1 ;
       ] ;
     ]
@@ -983,6 +897,10 @@
     sh:minCount 1 ;
   ] ;
   sh:property [
+    sh:path ( schema:target schema:actionPlatform ) ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
     sh:path ( schema:target schema:urlTemplate ) ;
     sh:minCount 1 ;
   ] ;
@@ -1042,20 +960,6 @@
     [
       sh:property [
         sh:path schema:subscription ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-  ) ;
-  sh:or (
-    [
-      sh:property [
-        sh:path schema:https ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-    [
-      sh:property [
-        sh:path ( schema:schema schema:org ) ;
         sh:minCount 1 ;
       ] ;
     ]

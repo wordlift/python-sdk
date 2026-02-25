@@ -3,7 +3,7 @@
 @prefix schema: <http://schema.org/> .
 
 # Source: https://developers.google.com/search/docs/appearance/structured-data/education-qa
-# Generated: 2026-02-06T07:25:07Z
+# Generated: 2026-02-25T16:11:55Z
 # Notes: required properties => errors; recommended properties => warnings.
 
 :google_QuizShape
