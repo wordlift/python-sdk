@@ -750,6 +750,9 @@ def test_clean_key_write_debug_and_reconcile(tmp_path: Path) -> None:
 
     graph = _make_graph("https://example.com/old")
     protocol._write_debug_graph(graph, "https://example.com/page")
+    protocol._write_debug_source_documents(
+        "https://example.com/page", "<html><body>Hi</body></html>", "<html/>"
+    )
     assert any((tmp_path / "debug").iterdir())
 
     https_graph = Graph()
@@ -762,6 +765,46 @@ def test_clean_key_write_debug_and_reconcile(tmp_path: Path) -> None:
     protocol._reconcile_root_id(https_graph, str(new))
     assert (new, RDF.type, URIRef("https://schema.org/WebPage")) in https_graph
     assert (child, URIRef("https://schema.org/about"), new) in https_graph
+
+
+@pytest.mark.asyncio
+async def test_callback_writes_html_xhtml_and_ttl_debug_artifacts(
+    tmp_path: Path,
+) -> None:
+    protocol = ProfileImportProtocol(
+        context=_make_context(),
+        profile=_make_profile(),
+        root_dir=tmp_path,
+        debug_dir=tmp_path / "debug",
+    )
+    protocol._patch_static_templates_once = AsyncMock()
+    protocol._resolve_mapping_path = MagicMock(return_value=Path("mapping.yarrrml"))
+    protocol._get_mapping_content = MagicMock(return_value="mapping")
+    protocol._core_ids.process_graph = MagicMock(side_effect=lambda g, _: g)
+    protocol._apply_postprocessors = MagicMock(side_effect=lambda g, *_: g)
+    protocol.patcher.patch_all = AsyncMock()
+
+    async def _apply_mapping(**kwargs):
+        debug_output = kwargs.get("debug_output")
+        if isinstance(debug_output, dict):
+            debug_output["xhtml"] = "<html><body>Converted</body></html>"
+        return _make_graph("https://example.com/mapped-web-page")
+
+    protocol.rml_service.apply_mapping = AsyncMock(side_effect=_apply_mapping)
+
+    response = WebPageScrapeResponse(
+        web_page=WebPage(url="https://example.com/page", html="<html>Raw</html>")
+    )
+
+    await protocol.callback(response)
+
+    safe_name = protocol_module.hashlib.sha256(
+        "https://example.com/page".encode("utf-8")
+    ).hexdigest()
+    debug_dir = tmp_path / "debug"
+    assert (debug_dir / f"{safe_name}.ttl").exists()
+    assert (debug_dir / f"{safe_name}.html").exists()
+    assert (debug_dir / f"{safe_name}.xhtml").exists()
 
 
 def test_mapping_response_with_existing_id() -> None:

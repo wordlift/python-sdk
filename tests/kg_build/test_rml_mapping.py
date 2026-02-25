@@ -40,15 +40,18 @@ async def test_apply_mapping_from_content_success(
     service = RmlMappingService(_context("https://data.example.com"))
     service._html_converter.convert = MagicMock(return_value="<html></html>")
     monkeypatch.setattr(rml_module, "MaterializationPipeline", _Pipeline)
+    debug_output: dict[str, str] = {}
 
     graph = await service.apply_mapping(
         html="<html></html>",
         url="https://example.com/page",
         mapping_file_path="demo.yarrrml",
         mapping_content="m: 1",
+        debug_output=debug_output,
     )
     assert isinstance(graph, Graph)
     assert len(graph) > 0
+    assert debug_output["xhtml"] == "<html></html>"
 
 
 @pytest.mark.asyncio

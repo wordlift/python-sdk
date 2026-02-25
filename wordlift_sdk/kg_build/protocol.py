@@ -155,6 +155,7 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         mapping_path = self._resolve_mapping_path(url)
         rendered_mapping = self._get_mapping_content(mapping_path)
         mapping_response = self._mapping_response(response, existing_web_page_id)
+        debug_output: dict[str, str] | None = {} if self.debug_dir else None
 
         graph = await self.rml_service.apply_mapping(
             html=response.web_page.html,
@@ -162,6 +163,7 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             mapping_file_path=mapping_path,
             mapping_content=rendered_mapping,
             response=mapping_response,
+            debug_output=debug_output,
         )
         if not graph or len(graph) == 0:
             logger.warning("No triples produced for %s", url)
@@ -176,6 +178,10 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         self._set_source(graph, existing_web_page_id)
 
         if self.debug_dir:
+            xhtml = (debug_output or {}).get("xhtml")
+            self._write_debug_source_documents(
+                url=url, html=response.web_page.html, xhtml=xhtml
+            )
             self._write_debug_graph(graph, url)
 
         validation_payload = self._validate_graph_if_enabled(graph, url)
@@ -449,8 +455,20 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         assert self.debug_dir is not None
         self.debug_dir.mkdir(parents=True, exist_ok=True)
         safe_name = hashlib.sha256(url.encode("utf-8")).hexdigest()
-        debug_file = self.debug_dir / f"cloud_{safe_name}.ttl"
+        debug_file = self.debug_dir / f"{safe_name}.ttl"
         graph.serialize(destination=debug_file, format="turtle")
+
+    def _write_debug_source_documents(
+        self, url: str, html: str, xhtml: str | None
+    ) -> None:
+        assert self.debug_dir is not None
+        self.debug_dir.mkdir(parents=True, exist_ok=True)
+        safe_name = hashlib.sha256(url.encode("utf-8")).hexdigest()
+        html_file = self.debug_dir / f"{safe_name}.html"
+        html_file.write_text(html, encoding="utf-8")
+        if xhtml:
+            xhtml_file = self.debug_dir / f"{safe_name}.xhtml"
+            xhtml_file.write_text(xhtml, encoding="utf-8")
 
     def _reconcile_root_id(self, graph: Graph, root_id: str) -> None:
         old_iri = self._find_web_page_iri(graph)

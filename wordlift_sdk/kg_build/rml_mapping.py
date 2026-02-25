@@ -20,6 +20,9 @@ class RmlMappingService:
         self._context = context
         self._html_converter = HtmlConverter()
 
+    def to_xhtml(self, html: str) -> str:
+        return self._html_converter.convert(html)
+
     async def apply_mapping(
         self,
         html: str,
@@ -28,9 +31,12 @@ class RmlMappingService:
         xhtml: str | None = None,
         mapping_content: str | None = None,
         response: object | None = None,
+        debug_output: dict[str, str] | None = None,
     ) -> Graph | None:
         try:
-            xhtml_str = xhtml or self._html_converter.convert(html)
+            xhtml_str = xhtml or self.to_xhtml(html)
+            if debug_output is not None:
+                debug_output["xhtml"] = xhtml_str
 
             with tempfile.TemporaryDirectory() as temp_dir:
                 data_path = os.path.join(temp_dir, "data.xhtml")

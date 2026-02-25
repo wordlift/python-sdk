@@ -69,6 +69,9 @@
 - `wordlift_sdk.kg_build` static template bootstrap is concurrency-safe:
   static templates are patched exactly once per run and only one
   `on_progress` payload with `kind="static_templates"` is emitted at startup.
+- `wordlift_sdk.kg_build` debug-cloud callback artifacts now include per-URL
+  source snapshots (`<sha256(url)>.html`, `<sha256(url)>.xhtml`)
+  in addition to callback graph Turtle output.
 - `wordlift_sdk.kg_build` postprocessor subprocesses do not inject package paths
   into `PYTHONPATH`; configured interpreters must resolve their own dependencies.
 - `wordlift_sdk.kg_build` postprocessor runtime is configurable via

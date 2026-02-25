@@ -49,8 +49,11 @@ Sequence:
 
 Debug output convention:
 
-- when cloud debug is enabled, callback graphs are written as Turtle under:
+- when cloud debug is enabled, callback artifacts are written under:
   - `output/debug_cloud/<profile_name>/`
+  - graph: `<sha256(url)>.ttl`
+  - source html: `<sha256(url)>.html`
+  - converted xhtml: `<sha256(url)>.xhtml` (when conversion succeeds)
 - merged validation can be run by host-project tooling using
   `wordlift_sdk.validation.validate_file`.
 
@@ -68,7 +71,7 @@ Responsibility:
 5. Set `seovoc:source` to `"web-page-import"` on all URI subjects in the host-side callback graph before patching (blank nodes are excluded).
 6. Apply built-in canonical ID generation (standard policy).
 7. Apply profile postprocessors (no hardcoded customer extractor references).
-8. Patch graph triples, and optionally write debug Turtle files.
+8. Patch graph triples, and optionally write debug graph/source files.
 9. Expose cumulative run KPIs via `get_kpi_summary()` for host emission/reporting.
 10. Cloud workflow can stream progress events (`on_progress`) and emit final KPI payload (`on_kpi`); legacy `on_info` remains supported and can be used concurrently.
 11. Static template bootstrap is guarded for concurrent callbacks: static templates patch once per run and emit one startup `on_progress` payload with `kind=static_templates`.

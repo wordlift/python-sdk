@@ -1,6 +1,6 @@
 # Changelog
 
-## 6.0.5 - 2026-02-25
+## 6.0.6 - 2026-02-25
 
 ### Changed
 
@@ -10,6 +10,7 @@
 - Playwright browser navigation timeouts now fall back to returning partial page content (`page.content()`) instead of failing ingestion immediately.
 - `HtmlConverter` now strips default XHTML `xmlns` declarations from converted output so unprefixed XPath selectors (for example `.//div`, `.//h1`, `.//title`) work against `__XHTML__` sources.
 - `kg_build` static template bootstrap is now concurrency-safe in cloud runs: static templates are patched once per run and `on_progress` emits a single `kind=static_templates` startup payload.
+- `kg_build` debug-cloud callback artifacts now also persist source HTML/XHTML snapshots per URL (`<sha256(url)>.html/.xhtml`) in addition to graph Turtle files.
 
 ## 6.0.1 - 2026-02-24
 

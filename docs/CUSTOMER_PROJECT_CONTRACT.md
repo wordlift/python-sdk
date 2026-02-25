@@ -120,6 +120,7 @@ Use this checklist before onboarding a customer repo.
 - [ ] `profiles/<name>/postprocessors.toml` exists (or intentionally absent)
 - [ ] Every postprocessor class import resolves in the configured interpreter (`python` field/default)
 - [ ] `--debug` run writes output under `output/debug_cloud/<profile>/`
+  (`<sha256(url)>.ttl`, `<sha256(url)>.html`, `<sha256(url)>.xhtml`)
 - [ ] At least one smoke test profile run completes without callback/postprocessor exceptions
 
 ## Suggested Onboarding Workflow
