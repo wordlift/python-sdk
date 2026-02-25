@@ -108,6 +108,9 @@
 - Playwright ingestion is async-loop-safe in cloud workflows: when a caller thread
   already runs an asyncio event loop, rendering is offloaded away from that thread
   before Sync Playwright APIs are invoked.
+- Playwright ingestion default `wait_until` is `domcontentloaded` (override with
+  `PLAYWRIGHT_WAIT_UNTIL`), and navigation timeout now falls back to partial DOM
+  extraction instead of immediate loader failure.
 - `IngestionWebPageScrapeUrlHandler` now surfaces first failure diagnostics from
   `ingest.item_failed.meta` in raised/logged errors as parseable JSON
   (`diagnostics=<json>`), with whitelisted keys and truncation/sanitization.

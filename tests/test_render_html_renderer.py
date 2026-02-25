@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import pytest
 
-from wordlift_sdk.render.html_renderer import HtmlRenderer
+from wordlift_sdk.render.browser import BrowserOperationError
+from wordlift_sdk.render.html_renderer import HtmlRenderer, RenderOperationError
 
 
 class _FakePage:
@@ -73,3 +74,91 @@ def test_html_renderer_uses_browser_and_converter(
     assert "data-xhtml='1'" in result.xhtml
     assert result.status_code == 200
     assert result.resources
+
+
+def test_html_renderer_reraises_browser_operation_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class _FailBrowser:
+        def __init__(self, *args, **kwargs) -> None:
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb) -> None:
+            return None
+
+        def open(self, url: str):
+            raise BrowserOperationError("navigate", "boom")
+
+    monkeypatch.setattr("wordlift_sdk.render.html_renderer.Browser", _FailBrowser)
+
+    renderer = HtmlRenderer()
+    with pytest.raises(BrowserOperationError):
+        renderer.render(
+            options=type(
+                "Opt",
+                (),
+                {
+                    "url": "https://example.com",
+                    "headless": True,
+                    "timeout_ms": 1000,
+                    "wait_until": "load",
+                    "locale": "en-US",
+                    "user_agent": None,
+                    "viewport_width": 1365,
+                    "viewport_height": 768,
+                    "ignore_https_errors": False,
+                },
+            )()
+        )
+
+
+def test_html_renderer_wraps_convert_errors(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr("wordlift_sdk.render.html_renderer.Browser", _FakeBrowser)
+
+    class _FailConverter:
+        def convert(self, html: str) -> str:
+            del html
+            raise ValueError("bad convert")
+
+    monkeypatch.setattr(
+        "wordlift_sdk.render.html_renderer.HtmlConverter", _FailConverter
+    )
+
+    renderer = HtmlRenderer()
+    with pytest.raises(RenderOperationError) as exc:
+        renderer.render(
+            options=type(
+                "Opt",
+                (),
+                {
+                    "url": "https://example.com",
+                    "headless": True,
+                    "timeout_ms": 1000,
+                    "wait_until": "load",
+                    "locale": "en-US",
+                    "user_agent": None,
+                    "viewport_width": 1365,
+                    "viewport_height": 768,
+                    "ignore_https_errors": False,
+                },
+            )()
+        )
+    assert exc.value.phase == "convert"
+
+
+def test_html_renderer_safe_page_content_failure_paths() -> None:
+    renderer = HtmlRenderer()
+
+    class _AlwaysFailPage:
+        def content(self) -> str:
+            raise RuntimeError("content fail")
+
+        def wait_for_load_state(self, *_args, **_kwargs) -> None:
+            raise RuntimeError("wait fail")
+
+    with pytest.raises(RenderOperationError) as exc:
+        renderer._safe_page_content(_AlwaysFailPage(), timeout_ms=1, retries=0)
+    assert exc.value.phase == "content"

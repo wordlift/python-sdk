@@ -129,7 +129,9 @@ class PlaywrightLoaderAdapter(BaseLoaderAdapter):
                 url=item.url,
                 timeout_ms=config.timeout_ms,
                 headless=bool(config.loader_config.get("headless", True)),
-                wait_until=str(config.loader_config.get("wait_until", "networkidle")),
+                wait_until=str(
+                    config.loader_config.get("wait_until", "domcontentloaded")
+                ),
             )
             try:
                 rendered = _render_with_loop_safety(self._renderer.render, options)

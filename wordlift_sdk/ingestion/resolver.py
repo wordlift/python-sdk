@@ -202,7 +202,7 @@ def resolve_ingestion_config_from_getter(
         "country_code": get_value("WEB_PAGE_IMPORT_COUNTRY_CODE"),
         "premium_proxy": get_value("WEB_PAGE_IMPORT_PREMIUM_PROXY"),
         "block_ads": get_value("WEB_PAGE_IMPORT_BLOCK_ADS"),
-        "wait_until": get_value("PLAYWRIGHT_WAIT_UNTIL", "networkidle"),
+        "wait_until": get_value("PLAYWRIGHT_WAIT_UNTIL", "domcontentloaded"),
         "headless": _parse_bool(get_value("PLAYWRIGHT_HEADLESS"), default=True),
     }
 

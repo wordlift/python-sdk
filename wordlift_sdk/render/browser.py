@@ -141,8 +141,17 @@ class Browser(AbstractContextManager):
                 url, wait_until=self.wait_until, timeout=self.timeout_ms
             )
         except PlaywrightError as exc:
+            if _is_navigation_timeout_error(exc):
+                # Fall back to the loaded DOM snapshot even if full wait condition timed out.
+                elapsed_ms = (perf_counter() - start) * 1000
+                return page, None, elapsed_ms, resources
             raise BrowserOperationError(
                 "navigate", f"Failed to navigate to page: {url}"
             ) from exc
         elapsed_ms = (perf_counter() - start) * 1000
         return page, response, elapsed_ms, resources
+
+
+def _is_navigation_timeout_error(error: Exception) -> bool:
+    text = str(error).lower()
+    return "timeout" in text and "exceeded" in text

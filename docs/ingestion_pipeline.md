@@ -78,6 +78,8 @@ Managed API loader mode. SDK treats it as a single loader mode and does not add 
 If Playwright is unavailable, loader raises typed error `INGEST_LOAD_PLAYWRIGHT_UNAVAILABLE`.
 When ingestion runs from an active asyncio workflow, Playwright rendering is isolated from the
 event-loop thread so Sync API calls are not executed directly inside the running loop.
+Default Playwright wait policy is `domcontentloaded`. On navigation timeout, ingestion now
+falls back to returning the current page DOM snapshot instead of failing immediately.
 For browser/runtime failures, loader preserves compatibility (`code=INGEST_LOAD_BROWSER_ERROR`,
 message `Playwright loader failed for <url>`) and includes structured root-cause details in
 `ingest.item_failed.meta`:

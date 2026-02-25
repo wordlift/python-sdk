@@ -1,11 +1,13 @@
 # Changelog
 
-## 6.0.2 - 2026-02-25
+## 6.0.3 - 2026-02-25
 
 ### Changed
 
 - Fix Playwright ingestion failures in async workflow by avoiding Sync API execution inside active asyncio loops; preserve detailed ingestion diagnostics.
 - Update `IngestionWebPageScrapeUrlHandler` error surfacing to append parseable, truncated diagnostics from `ingest.item_failed.meta` (phase, root cause type/message, url, wait policy, timeout, headless) while preserving existing code/message text.
+- Playwright ingestion default navigation wait policy is now `domcontentloaded` (was `networkidle`) to reduce timeout failures on long-polling pages.
+- Playwright browser navigation timeouts now fall back to returning partial page content (`page.content()`) instead of failing ingestion immediately.
 
 ## 6.0.1 - 2026-02-24
 

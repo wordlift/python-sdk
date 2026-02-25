@@ -11,6 +11,10 @@ from wordlift_sdk.ingestion.loaders import PlaywrightLoaderAdapter
 from wordlift_sdk.url_source import Url
 from wordlift_sdk.workflow.url_handler.ingestion_web_page_scrape_url_handler import (
     IngestionWebPageScrapeUrlHandler,
+    _format_failure_diagnostics,
+    _sanitize_url,
+    _sanitize_text,
+    _truncate,
 )
 
 
@@ -295,3 +299,29 @@ async def test_ingestion_bridge_handler_shows_orchestrator_failure_diagnostics(
     diagnostics = json.loads(text.split("diagnostics=", 1)[1])
     assert diagnostics["phase"] == "navigate"
     assert diagnostics["root_exception_type"] == "TimeoutError"
+
+
+def test_diagnostic_helpers_cover_fallback_paths() -> None:
+    assert _format_failure_diagnostics(None) is None
+    assert _format_failure_diagnostics({}) is None
+    assert _truncate("abc", 2) == "ab"
+    assert (
+        _sanitize_text("token=abc secret:xyz") == "token=[REDACTED] secret:[REDACTED]"
+    )
+    assert (
+        _sanitize_url("https://example.com/path?token=abc&safe=ok")
+        == "https://example.com/path?token=%5BREDACTED%5D&safe=ok"
+    )
+
+    # Force payload shrink passes through root/url fallback branches.
+    big_meta = {
+        "phase": "x",
+        "root_exception_type": "RuntimeError",
+        "root_exception_message": "x" * 8000,
+        "url": "https://example.com/" + ("a" * 4000) + "?token=abc",
+        "wait_until": "load",
+        "timeout_ms": 1,
+        "headless": False,
+    }
+    diag = _format_failure_diagnostics(big_meta)
+    assert diag is not None and len(diag) <= 3072

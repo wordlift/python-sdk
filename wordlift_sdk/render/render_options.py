@@ -10,7 +10,7 @@ class RenderOptions:
     url: str
     headless: bool = True
     timeout_ms: int = 30000
-    wait_until: str = "networkidle"
+    wait_until: str = "domcontentloaded"
     locale: str = "en-US"
     user_agent: str | None = (
         "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "

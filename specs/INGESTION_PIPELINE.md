@@ -65,6 +65,9 @@ If item includes embedded HTML and `INGEST_PASSTHROUGH_WHEN_HTML=true`, orchestr
 - Playwright loader execution must be async-loop-safe: when called while an event loop is already
   running in the caller thread, rendering is offloaded away from that loop thread before invoking
   Sync Playwright APIs.
+- Playwright default wait policy is `domcontentloaded`; explicit `PLAYWRIGHT_WAIT_UNTIL` still overrides.
+- On Playwright navigation timeout, loader should continue with available page DOM content instead of
+  failing immediately, and only raise browser errors for non-timeout navigation failures.
 - `INGEST_LOAD_PLAYWRIGHT_UNAVAILABLE` remains reserved for missing Playwright install/runtime availability.
 
 ## Retry/Timeout Policy

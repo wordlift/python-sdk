@@ -7,16 +7,17 @@ from wordlift_sdk.render.browser import Browser, BrowserOperationError
 
 
 class _FakePage:
-    def __init__(self, should_raise=False):
+    def __init__(self, should_raise=False, error_message="boom"):
         self._handlers = {}
         self._should_raise = should_raise
+        self._error_message = error_message
 
     def on(self, name, handler):
         self._handlers[name] = handler
 
     def goto(self, url, wait_until, timeout):
         if self._should_raise:
-            raise browser_module.PlaywrightError("boom")
+            raise browser_module.PlaywrightError(self._error_message)
 
         class _Req:
             resource_type = "document"
@@ -119,13 +120,30 @@ def test_browser_enter_exit_and_open(monkeypatch: pytest.MonkeyPatch):
 
 def test_browser_open_handles_playwright_error(monkeypatch: pytest.MonkeyPatch):
     pw = _FakePlaywright()
-    pw.browser.context.page = _FakePage(should_raise=True)
+    pw.browser.context.page = _FakePage(should_raise=True, error_message="boom")
     monkeypatch.setattr(browser_module, "sync_playwright", lambda: _Manager(pw))
 
     with Browser(headless=True, timeout_ms=50, wait_until="load") as browser:
         with pytest.raises(BrowserOperationError) as exc:
             browser.open("https://example.org")
         assert exc.value.phase == "navigate"
+
+
+def test_browser_open_timeout_returns_partial_page(monkeypatch: pytest.MonkeyPatch):
+    pw = _FakePlaywright()
+    pw.browser.context.page = _FakePage(
+        should_raise=True, error_message="Timeout 60000ms exceeded while navigating"
+    )
+    monkeypatch.setattr(browser_module, "sync_playwright", lambda: _Manager(pw))
+
+    with Browser(
+        headless=True, timeout_ms=50, wait_until="domcontentloaded"
+    ) as browser:
+        page, response, elapsed, resources = browser.open("https://example.org")
+        assert page is not None
+        assert response is None
+        assert elapsed >= 0
+        assert resources == []
 
 
 def test_browser_open_requires_initialized_context():

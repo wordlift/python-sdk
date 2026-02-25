@@ -2,13 +2,16 @@ from __future__ import annotations
 
 import asyncio
 import threading
+import urllib.error
 from io import BytesIO
 from types import SimpleNamespace
 
 import pytest
 
 from wordlift_sdk.ingestion.errors import LoaderConfigError, LoaderRuntimeError
+import wordlift_sdk.ingestion.loaders as loaders_module
 from wordlift_sdk.ingestion.loaders import (
+    BaseLoaderAdapter,
     PassthroughLoaderAdapter,
     PlaywrightLoaderAdapter,
     PremiumScraperLoaderAdapter,
@@ -110,6 +113,23 @@ def test_simple_loader_adapter(monkeypatch: pytest.MonkeyPatch) -> None:
     assert page.fetch_meta["backend"] == "simple"
 
 
+def test_simple_loader_adapter_wraps_url_errors(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    loader = SimpleLoaderAdapter()
+    monkeypatch.setattr(
+        "urllib.request.urlopen",
+        lambda request, timeout: (_ for _ in ()).throw(urllib.error.URLError("down")),
+    )
+    with pytest.raises(LoaderRuntimeError) as exc:
+        loader.load(
+            SourceItem(id="1", url="https://example.com"),
+            _config(retry_attempts=1),
+        )
+    assert exc.value.code == "INGEST_LOAD_NETWORK_ERROR"
+    assert exc.value.details["url"] == "https://example.com"
+
+
 def test_playwright_loader_raises_typed_error_when_unavailable(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -173,6 +193,41 @@ def test_playwright_loader_offloads_render_when_event_loop_is_active() -> None:
 
     assert len(seen_thread_ids) == 1
     assert seen_thread_ids[0] != main_thread_id
+
+
+def test_playwright_loader_wraps_non_runtime_exceptions(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    loader = PlaywrightLoaderAdapter()
+
+    def _raise(_options):
+        raise ValueError("unexpected")
+
+    monkeypatch.setattr(loader, "_renderer", SimpleNamespace(render=_raise))
+    with pytest.raises(LoaderRuntimeError) as exc:
+        loader.load(
+            SourceItem(id="1", url="https://example.com"),
+            _config(loader_name="playwright", retry_attempts=1),
+        )
+    assert exc.value.code == "INGEST_LOAD_BROWSER_ERROR"
+    assert exc.value.details["phase"] == "unknown"
+
+
+def test_build_playwright_error_details_and_phase_fallbacks() -> None:
+    options = loaders_module.RenderOptions(
+        url="https://example.com", timeout_ms=1000, headless=True, wait_until="load"
+    )
+    err = RuntimeError("root")
+    details = loaders_module._build_playwright_error_details(
+        item_url="https://example.com", options=options, exc=err
+    )
+    assert details["phase"] == "unknown"
+    assert details["root_exception_type"] == "RuntimeError"
+
+    cyclic = RuntimeError("cycle")
+    cyclic.__cause__ = cyclic
+    assert loaders_module._root_exception(cyclic) is cyclic
+    assert loaders_module._classify_playwright_error_phase(cyclic) == "unknown"
 
 
 def test_playwright_loader_navigation_failure_includes_root_diagnostics(
@@ -257,6 +312,109 @@ def test_playwright_loader_convert_failure_includes_phase(
     assert exc.value.details["phase"] == "convert"
     assert exc.value.details["root_exception_type"] == "ValueError"
     assert exc.value.details["root_exception_message"] == "Bad XHTML"
+
+
+def test_base_loader_with_retry_wraps_untyped_exceptions() -> None:
+    base = BaseLoaderAdapter()
+    attempts = {"count": 0}
+
+    def _boom():
+        attempts["count"] += 1
+        raise ValueError("x")
+
+    with pytest.raises(LoaderRuntimeError) as exc:
+        base._with_retry(_boom, attempts=2, backoff_ms=0)
+    assert attempts["count"] == 2
+    assert exc.value.code == "INGEST_LOAD_NETWORK_ERROR"
+
+
+def test_run_coro_sync_in_running_loop_and_error_path() -> None:
+    async def _ok():
+        return "ok"
+
+    async def _boom():
+        raise RuntimeError("fail")
+
+    async def _run() -> tuple[str, str]:
+        ok = loaders_module._run_coro_sync(_ok())
+        try:
+            loaders_module._run_coro_sync(_boom())
+            assert False, "expected RuntimeError"
+        except RuntimeError as exc:
+            return ok, str(exc)
+
+    ok, msg = asyncio.run(_run())
+    assert ok == "ok"
+    assert "fail" in msg
+
+
+@pytest.mark.asyncio
+async def test_web_scrape_loader_scrape_async_uses_api_client(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    loader = WebScrapeApiLoaderAdapter(mode="default")
+
+    class _Resp:
+        pass
+
+    class _Api:
+        def __init__(self, client):
+            self.client = client
+
+        async def create_web_page_scrape(
+            self, web_page_scrape_request, _request_timeout
+        ):
+            assert web_page_scrape_request.url == "https://example.com"
+            assert _request_timeout == 1.0
+            return _Resp()
+
+    class _ClientCtx:
+        def __init__(self, cfg):
+            self.cfg = cfg
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb):
+            return False
+
+    monkeypatch.setattr(loaders_module, "ApiClient", _ClientCtx)
+    monkeypatch.setattr(loaders_module, "WebPageScrapeApi", _Api)
+
+    resp = await loader._scrape_async(
+        item_url="https://example.com",
+        timeout_ms=1000,
+        client_configuration=object(),
+        render_js=None,
+        wait_for=None,
+        country_code=None,
+        premium_proxy=None,
+        block_ads=None,
+    )
+    assert isinstance(resp, _Resp)
+
+
+def test_web_scrape_loader_missing_config_and_empty_html() -> None:
+    loader = WebScrapeApiLoaderAdapter()
+    with pytest.raises(LoaderConfigError):
+        loader.load(
+            SourceItem(id="1", url="https://example.com"),
+            _config(loader_config={}),
+        )
+
+    async def _fake(**kwargs):
+        del kwargs
+        return SimpleNamespace(
+            web_page=SimpleNamespace(url="https://example.com", html=None)
+        )
+
+    loader._scrape_async = _fake
+    with pytest.raises(LoaderRuntimeError) as exc:
+        loader.load(
+            SourceItem(id="1", url="https://example.com"),
+            _config(loader_config={"client_configuration": object()}, retry_attempts=1),
+        )
+    assert exc.value.code == "INGEST_LOAD_REMOTE_API_ERROR"
 
 
 @pytest.mark.parametrize(

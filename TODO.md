@@ -1,9 +1,10 @@
 # TODO
 
+- [x] 2026-02-25 Set Playwright ingestion default wait policy to `domcontentloaded` and make navigation timeout path return partial DOM content instead of immediate `INGEST_LOAD_BROWSER_ERROR` failure.
 - [x] 2026-02-25 Update `IngestionWebPageScrapeUrlHandler` to surface parseable diagnostics from first `ingest.item_failed.meta` in raised/logged failures (with truncation/sanitization and fallback to legacy message when meta is missing).
 - [x] 2026-02-25 Fix Playwright ingestion async-loop failures (`INGEST_LOAD_BROWSER_ERROR` launch-phase "Sync API inside asyncio loop") by offloading Sync Playwright rendering away from active event-loop threads while preserving diagnostics and retry behavior.
 - [x] 2026-02-24 Improve Playwright ingestion diagnostics by surfacing root-cause details (`root_exception_type`, `root_exception_message`, `phase`, loader runtime options) in `ingest.item_failed.meta` while preserving existing error codes/messages.
-- [ ] 2026-02-24 Raise project-wide source coverage from 80% to 90%+ (`coverage report --omit='tests/*'` currently 80% baseline after this change); broaden tests for low-coverage modules (`structured_data/engine.py`, `utils/html_converter.py`, ingestion sources/loaders edge branches).
+- [x] 2026-02-24 Raise project-wide source coverage from 80% to 90%+ (`coverage report --omit='tests/*'` now 90% after expanded coverage for `structured_data/engine.py`, ingestion sources/loaders edge branches, renderer and bridge-handler diagnostics paths).
 - [x] 2026-02-24 Publish a version-locked worai integration contract doc (`docs/worai_sdk_integration_contract_v6.md`) and package docs/changelog artifacts in SDK distribution metadata for PyPI consumers.
 - [x] 2026-02-24 Remove ingestion legacy naming fallback (`WEB_PAGE_IMPORT_MODE` / `WEB_PAGE_IMPORT_TIMEOUT`), require explicit `INGEST_SOURCE` + `INGEST_LOADER`, and add source/loader matrix conformance tests.
 - [x] 2026-02-24 Canonicalize worai cloud path on `run_cloud_workflow` with explicit source-mode contract (`urls|sitemap|sheets`), set `postprocessor_runtime` SDK default to `persistent`, add source-mode conformance tests, and publish major-version migration/deprecation notes.
