@@ -58,6 +58,7 @@ def test_validation_settings_parse_into_profile_settings(tmp_path: Path) -> None
         shacl_builtin_shapes = "google-article, schemaorg-grammar"
         shacl_exclude_builtin_shapes = "schemaorg-grammar"
         shacl_extra_shapes = "https://example.com/custom.ttl"
+        import_hash_mode = "write"
         """,
     )
 
@@ -69,6 +70,7 @@ def test_validation_settings_parse_into_profile_settings(tmp_path: Path) -> None
     ]
     assert profile.settings["shacl_exclude_builtin_shapes"] == ["schemaorg-grammar"]
     assert profile.settings["shacl_extra_shapes"] == ["https://example.com/custom.ttl"]
+    assert profile.settings["import_hash_mode"] == "write"
 
 
 def test_template_override_prefers_selected_relative_path(tmp_path: Path) -> None:

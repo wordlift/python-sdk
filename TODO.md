@@ -1,6 +1,8 @@
 # TODO
 
 - [x] 2026-02-25 Add SDK-level SHACL shape composition helpers (`resolve_shape_specs`) plus stable issue extraction/filtering (`rule_id`, `rule_set`) for host-provided validation UX/CLI layers.
+- [x] 2026-02-25 Add per-node `seovoc:importHash` handling in `kg_build` patching (hash excludes `seovoc:importHash`, node value is updated before patch, unchanged nodes with matching provided hash are skipped).
+- [x] 2026-02-25 Refine `kg_build` import metadata controls: use first-level-only `seovoc:source` tagging and add `import_hash_mode=on|write|off` for hash write/skip behavior.
 - [x] 2026-02-25 Simplify `kg_build` SHACL runtime toggle to `shacl_validate_mode=off|warn|fail` (remove `shacl_validate_sync`, rename `strict` -> `fail`) and align profile shape-source settings with `resolve_shape_specs` (`shacl_builtin_shapes`, `shacl_exclude_builtin_shapes`, `shacl_extra_shapes`) while keeping callback payload schemas unchanged.
 - [x] 2026-02-25 Make `kg_build` static template bootstrap concurrency-safe so concurrent callbacks patch static templates once and emit a single `on_progress` startup event (`kind=static_templates`).
 - [x] 2026-02-25 Extend `kg_build` debug-cloud callback artifacts to persist per-URL source HTML/XHTML snapshots (`<sha256(url)>.html/.xhtml`) alongside graph Turtle output.

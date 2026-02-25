@@ -101,6 +101,7 @@ ENV_PARSERS: dict[str, Callable[[str], Any]] = {
     "shacl_extra_shapes": lambda v: [
         u.strip() for u in re.split(r"[\n,]", v) if u.strip()
     ],
+    "import_hash_mode": str,
 }
 
 

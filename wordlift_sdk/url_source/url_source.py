@@ -8,6 +8,7 @@ from typing import AsyncGenerator
 class Url:
     value: str
     iri: str | None = None
+    import_hash: str | None = None
     date_modified: datetime | None = None
 
 

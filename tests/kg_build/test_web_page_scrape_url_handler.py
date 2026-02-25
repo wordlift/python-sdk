@@ -21,7 +21,11 @@ async def test_web_page_scrape_handler_passes_fetch_options_and_existing_id():
         web_page_scrape_callback=callback,
         fetch_options=fetch_options,
     )
-    url = Url(value="https://example.com/page", iri="https://example.com/entity/1")
+    url = Url(
+        value="https://example.com/page",
+        iri="https://example.com/entity/1",
+        import_hash="abc123",
+    )
 
     with patch(
         "wordlift_sdk.workflow.url_handler.web_page_scrape_url_handler.ApiClient"
@@ -49,4 +53,5 @@ async def test_web_page_scrape_handler_passes_fetch_options_and_existing_id():
             callback.callback.assert_awaited_once_with(
                 mock_response,
                 existing_web_page_id="https://example.com/entity/1",
+                existing_import_hash="abc123",
             )

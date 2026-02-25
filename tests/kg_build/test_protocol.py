@@ -188,7 +188,7 @@ async def test_profile_protocol_sets_source_on_mapped_subject_when_existing_id_m
 
 
 @pytest.mark.asyncio
-async def test_profile_protocol_sets_source_on_all_uri_subjects_in_graph():
+async def test_profile_protocol_sets_source_only_on_first_level_uri_subjects():
     protocol = ProfileImportProtocol(
         context=_make_context(),
         profile=_make_profile(),
@@ -211,6 +211,48 @@ async def test_profile_protocol_sets_source_on_all_uri_subjects_in_graph():
     await protocol.callback(response)
 
     patched_graph = protocol.patcher.patch_all.call_args.args[0]
+    assert (
+        URIRef("https://example.com/entities/web-page"),
+        URIRef("https://w3id.org/seovoc/source"),
+        Literal("web-page-import"),
+    ) in patched_graph
+    for child in (
+        URIRef("https://example.com/entities/article"),
+        URIRef("https://example.com/entities/product"),
+        URIRef("https://example.com/entities/review"),
+    ):
+        assert (
+            child,
+            URIRef("https://w3id.org/seovoc/source"),
+            Literal("web-page-import"),
+        ) not in patched_graph
+
+
+@pytest.mark.asyncio
+async def test_profile_protocol_applies_existing_import_hash_to_all_uri_subjects() -> (
+    None
+):
+    protocol = ProfileImportProtocol(
+        context=_make_context(),
+        profile=_make_profile(),
+        root_dir=Path.cwd(),
+    )
+    protocol._patch_static_templates_once = AsyncMock()
+    protocol._resolve_mapping_path = MagicMock(return_value=Path("mapping.yarrrml"))
+    protocol._get_mapping_content = MagicMock(return_value="mapping")
+    protocol._core_ids.process_graph = MagicMock(side_effect=lambda g, _: g)
+    protocol._apply_postprocessors = MagicMock(side_effect=lambda g, *_: g)
+    protocol.patcher.patch_all = AsyncMock()
+    protocol.rml_service.apply_mapping = AsyncMock(
+        return_value=_make_multi_entity_graph()
+    )
+
+    response = WebPageScrapeResponse(
+        web_page=WebPage(url="https://example.com/page", html="<html></html>")
+    )
+    await protocol.callback(response, existing_import_hash="abc123")
+
+    patched_graph = protocol.patcher.patch_all.call_args.args[0]
     for iri in (
         URIRef("https://example.com/entities/web-page"),
         URIRef("https://example.com/entities/article"),
@@ -219,8 +261,8 @@ async def test_profile_protocol_sets_source_on_all_uri_subjects_in_graph():
     ):
         assert (
             iri,
-            URIRef("https://w3id.org/seovoc/source"),
-            Literal("web-page-import"),
+            URIRef("https://w3id.org/seovoc/importHash"),
+            Literal("abc123"),
         ) in patched_graph
 
 
@@ -256,6 +298,50 @@ async def test_profile_protocol_sets_source_when_web_page_absent_but_uri_subject
         URIRef("https://w3id.org/seovoc/source"),
         Literal("web-page-import"),
     ) in patched_graph
+
+
+@pytest.mark.asyncio
+async def test_profile_protocol_sets_source_by_dataset_id_depth() -> None:
+    protocol = ProfileImportProtocol(
+        context=_make_context(),
+        profile=_make_profile(),
+        root_dir=Path.cwd(),
+    )
+    protocol._patch_static_templates_once = AsyncMock()
+    protocol._resolve_mapping_path = MagicMock(return_value=Path("mapping.yarrrml"))
+    protocol._get_mapping_content = MagicMock(return_value="mapping")
+    protocol._core_ids.process_graph = MagicMock(side_effect=lambda g, _: g)
+    protocol._apply_postprocessors = MagicMock(side_effect=lambda g, *_: g)
+    protocol.patcher.patch_all = AsyncMock()
+
+    graph = Graph()
+    page = URIRef("https://data.example.com/dataset/web-pages/1")
+    entity = URIRef("https://data.example.com/dataset/entities/article-1")
+    child = URIRef("https://data.example.com/dataset/entities/article-1/faq/1")
+    graph.add((page, RDF.type, URIRef("https://schema.org/WebPage")))
+    graph.add((page, URIRef("https://schema.org/mainEntity"), entity))
+    graph.add((entity, RDF.type, URIRef("https://schema.org/Article")))
+    graph.add((entity, URIRef("https://schema.org/hasPart"), child))
+    graph.add((child, RDF.type, URIRef("https://schema.org/Question")))
+    protocol.rml_service.apply_mapping = AsyncMock(return_value=graph)
+
+    response = WebPageScrapeResponse(
+        web_page=WebPage(url="https://example.com/page", html="<html></html>")
+    )
+    await protocol.callback(response)
+
+    patched_graph = protocol.patcher.patch_all.call_args.args[0]
+    for iri in (page, entity):
+        assert (
+            iri,
+            URIRef("https://w3id.org/seovoc/source"),
+            Literal("web-page-import"),
+        ) in patched_graph
+    assert (
+        child,
+        URIRef("https://w3id.org/seovoc/source"),
+        Literal("web-page-import"),
+    ) not in patched_graph
 
 
 @pytest.mark.asyncio
@@ -562,7 +648,7 @@ async def test_patch_static_templates_once_is_concurrency_safe() -> None:
     protocol._template_graph = graph
     protocol._template_exports = {}
 
-    async def _patch_once(_: Graph) -> None:
+    async def _patch_once(_: Graph, **_kwargs) -> None:
         await asyncio.sleep(0.01)
 
     protocol.patcher.patch_all = AsyncMock(side_effect=_patch_once)
@@ -830,6 +916,7 @@ def test_protocol_setting_parsers_and_progress_error_logging(
             "SHACL_BUILTIN_SHAPES": "google-article",
             "SHACL_EXCLUDE_BUILTIN_SHAPES": "schemaorg-grammar",
             "SHACL_EXTRA_SHAPES": "https://example.com/custom-shape.ttl",
+            "IMPORT_HASH_MODE": "write",
         }
     )
     protocol = ProfileImportProtocol(
@@ -842,6 +929,7 @@ def test_protocol_setting_parsers_and_progress_error_logging(
         "google-article.ttl",
         "https://example.com/custom-shape.ttl",
     ]
+    assert protocol._import_hash_mode == "write"
     assert protocol._resolve_list_setting(["a", " ", "b"]) == ["a", "b"]
     assert protocol._resolve_list_setting(123) == ["123"]
 
@@ -1141,6 +1229,31 @@ async def test_profile_protocol_emits_null_validation_when_disabled() -> None:
 
 
 @pytest.mark.asyncio
+async def test_profile_protocol_passes_import_hash_mode_to_patcher() -> None:
+    protocol = ProfileImportProtocol(
+        context=_make_context(),
+        profile=_make_profile_with_overrides(settings={"import_hash_mode": "off"}),
+        root_dir=Path.cwd(),
+    )
+    protocol._patch_static_templates_once = AsyncMock()
+    protocol._resolve_mapping_path = MagicMock(return_value=Path("mapping.yarrrml"))
+    protocol._get_mapping_content = MagicMock(return_value="mapping")
+    protocol._core_ids.process_graph = MagicMock(side_effect=lambda g, _: g)
+    protocol._apply_postprocessors = MagicMock(side_effect=lambda g, *_: g)
+    protocol.patcher.patch_all = AsyncMock()
+    protocol.rml_service.apply_mapping = AsyncMock(
+        return_value=_make_dataset_scoped_graph()
+    )
+
+    response = WebPageScrapeResponse(
+        web_page=WebPage(url="https://example.com/page", html="<html></html>")
+    )
+    await protocol.callback(response)
+    protocol.patcher.patch_all.assert_awaited_once()
+    assert protocol.patcher.patch_all.call_args.kwargs["import_hash_mode"] == "off"
+
+
+@pytest.mark.asyncio
 async def test_profile_protocol_emits_graph_and_static_template_events() -> None:
     events: list[dict[str, object]] = []
     protocol = ProfileImportProtocol(
@@ -1238,3 +1351,14 @@ def test_protocol_validation_mode_normalization_and_deprecation(
         )
     assert unknown_protocol._shacl_mode == "warn"
     assert "Unsupported SHACL validation mode" in caplog.text
+
+    with caplog.at_level("WARNING"):
+        unknown_hash_mode = ProfileImportProtocol(
+            context=_make_context(),
+            profile=_make_profile_with_overrides(
+                settings={"import_hash_mode": "invalid-mode"}
+            ),
+            root_dir=Path.cwd(),
+        )
+    assert unknown_hash_mode._import_hash_mode == "on"
+    assert "Unsupported import hash mode" in caplog.text

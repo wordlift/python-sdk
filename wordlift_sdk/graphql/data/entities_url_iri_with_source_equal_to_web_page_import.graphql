@@ -7,6 +7,7 @@ query entities_url_iri_with_source_equal_to_web_page_import($urls: [String]!) {
     ) {
         iri
         url: string(name: "schema:url")
+        import_hash: string(name: "seovoc:importHash")
         date_imported: dateTime(name: "seovoc:dateImported")
     }
 }

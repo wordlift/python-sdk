@@ -53,10 +53,16 @@
 - Ingestion resolver requires explicit `INGEST_SOURCE` and `INGEST_LOADER`;
   legacy fallback from `WEB_PAGE_IMPORT_MODE`/`WEB_PAGE_IMPORT_TIMEOUT` and
   implicit source auto-priority are intentionally removed.
-- `wordlift_sdk.kg_build` callback patch preparation annotates every URI-subject
-  node in the generated callback graph with `seovoc:source = "web-page-import"`
-  (blank nodes are excluded), so source-filtered lookups continue to work when
+- `wordlift_sdk.kg_build` callback patch preparation annotates first-level
+  URI-subject nodes in the generated callback graph with
+  `seovoc:source = "web-page-import"` using dataset ID depth
+  `/<dataset>/<bucket>/<id>` as first-level (deeper child URI nodes and blank
+  nodes are excluded), so source-filtered lookups continue to work when
   profile postprocessing removes/rewrites `WebPage` root nodes.
+- `wordlift_sdk.kg_build` computes per-node `seovoc:importHash` before patching
+  dataset-scoped nodes (excluding `seovoc:importHash` from hash input), writes the
+  computed value back to the node, and applies `import_hash_mode` (`on|write|off`)
+  for unchanged-node skip behavior.
 - `wordlift_sdk.kg_build` tracks run-level graph-sync KPIs from dataset-scoped
   entities actually patched in callback/static graphs (`total_entities`,
   `type_assertions_total`, `property_assertions_total`, `entities_by_type`,

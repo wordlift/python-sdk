@@ -27,5 +27,9 @@ class AdapterUrlSource(UrlSource):
             yield Url(
                 value=item.url,
                 iri=item.metadata.get("iri"),
+                import_hash=(
+                    item.metadata.get("import_hash")
+                    or item.metadata.get("seovoc:importHash")
+                ),
                 date_modified=date_modified,
             )

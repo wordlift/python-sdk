@@ -38,6 +38,7 @@ from .templates import JinjaRdfTemplateReifier, TemplateTextRenderer
 
 logger = logging.getLogger(__name__)
 SEOVOC_SOURCE = URIRef("https://w3id.org/seovoc/source")
+SEOVOC_IMPORT_HASH = URIRef("https://w3id.org/seovoc/importHash")
 
 
 def _path_contains_part(path: str, part: str) -> bool:
@@ -131,6 +132,12 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             exclude_builtin_shapes=shacl_exclude_builtin_shapes or None,
             extra_shapes=shacl_extra_shapes or None,
         )
+        self._import_hash_mode = self._resolve_import_hash_mode(
+            self.profile.settings.get(
+                "import_hash_mode",
+                self.profile.settings.get("IMPORT_HASH_MODE", "on"),
+            )
+        )
         self._kpi = KgBuildKpiCollector(
             dataset_uri=getattr(self.context.account, "dataset_uri", None),
             validation_enabled=self._shacl_mode != "off",
@@ -149,6 +156,7 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         self,
         response: WebPageScrapeResponse,
         existing_web_page_id: str | None = None,
+        existing_import_hash: str | None = None,
     ) -> None:
         url = (
             response.web_page.url
@@ -190,6 +198,7 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         )
         graph = self._apply_postprocessors(graph, url, response, existing_web_page_id)
         self._set_source(graph, existing_web_page_id)
+        self._set_existing_import_hash(graph, existing_import_hash)
 
         if self.debug_dir:
             xhtml = (debug_output or {}).get("xhtml")
@@ -216,7 +225,7 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             and not validation_payload["pass"]
         ):
             raise RuntimeError(f"SHACL validation failed for {url} in fail mode.")
-        await self.patcher.patch_all(graph)
+        await self.patcher.patch_all(graph, import_hash_mode=self._import_hash_mode)
         logger.info("Patched %s triples for %s", len(graph), url)
 
     def close(self) -> None:
@@ -277,7 +286,9 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
                     raise RuntimeError(
                         "SHACL validation failed for static templates in fail mode."
                     )
-                await self.patcher.patch_all(self._template_graph)
+                await self.patcher.patch_all(
+                    self._template_graph, import_hash_mode=self._import_hash_mode
+                )
                 if self.debug_dir:
                     static_debug = self.debug_dir / "static_templates.ttl"
                     static_debug.parent.mkdir(parents=True, exist_ok=True)
@@ -506,11 +517,51 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
 
     def _set_source(self, graph: Graph, existing_web_page_id: str | None) -> None:
         del existing_web_page_id
+        for subject in self._first_level_subjects(graph):
+            graph.set((subject, SEOVOC_SOURCE, Literal("web-page-import")))
+
+    def _set_existing_import_hash(self, graph: Graph, import_hash: str | None) -> None:
+        if self._import_hash_mode == "off":
+            return
+        if not import_hash:
+            return
         subjects = {
             subject for subject in graph.subjects() if isinstance(subject, URIRef)
         }
         for subject in subjects:
-            graph.set((subject, SEOVOC_SOURCE, Literal("web-page-import")))
+            graph.set((subject, SEOVOC_IMPORT_HASH, Literal(import_hash)))
+
+    def _first_level_subjects(self, graph: Graph) -> set[URIRef]:
+        subjects = {
+            subject for subject in graph.subjects() if isinstance(subject, URIRef)
+        }
+        dataset_uri = str(
+            getattr(self.context.account, "dataset_uri", "") or ""
+        ).rstrip("/")
+        if dataset_uri:
+            first_level_by_id = {
+                subject
+                for subject in subjects
+                if str(subject).startswith(f"{dataset_uri}/")
+                and len(
+                    [
+                        part
+                        for part in str(subject)[len(dataset_uri) + 1 :].split("/")
+                        if part
+                    ]
+                )
+                == 2
+            }
+            if first_level_by_id:
+                return first_level_by_id
+
+        referenced = {
+            obj
+            for _, _, obj in graph.triples((None, None, None))
+            if isinstance(obj, URIRef) and obj in subjects
+        }
+        first_level = subjects - referenced
+        return first_level or subjects
 
     def _mapping_response(
         self,
@@ -649,3 +700,12 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             return mode
         logger.warning("Unsupported SHACL validation mode '%s'; using 'warn'.", mode)
         return "warn"
+
+    def _resolve_import_hash_mode(self, value: Any) -> str:
+        if value is None:
+            return "on"
+        mode = str(value).strip().lower()
+        if mode in {"on", "write", "off"}:
+            return mode
+        logger.warning("Unsupported import hash mode '%s'; using 'on'.", mode)
+        return "on"

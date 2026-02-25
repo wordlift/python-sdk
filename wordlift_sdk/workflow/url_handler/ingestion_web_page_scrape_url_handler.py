@@ -73,6 +73,7 @@ class IngestionWebPageScrapeUrlHandler(UrlHandler):
         await self._web_page_scrape_callback.callback(
             response,
             existing_web_page_id=url.iri,
+            existing_import_hash=url.import_hash,
         )
 
     def _build_settings(self, url: Url) -> dict[str, Any]:

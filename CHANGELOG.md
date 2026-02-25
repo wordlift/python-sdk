@@ -1,5 +1,17 @@
 # Changelog
 
+## 6.3.0 - 2026-02-25
+
+### Added
+
+- `kg_build` existing-entity URL lookup now loads `seovoc:importHash` and propagates it through URL handlers into protocol callback processing.
+- Added `import_hash_mode` / `IMPORT_HASH_MODE` runtime control for graph patching (`on|write|off`).
+
+### Changed
+
+- `kg_build` per-node import hash computation is sibling-aware within the dataset graph snapshot and continues excluding `seovoc:importHash` from hash input.
+- `kg_build` source annotation now targets first-level dataset IDs (`/<dataset>/<bucket>/<id>`) for `seovoc:source = "web-page-import"` instead of annotating all URI subjects.
+
 ## 6.2.0 - 2026-02-25
 
 ### Breaking

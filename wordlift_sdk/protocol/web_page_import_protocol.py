@@ -16,6 +16,7 @@ class WebPageImportProtocolInterface(Protocol):
         self,
         response: Any,
         existing_web_page_id: str | None = None,
+        existing_import_hash: str | None = None,
     ) -> None:
         pass
 
@@ -25,5 +26,6 @@ class DefaultWebPageImportProtocol(WebPageImportProtocolInterface):
         self,
         response: Any,
         existing_web_page_id: str | None = None,
+        existing_import_hash: str | None = None,
     ) -> None:
         pass

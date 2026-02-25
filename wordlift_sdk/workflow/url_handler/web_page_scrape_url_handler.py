@@ -74,6 +74,7 @@ class WebPageScrapeUrlHandler(UrlHandler):
                 await self._web_page_scrape_callback.callback(
                     response,
                     existing_web_page_id=url.iri,
+                    existing_import_hash=url.import_hash,
                 )
             except Exception as e:
                 logger.error("Error scraping Web Page %s", url.value, exc_info=e)

@@ -53,7 +53,13 @@ async def test_ingestion_bridge_handler_calls_callback(
         ),
     )
 
-    await handler(Url(value="https://example.com", iri="https://example.com/id"))
+    await handler(
+        Url(
+            value="https://example.com",
+            iri="https://example.com/id",
+            import_hash="abc123",
+        )
+    )
 
     callback.callback.assert_awaited_once()
     args, kwargs = callback.callback.call_args
@@ -61,6 +67,7 @@ async def test_ingestion_bridge_handler_calls_callback(
     assert response.web_page.url == "https://example.com/final"
     assert response.web_page.html == "<html>ok</html>"
     assert kwargs["existing_web_page_id"] == "https://example.com/id"
+    assert kwargs["existing_import_hash"] == "abc123"
 
 
 @pytest.mark.asyncio

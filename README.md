@@ -218,7 +218,12 @@ The SDK now includes a profile-driven cloud mapping module under `wordlift_sdk.k
 2. fallback `profiles/_base/postprocessors.toml`
 3. otherwise no postprocessors
 - Execution is manifest-based only (hard cutover): no legacy `.py` or `*.command.toml` discovery.
-- During callback patch preparation, the SDK annotates all URI-subject nodes in the generated graph with `seovoc:source "web-page-import"` (blank nodes are not annotated).
+- During callback patch preparation, the SDK annotates first-level URI-subject nodes in the generated graph with `seovoc:source "web-page-import"` where first-level is dataset ID depth `/<dataset>/<bucket>/<id>` (for example `https://data.host/dataset/types/name`); deeper child IDs and blank nodes are not annotated.
+- Before patching each dataset-scoped node, the SDK computes a per-node `seovoc:importHash` from graph snapshot triples (excluding `seovoc:importHash` itself), writes the hash back to the node, and can skip API patching when a provided `seovoc:importHash` already matches.
+- Import-hash behavior is controlled by `import_hash_mode` / `IMPORT_HASH_MODE`:
+  - `on` (default): write hash + skip unchanged nodes
+  - `write`: write hash but do not skip
+  - `off`: disable hash write/skip
 - Postprocessor runtime mode:
   - `profiles.<profile>.postprocessor_runtime` overrides `_base`.
   - `_base.postprocessor_runtime` is used when profile value is missing.

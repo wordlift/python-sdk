@@ -29,7 +29,7 @@ class NewOrChangedUrlSource(UrlSource):
         )
         graphql_df = pd.DataFrame.from_records(
             data=[record for record in list_records],
-            columns=("url", "iri", "date_imported"),
+            columns=("url", "iri", "import_hash", "date_imported"),
         )
         graphql_df["date_imported"] = pd.to_datetime(
             graphql_df["date_imported"], utc=True, errors="coerce"
@@ -54,6 +54,11 @@ class NewOrChangedUrlSource(UrlSource):
             yield Url(
                 value=row["value"],
                 iri=None if pd.isna(row["iri_graphql"]) else row["iri_graphql"],
+                import_hash=(
+                    None
+                    if pd.isna(row.get("import_hash_graphql"))
+                    else row.get("import_hash_graphql")
+                ),
                 date_modified=None
                 if pd.isna(row["date_modified"])
                 else row["date_modified"],

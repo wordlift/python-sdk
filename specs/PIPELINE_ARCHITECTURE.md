@@ -39,7 +39,8 @@ Sequence:
    - render mapping template with shared `exports`
    - materialize XHTML/XPath mapping
    - optionally reconcile root IRI when URL source provides an existing ID
-   - set `seovoc:source` to `"web-page-import"` on all URI-subject entities in host-generated callback graph output
+   - set `seovoc:source` to `"web-page-import"` on first-level URI-subject entities in host-generated callback graph output, where first-level follows dataset ID depth `/<dataset>/<bucket>/<id>`
+   - compute per-node `seovoc:importHash` before patching (hash excludes `seovoc:importHash` itself), write it back to the node, and apply `import_hash_mode` (`on|write|off`) for skip behavior
    - run postprocessors from selected manifest precedence (`profiles/<name>/postprocessors.toml`, else `_base`, else none)
    - aggregate run-level KPI counters for dataset-scoped entities in the patched graph (`total_entities`, type/property totals, and by-type/by-predicate breakdowns)
    - optionally run SHACL validation for each graph (`off`/`warn`/`fail`) and aggregate validation KPI counters (`total`, `pass`, `fail`, warnings/errors counts and per-shape sources)
@@ -68,7 +69,7 @@ Responsibility:
 3. Apply profile mapping template for current URL.
 4. Reconcile callback root IRI.
    - only when `existing_web_page_id` is provided
-5. Set `seovoc:source` to `"web-page-import"` on all URI subjects in the host-side callback graph before patching (blank nodes are excluded).
+5. Set `seovoc:source` to `"web-page-import"` on first-level URI subjects in the host-side callback graph before patching (dataset ID depth `/<dataset>/<bucket>/<id>`; blank nodes excluded).
 6. Apply built-in canonical ID generation (standard policy).
 7. Apply profile postprocessors (no hardcoded customer extractor references).
 8. Patch graph triples, and optionally write debug graph/source files.
