@@ -1,3 +1,4 @@
+import asyncio
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock
@@ -539,6 +540,43 @@ async def test_patch_static_templates_once_records_and_writes_debug(
 
     protocol.patcher.patch_all.assert_called_once()
     assert (tmp_path / "debug" / "static_templates.ttl").exists()
+
+
+@pytest.mark.asyncio
+async def test_patch_static_templates_once_is_concurrency_safe() -> None:
+    events: list[dict[str, object]] = []
+    protocol = ProfileImportProtocol(
+        context=_make_context(),
+        profile=_make_profile(),
+        root_dir=Path.cwd(),
+        on_progress=lambda payload: events.append(payload),
+    )
+    graph = Graph()
+    graph.add(
+        (
+            URIRef("https://data.example.com/dataset/entities/static"),
+            RDF.type,
+            URIRef("https://schema.org/Thing"),
+        )
+    )
+    protocol._template_graph = graph
+    protocol._template_exports = {}
+
+    async def _patch_once(_: Graph) -> None:
+        await asyncio.sleep(0.01)
+
+    protocol.patcher.patch_all = AsyncMock(side_effect=_patch_once)
+
+    await asyncio.gather(
+        *(protocol._patch_static_templates_once() for _ in range(8)),
+    )
+
+    protocol.patcher.patch_all.assert_called_once()
+    static_events = [
+        event for event in events if event.get("kind") == "static_templates"
+    ]
+    assert len(static_events) == 1
+    assert protocol._static_templates_patched is True
 
 
 def test_ensure_templates_loaded_requires_dataset_uri() -> None:

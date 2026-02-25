@@ -1,5 +1,6 @@
 # TODO
 
+- [x] 2026-02-25 Make `kg_build` static template bootstrap concurrency-safe so concurrent callbacks patch static templates once and emit a single `on_progress` startup event (`kind=static_templates`).
 - [x] 2026-02-25 Set Playwright ingestion default wait policy to `domcontentloaded` and make navigation timeout path return partial DOM content instead of immediate `INGEST_LOAD_BROWSER_ERROR` failure.
 - [x] 2026-02-25 Strip default XHTML `xmlns` declarations in `HtmlConverter` so unprefixed XPath selectors (for example `.//div`) work against `__XHTML__` materialization sources.
 - [x] 2026-02-25 Update `IngestionWebPageScrapeUrlHandler` to surface parseable diagnostics from first `ingest.item_failed.meta` in raised/logged failures (with truncation/sanitization and fallback to legacy message when meta is missing).

@@ -78,6 +78,8 @@ Notes:
 
 - `validation` is `null` when SHACL validation is disabled.
 - `graph` counts are dataset-scoped (only entities matching account dataset URI).
+- `kind="static_templates"` is emitted once per run during startup bootstrap,
+  even when URL callbacks execute concurrently.
 
 ## Final KPI Payload (`on_kpi`)
 

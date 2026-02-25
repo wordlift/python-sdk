@@ -234,6 +234,7 @@ The SDK now includes a profile-driven cloud mapping module under `wordlift_sdk.k
     - `shacl_shape_specs` / `SHACL_SHAPE_SPECS` (optional list or comma-separated shape names/files)
   - `run_cloud_workflow(..., on_kpi=...)` emits the final KPI summary once at run end (including failed runs with partial data).
   - `run_cloud_workflow(..., on_progress=...)` emits per-graph progress payloads during sync, including graph metrics and (when enabled) validation summaries.
+  - static template bootstrap emits one startup `on_progress` payload (`kind="static_templates"`) and patches static templates once per run, even when URL callbacks run concurrently.
   - `run_cloud_workflow(..., on_info=...)` remains supported and can be used together with `on_progress`/`on_kpi`.
   - final KPI payload uses `validation = null` when SHACL sync validation is disabled.
   - migration notes and deprecation window for non-canonical behavior are documented in `docs/kg_build_cloud_workflow_migration.md`.

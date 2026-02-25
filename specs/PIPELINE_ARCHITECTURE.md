@@ -71,6 +71,7 @@ Responsibility:
 8. Patch graph triples, and optionally write debug Turtle files.
 9. Expose cumulative run KPIs via `get_kpi_summary()` for host emission/reporting.
 10. Cloud workflow can stream progress events (`on_progress`) and emit final KPI payload (`on_kpi`); legacy `on_info` remains supported and can be used concurrently.
+11. Static template bootstrap is guarded for concurrent callbacks: static templates patch once per run and emit one startup `on_progress` payload with `kind=static_templates`.
 
 Example profile convention for postprocessors (manifest classes):
 

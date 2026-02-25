@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import logging
 import os
@@ -82,6 +83,7 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         self._template_exports: dict[str, Any] | None = None
         self._mapping_cache: dict[Path, str] = {}
         self._static_templates_patched = False
+        self._static_templates_lock = asyncio.Lock()
         self._core_ids = CanonicalIdsPostprocessor()
         self._postprocessor_runtime = _resolve_postprocessor_runtime(
             dict(self.profile.settings)
@@ -229,39 +231,44 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
     async def _patch_static_templates_once(self) -> None:
         if self._static_templates_patched:
             return
+        async with self._static_templates_lock:
+            if self._static_templates_patched:
+                return
 
-        self._ensure_templates_loaded()
-        if self._template_graph and len(self._template_graph) > 0:
-            validation_payload = self._validate_graph_if_enabled(
-                self._template_graph, "static_templates"
-            )
-            self._emit_progress(
-                {
-                    "kind": "static_templates",
-                    "profile": self.profile.name,
-                    "graph": self._kpi.graph_metrics(self._template_graph),
-                    "validation": validation_payload,
-                }
-            )
-            self._kpi.record_graph(self._template_graph)
-            if (
-                validation_payload is not None
-                and self._shacl_mode == "strict"
-                and not validation_payload["pass"]
-            ):
-                raise RuntimeError(
-                    "SHACL validation failed for static templates in strict mode."
+            self._ensure_templates_loaded()
+            if self._template_graph and len(self._template_graph) > 0:
+                validation_payload = self._validate_graph_if_enabled(
+                    self._template_graph, "static_templates"
                 )
-            await self.patcher.patch_all(self._template_graph)
-            if self.debug_dir:
-                static_debug = self.debug_dir / "static_templates.ttl"
-                static_debug.parent.mkdir(parents=True, exist_ok=True)
-                self._template_graph.serialize(
-                    destination=static_debug, format="turtle"
+                self._emit_progress(
+                    {
+                        "kind": "static_templates",
+                        "profile": self.profile.name,
+                        "graph": self._kpi.graph_metrics(self._template_graph),
+                        "validation": validation_payload,
+                    }
                 )
-            logger.info("Patched %s static template triples", len(self._template_graph))
+                self._kpi.record_graph(self._template_graph)
+                if (
+                    validation_payload is not None
+                    and self._shacl_mode == "strict"
+                    and not validation_payload["pass"]
+                ):
+                    raise RuntimeError(
+                        "SHACL validation failed for static templates in strict mode."
+                    )
+                await self.patcher.patch_all(self._template_graph)
+                if self.debug_dir:
+                    static_debug = self.debug_dir / "static_templates.ttl"
+                    static_debug.parent.mkdir(parents=True, exist_ok=True)
+                    self._template_graph.serialize(
+                        destination=static_debug, format="turtle"
+                    )
+                logger.info(
+                    "Patched %s static template triples", len(self._template_graph)
+                )
 
-        self._static_templates_patched = True
+            self._static_templates_patched = True
 
     def _ensure_templates_loaded(self) -> None:
         if self._template_graph is not None and self._template_exports is not None:

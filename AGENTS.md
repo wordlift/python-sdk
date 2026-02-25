@@ -66,6 +66,9 @@
   progress payloads are emitted before raising so failure context is available
   in telemetry; final KPI payload uses `validation = null` when SHACL sync
   validation is disabled.
+- `wordlift_sdk.kg_build` static template bootstrap is concurrency-safe:
+  static templates are patched exactly once per run and only one
+  `on_progress` payload with `kind="static_templates"` is emitted at startup.
 - `wordlift_sdk.kg_build` postprocessor subprocesses do not inject package paths
   into `PYTHONPATH`; configured interpreters must resolve their own dependencies.
 - `wordlift_sdk.kg_build` postprocessor runtime is configurable via
