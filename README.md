@@ -138,6 +138,20 @@ SHACL validation utilities and generated Google Search Gallery shapes are includ
 
 Use `wordlift_sdk.validation.validate_jsonld_from_url` to render a URL with Playwright, extract JSON-LD fragments, and validate them against SHACL shapes.
 
+For SDK-side shape selection, use `wordlift_sdk.validation.resolve_shape_specs`
+to compose bundled include/exclude sets and extra local/remote SHACL overlays:
+
+```python
+from wordlift_sdk.validation import resolve_shape_specs, validate_file
+
+shape_specs = resolve_shape_specs(
+    builtin_shapes=["google-article"],
+    exclude_builtin_shapes=["schemaorg-grammar"],
+    extra_shapes=["./custom-shape.ttl", "https://example.com/custom-shape.ttl"],
+)
+result = validate_file("out/page.jsonld", shape_specs=shape_specs)
+```
+
 Playwright is required for URL rendering. After installing dependencies, install the browser binaries:
 
 ```bash

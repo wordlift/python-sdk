@@ -7,12 +7,14 @@ from importlib import resources
 from json import JSONDecodeError
 from pathlib import Path
 from typing import Iterable
+from urllib.parse import urlparse
 
 from html.parser import HTMLParser
 import json
 
 from pyshacl import validate
-from rdflib import Graph, Namespace, URIRef
+from rdflib import Graph, URIRef
+from rdflib.namespace import SH
 from rdflib.term import Identifier
 from requests import Response, get
 
@@ -27,6 +29,17 @@ class ValidationResult:
     data_graph: Graph
     shape_source_map: dict[Identifier, str]
     warning_count: int
+
+
+@dataclass
+class ValidationIssue:
+    level: str
+    severity: str
+    focus_node: str | None
+    result_path: str | None
+    rule_id: str | None
+    rule_set: str | None
+    message: str
 
 
 class _JsonLdScriptExtractor(HTMLParser):
@@ -86,7 +99,7 @@ def _load_graph_from_text(data: str, fmt: str | None) -> Graph:
 
 
 def _load_graph(path_or_url: str) -> Graph:
-    if path_or_url.startswith(("http://", "https://")):
+    if _is_url(path_or_url):
         response = get(path_or_url, timeout=30)
         if not response.ok:
             raise RuntimeError(
@@ -192,6 +205,50 @@ def list_shape_names() -> list[str]:
     return _shape_resource_names()
 
 
+def _is_url(value: str) -> bool:
+    return value.startswith(("http://", "https://"))
+
+
+def _normalize_builtin_shape_name(
+    spec: str, bundled_shapes: set[str], parameter_name: str
+) -> str:
+    candidate = spec if spec.endswith(".ttl") else f"{spec}.ttl"
+    if candidate not in bundled_shapes:
+        raise RuntimeError(f"Unknown {parameter_name} value: {spec}")
+    return candidate
+
+
+def resolve_shape_specs(
+    builtin_shapes: Iterable[str] | None = None,
+    exclude_builtin_shapes: Iterable[str] | None = None,
+    extra_shapes: Iterable[str] | None = None,
+) -> list[str]:
+    bundled = _shape_resource_names()
+    bundled_set = set(bundled)
+    if builtin_shapes:
+        selected = {
+            _normalize_builtin_shape_name(spec, bundled_set, "builtin shape")
+            for spec in builtin_shapes
+        }
+    else:
+        selected = set(bundled)
+    if exclude_builtin_shapes:
+        excluded = {
+            _normalize_builtin_shape_name(spec, bundled_set, "excluded builtin shape")
+            for spec in exclude_builtin_shapes
+        }
+        selected.difference_update(excluded)
+
+    resolved = sorted(selected)
+    seen = set(resolved)
+    for spec in extra_shapes or []:
+        if spec in seen:
+            continue
+        resolved.append(spec)
+        seen.add(spec)
+    return resolved
+
+
 def _read_shape_resource(name: str) -> str | None:
     shapes_dir = resources.files("wordlift_sdk.validation.shacls")
     resource = shapes_dir.joinpath(name)
@@ -209,6 +266,9 @@ def _resolve_shape_sources(shape_specs: Iterable[str] | None) -> list[str]:
         path = Path(spec)
         if path.exists():
             resolved.append(path.as_posix())
+            continue
+        if _is_url(spec):
+            resolved.append(spec)
             continue
 
         name = spec
@@ -230,10 +290,17 @@ def _load_shapes_graph(
     for spec in _resolve_shape_sources(shape_specs):
         path = Path(spec)
         if path.exists():
-            temp = Graph()
-            temp.parse(path.as_posix(), format="turtle")
+            temp = _load_graph(path.as_posix())
             shapes_graph += temp
             label = path.stem
+            for subj in temp.subjects():
+                source_map.setdefault(subj, label)
+            continue
+        if _is_url(spec):
+            temp = _load_graph(spec)
+            shapes_graph += temp
+            parsed = urlparse(spec)
+            label = Path(parsed.path).stem or parsed.netloc or spec
             for subj in temp.subjects():
                 source_map.setdefault(subj, label)
             continue
@@ -267,8 +334,7 @@ def validate_file(
         allow_warnings=True,
     )
 
-    sh = Namespace("http://www.w3.org/ns/shacl#")
-    warning_count = sum(1 for _ in report_graph.subjects(sh.resultSeverity, sh.Warning))
+    warning_count = sum(1 for _ in report_graph.subjects(SH.resultSeverity, SH.Warning))
 
     return ValidationResult(
         conforms=conforms,
@@ -308,8 +374,7 @@ def validate_jsonld_from_url(
         allow_warnings=True,
     )
 
-    sh = Namespace("http://www.w3.org/ns/shacl#")
-    warning_count = sum(1 for _ in report_graph.subjects(sh.resultSeverity, sh.Warning))
+    warning_count = sum(1 for _ in report_graph.subjects(SH.resultSeverity, SH.Warning))
 
     return ValidationResult(
         conforms=conforms,
@@ -319,3 +384,45 @@ def validate_jsonld_from_url(
         shape_source_map=source_map,
         warning_count=warning_count,
     )
+
+
+def _severity_to_level(severity: Identifier | None) -> str:
+    if severity == SH.Violation:
+        return "error"
+    return "warning"
+
+
+def extract_validation_issues(result: ValidationResult) -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    for node in result.report_graph.subjects(SH.resultSeverity, None):
+        severity = result.report_graph.value(node, SH.resultSeverity)
+        source_shape = result.report_graph.value(node, SH.sourceShape)
+        message = result.report_graph.value(node, SH.resultMessage)
+        issues.append(
+            ValidationIssue(
+                level=_severity_to_level(severity),
+                severity=str(severity) if severity else str(SH.Violation),
+                focus_node=str(result.report_graph.value(node, SH.focusNode))
+                if result.report_graph.value(node, SH.focusNode) is not None
+                else None,
+                result_path=str(result.report_graph.value(node, SH.resultPath))
+                if result.report_graph.value(node, SH.resultPath) is not None
+                else None,
+                rule_id=str(source_shape) if source_shape is not None else None,
+                rule_set=result.shape_source_map.get(source_shape)
+                if source_shape is not None
+                else None,
+                message=str(message) if message is not None else "",
+            )
+        )
+    return issues
+
+
+def filter_validation_issues(
+    issues: Iterable[ValidationIssue], level: str = "warning"
+) -> list[ValidationIssue]:
+    if level not in {"warning", "error"}:
+        raise RuntimeError(f"Unsupported level: {level}")
+    if level == "warning":
+        return list(issues)
+    return [issue for issue in issues if issue.level == "error"]

@@ -1,5 +1,17 @@
 # Changelog
 
+## 6.1.0 - 2026-02-25
+
+### Added
+
+- Add SDK-level validation shape composition helper `resolve_shape_specs(...)` to support bundled-shape allowlist/denylist plus extra local/remote SHACL overlays without duplicating validator logic in host tools.
+- Add structured SHACL issue helpers (`ValidationIssue`, `extract_validation_issues`, `filter_validation_issues`) with stable `rule_id`/`rule_set` fields for host-side UX/CLI layers.
+
+### Changed
+
+- Extend SHACL shape loading to accept additional remote shape URLs in addition to local files and bundled resources.
+- Document validation composition and issue-filtering as API-first SDK contracts (`README`, `docs/validation.md`, `specs/validation.md`, and index/status docs).
+
 ## 6.0.6 - 2026-02-25
 
 ### Changed

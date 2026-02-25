@@ -1,5 +1,6 @@
 # TODO
 
+- [x] 2026-02-25 Add SDK-level SHACL shape composition helpers (`resolve_shape_specs`) plus stable issue extraction/filtering (`rule_id`, `rule_set`) for host-provided validation UX/CLI layers.
 - [x] 2026-02-25 Make `kg_build` static template bootstrap concurrency-safe so concurrent callbacks patch static templates once and emit a single `on_progress` startup event (`kind=static_templates`).
 - [x] 2026-02-25 Extend `kg_build` debug-cloud callback artifacts to persist per-URL source HTML/XHTML snapshots (`<sha256(url)>.html/.xhtml`) alongside graph Turtle output.
 - [x] 2026-02-25 Set Playwright ingestion default wait policy to `domcontentloaded` and make navigation timeout path return partial DOM content instead of immediate `INGEST_LOAD_BROWSER_ERROR` failure.

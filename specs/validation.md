@@ -34,3 +34,31 @@ nodes, and pass them through the SHACL validation pipeline.
 
 Playwright is a required dependency for URL rendering. Install browser binaries
 with `playwright install` after the Python dependencies are installed.
+
+## Validation API composition contract
+
+Host tooling can validate one or more file/URL inputs via SDK APIs with
+deterministic shape composition:
+
+- Built-in allowlist mode: `resolve_shape_specs(builtin_shapes=[...])`.
+- Built-in exclusion mode: `resolve_shape_specs(exclude_builtin_shapes=[...])`.
+- Extra local/remote SHACL overlays: `resolve_shape_specs(extra_shapes=[...])`.
+
+Shape composition order:
+1. If `builtin_shapes` is set, only listed bundled shapes are selected.
+2. Otherwise, all bundled shapes are selected.
+3. `exclude_builtin_shapes` removes bundled shapes from the selected set.
+4. `extra_shapes` values are appended as additional shape sources.
+
+Issue output model uses normalized levels:
+- `error`: SHACL `Violation`
+- `warning`: SHACL `Warning` and `Info`
+
+Issue fields are:
+- `level`
+- `severity` (raw SHACL severity IRI)
+- `focus_node`
+- `result_path`
+- `rule_id` (SHACL source shape identifier)
+- `rule_set` (shape source label, when resolvable)
+- `message`

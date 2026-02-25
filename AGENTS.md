@@ -17,6 +17,10 @@
   for all properties.
 - URL validation can render pages with Playwright, extract JSON-LD fragments, and
   validate them via SHACL. Playwright browser binaries must be installed.
+- Validation exposes SDK-level shape composition (`resolve_shape_specs`) with
+  bundled include/exclude controls and extra local/remote SHACL overlays, plus
+  normalized issue extraction/filtering helpers with stable issue fields
+  (`rule_id`, `rule_set`) for host-side UX/CLI layers.
 - SSL verification is always enabled; on macOS the SDK uses the system CA bundle
   when available and falls back to `certifi`. Explicit CA bundle overrides are
   supported in the SDK layer.
