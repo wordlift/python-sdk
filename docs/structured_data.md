@@ -72,6 +72,8 @@ prefixed attributes dropped) so XML/XPath materialization does not fail with
 `unbound prefix` parser errors.
 The converter also strips XML-invalid comment/PI nodes and validates serialized
 XHTML with `ElementTree.fromstring()` using a strict fallback sanitation pass.
+Default XHTML `xmlns` declarations are also removed so unprefixed XPath selectors
+(for example `.//div`, `.//h1`, `.//title`) work against `__XHTML__` inputs.
 
 ## Workflows
 

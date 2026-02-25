@@ -181,6 +181,8 @@ materialization flows.
 It also removes XML-invalid comments/processing instructions, validates output
 with `xml.etree.ElementTree.fromstring()`, and runs a strict fallback sanitation
 pass before surfacing a context-rich conversion error.
+Converted XHTML also strips default `xmlns` declarations so unprefixed XPath
+selectors (for example `.//div`, `.//h1`) work with `__XHTML__` sources.
 
 ## KG Build Module
 

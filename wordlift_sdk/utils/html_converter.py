@@ -172,7 +172,12 @@ class HtmlConverter:
                     element.attrib[attr] = self._strip_invalid_xml_chars(value)
                 continue
 
-            if attr == "xmlns" or attr.startswith("xmlns:"):
+            if attr == "xmlns":
+                # Drop default namespace so plain XPath selectors (.//div) work on __XHTML__.
+                del element.attrib[attr]
+                continue
+
+            if attr.startswith("xmlns:"):
                 value = element.attrib.get(attr)
                 if isinstance(value, str):
                     element.attrib[attr] = self._strip_invalid_xml_chars(value)

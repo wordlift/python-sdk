@@ -35,7 +35,9 @@
   removed) to avoid XML parser `unbound prefix` failures with XPath sources;
   it also removes XML-invalid comments/PIs, validates output with
   `ElementTree.fromstring()`, and applies strict fallback sanitation on parse
-  failures.
+  failures. The converter also strips default XHTML `xmlns` declarations so
+  unprefixed XPath selectors against `__XHTML__` (for example `.//div`) match
+  as expected.
 - Materialization errors are categorized with actionable context for malformed
   YARRRML and unsupported XPath/function constructs.
 - `wordlift_sdk.kg_build` is integrated in the SDK with manifest-based

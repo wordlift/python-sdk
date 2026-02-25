@@ -1,6 +1,7 @@
 # TODO
 
 - [x] 2026-02-25 Set Playwright ingestion default wait policy to `domcontentloaded` and make navigation timeout path return partial DOM content instead of immediate `INGEST_LOAD_BROWSER_ERROR` failure.
+- [x] 2026-02-25 Strip default XHTML `xmlns` declarations in `HtmlConverter` so unprefixed XPath selectors (for example `.//div`) work against `__XHTML__` materialization sources.
 - [x] 2026-02-25 Update `IngestionWebPageScrapeUrlHandler` to surface parseable diagnostics from first `ingest.item_failed.meta` in raised/logged failures (with truncation/sanitization and fallback to legacy message when meta is missing).
 - [x] 2026-02-25 Fix Playwright ingestion async-loop failures (`INGEST_LOAD_BROWSER_ERROR` launch-phase "Sync API inside asyncio loop") by offloading Sync Playwright rendering away from active event-loop threads while preserving diagnostics and retry behavior.
 - [x] 2026-02-24 Improve Playwright ingestion diagnostics by surfacing root-cause details (`root_exception_type`, `root_exception_message`, `phase`, loader runtime options) in `ingest.item_failed.meta` while preserving existing error codes/messages.

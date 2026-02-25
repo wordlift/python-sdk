@@ -117,3 +117,19 @@ class TestHtmlConverter:
         assert "<!--" not in xhtml_output
         assert "<p>ok</p>" in xhtml_output
         ET.fromstring(xhtml_output)
+
+    def test_convert_removes_default_xmlns_for_xpath_compat(self, converter):
+        """Default XHTML namespace is removed so unprefixed XPath matches work."""
+        if lxml_html is None:
+            pytest.skip("lxml not installed")
+
+        html_input = (
+            '<html xmlns="http://www.w3.org/1999/xhtml"><body><div class="x">'
+            "<h1>Title</h1></div></body></html>"
+        )
+        xhtml_output = converter.convert(html_input)
+
+        assert 'xmlns="http://www.w3.org/1999/xhtml"' not in xhtml_output
+        root = ET.fromstring(xhtml_output)
+        assert root.findall(".//div")
+        assert root.findall(".//h1")
