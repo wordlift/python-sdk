@@ -62,6 +62,9 @@ If item includes embedded HTML and `INGEST_PASSTHROUGH_WHEN_HTML=true`, orchestr
   - `root_exception_message` (max 2KB)
   - `phase` (`launch|navigate|content|convert|unknown`)
   - `url`, `wait_until`, `timeout_ms`, `headless`
+- Playwright loader execution must be async-loop-safe: when called while an event loop is already
+  running in the caller thread, rendering is offloaded away from that loop thread before invoking
+  Sync Playwright APIs.
 - `INGEST_LOAD_PLAYWRIGHT_UNAVAILABLE` remains reserved for missing Playwright install/runtime availability.
 
 ## Retry/Timeout Policy
@@ -86,6 +89,13 @@ Machine-parseable events:
 - `code`
 - `message`
 - `meta`
+
+Bridge-handler failure surfacing contract:
+- `IngestionWebPageScrapeUrlHandler` keeps base failure text
+  (`Ingestion loader failed for <url>: <code> <message>`) and appends
+  `diagnostics=<json>` when `ingest.item_failed.meta` includes diagnostic fields.
+- Appended diagnostics are key-whitelisted, JSON-serialized with stable keys, and
+  truncated/sanitized for safe logs (`root_exception_message` capped; payload capped).
 
 ## web_scrape_api Semantics
 

@@ -1,6 +1,10 @@
 from __future__ import annotations
 
+import json
+import logging
+import re
 from typing import Any
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from wordlift_client import WebPage, WebPageScrapeResponse
 
@@ -10,6 +14,20 @@ from ...configuration import ConfigurationProvider
 from ...protocol import Context, WebPageImportProtocolInterface
 from ...url_source import Url
 from .url_handler import UrlHandler
+
+logger = logging.getLogger(__name__)
+_DIAG_KEYS = (
+    "phase",
+    "root_exception_type",
+    "root_exception_message",
+    "url",
+    "wait_until",
+    "timeout_ms",
+    "headless",
+)
+_MAX_ROOT_MESSAGE_LEN = 2048
+_MAX_DIAGNOSTICS_LEN = 3072
+_REDACT_KEYS = ("token", "secret", "password", "cookie", "authorization", "api_key")
 
 
 class IngestionWebPageScrapeUrlHandler(UrlHandler):
@@ -33,9 +51,15 @@ class IngestionWebPageScrapeUrlHandler(UrlHandler):
             ]
             if failed:
                 first = failed[0]
-                raise RuntimeError(
-                    f"Ingestion loader failed for {url.value}: {first.get('code')} {first.get('message')}"
+                base_message = f"Ingestion loader failed for {url.value}: {first.get('code')} {first.get('message')}"
+                diagnostics = _format_failure_diagnostics(first.get("meta"))
+                error_message = (
+                    f"{base_message} diagnostics={diagnostics}"
+                    if diagnostics is not None
+                    else base_message
                 )
+                logger.error(error_message)
+                raise RuntimeError(error_message)
             raise RuntimeError(f"Ingestion loader produced no page for {url.value}")
 
         page = result.pages[0]
@@ -82,3 +106,99 @@ class IngestionWebPageScrapeUrlHandler(UrlHandler):
             }
         ]
         return settings
+
+
+def _format_failure_diagnostics(meta: Any) -> str | None:
+    if not isinstance(meta, dict) or not meta:
+        return None
+    payload: dict[str, Any] = {}
+    for key in _DIAG_KEYS:
+        value = meta.get(key)
+        if value is None:
+            continue
+        if key == "root_exception_message":
+            payload[key] = _truncate(_sanitize_text(str(value)), _MAX_ROOT_MESSAGE_LEN)
+            continue
+        if key == "url":
+            payload[key] = _sanitize_url(str(value))
+            continue
+        if isinstance(value, str):
+            payload[key] = _sanitize_text(value)
+            continue
+        payload[key] = value
+
+    if not payload:
+        return None
+
+    diagnostics = json.dumps(payload, sort_keys=True, separators=(",", ":"))
+    if len(diagnostics) <= _MAX_DIAGNOSTICS_LEN:
+        return diagnostics
+
+    root = payload.get("root_exception_message")
+    if isinstance(root, str):
+        over_by = len(diagnostics) - _MAX_DIAGNOSTICS_LEN
+        payload["root_exception_message"] = _truncate(
+            root, max(64, len(root) - over_by - 3)
+        )
+        diagnostics = json.dumps(payload, sort_keys=True, separators=(",", ":"))
+        if len(diagnostics) <= _MAX_DIAGNOSTICS_LEN:
+            return diagnostics
+
+    url_value = payload.get("url")
+    if isinstance(url_value, str):
+        over_by = len(diagnostics) - _MAX_DIAGNOSTICS_LEN
+        payload["url"] = _truncate(url_value, max(64, len(url_value) - over_by - 3))
+        diagnostics = json.dumps(payload, sort_keys=True, separators=(",", ":"))
+        if len(diagnostics) <= _MAX_DIAGNOSTICS_LEN:
+            return diagnostics
+
+    payload["root_exception_message"] = "[truncated]"
+    diagnostics = json.dumps(payload, sort_keys=True, separators=(",", ":"))
+    if len(diagnostics) <= _MAX_DIAGNOSTICS_LEN:
+        return diagnostics
+    return _truncate(diagnostics, _MAX_DIAGNOSTICS_LEN)
+
+
+def _truncate(value: str, max_len: int) -> str:
+    if len(value) <= max_len:
+        return value
+    if max_len <= 3:
+        return value[:max_len]
+    return value[: max_len - 3] + "..."
+
+
+def _sanitize_text(value: str) -> str:
+    sanitized = value
+    for key in _REDACT_KEYS:
+        sanitized = re.sub(
+            rf"(?i)({re.escape(key)}\s*[=:]\s*)([^\s,;]+)",
+            r"\1[REDACTED]",
+            sanitized,
+        )
+    return sanitized
+
+
+def _sanitize_url(value: str) -> str:
+    try:
+        parts = urlsplit(value)
+    except Exception:
+        return _sanitize_text(value)
+    query = parse_qsl(parts.query, keep_blank_values=True)
+    if not query:
+        return value
+    redacted: list[tuple[str, str]] = []
+    for key, query_value in query:
+        lower = key.lower()
+        if any(marker in lower for marker in _REDACT_KEYS):
+            redacted.append((key, "[REDACTED]"))
+        else:
+            redacted.append((key, query_value))
+    return urlunsplit(
+        (
+            parts.scheme,
+            parts.netloc,
+            parts.path,
+            urlencode(redacted, doseq=True),
+            parts.fragment,
+        )
+    )

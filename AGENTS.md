@@ -105,3 +105,9 @@
   and emitted `ingest.item_failed.meta` (`root_exception_type`,
   `root_exception_message` capped to 2KB, `phase`, `url`, `wait_until`,
   `timeout_ms`, `headless`).
+- Playwright ingestion is async-loop-safe in cloud workflows: when a caller thread
+  already runs an asyncio event loop, rendering is offloaded away from that thread
+  before Sync Playwright APIs are invoked.
+- `IngestionWebPageScrapeUrlHandler` now surfaces first failure diagnostics from
+  `ingest.item_failed.meta` in raised/logged errors as parseable JSON
+  (`diagnostics=<json>`), with whitelisted keys and truncation/sanitization.

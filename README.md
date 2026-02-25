@@ -252,6 +252,11 @@ before network loaders.
 Playwright ingestion failures keep stable top-level code/message and expose root-cause
 diagnostics (`root_exception_type`, `root_exception_message`, `phase`, `url`,
 `wait_until`, `timeout_ms`, `headless`) in `ingest.item_failed.meta`.
+When ingestion is triggered from async workflows, the Playwright loader avoids executing
+Sync API calls directly on the active asyncio loop thread.
+Bridge handler failures (`IngestionWebPageScrapeUrlHandler`) now preserve existing
+loader code/message text and append parseable diagnostics from `ingest.item_failed.meta`
+when available.
 
 Quick start:
 

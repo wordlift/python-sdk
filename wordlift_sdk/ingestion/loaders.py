@@ -132,7 +132,7 @@ class PlaywrightLoaderAdapter(BaseLoaderAdapter):
                 wait_until=str(config.loader_config.get("wait_until", "networkidle")),
             )
             try:
-                rendered = self._renderer.render(options)
+                rendered = _render_with_loop_safety(self._renderer.render, options)
             except RuntimeError as exc:
                 if "Playwright is not installed" in str(exc):
                     raise LoaderConfigError(
@@ -246,6 +246,42 @@ def _truncate(value: str, max_len: int) -> str:
     if len(value) <= max_len:
         return value
     return value[:max_len]
+
+
+def _is_running_in_event_loop() -> bool:
+    try:
+        asyncio.get_running_loop()
+        return True
+    except RuntimeError:
+        return False
+
+
+def _render_with_loop_safety(
+    render_fn: Callable[[RenderOptions], Any], options: RenderOptions
+) -> Any:
+    if not _is_running_in_event_loop():
+        return render_fn(options)
+    return _run_in_worker_thread(lambda: render_fn(options))
+
+
+def _run_in_worker_thread(fn: Callable[[], Any]) -> Any:
+    result: dict[str, Any] = {}
+    error: dict[str, BaseException] = {}
+
+    def target() -> None:
+        try:
+            result["value"] = fn()
+        except BaseException as exc:  # pragma: no cover - asserted via caller paths
+            error["exc"] = exc
+
+    thread = threading.Thread(target=target, name="playwright-render-worker")
+    thread.start()
+    thread.join()
+
+    exc = error.get("exc")
+    if exc is not None:
+        raise exc
+    return result["value"]
 
 
 class WebScrapeApiLoaderAdapter(BaseLoaderAdapter):

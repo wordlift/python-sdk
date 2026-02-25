@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import asyncio
+import threading
 from io import BytesIO
 from types import SimpleNamespace
 
@@ -124,6 +126,53 @@ def test_playwright_loader_raises_typed_error_when_unavailable(
     with pytest.raises(LoaderConfigError) as exc:
         loader.load(SourceItem(id="1", url="https://example.com"), _config())
     assert exc.value.code == "INGEST_LOAD_PLAYWRIGHT_UNAVAILABLE"
+
+
+def test_playwright_loader_success_returns_loaded_page() -> None:
+    loader = PlaywrightLoaderAdapter()
+    url = "https://www.bluehost.com/vps-hosting/docker"
+    loader._renderer = SimpleNamespace(
+        render=lambda _options: SimpleNamespace(
+            status_code=200,
+            html="<html>ok</html>",
+            resources=[{"url": url, "status": 200}],
+        )
+    )
+
+    page = loader.load(
+        SourceItem(id="1", url=url),
+        _config(loader_name="playwright"),
+    )
+
+    assert page.item_id == "1"
+    assert page.url == url
+    assert page.final_url == url
+    assert page.status_code == 200
+    assert page.html == "<html>ok</html>"
+    assert page.fetch_meta["backend"] == "playwright"
+    assert page.fetch_meta["resources"] == [{"url": url, "status": 200}]
+
+
+def test_playwright_loader_offloads_render_when_event_loop_is_active() -> None:
+    loader = PlaywrightLoaderAdapter()
+    main_thread_id = threading.get_ident()
+    seen_thread_ids: list[int] = []
+
+    def _render(_options):
+        seen_thread_ids.append(threading.get_ident())
+        return SimpleNamespace(status_code=200, html="<html>ok</html>", resources=[])
+
+    loader._renderer = SimpleNamespace(render=_render)
+    cfg = _config(loader_name="playwright")
+
+    async def _run() -> None:
+        page = loader.load(SourceItem(id="1", url="https://example.com"), cfg)
+        assert page.fetch_meta["backend"] == "playwright"
+
+    asyncio.run(_run())
+
+    assert len(seen_thread_ids) == 1
+    assert seen_thread_ids[0] != main_thread_id
 
 
 def test_playwright_loader_navigation_failure_includes_root_diagnostics(

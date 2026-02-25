@@ -1,5 +1,7 @@
 # TODO
 
+- [x] 2026-02-25 Update `IngestionWebPageScrapeUrlHandler` to surface parseable diagnostics from first `ingest.item_failed.meta` in raised/logged failures (with truncation/sanitization and fallback to legacy message when meta is missing).
+- [x] 2026-02-25 Fix Playwright ingestion async-loop failures (`INGEST_LOAD_BROWSER_ERROR` launch-phase "Sync API inside asyncio loop") by offloading Sync Playwright rendering away from active event-loop threads while preserving diagnostics and retry behavior.
 - [x] 2026-02-24 Improve Playwright ingestion diagnostics by surfacing root-cause details (`root_exception_type`, `root_exception_message`, `phase`, loader runtime options) in `ingest.item_failed.meta` while preserving existing error codes/messages.
 - [ ] 2026-02-24 Raise project-wide source coverage from 80% to 90%+ (`coverage report --omit='tests/*'` currently 80% baseline after this change); broaden tests for low-coverage modules (`structured_data/engine.py`, `utils/html_converter.py`, ingestion sources/loaders edge branches).
 - [x] 2026-02-24 Publish a version-locked worai integration contract doc (`docs/worai_sdk_integration_contract_v6.md`) and package docs/changelog artifacts in SDK distribution metadata for PyPI consumers.

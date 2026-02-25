@@ -1,5 +1,12 @@
 # Changelog
 
+## 6.0.2 - 2026-02-25
+
+### Changed
+
+- Fix Playwright ingestion failures in async workflow by avoiding Sync API execution inside active asyncio loops; preserve detailed ingestion diagnostics.
+- Update `IngestionWebPageScrapeUrlHandler` error surfacing to append parseable, truncated diagnostics from `ingest.item_failed.meta` (phase, root cause type/message, url, wait policy, timeout, headless) while preserving existing code/message text.
+
 ## 6.0.1 - 2026-02-24
 
 ### Changed
