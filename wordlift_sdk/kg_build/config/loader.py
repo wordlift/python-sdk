@@ -91,6 +91,16 @@ ENV_PARSERS: dict[str, Callable[[str], Any]] = {
     "google_search_console": lambda v: v.strip().lower() in {"1", "true", "yes", "on"},
     "service_account_file": str,
     "postprocessor_runtime": str,
+    "shacl_validate_mode": str,
+    "shacl_builtin_shapes": lambda v: [
+        u.strip() for u in re.split(r"[\n,]", v) if u.strip()
+    ],
+    "shacl_exclude_builtin_shapes": lambda v: [
+        u.strip() for u in re.split(r"[\n,]", v) if u.strip()
+    ],
+    "shacl_extra_shapes": lambda v: [
+        u.strip() for u in re.split(r"[\n,]", v) if u.strip()
+    ],
 }
 
 

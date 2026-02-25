@@ -17,7 +17,11 @@ from wordlift_sdk.protocol import Context
 from wordlift_sdk.protocol.web_page_import_protocol import (
     WebPageImportProtocolInterface,
 )
-from wordlift_sdk.validation.shacl import ValidationResult, validate_file
+from wordlift_sdk.validation.shacl import (
+    ValidationResult,
+    resolve_shape_specs,
+    validate_file,
+)
 
 from .config import ProfileDefinition
 from .entity_patcher import EntityPatcher
@@ -99,27 +103,37 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             profile_name=self.profile.name,
             runtime=self._postprocessor_runtime,
         )
-        self._shacl_validate = self._resolve_bool_setting(
-            "shacl_validate_sync", "SHACL_VALIDATE_SYNC", False
-        )
-        self._shacl_mode = (
-            str(
-                self.profile.settings.get(
-                    "shacl_validate_mode",
-                    self.profile.settings.get("SHACL_VALIDATE_MODE", "warn"),
-                )
-            )
-            .strip()
-            .lower()
-        )
-        self._shacl_shape_specs = self._resolve_shape_specs(
+        self._shacl_mode = self._resolve_validation_mode(
             self.profile.settings.get(
-                "shacl_shape_specs", self.profile.settings.get("SHACL_SHAPE_SPECS")
+                "shacl_validate_mode",
+                self.profile.settings.get("SHACL_VALIDATE_MODE", "warn"),
             )
+        )
+        shacl_builtin_shapes = self._resolve_list_setting(
+            self.profile.settings.get(
+                "shacl_builtin_shapes",
+                self.profile.settings.get("SHACL_BUILTIN_SHAPES"),
+            )
+        )
+        shacl_exclude_builtin_shapes = self._resolve_list_setting(
+            self.profile.settings.get(
+                "shacl_exclude_builtin_shapes",
+                self.profile.settings.get("SHACL_EXCLUDE_BUILTIN_SHAPES"),
+            )
+        )
+        shacl_extra_shapes = self._resolve_list_setting(
+            self.profile.settings.get(
+                "shacl_extra_shapes", self.profile.settings.get("SHACL_EXTRA_SHAPES")
+            )
+        )
+        self._shacl_shape_specs = resolve_shape_specs(
+            builtin_shapes=shacl_builtin_shapes or None,
+            exclude_builtin_shapes=shacl_exclude_builtin_shapes or None,
+            extra_shapes=shacl_extra_shapes or None,
         )
         self._kpi = KgBuildKpiCollector(
             dataset_uri=getattr(self.context.account, "dataset_uri", None),
-            validation_enabled=self._shacl_validate,
+            validation_enabled=self._shacl_mode != "off",
         )
         logger.debug(
             "Resolved mappings for profile '%s': effective_dir=%s (origin=%s), routes=%s (origin=%s), overlay_dirs=%s",
@@ -198,10 +212,10 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         self._kpi.record_graph(graph)
         if (
             validation_payload is not None
-            and self._shacl_mode == "strict"
+            and self._shacl_mode == "fail"
             and not validation_payload["pass"]
         ):
-            raise RuntimeError(f"SHACL validation failed for {url} in strict mode.")
+            raise RuntimeError(f"SHACL validation failed for {url} in fail mode.")
         await self.patcher.patch_all(graph)
         logger.info("Patched %s triples for %s", len(graph), url)
 
@@ -257,11 +271,11 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
                 self._kpi.record_graph(self._template_graph)
                 if (
                     validation_payload is not None
-                    and self._shacl_mode == "strict"
+                    and self._shacl_mode == "fail"
                     and not validation_payload["pass"]
                 ):
                     raise RuntimeError(
-                        "SHACL validation failed for static templates in strict mode."
+                        "SHACL validation failed for static templates in fail mode."
                     )
                 await self.patcher.patch_all(self._template_graph)
                 if self.debug_dir:
@@ -514,7 +528,7 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
     def _validate_graph_if_enabled(
         self, graph: Graph, url: str
     ) -> dict[str, Any] | None:
-        if not self._shacl_validate:
+        if self._shacl_mode == "off":
             return None
         result = self._validate_graph(graph)
         summary = self._summarize_validation(result)
@@ -608,15 +622,7 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         except Exception:
             logger.warning("Failed to emit kg_build progress payload.", exc_info=True)
 
-    def _resolve_bool_setting(self, key: str, legacy_key: str, default: bool) -> bool:
-        value = self.profile.settings.get(key, self.profile.settings.get(legacy_key))
-        if value is None:
-            return default
-        if isinstance(value, bool):
-            return value
-        return str(value).strip().lower() in {"1", "true", "yes", "on"}
-
-    def _resolve_shape_specs(self, value: Any) -> list[str]:
+    def _resolve_list_setting(self, value: Any) -> list[str]:
         if value is None:
             return []
         if isinstance(value, str):
@@ -629,3 +635,17 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
                     specs.append(text)
             return specs
         return [str(value).strip()] if str(value).strip() else []
+
+    def _resolve_validation_mode(self, value: Any) -> str:
+        if value is None:
+            return "warn"
+        mode = str(value).strip().lower()
+        if mode == "strict":
+            logger.warning(
+                "Deprecated SHACL validation mode 'strict' detected; using 'fail'."
+            )
+            return "fail"
+        if mode in {"off", "warn", "fail"}:
+            return mode
+        logger.warning("Unsupported SHACL validation mode '%s'; using 'warn'.", mode)
+        return "warn"

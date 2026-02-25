@@ -49,9 +49,9 @@ These callbacks can be used together in a single run.
 
 ## Validation Semantics
 
-- `shacl_validate_sync = false`: progress `validation` is `null`, final KPI `validation` is `null`.
+- `shacl_validate_mode = off`: progress `validation` is `null`, final KPI `validation` is `null`.
 - `shacl_validate_mode = warn`: include validation payloads and continue.
-- `shacl_validate_mode = strict`: emit failing progress payload, then raise and stop the failing graph/static-template sync path.
+- `shacl_validate_mode = fail`: emit failing progress payload, then raise and stop the failing graph/static-template sync path.
 
 ## Runtime Semantics
 

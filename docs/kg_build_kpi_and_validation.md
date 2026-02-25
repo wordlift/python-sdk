@@ -17,14 +17,16 @@ Use `wordlift_sdk.kg_build.cloud_flow.run_cloud_workflow`:
 
 Validation is optional and controlled by profile settings:
 
-- `shacl_validate_sync` / `SHACL_VALIDATE_SYNC`: `true|false` (default `false`)
-- `shacl_validate_mode` / `SHACL_VALIDATE_MODE`: `warn|strict` (default `warn`)
-- `shacl_shape_specs` / `SHACL_SHAPE_SPECS`: optional shape names/files (list or comma-separated string)
+- `shacl_validate_mode` / `SHACL_VALIDATE_MODE`: `off|warn|fail` (default `warn`)
+- `shacl_builtin_shapes` / `SHACL_BUILTIN_SHAPES`: optional bundled shape allowlist
+- `shacl_exclude_builtin_shapes` / `SHACL_EXCLUDE_BUILTIN_SHAPES`: optional bundled shape denylist
+- `shacl_extra_shapes` / `SHACL_EXTRA_SHAPES`: optional list/comma-separated local paths or remote URLs
 
 Behavior:
 
+- `off`: validation payloads are `null`; sync continues.
 - `warn`: validation results are included in payloads; sync continues on failures.
-- `strict`: failing graph/static-template events are emitted first with
+- `fail`: failing graph/static-template events are emitted first with
   `validation.pass = false`, then sync raises and stops that graph path.
 
 ## In-Run Progress Payload (`on_progress`)
@@ -80,6 +82,8 @@ Notes:
 - `graph` counts are dataset-scoped (only entities matching account dataset URI).
 - `kind="static_templates"` is emitted once per run during startup bootstrap,
   even when URL callbacks execute concurrently.
+- payload schema is unchanged by validation-mode/shape-resolution settings; only
+  the content of `validation` changes (`null` in `off`, summary object in `warn`/`fail`).
 
 ## Final KPI Payload (`on_kpi`)
 

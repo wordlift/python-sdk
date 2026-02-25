@@ -243,9 +243,10 @@ The SDK now includes a profile-driven cloud mapping module under `wordlift_sdk.k
     - validation totals: `validation.total`, `validation.pass`, `validation.fail` (when validation is enabled)
     - validation breakdowns: `validation.warnings.{count,sources}`, `validation.errors.{count,sources}` (when validation is enabled)
   - Validation can be enabled per profile with:
-    - `shacl_validate_sync` / `SHACL_VALIDATE_SYNC` (`true|false`, default `false`)
-    - `shacl_validate_mode` / `SHACL_VALIDATE_MODE` (`warn|strict`, default `warn`)
-    - `shacl_shape_specs` / `SHACL_SHAPE_SPECS` (optional list or comma-separated shape names/files)
+    - `shacl_validate_mode` / `SHACL_VALIDATE_MODE` (`off|warn|fail`, default `warn`)
+    - `shacl_builtin_shapes` / `SHACL_BUILTIN_SHAPES` (optional bundled shape allowlist)
+    - `shacl_exclude_builtin_shapes` / `SHACL_EXCLUDE_BUILTIN_SHAPES` (optional bundled shape denylist)
+    - `shacl_extra_shapes` / `SHACL_EXTRA_SHAPES` (optional list/comma-separated local paths or remote URLs)
   - `run_cloud_workflow(..., on_kpi=...)` emits the final KPI summary once at run end (including failed runs with partial data).
   - `run_cloud_workflow(..., on_progress=...)` emits per-graph progress payloads during sync, including graph metrics and (when enabled) validation summaries.
   - static template bootstrap emits one startup `on_progress` payload (`kind="static_templates"`) and patches static templates once per run, even when URL callbacks run concurrently.

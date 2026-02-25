@@ -48,9 +48,9 @@ These callbacks are supported concurrently in the same run.
 
 ### 4) Validation Contract
 
-- `shacl_validate_sync = false`: `validation = null`
+- `shacl_validate_mode = off`: `validation = null`
 - `shacl_validate_mode = warn`: include validation, continue
-- `shacl_validate_mode = strict`: emit failing progress payload, then raise/stop failing graph path
+- `shacl_validate_mode = fail`: emit failing progress payload, then raise/stop failing graph path
 
 ### 5) Postprocessor Runtime Contract
 

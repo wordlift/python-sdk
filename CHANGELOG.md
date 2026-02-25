@@ -1,5 +1,18 @@
 # Changelog
 
+## 6.2.0 - 2026-02-25
+
+### Breaking
+
+- `kg_build` validation toggle `shacl_validate_sync` / `SHACL_VALIDATE_SYNC` is removed; validation behavior is now controlled only by `shacl_validate_mode`.
+- `kg_build` validation mode value `strict` is replaced by `fail` (`off|warn|fail`).
+- `kg_build` setting `shacl_shape_specs` / `SHACL_SHAPE_SPECS` is removed in favor of resolver-aligned shape inputs (`shacl_builtin_shapes`, `shacl_exclude_builtin_shapes`, `shacl_extra_shapes`).
+
+### Changed
+
+- `kg_build` SHACL validation now resolves shape specs via `resolve_shape_specs(...)` using bundled include/exclude lists plus local/remote overlays.
+- `kg_build` progress/KPI callback payload schema remains unchanged; only validation mode/settings semantics were updated.
+
 ## 6.1.0 - 2026-02-25
 
 ### Added

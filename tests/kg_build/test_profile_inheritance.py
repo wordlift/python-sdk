@@ -48,6 +48,29 @@ def test_runtime_inherits_from_base_when_selected_missing(tmp_path: Path) -> Non
     assert protocol._postprocessor_runtime == "persistent"
 
 
+def test_validation_settings_parse_into_profile_settings(tmp_path: Path) -> None:
+    _write(
+        tmp_path / "worai.toml",
+        """
+        [profiles.alpha]
+        mapping = "default.yarrrml"
+        shacl_validate_mode = "fail"
+        shacl_builtin_shapes = "google-article, schemaorg-grammar"
+        shacl_exclude_builtin_shapes = "schemaorg-grammar"
+        shacl_extra_shapes = "https://example.com/custom.ttl"
+        """,
+    )
+
+    profile = load_profile_config(tmp_path / "worai.toml").get("alpha")
+    assert profile.settings["shacl_validate_mode"] == "fail"
+    assert profile.settings["shacl_builtin_shapes"] == [
+        "google-article",
+        "schemaorg-grammar",
+    ]
+    assert profile.settings["shacl_exclude_builtin_shapes"] == ["schemaorg-grammar"]
+    assert profile.settings["shacl_extra_shapes"] == ["https://example.com/custom.ttl"]
+
+
 def test_template_override_prefers_selected_relative_path(tmp_path: Path) -> None:
     _write(
         tmp_path / "worai.toml",

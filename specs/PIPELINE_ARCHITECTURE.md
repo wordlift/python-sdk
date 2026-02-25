@@ -42,8 +42,8 @@ Sequence:
    - set `seovoc:source` to `"web-page-import"` on all URI-subject entities in host-generated callback graph output
    - run postprocessors from selected manifest precedence (`profiles/<name>/postprocessors.toml`, else `_base`, else none)
    - aggregate run-level KPI counters for dataset-scoped entities in the patched graph (`total_entities`, type/property totals, and by-type/by-predicate breakdowns)
-   - optionally run SHACL validation for each graph (`warn`/`strict`) and aggregate validation KPI counters (`total`, `pass`, `fail`, warnings/errors counts and per-shape sources)
-   - in `strict` mode, emit failing progress payload first, then raise to stop the failing graph/static-template sync path
+   - optionally run SHACL validation for each graph (`off`/`warn`/`fail`) and aggregate validation KPI counters (`total`, `pass`, `fail`, warnings/errors counts and per-shape sources)
+   - in `fail` mode, emit failing progress payload first, then raise to stop the failing graph/static-template sync path
    - optionally emit per-graph progress payloads to host callback (`on_progress`) with graph metrics and validation summary (`null` when validation is disabled)
    - patch generated graph to WordLift
 

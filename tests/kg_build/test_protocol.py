@@ -826,8 +826,10 @@ def test_protocol_setting_parsers_and_progress_error_logging(
 ) -> None:
     profile = _make_profile_with_overrides(
         settings={
-            "SHACL_VALIDATE_SYNC": "true",
-            "SHACL_SHAPE_SPECS": "google-article, google-product",
+            "SHACL_VALIDATE_MODE": "warn",
+            "SHACL_BUILTIN_SHAPES": "google-article",
+            "SHACL_EXCLUDE_BUILTIN_SHAPES": "schemaorg-grammar",
+            "SHACL_EXTRA_SHAPES": "https://example.com/custom-shape.ttl",
         }
     )
     protocol = ProfileImportProtocol(
@@ -835,10 +837,13 @@ def test_protocol_setting_parsers_and_progress_error_logging(
         profile=profile,
         root_dir=Path.cwd(),
     )
-    assert protocol._shacl_validate is True
-    assert protocol._shacl_shape_specs == ["google-article", "google-product"]
-    assert protocol._resolve_shape_specs(["a", " ", "b"]) == ["a", "b"]
-    assert protocol._resolve_shape_specs(123) == ["123"]
+    assert protocol._shacl_mode == "warn"
+    assert protocol._shacl_shape_specs == [
+        "google-article.ttl",
+        "https://example.com/custom-shape.ttl",
+    ]
+    assert protocol._resolve_list_setting(["a", " ", "b"]) == ["a", "b"]
+    assert protocol._resolve_list_setting(123) == ["123"]
 
     protocol._on_progress = lambda _payload: (_ for _ in ()).throw(RuntimeError("boom"))
     with caplog.at_level("WARNING"):
@@ -882,12 +887,11 @@ def test_resolve_mapping_path_absolute_and_templated(tmp_path: Path) -> None:
 
 
 @pytest.mark.asyncio
-async def test_patch_static_templates_strict_validation_raises() -> None:
+async def test_patch_static_templates_fail_validation_raises() -> None:
     events: list[dict[str, object]] = []
     profile = _make_profile_with_overrides(
         settings={
-            "shacl_validate_sync": True,
-            "shacl_validate_mode": "strict",
+            "shacl_validate_mode": "fail",
         }
     )
     protocol = ProfileImportProtocol(
@@ -1006,7 +1010,6 @@ async def test_profile_protocol_emits_progress_and_validation_in_warn_mode() -> 
     events: list[dict[str, object]] = []
     profile = _make_profile_with_overrides(
         settings={
-            "shacl_validate_sync": True,
             "shacl_validate_mode": "warn",
         }
     )
@@ -1067,12 +1070,11 @@ async def test_profile_protocol_emits_progress_and_validation_in_warn_mode() -> 
 
 
 @pytest.mark.asyncio
-async def test_profile_protocol_validation_strict_mode_raises() -> None:
+async def test_profile_protocol_validation_fail_mode_raises() -> None:
     events: list[dict[str, object]] = []
     profile = _make_profile_with_overrides(
         settings={
-            "shacl_validate_sync": True,
-            "shacl_validate_mode": "strict",
+            "shacl_validate_mode": "fail",
         }
     )
     protocol = ProfileImportProtocol(
@@ -1112,7 +1114,7 @@ async def test_profile_protocol_emits_null_validation_when_disabled() -> None:
     events: list[dict[str, object]] = []
     protocol = ProfileImportProtocol(
         context=_make_context(),
-        profile=_make_profile(),
+        profile=_make_profile_with_overrides(settings={"shacl_validate_mode": "off"}),
         root_dir=Path.cwd(),
         on_progress=lambda payload: events.append(payload),
     )
@@ -1173,7 +1175,7 @@ async def test_profile_protocol_emits_graph_and_static_template_events() -> None
 async def test_profile_protocol_collects_run_level_kpis() -> None:
     protocol = ProfileImportProtocol(
         context=_make_context(),
-        profile=_make_profile(),
+        profile=_make_profile_with_overrides(settings={"shacl_validate_mode": "off"}),
         root_dir=Path.cwd(),
     )
     protocol._patch_static_templates_once = AsyncMock()
@@ -1210,3 +1212,29 @@ async def test_profile_protocol_collects_run_level_kpis() -> None:
         "https://w3id.org/seovoc/source": 2,
     }
     assert summary["validation"] is None
+
+
+def test_protocol_validation_mode_normalization_and_deprecation(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    with caplog.at_level("WARNING"):
+        strict_protocol = ProfileImportProtocol(
+            context=_make_context(),
+            profile=_make_profile_with_overrides(
+                settings={"shacl_validate_mode": "strict"}
+            ),
+            root_dir=Path.cwd(),
+        )
+    assert strict_protocol._shacl_mode == "fail"
+    assert "Deprecated SHACL validation mode 'strict' detected" in caplog.text
+
+    with caplog.at_level("WARNING"):
+        unknown_protocol = ProfileImportProtocol(
+            context=_make_context(),
+            profile=_make_profile_with_overrides(
+                settings={"shacl_validate_mode": "invalid-mode"}
+            ),
+            root_dir=Path.cwd(),
+        )
+    assert unknown_protocol._shacl_mode == "warn"
+    assert "Unsupported SHACL validation mode" in caplog.text
