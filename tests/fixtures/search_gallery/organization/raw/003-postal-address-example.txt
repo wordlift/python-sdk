@@ -1,0 +1,13 @@
+"address": [{
+  "@type": "PostalAddress",
+  "streetAddress": "999 W Example St Suite 99 Unit 9",
+  "addressLocality": "New York",
+  "addressRegion": "NY",
+  "postalCode": "10019",
+  "addressCountry": "US"
+},{
+  "streetAddress": "999 Rue due exemple",
+  "addressLocality": "Paris",
+  "postalCode": "75001",
+  "addressCountry": "FR"
+}]

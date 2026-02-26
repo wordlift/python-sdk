@@ -1,0 +1,5 @@
+"license" : {
+  "@type": "CreativeWork",
+  "name": "Custom license",
+  "url": "https://example.com/custom_license"
+  }

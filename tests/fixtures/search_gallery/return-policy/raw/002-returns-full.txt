@@ -1,0 +1,48 @@
+<html>
+  <head>
+    <title>Our return policy</title>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "OnlineStore",
+        "hasMerchantReturnPolicy": {
+          "@type": "MerchantReturnPolicy",
+          "applicableCountry": [ "DE", "AT", "CH"],
+          "returnPolicyCountry": "IE",
+          "returnPolicyCategory": "https://schema.org/MerchantReturnFiniteReturnWindow",
+          "merchantReturnDays": 60,
+          "itemCondition": [ "https://schema.org/NewCondition", "https://schema.org/DamagedCondition" ],
+          "returnMethod": "https://schema.org/ReturnByMail",
+          "returnFees": "https://schema.org/ReturnShippingFees",
+          "refundType": "https://schema.org/FullRefund",
+          "returnShippingFeesAmount": {
+            "@type": "MonetaryAmount",
+            "value": 2.99,
+            "currency": "EUR"
+          },
+          "returnLabelSource": "https://schema.org/ReturnLabelInBox",
+          "customerRemorseReturnFees": "https://schema.org/ReturnShippingFees",
+          "customerRemorseReturnShippingFeesAmount": {
+            "@type": "MonetaryAmount",
+            "value": 5.99,
+            "currency": "EUR"
+          },
+          "customerRemorseReturnLabelSource": "https://schema.org/ReturnLabelDownloadAndPrint",
+          "itemDefectReturnFees": "https://schema.org/FreeReturn",
+          "itemDefectReturnLabelSource": "https://schema.org/ReturnLabelInBox",
+          "returnPolicySeasonalOverride": {
+            "@type": "MerchantReturnPolicySeasonalOverride",
+            "returnPolicyCategory": "https://schema.org/MerchantReturnFiniteReturnWindow",
+            "startDate": "2025-12-01",
+            "endDate": "2025-01-05",
+            "merchantReturnDays": 30
+          }
+        }
+        // Other Organization-level properties
+        // ...
+      }
+    </script>
+  </head>
+  <body>
+  </body>
+</html>

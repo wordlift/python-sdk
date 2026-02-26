@@ -135,6 +135,13 @@ Add `.ttl.liquid` files under `data/templates`. Templates render with `account` 
 ## Validation
 
 SHACL validation utilities and generated Google Search Gallery shapes are included. When a feature includes both container types (for example `ItemList`, `BreadcrumbList`, `QAPage`, `FAQPage`, `Quiz`, `ProfilePage`, `Product`, `Recipe`, `Course`, `Review`) and their contained types (`ListItem`, `Question`, `Answer`, `Comment`, `Offer`, `AggregateOffer`, `HowToStep`, `Person`, `Organization`, `Rating`, `AggregateRating`, `Review`, `ItemList`), the generator scopes the contained constraints under the container properties to avoid enforcing them on unrelated nodes. For Product snippets, `offers` is scoped as `Offer` or `AggregateOffer`, matching Google requirements. The generator also captures "one of" requirements expressed in prose lists and emits `sh:or` constraints so any listed property satisfies the requirement. For tables with explicit `Option A` / `Option B` branches, the generator emits branch-level alternatives (a branch can require multiple properties), and it ignores enum URL literals when extracting property alternatives. Schema.org grammar checks are intentionally permissive and accept URL/text literals for all properties.
+The generator also recognizes explicit fallback wording in required rows (for example, `contentUrl` with supported `url` fallback if `contentUrl` is missing) and emits `sh:or` alternatives instead of hard-requiring only the preferred property.
+Paragraph-level "one of the following values" lists are treated as value guidance (not property alternatives), and conditional sections phrased as "required when"/"required if" are emitted as warnings instead of unconditional required errors.
+Google page type context is resolved from explicit type-definition prose and scoped plain headings (for example `Quiz`, `Question`, `DataFeed entity`) to avoid example-snippet schema types leaking into top-level feature constraints.
+Search Gallery fixtures are maintained in `tests/fixtures/search_gallery`; use
+`python tests/tools/extract_search_gallery_samples.py` to refresh samples and
+`python tests/tools/search_gallery_conformance_diff.py` to print per-page
+baseline conformance deltas used by CI quality gates.
 
 Use `wordlift_sdk.validation.validate_jsonld_from_url` to render a URL with Playwright, extract JSON-LD fragments, and validate them against SHACL shapes.
 
@@ -151,6 +158,10 @@ shape_specs = resolve_shape_specs(
 )
 result = validate_file("out/page.jsonld", shape_specs=shape_specs)
 ```
+
+Default bundled-shape resolution excludes `google-image-license-metadata`; include
+it explicitly with `resolve_shape_specs(builtin_shapes=["google-image-license-metadata"])`
+or by passing `shape_specs=["google-image-license-metadata"]`.
 
 Playwright is required for URL rendering. After installing dependencies, install the browser binaries:
 

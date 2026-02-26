@@ -1,0 +1,9 @@
+"educationRequirements": [
+  {
+    "@type": "EducationalOccupationalCredential",
+    "credentialCategory": "bachelor degree" },
+  {
+    "@type": "EducationalOccupationalCredential",
+    "credentialCategory": "postgraduate degree"
+  }
+]

@@ -1,0 +1,8 @@
+"offers": {
+  "@type": "Offer",
+  "priceSpecification": {
+    "@type": "PriceSpecification",
+    "price": 9.99,
+    "priceCurrency": "AUD"
+  }
+}

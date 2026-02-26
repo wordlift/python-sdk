@@ -1,0 +1,21 @@
+{
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "url": "https://example.com/a-star-is-born.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "url": "https://example.com/bohemian-rhapsody.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "url": "https://example.com/black-panther.html"
+    }
+  ]
+}

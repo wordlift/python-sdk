@@ -1,0 +1,126 @@
+{
+  "book": {
+    "known_nonconforming_sample_ids": [
+      "001-data-feed-element-01",
+      "002-library-system-feed-01",
+      "009-readaction-book-feed-01",
+      "010-borrowaction-book-feed-01",
+      "017-library-system-feed-01"
+    ]
+  },
+  "breadcrumb": {
+    "known_nonconforming_sample_ids": [
+      "001-json-ld-bredacrumb-01",
+      "005-json-ld-multiple-breadcrumbs-01"
+    ]
+  },
+  "carousel": {
+    "known_nonconforming_sample_ids": [
+      "001-summary-page-01",
+      "005-single-all-in-one-page-01"
+    ]
+  },
+  "course": {
+    "known_nonconforming_sample_ids": [
+      "002-single-all-in-one-page-01"
+    ]
+  },
+  "dataset": {
+    "known_nonconforming_sample_ids": [
+      "001-json-ld-dataset-01",
+      "022-hello-01"
+    ]
+  },
+  "discussion-forum": {
+    "known_nonconforming_sample_ids": [
+      "001-json-ld-example-showing-nested-comment-structure-01",
+      "003-json-ld-example-showing-mainentity-nesting-01"
+    ]
+  },
+  "employer-rating": {
+    "known_nonconforming_sample_ids": [
+      "001-json-ld-employeraggregaterating-01",
+      "002-itemreviewed-property-01"
+    ]
+  },
+  "event": {
+    "known_nonconforming_sample_ids": [
+      "014-canceled-event-01",
+      "015-postponed-event-01",
+      "016-rescheduled-event-01",
+      "017-scheduled-event-01",
+      "025-event-that-was-rescheduled-multiple-times-01"
+    ]
+  },
+  "job-posting": {
+    "known_nonconforming_sample_ids": [
+      "002-remote-job-posting-markup-01"
+    ]
+  },
+  "math-solvers": {
+    "known_nonconforming_sample_ids": [
+      "001-math-home-page-example-01",
+      "002-math-home-page-with-two-solver-actions-01"
+    ]
+  },
+  "merchant-listing": {
+    "known_nonconforming_sample_ids": [
+      "001-json-ld-product-with-offer-01",
+      "006-sale-price-01",
+      "007-sale-price-with-two-unitpricespecification-01",
+      "013-json-ld-offer-and-shipping-01",
+      "017-product-return-policy-01",
+      "018-co2-certification-01",
+      "019-eprel-certification-01",
+      "020-3d-model-01",
+      "021-product-and-car-co-type-01",
+      "023-product-and-book-co-type-01",
+      "027-linked-shipping-policy-json-ld-example-01"
+    ]
+  },
+  "product-snippet": {
+    "known_nonconforming_sample_ids": [
+      "010-product-and-car-co-type-01"
+    ]
+  },
+  "qapage": {
+    "known_nonconforming_sample_ids": [
+      "001-json-ld-example-showing-valid-q-a-page-markup-01"
+    ]
+  },
+  "recipe": {
+    "known_nonconforming_sample_ids": [
+      "002-recipe-carousel-markup-in-json-ld-01"
+    ]
+  },
+  "review-snippet": {
+    "known_nonconforming_sample_ids": [
+      "004-nested-review-in-json-ld-01",
+      "013-name-of-the-reviewed-item-01"
+    ]
+  },
+  "shipping-policy": {
+    "known_nonconforming_sample_ids": [
+      "001-shipping-policy-basic-01"
+    ]
+  },
+  "software-app": {
+    "known_nonconforming_sample_ids": [
+      "001-software-app-in-json-ld-01"
+    ]
+  },
+  "vacation-rental": {
+    "known_nonconforming_sample_ids": [
+      "001-vacation-rental-listing-page-01"
+    ]
+  },
+  "video": {
+    "known_nonconforming_sample_ids": [
+      "003-livestreaming-video-in-json-ld-01",
+      "007-video-with-seektoaction-in-json-ld-01",
+      "011-video-with-one-clip-01",
+      "013-livestreaming-video-01",
+      "015-potentialaction-property-01"
+    ]
+  }
+}

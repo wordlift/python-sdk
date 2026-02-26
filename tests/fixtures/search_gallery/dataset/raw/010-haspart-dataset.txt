@@ -1,0 +1,22 @@
+"hasPart" : [
+  {
+    "@type": "Dataset",
+    "name": "Sub dataset 01",
+    "description": "Informative description of the first subdataset...",
+    "license": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "creator": {
+      "@type":"Organization",
+      "name": "Sub dataset 01 creator"
+    }
+  },
+  {
+    "@type": "Dataset",
+    "name": "Sub dataset 02",
+    "description": "Informative description of the second subdataset...",
+    "license": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "creator": {
+      "@type":"Organization",
+      "name": "Sub dataset 02 creator"
+    }
+  }
+]

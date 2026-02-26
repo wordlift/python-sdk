@@ -1,0 +1,10 @@
+"bed": [{
+  "@type": "BedDetails",
+  "numberOfBeds" : 1,
+  "typeOfBed": "Queen"
+  },
+  {
+  "@type": "BedDetails",
+  "numberOfBeds" : 2,
+  "typeOfBed": "Single"
+  }]

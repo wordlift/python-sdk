@@ -1,0 +1,4 @@
+"offers": {
+  "@type": "Offer",
+  "url": "https://www.example.com/event_offer/12345_201803180430"
+}

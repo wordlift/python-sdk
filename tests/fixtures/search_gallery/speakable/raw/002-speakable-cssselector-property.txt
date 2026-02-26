@@ -1,0 +1,8 @@
+"speakable":
+  {
+  "@type": "SpeakableSpecification",
+  "cssSelector": [
+    ".headline",
+    ".summary"
+  ]
+}

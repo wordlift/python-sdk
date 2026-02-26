@@ -1,0 +1,21 @@
+"creator": [
+  {
+    "@type": "Person",
+    "sameAs": "https://orcid.org/0000-0000-0000-0000",
+    "givenName": "Jane",
+    "familyName": "Foo",
+    "name": "Jane Foo"
+  },
+  {
+    "@type": "Person",
+    "sameAs": "https://orcid.org/0000-0000-0000-0001",
+    "givenName": "Jo",
+    "familyName": "Bar",
+    "name": "Jo Bar"
+  },
+  {
+    "@type": "Organization",
+    "sameAs": "https://ror.org/xxxxxxxxx",
+    "name": "Fictitious Research Consortium"
+  }
+]

@@ -1,0 +1,4 @@
+"hasTierRequirement": {
+    "@type": "CreditCard",
+    "name": "Capital Two cashback rewards platinum card"
+  }

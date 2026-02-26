@@ -1,0 +1,6 @@
+"hasEnergyConsumptionDetails": {
+  "@type": "EnergyConsumptionDetails",
+  "hasEnergyEfficiencyCategory": "https://schema.org/EUEnergyEfficiencyCategoryC",
+  "energyEfficiencyScaleMin": "https://schema.org/EUEnergyEfficiencyCategoryF",
+  "energyEfficiencyScaleMax": "https://schema.org/EUEnergyEfficiencyCategoryA1Plus"
+}

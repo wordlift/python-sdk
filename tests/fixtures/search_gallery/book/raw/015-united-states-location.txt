@@ -1,0 +1,13 @@
+{
+  "@type": "Library",
+  "@id": "https://example.com/library-branches/1001",
+  "name": "Campbell Library",
+  "location": {
+    "@type": "PostalAddress",
+    "streetAddress": "77 Harrison Ave",
+    "addressLocality": "Campbell",
+    "addressRegion": "CA",
+    "postalCode": "95008",
+    "addressCountry": "US"
+  }
+}

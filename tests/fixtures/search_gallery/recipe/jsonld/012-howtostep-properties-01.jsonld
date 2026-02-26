@@ -1,0 +1,14 @@
+{
+  "@type": "HowToSection",
+  "name": "Assemble the pie",
+  "itemListElement": [
+    {
+      "@type": "HowToStep",
+      "text": "In large bowl, gently mix filling ingredients; spoon into crust-lined pie plate."
+    },
+    {
+      "@type": "HowToStep",
+      "text": "Top with second crust. Cut slits or shapes in several places in top crust."
+    }
+  ]
+}

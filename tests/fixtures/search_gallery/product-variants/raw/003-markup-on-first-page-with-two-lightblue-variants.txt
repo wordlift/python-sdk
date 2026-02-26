@@ -1,0 +1,62 @@
+<html>
+  <head>
+    <title>Wool winter coat, light blue color</title>
+    <script type="application/ld+json">
+    [
+      {
+        "@context": "https://schema.org/",
+        "@type": "ProductGroup",
+        "name": "Wool winter coat",
+        "description": "Wool coat, new for the coming winter season",
+        // ... other ProductGroup-level properties
+        "brand": {
+          "@type": "Brand",
+          "name": "Good brand"
+        },
+        "productGroupID": "44E01",
+        "variesBy": [
+          "https://schema.org/size",
+          "https://schema.org/color"
+        ],
+        "hasVariant": [
+          {
+            "@type": "Product",
+            "name": "Small light blue coat",
+            "description": "Small wool light blue coat for the winter season",
+            "image": "https://www.example.com/coat_small_lightblue.jpg",
+            "size": "small",
+            "color": "light blue",
+            // ... other Product-level properties
+            "offers": {
+              "@type": "Offer",
+              "url": "https://www.example.com/coat/lightblue?size=small",
+              "price": 39.99,
+              "priceCurrency": "USD"
+              // ... other offer-level properties
+            }
+          },
+          {
+            "@type": "Product",
+            "name": "Large light blue coat",
+            "description": "Large wool light blue coat for the winter season",
+            "image": "https://www.example.com/coat_large_lightblue.jpg",
+            "size": "large",
+            "color": "light blue",
+            // ... other Product-level properties
+            "offers": {
+              "@type": "Offer",
+              "url": "https://www.example.com/coat/lightblue?size=large",
+              "price": 49.99,
+              "priceCurrency": "USD"
+              // ... other offer-level properties
+            }
+          },
+          { "url": "https://www.example.com/coat/green?size=small" }
+        ]
+      }
+    ]
+    </script>
+  </head>
+  <body>
+  </body>
+</html>

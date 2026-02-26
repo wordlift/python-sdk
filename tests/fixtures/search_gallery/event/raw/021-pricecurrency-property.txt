@@ -1,0 +1,4 @@
+"offers": {
+  "@type": "Offer",
+  "priceCurrency": "USD"
+}

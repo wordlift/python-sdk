@@ -1,0 +1,17 @@
+"handlingTime": {
+  "@type": "ServicePeriod",
+  "businessDays": [
+    "https://schema.org/Monday",
+    "https://schema.org/Tuesday",
+    "https://schema.org/Wednesday",
+    "https://schema.org/Thursday",
+    "https://schema.org/Friday"
+  ],
+  "cutoffTime": "22:30:00-05:00",
+  "duration": {
+    "@type": "QuantitativeValue",
+    "minValue": 0,
+    "maxValue": 2,
+    "unitCode": "DAY"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "@context": "https://schema.org",
+  "@type": "ProfilePage",
+  "mainEntity": {
+    "@id": "#main-author",
+    "@type": "Person",
+    "name": "Marlo Smith"
+  },
+  "hasPart": [{
+    "@type": "Article",
+    "headline": "Things to see in NJ",
+    "url": "https://example.com/things-to-see-nj",
+    "datePublished": "2014-02-23T18:34:00Z",
+    "author": { "@id": "#main-author" }
+  }]
+}

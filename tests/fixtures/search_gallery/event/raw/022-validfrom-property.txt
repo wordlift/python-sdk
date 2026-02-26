@@ -1,0 +1,4 @@
+"offers": {
+  "@type": "Offer",
+  "validFrom": "2024-05-21T12:00"
+}

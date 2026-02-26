@@ -1,0 +1,2 @@
+"citation":
+ "Doe J (2014) Influence of X ... https://doi.org/10.1111/111"

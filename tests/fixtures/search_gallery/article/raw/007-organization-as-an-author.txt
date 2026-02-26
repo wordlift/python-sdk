@@ -1,0 +1,8 @@
+"author":
+  [
+    {
+      "@type":"Organization",
+      "name": "Some News Agency",
+      "url": "https://www.example.com/"
+  }
+]

@@ -3,26 +3,26 @@
 @prefix schema: <http://schema.org/> .
 
 # Source: https://developers.google.com/search/docs/appearance/structured-data/book
-# Generated: 2026-02-25T16:11:50Z
+# Generated: 2026-02-26T12:52:44Z
 # Notes: required properties => errors; recommended properties => warnings.
 
-:google_AndroidPlatformShape
+:google_BookShape
   a sh:NodeShape ;
-  sh:targetClass schema:AndroidPlatform ;
+  sh:targetClass schema:Book ;
   sh:property [
-    sh:path schema:additionalProperty ;
+    sh:path schema:author ;
     sh:minCount 1 ;
   ] ;
   sh:property [
-    sh:path ( schema:additionalProperty schema:name ) ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:context ;
+    sh:path schema:bookFormat ;
     sh:minCount 1 ;
   ] ;
   sh:property [
     sh:path schema:expectsAcceptanceOf ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path ( schema:expectsAcceptanceOf schema:category ) ;
     sh:minCount 1 ;
   ] ;
   sh:property [
@@ -34,7 +34,11 @@
     sh:minCount 1 ;
   ] ;
   sh:property [
-    sh:path schema:id ;
+    sh:path schema:inLanguage ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:isbn ;
     sh:minCount 1 ;
   ] ;
   sh:property [
@@ -42,11 +46,15 @@
     sh:minCount 1 ;
   ] ;
   sh:property [
-    sh:path schema:member ;
+    sh:path schema:name ;
     sh:minCount 1 ;
   ] ;
   sh:property [
-    sh:path schema:name ;
+    sh:path schema:potentialAction ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:propertyID ;
     sh:minCount 1 ;
   ] ;
   sh:property [
@@ -62,150 +70,11 @@
     sh:minCount 1 ;
   ] ;
   sh:property [
-    sh:path schema:type ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
     sh:path schema:url ;
     sh:minCount 1 ;
   ] ;
   sh:property [
-    sh:path ( schema:expectsAcceptanceOf schema:availabilityEnds ) ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: expectsAcceptanceOf.availabilityEnds." ;
-  ] ;
-  sh:property [
-    sh:path ( schema:expectsAcceptanceOf schema:availabilityStarts ) ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: expectsAcceptanceOf.availabilityStarts." ;
-  ] ;
-  sh:property [
-    sh:path ( schema:expectsAcceptanceOf schema:price ) ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: expectsAcceptanceOf.price." ;
-  ] ;
-  sh:property [
-    sh:path ( schema:expectsAcceptanceOf schema:priceCurrency ) ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: expectsAcceptanceOf.priceCurrency." ;
-  ] ;
-  sh:or (
-    [
-      sh:property [
-        sh:path schema:free ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-    [
-      sh:property [
-        sh:path schema:nologinrequired ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-    [
-      sh:property [
-        sh:path schema:purchase ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-    [
-      sh:property [
-        sh:path schema:rental ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-    [
-      sh:property [
-        sh:path schema:subscription ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-  ) ;
-  sh:or (
-    [
-      sh:property [
-        sh:path schema:academic ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-    [
-      sh:property [
-        sh:path schema:corporate ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-    [
-      sh:property [
-        sh:path schema:government ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-    [
-      sh:property [
-        sh:path schema:public ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-    [
-      sh:property [
-        sh:path schema:school ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-    [
-      sh:property [
-        sh:path schema:special ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-  ) ;
-.
-
-:google_BookShape
-  a sh:NodeShape ;
-  sh:targetClass schema:Book ;
-  sh:property [
-    sh:path schema:author ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:bookFormat ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:context ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:id ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:inLanguage ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:isbn ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:name ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:potentialAction ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:type ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:url ;
+    sh:path schema:value ;
     sh:minCount 1 ;
   ] ;
   sh:property [
@@ -225,100 +94,6 @@
     sh:message "Recommended by Google: datePublished." ;
   ] ;
   sh:property [
-    sh:path schema:identifier ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: identifier." ;
-  ] ;
-  sh:property [
-    sh:path schema:sameAs ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: sameAs." ;
-  ] ;
-.
-
-:google_DataFeedShape
-  a sh:NodeShape ;
-  sh:targetClass schema:DataFeed ;
-  sh:property [
-    sh:path schema:context ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:dataFeedElement ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:type ;
-    sh:minCount 1 ;
-  ] ;
-.
-
-:google_DesktopWebPlatformShape
-  a sh:NodeShape ;
-  sh:targetClass schema:DesktopWebPlatform ;
-  sh:property [
-    sh:path schema:additionalProperty ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path ( schema:additionalProperty schema:name ) ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:context ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:expectsAcceptanceOf ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path ( schema:expectsAcceptanceOf schema:eligibleRegion ) ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path ( schema:expectsAcceptanceOf schema:eligibleRegion schema:name ) ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:id ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:lender ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:member ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:name ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:target ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path ( schema:target schema:actionPlatform ) ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path ( schema:target schema:urlTemplate ) ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:type ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:url ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
     sh:path ( schema:expectsAcceptanceOf schema:availabilityEnds ) ;
     sh:minCount 1 ;
     sh:severity sh:Warning ;
@@ -342,102 +117,26 @@
     sh:severity sh:Warning ;
     sh:message "Recommended by Google: expectsAcceptanceOf.priceCurrency." ;
   ] ;
-  sh:or (
-    [
-      sh:property [
-        sh:path schema:free ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-    [
-      sh:property [
-        sh:path schema:nologinrequired ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-    [
-      sh:property [
-        sh:path schema:purchase ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-    [
-      sh:property [
-        sh:path schema:rental ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-    [
-      sh:property [
-        sh:path schema:subscription ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-  ) ;
-  sh:or (
-    [
-      sh:property [
-        sh:path schema:academic ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-    [
-      sh:property [
-        sh:path schema:corporate ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-    [
-      sh:property [
-        sh:path schema:government ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-    [
-      sh:property [
-        sh:path schema:public ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-    [
-      sh:property [
-        sh:path schema:school ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-    [
-      sh:property [
-        sh:path schema:special ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-  ) ;
-.
-
-:google_EBookShape
-  a sh:NodeShape ;
-  sh:targetClass schema:EBook ;
   sh:property [
-    sh:path schema:name ;
+    sh:path schema:identifier ;
     sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:propertyID ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:type ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:value ;
-    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: identifier." ;
   ] ;
   sh:property [
     sh:path schema:sameAs ;
     sh:minCount 1 ;
     sh:severity sh:Warning ;
     sh:message "Recommended by Google: sameAs." ;
+  ] ;
+.
+
+:google_DataFeedShape
+  a sh:NodeShape ;
+  sh:targetClass schema:DataFeed ;
+  sh:property [
+    sh:path schema:dataFeedElement ;
+    sh:minCount 1 ;
   ] ;
 .
 
@@ -449,7 +148,19 @@
     sh:minCount 1 ;
   ] ;
   sh:property [
-    sh:path schema:id ;
+    sh:path schema:expectsAcceptanceOf ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path ( schema:expectsAcceptanceOf schema:category ) ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path ( schema:expectsAcceptanceOf schema:eligibleRegion ) ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path ( schema:expectsAcceptanceOf schema:eligibleRegion schema:name ) ;
     sh:minCount 1 ;
   ] ;
   sh:property [
@@ -461,11 +172,35 @@
     sh:minCount 1 ;
   ] ;
   sh:property [
+    sh:path schema:lender ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:name ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
     sh:path schema:potentialAction ;
     sh:minCount 1 ;
   ] ;
   sh:property [
-    sh:path schema:type ;
+    sh:path schema:propertyID ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:target ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path ( schema:target schema:actionPlatform ) ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path ( schema:target schema:urlTemplate ) ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:value ;
     sh:minCount 1 ;
   ] ;
   sh:property [
@@ -487,16 +222,34 @@
     sh:message "Recommended by Google: datePublished." ;
   ] ;
   sh:property [
+    sh:path ( schema:expectsAcceptanceOf schema:availabilityEnds ) ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: expectsAcceptanceOf.availabilityEnds." ;
+  ] ;
+  sh:property [
+    sh:path ( schema:expectsAcceptanceOf schema:availabilityStarts ) ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: expectsAcceptanceOf.availabilityStarts." ;
+  ] ;
+  sh:property [
+    sh:path ( schema:expectsAcceptanceOf schema:price ) ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: expectsAcceptanceOf.price." ;
+  ] ;
+  sh:property [
+    sh:path ( schema:expectsAcceptanceOf schema:priceCurrency ) ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "Recommended by Google: expectsAcceptanceOf.priceCurrency." ;
+  ] ;
+  sh:property [
     sh:path schema:identifier ;
     sh:minCount 1 ;
     sh:severity sh:Warning ;
     sh:message "Recommended by Google: identifier." ;
-  ] ;
-  sh:property [
-    sh:path schema:name ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: name." ;
   ] ;
   sh:property [
     sh:path schema:sameAs ;
@@ -512,291 +265,9 @@
   ] ;
 .
 
-:google_HardcoverShape
-  a sh:NodeShape ;
-  sh:targetClass schema:Hardcover ;
-  sh:property [
-    sh:path schema:expectsAcceptanceOf ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path ( schema:expectsAcceptanceOf schema:eligibleRegion ) ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path ( schema:expectsAcceptanceOf schema:eligibleRegion schema:name ) ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:name ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:propertyID ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:target ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path ( schema:target schema:actionPlatform ) ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path ( schema:target schema:urlTemplate ) ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:type ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:value ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path ( schema:expectsAcceptanceOf schema:availabilityEnds ) ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: expectsAcceptanceOf.availabilityEnds." ;
-  ] ;
-  sh:property [
-    sh:path ( schema:expectsAcceptanceOf schema:availabilityStarts ) ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: expectsAcceptanceOf.availabilityStarts." ;
-  ] ;
-  sh:property [
-    sh:path ( schema:expectsAcceptanceOf schema:price ) ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: expectsAcceptanceOf.price." ;
-  ] ;
-  sh:property [
-    sh:path ( schema:expectsAcceptanceOf schema:priceCurrency ) ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: expectsAcceptanceOf.priceCurrency." ;
-  ] ;
-  sh:property [
-    sh:path schema:sameAs ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: sameAs." ;
-  ] ;
-  sh:or (
-    [
-      sh:property [
-        sh:path schema:free ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-    [
-      sh:property [
-        sh:path schema:nologinrequired ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-    [
-      sh:property [
-        sh:path schema:purchase ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-    [
-      sh:property [
-        sh:path schema:rental ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-    [
-      sh:property [
-        sh:path schema:subscription ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-  ) ;
-.
-
-:google_IOSPlatformShape
-  a sh:NodeShape ;
-  sh:targetClass schema:IOSPlatform ;
-  sh:property [
-    sh:path schema:additionalProperty ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path ( schema:additionalProperty schema:name ) ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:context ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:expectsAcceptanceOf ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path ( schema:expectsAcceptanceOf schema:eligibleRegion ) ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path ( schema:expectsAcceptanceOf schema:eligibleRegion schema:name ) ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:id ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:lender ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:member ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:name ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:target ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path ( schema:target schema:actionPlatform ) ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path ( schema:target schema:urlTemplate ) ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:type ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:url ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path ( schema:expectsAcceptanceOf schema:availabilityEnds ) ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: expectsAcceptanceOf.availabilityEnds." ;
-  ] ;
-  sh:property [
-    sh:path ( schema:expectsAcceptanceOf schema:availabilityStarts ) ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: expectsAcceptanceOf.availabilityStarts." ;
-  ] ;
-  sh:property [
-    sh:path ( schema:expectsAcceptanceOf schema:price ) ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: expectsAcceptanceOf.price." ;
-  ] ;
-  sh:property [
-    sh:path ( schema:expectsAcceptanceOf schema:priceCurrency ) ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: expectsAcceptanceOf.priceCurrency." ;
-  ] ;
-  sh:or (
-    [
-      sh:property [
-        sh:path schema:free ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-    [
-      sh:property [
-        sh:path schema:nologinrequired ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-    [
-      sh:property [
-        sh:path schema:purchase ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-    [
-      sh:property [
-        sh:path schema:rental ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-    [
-      sh:property [
-        sh:path schema:subscription ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-  ) ;
-  sh:or (
-    [
-      sh:property [
-        sh:path schema:academic ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-    [
-      sh:property [
-        sh:path schema:corporate ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-    [
-      sh:property [
-        sh:path schema:government ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-    [
-      sh:property [
-        sh:path schema:public ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-    [
-      sh:property [
-        sh:path schema:school ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-    [
-      sh:property [
-        sh:path schema:special ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-  ) ;
-.
-
 :google_LibraryShape
   a sh:NodeShape ;
   sh:targetClass schema:Library ;
-  sh:property [
-    sh:path schema:additionalProperty ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path ( schema:additionalProperty schema:name ) ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:context ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:id ;
-    sh:minCount 1 ;
-  ] ;
   sh:property [
     sh:path schema:location ;
     sh:minCount 1 ;
@@ -822,6 +293,27 @@
     sh:minCount 1 ;
   ] ;
   sh:property [
+    sh:path schema:name ;
+    sh:minCount 1 ;
+  ] ;
+.
+
+:google_LibrarySystemShape
+  a sh:NodeShape ;
+  sh:targetClass schema:LibrarySystem ;
+  sh:property [
+    sh:path schema:additionalProperty ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path ( schema:additionalProperty schema:name ) ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path ( schema:additionalProperty schema:value ) ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
     sh:path schema:member ;
     sh:minCount 1 ;
   ] ;
@@ -830,140 +322,9 @@
     sh:minCount 1 ;
   ] ;
   sh:property [
-    sh:path schema:type ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
     sh:path schema:url ;
     sh:minCount 1 ;
   ] ;
-  sh:or (
-    [
-      sh:property [
-        sh:path schema:academic ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-    [
-      sh:property [
-        sh:path schema:corporate ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-    [
-      sh:property [
-        sh:path schema:government ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-    [
-      sh:property [
-        sh:path schema:public ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-    [
-      sh:property [
-        sh:path schema:school ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-    [
-      sh:property [
-        sh:path schema:special ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-  ) ;
-.
-
-:google_PaperbackShape
-  a sh:NodeShape ;
-  sh:targetClass schema:Paperback ;
-  sh:property [
-    sh:path schema:expectsAcceptanceOf ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path ( schema:expectsAcceptanceOf schema:eligibleRegion ) ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path ( schema:expectsAcceptanceOf schema:eligibleRegion schema:name ) ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:target ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path ( schema:target schema:actionPlatform ) ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path ( schema:target schema:urlTemplate ) ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:type ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path ( schema:expectsAcceptanceOf schema:availabilityEnds ) ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: expectsAcceptanceOf.availabilityEnds." ;
-  ] ;
-  sh:property [
-    sh:path ( schema:expectsAcceptanceOf schema:availabilityStarts ) ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: expectsAcceptanceOf.availabilityStarts." ;
-  ] ;
-  sh:property [
-    sh:path ( schema:expectsAcceptanceOf schema:price ) ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: expectsAcceptanceOf.price." ;
-  ] ;
-  sh:property [
-    sh:path ( schema:expectsAcceptanceOf schema:priceCurrency ) ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: expectsAcceptanceOf.priceCurrency." ;
-  ] ;
-  sh:or (
-    [
-      sh:property [
-        sh:path schema:free ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-    [
-      sh:property [
-        sh:path schema:nologinrequired ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-    [
-      sh:property [
-        sh:path schema:purchase ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-    [
-      sh:property [
-        sh:path schema:rental ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-    [
-      sh:property [
-        sh:path schema:subscription ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-  ) ;
 .
 
 :google_WorkShape
@@ -974,19 +335,7 @@
     sh:minCount 1 ;
   ] ;
   sh:property [
-    sh:path schema:context ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:id ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
     sh:path schema:name ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:type ;
     sh:minCount 1 ;
   ] ;
   sh:property [

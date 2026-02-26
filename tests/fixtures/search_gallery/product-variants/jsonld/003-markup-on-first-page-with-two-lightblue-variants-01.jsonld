@@ -1,0 +1,50 @@
+[
+  {
+    "@context": "https://schema.org/",
+    "@type": "ProductGroup",
+    "name": "Wool winter coat",
+    "description": "Wool coat, new for the coming winter season",
+    "brand": {
+      "@type": "Brand",
+      "name": "Good brand"
+    },
+    "productGroupID": "44E01",
+    "variesBy": [
+      "https://schema.org/size",
+      "https://schema.org/color"
+    ],
+    "hasVariant": [
+      {
+        "@type": "Product",
+        "name": "Small light blue coat",
+        "description": "Small wool light blue coat for the winter season",
+        "image": "https://www.example.com/coat_small_lightblue.jpg",
+        "size": "small",
+        "color": "light blue",
+        "offers": {
+          "@type": "Offer",
+          "url": "https://www.example.com/coat/lightblue?size=small",
+          "price": 39.99,
+          "priceCurrency": "USD"
+        }
+      },
+      {
+        "@type": "Product",
+        "name": "Large light blue coat",
+        "description": "Large wool light blue coat for the winter season",
+        "image": "https://www.example.com/coat_large_lightblue.jpg",
+        "size": "large",
+        "color": "light blue",
+        "offers": {
+          "@type": "Offer",
+          "url": "https://www.example.com/coat/lightblue?size=large",
+          "price": 49.99,
+          "priceCurrency": "USD"
+        }
+      },
+      {
+        "url": "https://www.example.com/coat/green?size=small"
+      }
+    ]
+  }
+]

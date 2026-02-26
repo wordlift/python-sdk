@@ -1,0 +1,4 @@
+{
+  "@type": "SolveMathAction",
+  "eduQuestionType": "Polynomial Equation"
+}

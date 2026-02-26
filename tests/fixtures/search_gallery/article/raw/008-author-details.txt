@@ -1,0 +1,17 @@
+"author":
+  [
+    {
+      "@type": "Person",
+      "name": "Echidna Jones",
+      "honorificPrefix": "Dr",
+      "jobTitle": "Editor in Chief"
+    }
+  ],
+"publisher":
+  [
+    {
+      "@type": "Organization",
+      "name": "Bugs Daily"
+    }
+  ]
+}

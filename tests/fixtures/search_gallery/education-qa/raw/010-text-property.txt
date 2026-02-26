@@ -1,0 +1,4 @@
+{
+  "@type": "Question",
+  "text": "A protein on the surface of HIV can attach to proteins on the surface of healthy human cells. What are the attachment sites on the surface of the cells known as?"
+}

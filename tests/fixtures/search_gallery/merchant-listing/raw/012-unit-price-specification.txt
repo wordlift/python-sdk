@@ -1,0 +1,19 @@
+"offers": {
+  "@type": "Offer",
+  "url": "https://www.example.com/perfume_offer",
+  "priceSpecification": {
+    "@type": "UnitPriceSpecification",
+    "price": 200.00,
+    "priceCurrency": "EUR",
+    "referenceQuantity": {
+      "@type": "QuantitativeValue",
+      "value": "200",
+      "unitCode": "ML",
+      "valueReference": {
+        "@type": "QuantitativeValue",
+        "value": "100",
+        "unitCode": "ML"
+      }
+    }
+  }
+}

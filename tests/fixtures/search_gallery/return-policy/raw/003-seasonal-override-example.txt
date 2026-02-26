@@ -1,0 +1,7 @@
+"returnPolicySeasonalOverride": {
+    "@type": "MerchantReturnPolicySeasonalOverride",
+    "startDate": "2024-11-29",
+    "endDate": "2024-12-06",
+    "merchantReturnDays": 10,
+    "returnPolicyCategory": "https://schema.org/MerchantReturnFiniteReturnWindow"
+  }

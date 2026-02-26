@@ -20,6 +20,8 @@ from requests import Response, get
 
 from wordlift_sdk.render import RenderOptions, render_html
 
+DEFAULT_OPT_IN_EXCLUDED_SHAPES = {"google-image-license-metadata.ttl"}
+
 
 @dataclass
 class ValidationResult:
@@ -201,6 +203,14 @@ def _shape_resource_names() -> list[str]:
     )
 
 
+def _default_shape_resource_names() -> list[str]:
+    return [
+        name
+        for name in _shape_resource_names()
+        if name not in DEFAULT_OPT_IN_EXCLUDED_SHAPES
+    ]
+
+
 def list_shape_names() -> list[str]:
     return _shape_resource_names()
 
@@ -231,7 +241,7 @@ def resolve_shape_specs(
             for spec in builtin_shapes
         }
     else:
-        selected = set(bundled)
+        selected = set(_default_shape_resource_names())
     if exclude_builtin_shapes:
         excluded = {
             _normalize_builtin_shape_name(spec, bundled_set, "excluded builtin shape")
@@ -259,7 +269,7 @@ def _read_shape_resource(name: str) -> str | None:
 
 def _resolve_shape_sources(shape_specs: Iterable[str] | None) -> list[str]:
     if not shape_specs:
-        return _shape_resource_names()
+        return _default_shape_resource_names()
 
     resolved: list[str] = []
     for spec in shape_specs:

@@ -1,0 +1,16 @@
+{
+  "@type": "Quiz",
+  "educationalAlignment": [
+     {
+       "@type": "AlignmentObject",
+       "alignmentType": "educationalSubject",
+       "targetName": "Biology"
+     },
+     {
+       "@type": "AlignmentObject",
+       "alignmentType": "educationalLevel",
+       "targetName": "Fifth grade"
+     }
+
+  ]
+}

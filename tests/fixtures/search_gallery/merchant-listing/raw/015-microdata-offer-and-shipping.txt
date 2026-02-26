@@ -1,0 +1,63 @@
+<html>
+  <head>
+    <title>Nice trinket</title>
+  </head>
+  <body>
+  <div>
+    <div itemtype="https://schema.org/Product" itemscope>
+      <meta itemprop="sku" content="trinket-12345" />
+      <meta itemprop="gtin14" content="00012345600012" />
+      <meta itemprop="name" content="Nice trinket" />
+      <link itemprop="image" href="https://example.com/photos/16x9/trinket.jpg" />
+      <link itemprop="image" href="https://example.com/photos/4x3/trinket.jpg" />
+      <link itemprop="image" href="https://example.com/photos/1x1/trinket.jpg" />
+      <meta itemprop="description" content="Trinket with clean lines" />
+      <div itemprop="brand" itemtype="https://schema.org/Brand" itemscope>
+        <meta itemprop="name" content="MyBrand" />
+      </div>
+      <div itemprop="offers" itemtype="https://schema.org/Offer" itemscope>
+        <link itemprop="url" href="https://www.example.com/trinket_offer" />
+        <meta itemprop="itemCondition" content="https://schema.org/NewCondition" />
+        <meta itemprop="availability" content="https://schema.org/InStock" />
+        <meta itemprop="price" content="39.99" />
+        <meta itemprop="priceCurrency" content="USD" />
+        <meta itemprop="priceValidUntil" content="2024-11-20" />
+        <div itemprop="shippingDetails" itemtype="https://schema.org/OfferShippingDetails" itemscope>
+          <div itemprop="shippingRate" itemtype="https://schema.org/MonetaryAmount" itemscope>
+            <meta itemprop="value" content="3.49" />
+            <meta itemprop="currency" content="USD" />
+          </div>
+          <div itemprop="shippingDestination" itemtype="https://schema.org/DefinedRegion" itemscope>
+            <meta itemprop="addressCountry" content="US" />
+          </div>
+          <div itemprop="deliveryTime" itemtype="https://schema.org/ShippingDeliveryTime" itemscope>
+            <div itemprop="handlingTime" itemtype="https://schema.org/QuantitativeValue" itemscope>
+              <meta itemprop="minValue" content="0" />
+              <meta itemprop="maxValue" content="1" />
+              <meta itemprop="unitCode" content="DAY" />
+            </div>
+            <div itemprop="transitTime" itemtype="https://schema.org/QuantitativeValue" itemscope>
+              <meta itemprop="minValue" content="1" />
+              <meta itemprop="maxValue" content="5" />
+              <meta itemprop="unitCode" content="DAY" />
+            </div>
+          </div>
+        </div>
+      </div>
+      <div itemprop="review" itemtype="https://schema.org/Review" itemscope>
+        <div itemprop="author" itemtype="https://schema.org/Person" itemscope>
+          <meta itemprop="name" content="Fred Benson" />
+        </div>
+        <div itemprop="reviewRating" itemtype="https://schema.org/Rating" itemscope>
+          <meta itemprop="ratingValue" content="4" />
+          <meta itemprop="bestRating" content="5" />
+        </div>
+      </div>
+      <div itemprop="aggregateRating" itemtype="https://schema.org/AggregateRating" itemscope>
+        <meta itemprop="reviewCount" content="89" />
+        <meta itemprop="ratingValue" content="4.4" />
+      </div>
+    </div>
+  </div>
+  </body>
+</html>

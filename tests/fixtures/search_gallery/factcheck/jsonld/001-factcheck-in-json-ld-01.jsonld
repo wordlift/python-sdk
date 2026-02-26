@@ -1,0 +1,45 @@
+{
+  "@context": "https://schema.org",
+  "@type": "ClaimReview",
+  "url": "https://example.com/news/science/worldisflat.html",
+  "claimReviewed": "The world is flat",
+  "itemReviewed": {
+    "@type": "Claim",
+    "author": {
+      "@type": "Organization",
+      "name": "Square World Society",
+      "sameAs": "https://example.flatworlders.com/we-know-that-the-world-is-flat"
+    },
+    "datePublished": "2024-06-20",
+    "appearance": {
+      "@type": "OpinionNewsArticle",
+      "url": "https://example.com/news/a122121",
+      "headline": "Square Earth - Flat earthers for the Internet age",
+      "datePublished": "2024-06-22",
+      "author": {
+        "@type": "Person",
+        "name": "T. Tellar"
+      },
+      "image": "https://example.com/photos/1x1/photo.jpg",
+      "publisher": {
+        "@type": "Organization",
+        "name": "Skeptical News",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://example.com/logo.jpg"
+        }
+      }
+    }
+  },
+  "author": {
+    "@type": "Organization",
+    "name": "Example.com science watch"
+  },
+  "reviewRating": {
+    "@type": "Rating",
+    "ratingValue": 1,
+    "bestRating": 5,
+    "worstRating": 1,
+    "alternateName": "False"
+  }
+}

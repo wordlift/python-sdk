@@ -1,0 +1,13 @@
+(math_expression)'
+          d/dvariable math_expression
+        
+        Examples:
+        
+          (x^2+x)'
+          d/dx (x^2+x)
+          d/dy y^2+y
+        
+        Integrals
+        Google will send a math_expression_string in one of two forms:
+        
+          \int math_expression

@@ -1,0 +1,11 @@
+"author": [
+  {
+    "@type": "Person",
+    "name": "William Shakespeare"
+  },
+  {
+    "@type": "Person",
+    "name": "Victor Hugo",
+    "sameAs": "https://en.wikipedia.org/wiki/Victor_Hugo"
+  }
+]

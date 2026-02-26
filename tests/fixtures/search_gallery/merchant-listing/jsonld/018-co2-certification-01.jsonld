@@ -1,0 +1,34 @@
+{
+  "@context": "https://schema.org/",
+  "@type": "Product",
+  "sku": "1234-5678",
+  "image": "https://www.example.com/vehicle.jpg",
+  "name": "Big Car",
+  "description": "Passenger vehicle with combustion engine",
+  "gtin14": "00012345600012",
+  "mpn": "WH1234",
+  "brand": {
+    "@type": "Brand",
+    "name": "ExampleCarBrand"
+  },
+  "hasCertification": {
+    "@type": "Certification",
+    "issuedBy": {
+      "@type": "Organization",
+      "name": "BMWK"
+    },
+    "name": "Vehicle_CO2_Class",
+    "certificationRating": {
+      "@type": "Rating",
+      "ratingValue": "D"
+    }
+  },
+  "offers": {
+    "@type": "Offer",
+    "url": "https://www.example.com/vehicle",
+    "itemCondition": "https://schema.org/NewCondition",
+    "availability": "https://schema.org/InStock",
+    "price": 17999.0,
+    "priceCurrency": "EUR"
+  }
+}

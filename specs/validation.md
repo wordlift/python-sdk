@@ -22,6 +22,26 @@ For Product snippets, `offers` supports either an `Offer` shape or an
 When a required property row includes alternatives (for example,
 `price or priceSpecification.price`), the generator treats the row as a
 `sh:or` group so either property satisfies the requirement.
+Rows with explicit fallback wording (for example, "supports `url` if you don't
+include `contentUrl`") are also modeled as `sh:or` alternatives.
+Paragraph/list text that says "one of the following values" is treated as value
+guidance and must not be converted into property-level `sh:or` alternatives.
+
+Required tables introduced by conditional prose (for example, "required when...",
+"required if...", "only required if...") are lowered to warning constraints to
+avoid unconditional validation failures for conditional sections.
+
+Google-type context assignment for table sections is derived from explicit
+type-definition statements and scoped plain headings, not arbitrary schema links
+found in markup examples.
+
+Search Gallery quality gates:
+- Fixture extraction output lives under `tests/fixtures/search_gallery/`.
+- Baseline conformance by page is stored in
+  `tests/fixtures/search_gallery/baseline_conformance.json`.
+- Known non-conforming sample IDs are tracked in
+  `tests/fixtures/search_gallery/expectations.json`.
+- CI compares current fixture conformance to baseline and fails on regressions.
 
 Schema.org grammar checks intentionally allow URL and text literals for every
 property (in addition to the documented range types).
@@ -46,7 +66,8 @@ deterministic shape composition:
 
 Shape composition order:
 1. If `builtin_shapes` is set, only listed bundled shapes are selected.
-2. Otherwise, all bundled shapes are selected.
+2. Otherwise, bundled default shapes are selected (currently excluding
+   `google-image-license-metadata`, which is opt-in).
 3. `exclude_builtin_shapes` removes bundled shapes from the selected set.
 4. `extra_shapes` values are appended as additional shape sources.
 

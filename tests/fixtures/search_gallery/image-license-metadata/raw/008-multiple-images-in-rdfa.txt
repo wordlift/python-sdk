@@ -1,0 +1,34 @@
+<html>
+  <head>
+    <title>Photos of black labradors</title>
+  </head>
+  <body>
+    <div vocab="https://schema.org/" typeof="ImageObject">
+      <h2 property="name">Black labrador puppy</h2>
+      <img alt="Black labrador puppy" property="contentUrl" src="https://example.com/photos/1x1/black-labrador-puppy.jpg" /><br>
+      <span property="license"> https://example.com/license</span>
+      <span property="acquireLicensePage">https://example.com/how-to-use-my-images</span>
+      <span rel="schema:creator">
+        <span typeof="schema:Person">
+          <span property="schema:name" content="Brixton Brownstone"></span>
+        </span>
+      </span>
+      <span property="copyrightNotice">Clara Kent</span>
+      <span property="creditText">Labrador PhotoLab</span>
+    </div>
+    <br>
+    <div vocab="https://schema.org/" typeof="ImageObject">
+      <h2 property="name">Adult black labrador</h2>
+      <img alt="Adult black labrador" property="contentUrl" src="https://example.com/photos/1x1/adult-black-labrador.jpg" />
+      <span property="license"> https://example.com/license</span>
+      <span property="acquireLicensePage">https://example.com/how-to-use-my-images</span>
+      <span rel="schema:creator">
+        <span typeof="schema:Person">
+          <span property="schema:name" content="Brixton Brownstone"></span>
+        </span>
+      </span>
+      <span property="copyrightNotice">Clara Kent</span>
+      <span property="creditText">Labrador PhotoLab</span>
+    </div>
+  </body>
+</html>

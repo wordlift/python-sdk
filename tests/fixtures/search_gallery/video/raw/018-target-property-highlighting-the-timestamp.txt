@@ -1,0 +1,1 @@
+"target": "https://video.example.com/watch/videoID?t=30"

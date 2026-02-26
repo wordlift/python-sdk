@@ -1,0 +1,1 @@
+"spatialCoverage:" "Tahoe City, CA"

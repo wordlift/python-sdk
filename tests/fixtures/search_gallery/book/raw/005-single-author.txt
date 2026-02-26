@@ -1,0 +1,4 @@
+"author": {
+  "@type": "Person",
+  "name": "William Shakespeare"
+}

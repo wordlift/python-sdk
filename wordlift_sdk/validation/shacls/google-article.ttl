@@ -3,7 +3,7 @@
 @prefix schema: <http://schema.org/> .
 
 # Source: https://developers.google.com/search/docs/appearance/structured-data/article
-# Generated: 2026-02-25T16:11:49Z
+# Generated: 2026-02-26T12:52:44Z
 # Notes: required properties => errors; recommended properties => warnings.
 
 :google_ArticleShape

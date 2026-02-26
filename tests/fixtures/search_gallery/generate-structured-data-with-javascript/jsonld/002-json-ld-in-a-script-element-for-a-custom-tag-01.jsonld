@@ -1,0 +1,12 @@
+{
+  "@context": "https://schema.org/",
+  "@type": "Recipe",
+  "name": "{{recipe_name}}",
+  "image": [
+    "{{recipe_image}}"
+  ],
+  "author": {
+    "@type": "Person",
+    "name": "{{recipe_author}}"
+  }
+}

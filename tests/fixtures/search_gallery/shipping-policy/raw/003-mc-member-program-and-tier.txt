@@ -1,0 +1,3 @@
+"validForMemberTier": {
+  "@id": "https://www.example.com/com/member-plus#tier_silver"
+}

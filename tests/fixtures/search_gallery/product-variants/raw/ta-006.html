@@ -1,0 +1,113 @@
+<html>
+  <head>
+    <title>Wool winter coat, green color</title>
+    <script type="application/ld+json">
+    [
+      {
+        "@context": "https://schema.org/",
+        "@type": "ProductGroup",
+        "@id": "#coat_parent",
+        "name": "Wool winter coat",
+        "description": "Wool coat, new for the coming winter season",
+        "brand": {
+          "@type": "Brand",
+          "name": "Good brand"
+        },
+        "audience": {
+          "@type": "PeopleAudience",
+          "suggestedGender": "unisex",
+          "suggestedAge": {
+            "@type": "QuantitativeValue",
+            "minValue": 13,
+            "unitCode": "ANN"
+          }
+        },
+        "productGroupID": "44E01",
+        "pattern": "striped",
+        "material": "wool",
+        "variesBy": [
+          "https://schema.org/size",
+          "https://schema.org/color"
+        ]
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "Product",
+        "@id": "#small_green",
+        "isVariantOf": { "@id": "#coat_parent" },
+        "sku": "44E01-M11000",
+        "gtin14": "98766051104214",
+        "image": "https://www.example.com/coat_green.jpg",
+        "name": "Small green coat",
+        "description": "Small wool green coat for the winter season",
+        "color": "green",
+        "size": "small",
+        "offers": {
+          "@type": "Offer",
+          "url": "https://www.example.com/coat/green?size=small",
+          "priceCurrency": "USD",
+          "price": 39.99,
+          "itemCondition": "https://schema.org/NewCondition",
+          "availability": "https://schema.org/InStock",
+          "shippingDetails": { "@id": "#shipping_policy" },
+          "hasMerchantReturnPolicy": { "@id": "#return_policy" }
+        }
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "Product",
+        "isVariantOf": { "@id": "#coat_parent" },
+        "url": "https://www.example.com/coat/lightblue?size=small"
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "Product",
+        "isVariantOf": { "@id": "#coat_parent" },
+        "url": "https://www.example.com/coat/lightblue?size=large"
+      },
+      {
+        "@context": "https://schema.org/",
+        "@type": "OfferShippingDetails",
+        "@id": "#shipping_policy",
+        "shippingRate": {
+          "@type": "MonetaryAmount",
+          "value": "2.99",
+          "currency": "USD"
+        },
+        "shippingDestination": {
+          "@type": "DefinedRegion",
+          "addressCountry": "US"
+        },
+        "deliveryTime": {
+          "@type": "ShippingDeliveryTime",
+          "handlingTime": {
+            "@type": "QuantitativeValue",
+            "minValue": 0,
+            "maxValue": 1,
+            "unitCode": "DAY"
+          },
+          "transitTime": {
+            "@type": "QuantitativeValue",
+            "minValue": 1,
+            "maxValue": 5,
+            "unitCode": "DAY"
+          }
+        }
+      },
+      {
+        "@context": "https://schema.org/",
+        "@type": "MerchantReturnPolicy",
+        "@id": "#return_policy",
+        "applicableCountry": "US",
+        "returnPolicyCountry": "US",
+        "returnPolicyCategory": "https://schema.org/MerchantReturnFiniteReturnWindow",
+        "merchantReturnDays": 60,
+        "returnMethod": "https://schema.org/ReturnByMail",
+        "returnFees": "https://schema.org/FreeReturn"
+      }
+    ]
+    </script>
+  </head>
+  <body>
+  </body>
+</html>

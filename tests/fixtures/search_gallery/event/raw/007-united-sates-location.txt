@@ -1,0 +1,12 @@
+"location": {
+  "@type": "Place",
+  "name": "Snickerpark Stadium",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "100 West Snickerpark Dr",
+    "addressLocality": "Snickertown",
+    "postalCode": "19019",
+    "addressRegion": "PA",
+    "addressCountry": "US"
+  }
+}

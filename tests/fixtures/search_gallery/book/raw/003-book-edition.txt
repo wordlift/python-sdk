@@ -1,0 +1,11 @@
+"workExample":
+        {
+          "@type": "Book",
+          "@id": "https://example.com/book/100",
+          "inLanguage": "en",
+          "isbn": "9787543321724",
+          "bookEdition": "20 Anniversary Edition",
+          "datePublished": "2000-02-26",
+          "bookFormat": "https://schema.org/Hardcover",
+          "potentialAction": {...}
+        }

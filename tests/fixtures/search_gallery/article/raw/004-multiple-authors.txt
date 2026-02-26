@@ -1,0 +1,4 @@
+"author": [
+  {"name": "Willow Lane"},
+  {"name": "Regula Felix"}
+]

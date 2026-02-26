@@ -1,0 +1,10 @@
+{
+  "@context": "https://schema.org",
+  "@type": "Offer",
+  "shippingDetails": {
+    "@type": "OfferShippingDetails",
+    "hasShippingService": {
+      "@id": "https://example.com/shipping#policy"
+    }
+  }
+}

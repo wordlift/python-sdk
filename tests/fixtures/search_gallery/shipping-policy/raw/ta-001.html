@@ -1,0 +1,172 @@
+<html>
+  <head>
+    <title>Our shipping policy</title>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "https://schema.org/Organization",
+        "hasShippingService": {
+            "@type": "ShippingService",
+            "@id": "#us_ca_mx_standard_shipping",
+            "name": "Standard shipping policies for US, Canada and Mexico",
+            "description": "US and Canada: Free 2-day shipping for orders over $29.99,
+                            otherwise 3-day shipping for $3.49.
+                            Mexico: No shipping to Mexico for orders under $50,
+                            otherwise 10% shipping cost and 4-day shipping.",
+            "fulfillmentType": "FulfillmentTypeDelivery",
+            "handlingTime": {
+              "@type": "ServicePeriod",
+              "cutoffTime": "14:30:00-07:00",
+              "duration": {
+                "@type": "QuantitativeValue",
+                "minValue": 0,
+                "maxValue": 1,
+                "unitCode": "DAY"
+              },
+              "businessDays": [
+                "Monday",
+                "Tuesday",
+                "Wednesday",
+                "Thursday",
+                "Friday"
+              ]
+            },
+            "shippingConditions": [
+              {
+                "@type": "ShippingConditions",
+                "shippingDestination": [
+                  {
+                    "@type": "DefinedRegion",
+                    "addressCountry": "US"
+                  },
+                  {
+                    "@type": "DefinedRegion",
+                    "addressCountry": "CA"
+                  }
+                ],
+                "orderValue": {
+                  "@type": "MonetaryAmount",
+                  "minValue": 0,
+                  "maxValue": 29.99,
+                  "currency": "USD"
+                },
+                "shippingRate": {
+                  "@type": "MonetaryAmount",
+                  "value": 3.49,
+                  "currency": "USD"
+                },
+                "transitTime": {
+                  "@type": "ServicePeriod",
+                  "duration": {
+                    "@type": "QuantitativeValue",
+                    "minValue": 1,
+                    "maxValue": 2,
+                    "unitCode": "DAY"
+                  },
+                  "businessDays": [
+                    "Monday",
+                    "Tuesday",
+                    "Wednesday",
+                    "Thursday",
+                    "Friday",
+                    "Saturday"
+                  ]
+                }
+              },
+              {
+                "@type": "ShippingConditions",
+                "shippingDestination": [
+                  {
+                    "@type": "DefinedRegion",
+                    "addressCountry": "US"
+                  },
+                  {
+                    "@type": "DefinedRegion",
+                    "addressCountry": "CA"
+                  }
+                ],
+                "orderValue": {
+                  "@type": "MonetaryAmount",
+                  "minValue": 30,
+                  "currency": "USD"
+                },
+                "shippingRate": {
+                  "@type": "MonetaryAmount",
+                  "value": 0,
+                  "currency": "USD"
+                },
+                "transitTime": {
+                  "@type": "ServicePeriod",
+                  "duration": {
+                    "@type": "QuantitativeValue",
+                    "minValue": 1,
+                    "maxValue": 1,
+                    "unitCode": "DAY"
+                  },
+                  "businessDays": [
+                    "Monday",
+                    "Tuesday",
+                    "Wednesday",
+                    "Thursday",
+                    "Friday",
+                    "Saturday"
+                  ]
+                }
+              },
+              {
+                "@type": "ShippingConditions",
+                "shippingDestination": {
+                  "@type": "DefinedRegion",
+                  "addressCountry": "MX"
+                },
+                "orderValue": {
+                  "@type": "MonetaryAmount",
+                  "minValue": 0,
+                  "maxValue": 49.99,
+                  "currency": "USD"
+                },
+                "doesNotShip": true
+              },
+              {
+                "@type": "ShippingConditions",
+                "shippingDestination": {
+                  "@type": "DefinedRegion",
+                  "addressCountry": "MX"
+                },
+                "orderValue": {
+                  "@type": "MonetaryAmount",
+                  "minValue": 50,
+                  "currency": "USD"
+                },
+                "shippingRate": {
+                  "@type": "ShippingRateSettings",
+                  "orderPercentage": 0.10
+                },
+                "transitTime": {
+                  "@type": "ServicePeriod",
+                  "duration": {
+                    "@type": "QuantitativeValue",
+                    "minValue": 2,
+                    "maxValue": 3,
+                    "unitCode": "DAY"
+                  },
+                  "businessDays": [
+                    "Monday",
+                    "Tuesday",
+                    "Wednesday",
+                    "Thursday",
+                    "Friday",
+                    "Saturday"
+                  ]
+                }
+              }
+           ]
+        }
+        // Other Organization-level properties
+        // ...
+    }
+    </script>
+  </head>
+  <body>
+  </body>
+</html>

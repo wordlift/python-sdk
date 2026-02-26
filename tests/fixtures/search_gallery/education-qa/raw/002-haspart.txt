@@ -1,0 +1,6 @@
+{
+  "@type": "Quiz",
+  "hasPart": {
+    "@type": "Question"
+  }
+}

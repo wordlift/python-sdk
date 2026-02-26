@@ -1,0 +1,86 @@
+{
+  "@context": "https://schema.org",
+  "@type": "DataFeed",
+  "dataFeedElement": [
+    {
+      "@context": "https://schema.org",
+      "@type": "Book",
+      "@id": "https://example.com/work/the_catcher_in_the_rye",
+      "url": "https://example.com/work/the_catcher_in_the_rye",
+      "name": "The Catcher in the Rye",
+      "author": {
+        "@type": "Person",
+        "name": "J.D. Salinger"
+      },
+      "sameAs": "https://en.wikipedia.org/wiki/The_Catcher_in_the_Rye",
+      "workExample": [
+        {
+          "@type": "Book",
+          "@id": "https://example.com/edition/the_catcher_in_the_rye_paperback",
+          "isbn": "9787543321724",
+          "bookEdition": "Mass Market Paperback",
+          "bookFormat": "https://schema.org/Paperback",
+          "inLanguage": "en",
+          "url": "https://example.com/edition/the_catcher_in_the_rye_paperback",
+          "datePublished": "1991-05-01",
+          "identifier": {
+            "@type": "PropertyValue",
+            "propertyID": "OCLC_NUMBER",
+            "value": "1057320822"
+          },
+          "potentialAction": {
+            "@type": "BorrowAction",
+            "lender": {
+              "@type": "LibrarySystem",
+              "@id": "https://example.com/librarySystem/100"
+            },
+            "target": {
+              "@type": "EntryPoint",
+              "urlTemplate": "https://example.com/borrowpurchase?bookId=170",
+              "actionPlatform": [
+                "https://schema.org/DesktopWebPlatform",
+                "https://schema.org/AndroidPlatform",
+                "https://schema.org/IOSPlatform"
+              ]
+            }
+          }
+        },
+        {
+          "@type": "Book",
+          "@id": "https://example.com/edition/the_catcher_in_the_rye_hardcover",
+          "isbn": "9780316769532",
+          "bookEdition": "Hardcover",
+          "bookFormat": "https://schema.org/Hardcover",
+          "inLanguage": "en",
+          "url": "https://example.com/edition/the_catcher_in_the_rye_hardcover",
+          "datePublished": "1951-07-16",
+          "potentialAction": {
+            "@type": "BorrowAction",
+            "lender": {
+              "@type": "LibrarySystem",
+              "@id": "https://example.com/librarySystem/100"
+            },
+            "target": [
+              {
+                "@type": "EntryPoint",
+                "urlTemplate": "https://example.com/borrowpurchase?bookId=170",
+                "actionPlatform": [
+                  "https://schema.org/DesktopWebPlatform"
+                ]
+              },
+              {
+                "@type": "EntryPoint",
+                "urlTemplate": "https://example.com/mobile/borrowpurchase?bookId=170",
+                "actionPlatform": [
+                  "https://schema.org/AndroidPlatform",
+                  "https://schema.org/IOSPlatform"
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "dateModified": "2018-09-10T13:58:26.892Z"
+}

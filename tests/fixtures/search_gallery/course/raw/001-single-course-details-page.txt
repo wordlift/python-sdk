@@ -1,0 +1,20 @@
+<html>
+  <head>
+    <title>Introduction to Computer Science and Programming</title>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Course",
+      "name": "Introduction to Computer Science and Programming",
+      "description": "Introductory CS course laying out the basics.",
+      "provider": {
+        "@type": "Organization",
+        "name": "University of Technology - Eureka",
+        "sameAs": "https://www.example.com"
+      }
+    }
+    </script>
+  </head>
+  <body>
+  </body>
+</html>

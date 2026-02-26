@@ -1,0 +1,26 @@
+<html>
+  <head>
+    <title>Angry Birds</title>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Angry Birds",
+      "operatingSystem": "ANDROID",
+      "applicationCategory": "GameApplication",
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": 4.6,
+        "ratingCount": 8864
+      },
+      "offers": {
+        "@type": "Offer",
+        "price": 1.00,
+        "priceCurrency": "USD"
+      }
+    }
+    </script>
+  </head>
+  <body>
+  </body>
+</html>

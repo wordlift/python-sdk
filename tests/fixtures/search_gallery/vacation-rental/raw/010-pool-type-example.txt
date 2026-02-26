@@ -1,0 +1,5 @@
+"amenityFeature": {
+  "@type": "LocationFeatureSpecification",
+  "name" : "licenseNum",
+  "value": "Paris: 123456ABC"
+}

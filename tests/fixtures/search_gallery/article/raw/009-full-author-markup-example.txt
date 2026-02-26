@@ -1,0 +1,23 @@
+"author":
+  [
+    {
+      "@type": "Person",
+      "name": "Willow Lane",
+      "jobTitle": "Journalist",
+      "url": "https://www.example.com/staff/willow-lane"
+    },
+    {
+      "@type": "Person",
+      "name": "Echidna Jones",
+      "jobTitle": "Editor in Chief",
+      "url": "https://www.example.com/staff/echidna-jones"
+    }
+  ],
+"publisher":
+  {
+    "@type": "Organization",
+    "name": "The Daily Bug",
+    "url": "https://www.example.com"
+  },
+  // + Other fields related to the article...
+}

@@ -1,0 +1,47 @@
+<html>
+  <head>
+    <title>Wool winter coat, green color</title>
+    <script type="application/ld+json">
+    [
+      {
+        "@context": "https://schema.org/",
+        "@type": "ProductGroup",
+        "name": "Wool winter coat",
+        "description": "Wool coat, new for the coming winter season",
+        // ... other ProductGroup-level properties
+        "brand": {
+          "@type": "Brand",
+          "name": "Good brand"
+        },
+        "productGroupID": "44E01",
+        "variesBy": [
+          "https://schema.org/size",
+          "https://schema.org/color"
+        ],
+        "hasVariant": [
+          {
+            "@type": "Product",
+            "name": "Small green coat",
+            "description": "Small wool green coat for the winter season",
+            "image": "https://www.example.com/coat_green.jpg",
+            "color": "green",
+            "size": "small",
+            // ... other Product-level properties
+            "offers": {
+              "@type": "Offer",
+              "url": "https://www.example.com/coat/green?size=small",
+              "price": 39.99,
+              "priceCurrency": "USD"
+              // ... other offer-level properties
+            }
+          },
+          { "url": "https://www.example.com/coat/lightblue?size=small" },
+          { "url": "https://www.example.com/coat/lightblue?size=large" }
+        ]
+      }
+    ]
+    </script>
+  </head>
+  <body>
+  </body>
+</html>

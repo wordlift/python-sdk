@@ -1,0 +1,29 @@
+<html>
+  <head>
+    <title>Grandma's Best Pie Recipes</title>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "ItemList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "url": "https://example.com/apple-pie.html"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "url": "https://example.com/blueberry-pie.html"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "url": "https://example.com/cherry-pie.html"
+        }]
+    }
+    </script>
+  </head>
+  <body>
+  </body>
+</html>

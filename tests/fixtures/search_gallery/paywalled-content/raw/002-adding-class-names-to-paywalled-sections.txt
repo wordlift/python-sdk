@@ -1,0 +1,4 @@
+<body>
+<p>This content is outside a paywall and is visible to all.</p>
+<div class="paywall">This content is inside a paywall, and requires a subscription or registration.</div>
+</body>

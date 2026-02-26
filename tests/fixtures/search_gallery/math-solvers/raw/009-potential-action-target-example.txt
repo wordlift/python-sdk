@@ -1,0 +1,7 @@
+{
+"@type": "MathSolver",
+"potentialAction": [{
+  "@type": "SolveMathAction",
+  "target": "https://mathdomain.com/solve?q={math_expression_string}"
+  }]
+}

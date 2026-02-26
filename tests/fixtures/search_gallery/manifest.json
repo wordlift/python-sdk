@@ -1,0 +1,1713 @@
+{
+  "intro-structured-data": {
+    "url": "https://developers.google.com/search/docs/appearance/structured-data/intro-structured-data",
+    "raw_samples": [
+      "tests/fixtures/search_gallery/intro-structured-data/raw/ta-001.html"
+    ],
+    "jsonld_samples": [
+      {
+        "id": "ta-001-01",
+        "path": "tests/fixtures/search_gallery/intro-structured-data/jsonld/ta-001-01.jsonld",
+        "source_kind": "textarea",
+        "label": "textarea-001"
+      },
+      {
+        "id": "pg-001",
+        "path": "tests/fixtures/search_gallery/intro-structured-data/jsonld/pg-001.jsonld",
+        "source_kind": "page_script",
+        "label": "page-script-001"
+      }
+    ]
+  },
+  "sd-policies": {
+    "url": "https://developers.google.com/search/docs/appearance/structured-data/sd-policies",
+    "raw_samples": [
+      "tests/fixtures/search_gallery/sd-policies/raw/001-nested-structured-data.txt",
+      "tests/fixtures/search_gallery/sd-policies/raw/002-individual-items-of-structured-data.txt"
+    ],
+    "jsonld_samples": [
+      {
+        "id": "001-nested-structured-data-01",
+        "path": "tests/fixtures/search_gallery/sd-policies/jsonld/001-nested-structured-data-01.jsonld",
+        "source_kind": "pre",
+        "label": "Nested structured data"
+      },
+      {
+        "id": "002-individual-items-of-structured-data-01",
+        "path": "tests/fixtures/search_gallery/sd-policies/jsonld/002-individual-items-of-structured-data-01.jsonld",
+        "source_kind": "pre",
+        "label": "Individual items of structured data"
+      },
+      {
+        "id": "pg-001",
+        "path": "tests/fixtures/search_gallery/sd-policies/jsonld/pg-001.jsonld",
+        "source_kind": "page_script",
+        "label": "page-script-001"
+      }
+    ]
+  },
+  "generate-structured-data-with-javascript": {
+    "url": "https://developers.google.com/search/docs/appearance/structured-data/generate-structured-data-with-javascript",
+    "raw_samples": [
+      "tests/fixtures/search_gallery/generate-structured-data-with-javascript/raw/001-creating-a-custom-variable.txt",
+      "tests/fixtures/search_gallery/generate-structured-data-with-javascript/raw/002-json-ld-in-a-script-element-for-a-custom-tag.txt",
+      "tests/fixtures/search_gallery/generate-structured-data-with-javascript/raw/003-javascript-that-fetches-data-to-generate-a-json-ld-script-element.txt"
+    ],
+    "jsonld_samples": [
+      {
+        "id": "002-json-ld-in-a-script-element-for-a-custom-tag-01",
+        "path": "tests/fixtures/search_gallery/generate-structured-data-with-javascript/jsonld/002-json-ld-in-a-script-element-for-a-custom-tag-01.jsonld",
+        "source_kind": "pre",
+        "label": "JSON-LD in a script element for a custom tag"
+      },
+      {
+        "id": "pg-001",
+        "path": "tests/fixtures/search_gallery/generate-structured-data-with-javascript/jsonld/pg-001.jsonld",
+        "source_kind": "page_script",
+        "label": "page-script-001"
+      }
+    ]
+  },
+  "article": {
+    "url": "https://developers.google.com/search/docs/appearance/structured-data/article",
+    "raw_samples": [
+      "tests/fixtures/search_gallery/article/raw/001-json-ld-article.txt",
+      "tests/fixtures/search_gallery/article/raw/002-microdata-article.txt",
+      "tests/fixtures/search_gallery/article/raw/003-multiple-images-example-in-json-ld.txt",
+      "tests/fixtures/search_gallery/article/raw/004-multiple-authors.txt",
+      "tests/fixtures/search_gallery/article/raw/005-single-author.txt",
+      "tests/fixtures/search_gallery/article/raw/006-author-with-website.txt",
+      "tests/fixtures/search_gallery/article/raw/007-organization-as-an-author.txt",
+      "tests/fixtures/search_gallery/article/raw/008-author-details.txt",
+      "tests/fixtures/search_gallery/article/raw/009-full-author-markup-example.txt",
+      "tests/fixtures/search_gallery/article/raw/ta-001.html",
+      "tests/fixtures/search_gallery/article/raw/ta-002.html"
+    ],
+    "jsonld_samples": [
+      {
+        "id": "001-json-ld-article-01",
+        "path": "tests/fixtures/search_gallery/article/jsonld/001-json-ld-article-01.jsonld",
+        "source_kind": "pre",
+        "label": "JSON-LD Article"
+      },
+      {
+        "id": "pg-001",
+        "path": "tests/fixtures/search_gallery/article/jsonld/pg-001.jsonld",
+        "source_kind": "page_script",
+        "label": "page-script-001"
+      }
+    ]
+  },
+  "book": {
+    "url": "https://developers.google.com/search/docs/appearance/structured-data/book",
+    "raw_samples": [
+      "tests/fixtures/search_gallery/book/raw/001-data-feed-element.txt",
+      "tests/fixtures/search_gallery/book/raw/002-library-system-feed.txt",
+      "tests/fixtures/search_gallery/book/raw/003-book-edition.txt",
+      "tests/fixtures/search_gallery/book/raw/004-book-edition-with-multiple-works.txt",
+      "tests/fixtures/search_gallery/book/raw/005-single-author.txt",
+      "tests/fixtures/search_gallery/book/raw/006-multiple-authors.txt",
+      "tests/fixtures/search_gallery/book/raw/007-single-identifier.txt",
+      "tests/fixtures/search_gallery/book/raw/008-multiple-identifiers.txt",
+      "tests/fixtures/search_gallery/book/raw/009-readaction-book-feed.txt",
+      "tests/fixtures/search_gallery/book/raw/010-borrowaction-book-feed.txt",
+      "tests/fixtures/search_gallery/book/raw/011-readaction.txt",
+      "tests/fixtures/search_gallery/book/raw/012-readaction-with-multiple-entrypoints.txt",
+      "tests/fixtures/search_gallery/book/raw/013-borrowaction.txt",
+      "tests/fixtures/search_gallery/book/raw/014-borrowaction-with-multiple-entrypoints.txt",
+      "tests/fixtures/search_gallery/book/raw/015-united-states-location.txt",
+      "tests/fixtures/search_gallery/book/raw/016-japan-location.txt",
+      "tests/fixtures/search_gallery/book/raw/017-library-system-feed.txt"
+    ],
+    "jsonld_samples": [
+      {
+        "id": "001-data-feed-element-01",
+        "path": "tests/fixtures/search_gallery/book/jsonld/001-data-feed-element-01.jsonld",
+        "source_kind": "pre",
+        "label": "Data feed element"
+      },
+      {
+        "id": "002-library-system-feed-01",
+        "path": "tests/fixtures/search_gallery/book/jsonld/002-library-system-feed-01.jsonld",
+        "source_kind": "pre",
+        "label": "Library system feed"
+      },
+      {
+        "id": "009-readaction-book-feed-01",
+        "path": "tests/fixtures/search_gallery/book/jsonld/009-readaction-book-feed-01.jsonld",
+        "source_kind": "pre",
+        "label": "ReadAction book feed"
+      },
+      {
+        "id": "010-borrowaction-book-feed-01",
+        "path": "tests/fixtures/search_gallery/book/jsonld/010-borrowaction-book-feed-01.jsonld",
+        "source_kind": "pre",
+        "label": "BorrowAction book feed"
+      },
+      {
+        "id": "015-united-states-location-01",
+        "path": "tests/fixtures/search_gallery/book/jsonld/015-united-states-location-01.jsonld",
+        "source_kind": "pre",
+        "label": "United States location"
+      },
+      {
+        "id": "016-japan-location-01",
+        "path": "tests/fixtures/search_gallery/book/jsonld/016-japan-location-01.jsonld",
+        "source_kind": "pre",
+        "label": "Japan location"
+      },
+      {
+        "id": "017-library-system-feed-01",
+        "path": "tests/fixtures/search_gallery/book/jsonld/017-library-system-feed-01.jsonld",
+        "source_kind": "pre",
+        "label": "Library system feed"
+      },
+      {
+        "id": "pg-001",
+        "path": "tests/fixtures/search_gallery/book/jsonld/pg-001.jsonld",
+        "source_kind": "page_script",
+        "label": "page-script-001"
+      }
+    ]
+  },
+  "breadcrumb": {
+    "url": "https://developers.google.com/search/docs/appearance/structured-data/breadcrumb",
+    "raw_samples": [
+      "tests/fixtures/search_gallery/breadcrumb/raw/001-json-ld-bredacrumb.txt",
+      "tests/fixtures/search_gallery/breadcrumb/raw/002-rdfa-breadcrumb.txt",
+      "tests/fixtures/search_gallery/breadcrumb/raw/003-microdata-breadcrumb.txt",
+      "tests/fixtures/search_gallery/breadcrumb/raw/004-html-breadcrumb.txt",
+      "tests/fixtures/search_gallery/breadcrumb/raw/005-json-ld-multiple-breadcrumbs.txt",
+      "tests/fixtures/search_gallery/breadcrumb/raw/006-rdfa-multiple-breadcrumbs.txt",
+      "tests/fixtures/search_gallery/breadcrumb/raw/007-microdata-multiple-breadcrumbs.txt",
+      "tests/fixtures/search_gallery/breadcrumb/raw/008-html-multiple-breadcrumbs.txt",
+      "tests/fixtures/search_gallery/breadcrumb/raw/009-ordered-breadcrumbs.txt",
+      "tests/fixtures/search_gallery/breadcrumb/raw/010-breacrumb-url.txt",
+      "tests/fixtures/search_gallery/breadcrumb/raw/ta-001.html",
+      "tests/fixtures/search_gallery/breadcrumb/raw/ta-002.html",
+      "tests/fixtures/search_gallery/breadcrumb/raw/ta-003.html",
+      "tests/fixtures/search_gallery/breadcrumb/raw/ta-004.html",
+      "tests/fixtures/search_gallery/breadcrumb/raw/ta-005.html",
+      "tests/fixtures/search_gallery/breadcrumb/raw/ta-006.html"
+    ],
+    "jsonld_samples": [
+      {
+        "id": "001-json-ld-bredacrumb-01",
+        "path": "tests/fixtures/search_gallery/breadcrumb/jsonld/001-json-ld-bredacrumb-01.jsonld",
+        "source_kind": "pre",
+        "label": "JSON-LD bredacrumb"
+      },
+      {
+        "id": "005-json-ld-multiple-breadcrumbs-01",
+        "path": "tests/fixtures/search_gallery/breadcrumb/jsonld/005-json-ld-multiple-breadcrumbs-01.jsonld",
+        "source_kind": "pre",
+        "label": "JSON-LD multiple breadcrumbs"
+      },
+      {
+        "id": "009-ordered-breadcrumbs-01",
+        "path": "tests/fixtures/search_gallery/breadcrumb/jsonld/009-ordered-breadcrumbs-01.jsonld",
+        "source_kind": "pre",
+        "label": "Ordered breadcrumbs"
+      },
+      {
+        "id": "pg-001",
+        "path": "tests/fixtures/search_gallery/breadcrumb/jsonld/pg-001.jsonld",
+        "source_kind": "page_script",
+        "label": "page-script-001"
+      }
+    ]
+  },
+  "carousel": {
+    "url": "https://developers.google.com/search/docs/appearance/structured-data/carousel",
+    "raw_samples": [
+      "tests/fixtures/search_gallery/carousel/raw/001-summary-page.txt",
+      "tests/fixtures/search_gallery/carousel/raw/002-details-page-1.txt",
+      "tests/fixtures/search_gallery/carousel/raw/003-details-page-2.txt",
+      "tests/fixtures/search_gallery/carousel/raw/004-details-page-3.txt",
+      "tests/fixtures/search_gallery/carousel/raw/005-single-all-in-one-page.txt",
+      "tests/fixtures/search_gallery/carousel/raw/ta-001.html",
+      "tests/fixtures/search_gallery/carousel/raw/ta-002.html",
+      "tests/fixtures/search_gallery/carousel/raw/ta-003.html",
+      "tests/fixtures/search_gallery/carousel/raw/ta-004.html",
+      "tests/fixtures/search_gallery/carousel/raw/ta-005.html"
+    ],
+    "jsonld_samples": [
+      {
+        "id": "001-summary-page-01",
+        "path": "tests/fixtures/search_gallery/carousel/jsonld/001-summary-page-01.jsonld",
+        "source_kind": "pre",
+        "label": "Summary page"
+      },
+      {
+        "id": "002-details-page-1-01",
+        "path": "tests/fixtures/search_gallery/carousel/jsonld/002-details-page-1-01.jsonld",
+        "source_kind": "pre",
+        "label": "Details page 1"
+      },
+      {
+        "id": "003-details-page-2-01",
+        "path": "tests/fixtures/search_gallery/carousel/jsonld/003-details-page-2-01.jsonld",
+        "source_kind": "pre",
+        "label": "Details page 2"
+      },
+      {
+        "id": "004-details-page-3-01",
+        "path": "tests/fixtures/search_gallery/carousel/jsonld/004-details-page-3-01.jsonld",
+        "source_kind": "pre",
+        "label": "Details page 3"
+      },
+      {
+        "id": "005-single-all-in-one-page-01",
+        "path": "tests/fixtures/search_gallery/carousel/jsonld/005-single-all-in-one-page-01.jsonld",
+        "source_kind": "pre",
+        "label": "Single, all-in-one-page"
+      },
+      {
+        "id": "pg-001",
+        "path": "tests/fixtures/search_gallery/carousel/jsonld/pg-001.jsonld",
+        "source_kind": "page_script",
+        "label": "page-script-001"
+      }
+    ]
+  },
+  "course": {
+    "url": "https://developers.google.com/search/docs/appearance/structured-data/course",
+    "raw_samples": [
+      "tests/fixtures/search_gallery/course/raw/001-single-course-details-page.txt",
+      "tests/fixtures/search_gallery/course/raw/002-single-all-in-one-page.txt",
+      "tests/fixtures/search_gallery/course/raw/ta-001.html",
+      "tests/fixtures/search_gallery/course/raw/ta-002.html"
+    ],
+    "jsonld_samples": [
+      {
+        "id": "001-single-course-details-page-01",
+        "path": "tests/fixtures/search_gallery/course/jsonld/001-single-course-details-page-01.jsonld",
+        "source_kind": "pre",
+        "label": "Single course details page"
+      },
+      {
+        "id": "002-single-all-in-one-page-01",
+        "path": "tests/fixtures/search_gallery/course/jsonld/002-single-all-in-one-page-01.jsonld",
+        "source_kind": "pre",
+        "label": "Single, all-in-one page"
+      },
+      {
+        "id": "pg-001",
+        "path": "tests/fixtures/search_gallery/course/jsonld/pg-001.jsonld",
+        "source_kind": "page_script",
+        "label": "page-script-001"
+      }
+    ]
+  },
+  "dataset": {
+    "url": "https://developers.google.com/search/docs/appearance/structured-data/dataset",
+    "raw_samples": [
+      "tests/fixtures/search_gallery/dataset/raw/001-json-ld-dataset.txt",
+      "tests/fixtures/search_gallery/dataset/raw/002-rdfa-dataset.txt",
+      "tests/fixtures/search_gallery/dataset/raw/003-alternate-name.txt",
+      "tests/fixtures/search_gallery/dataset/raw/004-creator-info.txt",
+      "tests/fixtures/search_gallery/dataset/raw/005-doi-citation.txt",
+      "tests/fixtures/search_gallery/dataset/raw/006-pubmed-citation.txt",
+      "tests/fixtures/search_gallery/dataset/raw/007-arxiv-citation.txt",
+      "tests/fixtures/search_gallery/dataset/raw/008-doi-citation-with-text.txt",
+      "tests/fixtures/search_gallery/dataset/raw/009-funder-with-orcid-id-and-ror-id.txt",
+      "tests/fixtures/search_gallery/dataset/raw/010-haspart-dataset.txt",
+      "tests/fixtures/search_gallery/dataset/raw/011-ispartof-example.txt",
+      "tests/fixtures/search_gallery/dataset/raw/012-hello.txt",
+      "tests/fixtures/search_gallery/dataset/raw/013-hello.txt",
+      "tests/fixtures/search_gallery/dataset/raw/014-hello.txt",
+      "tests/fixtures/search_gallery/dataset/raw/015-hello.txt",
+      "tests/fixtures/search_gallery/dataset/raw/016-hello.txt",
+      "tests/fixtures/search_gallery/dataset/raw/017-hello.txt",
+      "tests/fixtures/search_gallery/dataset/raw/018-hello.txt",
+      "tests/fixtures/search_gallery/dataset/raw/019-hello.txt",
+      "tests/fixtures/search_gallery/dataset/raw/020-hello.txt",
+      "tests/fixtures/search_gallery/dataset/raw/021-hello.txt",
+      "tests/fixtures/search_gallery/dataset/raw/022-hello.txt",
+      "tests/fixtures/search_gallery/dataset/raw/ta-001.html",
+      "tests/fixtures/search_gallery/dataset/raw/ta-002.html"
+    ],
+    "jsonld_samples": [
+      {
+        "id": "001-json-ld-dataset-01",
+        "path": "tests/fixtures/search_gallery/dataset/jsonld/001-json-ld-dataset-01.jsonld",
+        "source_kind": "pre",
+        "label": "JSON-LD dataset"
+      },
+      {
+        "id": "022-hello-01",
+        "path": "tests/fixtures/search_gallery/dataset/jsonld/022-hello-01.jsonld",
+        "source_kind": "pre",
+        "label": "hello"
+      },
+      {
+        "id": "pg-001",
+        "path": "tests/fixtures/search_gallery/dataset/jsonld/pg-001.jsonld",
+        "source_kind": "page_script",
+        "label": "page-script-001"
+      }
+    ]
+  },
+  "discussion-forum": {
+    "url": "https://developers.google.com/search/docs/appearance/structured-data/discussion-forum",
+    "raw_samples": [
+      "tests/fixtures/search_gallery/discussion-forum/raw/001-json-ld-example-showing-nested-comment-structure.txt",
+      "tests/fixtures/search_gallery/discussion-forum/raw/002-json-ld-example-showing-non-nested-comment-structure.txt",
+      "tests/fixtures/search_gallery/discussion-forum/raw/003-json-ld-example-showing-mainentity-nesting.txt",
+      "tests/fixtures/search_gallery/discussion-forum/raw/004-json-ld-example-of-valid-discussion-forum-markup.txt",
+      "tests/fixtures/search_gallery/discussion-forum/raw/005-microdata-example-of-valid-discussion-forum-markup.txt",
+      "tests/fixtures/search_gallery/discussion-forum/raw/006-json-ld-example-how-to-include-a-shared-link-from-a-post.txt",
+      "tests/fixtures/search_gallery/discussion-forum/raw/007-json-ld-example-how-to-include-a-shared-link-from-a-comment.txt",
+      "tests/fixtures/search_gallery/discussion-forum/raw/ta-001.html",
+      "tests/fixtures/search_gallery/discussion-forum/raw/ta-002.html"
+    ],
+    "jsonld_samples": [
+      {
+        "id": "001-json-ld-example-showing-nested-comment-structure-01",
+        "path": "tests/fixtures/search_gallery/discussion-forum/jsonld/001-json-ld-example-showing-nested-comment-structure-01.jsonld",
+        "source_kind": "pre",
+        "label": "JSON-LD example showing nested comment structure"
+      },
+      {
+        "id": "003-json-ld-example-showing-mainentity-nesting-01",
+        "path": "tests/fixtures/search_gallery/discussion-forum/jsonld/003-json-ld-example-showing-mainentity-nesting-01.jsonld",
+        "source_kind": "pre",
+        "label": "JSON-LD example showing mainEntity nesting"
+      },
+      {
+        "id": "004-json-ld-example-of-valid-discussion-forum-markup-01",
+        "path": "tests/fixtures/search_gallery/discussion-forum/jsonld/004-json-ld-example-of-valid-discussion-forum-markup-01.jsonld",
+        "source_kind": "pre",
+        "label": "JSON-LD example of valid discussion forum markup"
+      },
+      {
+        "id": "pg-001",
+        "path": "tests/fixtures/search_gallery/discussion-forum/jsonld/pg-001.jsonld",
+        "source_kind": "page_script",
+        "label": "page-script-001"
+      }
+    ]
+  },
+  "education-qa": {
+    "url": "https://developers.google.com/search/docs/appearance/structured-data/education-qa",
+    "raw_samples": [
+      "tests/fixtures/search_gallery/education-qa/raw/001-json-ld-education-q-amp-a.txt",
+      "tests/fixtures/search_gallery/education-qa/raw/002-haspart.txt",
+      "tests/fixtures/search_gallery/education-qa/raw/003-about-property.txt",
+      "tests/fixtures/search_gallery/education-qa/raw/004-about-name-property.txt",
+      "tests/fixtures/search_gallery/education-qa/raw/005-educational-alignment-property.txt",
+      "tests/fixtures/search_gallery/education-qa/raw/006-educational-subject-and-level.txt",
+      "tests/fixtures/search_gallery/education-qa/raw/007-educational-alignment-target-name.txt",
+      "tests/fixtures/search_gallery/education-qa/raw/008-accepted-answer-property.txt",
+      "tests/fixtures/search_gallery/education-qa/raw/009-eduquestiontype-property.txt",
+      "tests/fixtures/search_gallery/education-qa/raw/010-text-property.txt",
+      "tests/fixtures/search_gallery/education-qa/raw/ta-001.html"
+    ],
+    "jsonld_samples": [
+      {
+        "id": "001-json-ld-education-q-amp-a-01",
+        "path": "tests/fixtures/search_gallery/education-qa/jsonld/001-json-ld-education-q-amp-a-01.jsonld",
+        "source_kind": "pre",
+        "label": "JSON-LD education Q&amp;A"
+      },
+      {
+        "id": "002-haspart-01",
+        "path": "tests/fixtures/search_gallery/education-qa/jsonld/002-haspart-01.jsonld",
+        "source_kind": "pre",
+        "label": "hasPart"
+      },
+      {
+        "id": "003-about-property-01",
+        "path": "tests/fixtures/search_gallery/education-qa/jsonld/003-about-property-01.jsonld",
+        "source_kind": "pre",
+        "label": "about property"
+      },
+      {
+        "id": "004-about-name-property-01",
+        "path": "tests/fixtures/search_gallery/education-qa/jsonld/004-about-name-property-01.jsonld",
+        "source_kind": "pre",
+        "label": "about.name property"
+      },
+      {
+        "id": "005-educational-alignment-property-01",
+        "path": "tests/fixtures/search_gallery/education-qa/jsonld/005-educational-alignment-property-01.jsonld",
+        "source_kind": "pre",
+        "label": "educational alignment property"
+      },
+      {
+        "id": "006-educational-subject-and-level-01",
+        "path": "tests/fixtures/search_gallery/education-qa/jsonld/006-educational-subject-and-level-01.jsonld",
+        "source_kind": "pre",
+        "label": "educational subject and level"
+      },
+      {
+        "id": "007-educational-alignment-target-name-01",
+        "path": "tests/fixtures/search_gallery/education-qa/jsonld/007-educational-alignment-target-name-01.jsonld",
+        "source_kind": "pre",
+        "label": "Educational alignment target name"
+      },
+      {
+        "id": "008-accepted-answer-property-01",
+        "path": "tests/fixtures/search_gallery/education-qa/jsonld/008-accepted-answer-property-01.jsonld",
+        "source_kind": "pre",
+        "label": "Accepted answer property"
+      },
+      {
+        "id": "010-text-property-01",
+        "path": "tests/fixtures/search_gallery/education-qa/jsonld/010-text-property-01.jsonld",
+        "source_kind": "pre",
+        "label": "text property"
+      },
+      {
+        "id": "pg-001",
+        "path": "tests/fixtures/search_gallery/education-qa/jsonld/pg-001.jsonld",
+        "source_kind": "page_script",
+        "label": "page-script-001"
+      }
+    ]
+  },
+  "employer-rating": {
+    "url": "https://developers.google.com/search/docs/appearance/structured-data/employer-rating",
+    "raw_samples": [
+      "tests/fixtures/search_gallery/employer-rating/raw/001-json-ld-employeraggregaterating.txt",
+      "tests/fixtures/search_gallery/employer-rating/raw/002-itemreviewed-property.txt",
+      "tests/fixtures/search_gallery/employer-rating/raw/ta-001.html"
+    ],
+    "jsonld_samples": [
+      {
+        "id": "001-json-ld-employeraggregaterating-01",
+        "path": "tests/fixtures/search_gallery/employer-rating/jsonld/001-json-ld-employeraggregaterating-01.jsonld",
+        "source_kind": "pre",
+        "label": "JSON-LD EmployerAggregateRating"
+      },
+      {
+        "id": "002-itemreviewed-property-01",
+        "path": "tests/fixtures/search_gallery/employer-rating/jsonld/002-itemreviewed-property-01.jsonld",
+        "source_kind": "pre",
+        "label": "itemReviewed property"
+      },
+      {
+        "id": "pg-001",
+        "path": "tests/fixtures/search_gallery/employer-rating/jsonld/pg-001.jsonld",
+        "source_kind": "page_script",
+        "label": "page-script-001"
+      }
+    ]
+  },
+  "factcheck": {
+    "url": "https://developers.google.com/search/docs/appearance/structured-data/factcheck",
+    "raw_samples": [
+      "tests/fixtures/search_gallery/factcheck/raw/001-factcheck-in-json-ld.txt",
+      "tests/fixtures/search_gallery/factcheck/raw/ta-001.html",
+      "tests/fixtures/search_gallery/factcheck/raw/ta-002.html"
+    ],
+    "jsonld_samples": [
+      {
+        "id": "001-factcheck-in-json-ld-01",
+        "path": "tests/fixtures/search_gallery/factcheck/jsonld/001-factcheck-in-json-ld-01.jsonld",
+        "source_kind": "pre",
+        "label": "Factcheck in JSON-LD"
+      },
+      {
+        "id": "ta-002-01",
+        "path": "tests/fixtures/search_gallery/factcheck/jsonld/ta-002-01.jsonld",
+        "source_kind": "textarea",
+        "label": "textarea-002"
+      },
+      {
+        "id": "pg-001",
+        "path": "tests/fixtures/search_gallery/factcheck/jsonld/pg-001.jsonld",
+        "source_kind": "page_script",
+        "label": "page-script-001"
+      }
+    ]
+  },
+  "event": {
+    "url": "https://developers.google.com/search/docs/appearance/structured-data/event",
+    "raw_samples": [
+      "tests/fixtures/search_gallery/event/raw/001-standard-event-in-json-ld.txt",
+      "tests/fixtures/search_gallery/event/raw/002-canceled-event-in-json-ld.txt",
+      "tests/fixtures/search_gallery/event/raw/003-resecheduled-event-in-json-ld.txt",
+      "tests/fixtures/search_gallery/event/raw/004-recommended-date-range-with-timezone.txt",
+      "tests/fixtures/search_gallery/event/raw/005-recommended-date-range-without-timezone.txt",
+      "tests/fixtures/search_gallery/event/raw/006-not-recommended-date-range-with-timezone.txt",
+      "tests/fixtures/search_gallery/event/raw/007-united-sates-location.txt",
+      "tests/fixtures/search_gallery/event/raw/008-granular-japan-location.txt",
+      "tests/fixtures/search_gallery/event/raw/009-japan-location-with-only-address-and-country-fields.txt",
+      "tests/fixtures/search_gallery/event/raw/010-japan-addess-on-one-line.txt",
+      "tests/fixtures/search_gallery/event/raw/011-startdate-property.txt",
+      "tests/fixtures/search_gallery/event/raw/012-description-property.txt",
+      "tests/fixtures/search_gallery/event/raw/013-enddate-property.txt",
+      "tests/fixtures/search_gallery/event/raw/014-canceled-event.txt",
+      "tests/fixtures/search_gallery/event/raw/015-postponed-event.txt",
+      "tests/fixtures/search_gallery/event/raw/016-rescheduled-event.txt",
+      "tests/fixtures/search_gallery/event/raw/017-scheduled-event.txt",
+      "tests/fixtures/search_gallery/event/raw/018-multiple-images-example-in-json-ld.txt",
+      "tests/fixtures/search_gallery/event/raw/019-availability-property.txt",
+      "tests/fixtures/search_gallery/event/raw/020-price-property.txt",
+      "tests/fixtures/search_gallery/event/raw/021-pricecurrency-property.txt",
+      "tests/fixtures/search_gallery/event/raw/022-validfrom-property.txt",
+      "tests/fixtures/search_gallery/event/raw/023-url-property.txt",
+      "tests/fixtures/search_gallery/event/raw/024-performer-name-property.txt",
+      "tests/fixtures/search_gallery/event/raw/025-event-that-was-rescheduled-multiple-times.txt",
+      "tests/fixtures/search_gallery/event/raw/ta-001.html",
+      "tests/fixtures/search_gallery/event/raw/ta-002.html",
+      "tests/fixtures/search_gallery/event/raw/ta-003.html"
+    ],
+    "jsonld_samples": [
+      {
+        "id": "001-standard-event-in-json-ld-01",
+        "path": "tests/fixtures/search_gallery/event/jsonld/001-standard-event-in-json-ld-01.jsonld",
+        "source_kind": "pre",
+        "label": "standard event in JSON-LD"
+      },
+      {
+        "id": "002-canceled-event-in-json-ld-01",
+        "path": "tests/fixtures/search_gallery/event/jsonld/002-canceled-event-in-json-ld-01.jsonld",
+        "source_kind": "pre",
+        "label": "Canceled event in JSON-LD"
+      },
+      {
+        "id": "003-resecheduled-event-in-json-ld-01",
+        "path": "tests/fixtures/search_gallery/event/jsonld/003-resecheduled-event-in-json-ld-01.jsonld",
+        "source_kind": "pre",
+        "label": "Resecheduled event in JSON-LD"
+      },
+      {
+        "id": "014-canceled-event-01",
+        "path": "tests/fixtures/search_gallery/event/jsonld/014-canceled-event-01.jsonld",
+        "source_kind": "pre",
+        "label": "Canceled event"
+      },
+      {
+        "id": "015-postponed-event-01",
+        "path": "tests/fixtures/search_gallery/event/jsonld/015-postponed-event-01.jsonld",
+        "source_kind": "pre",
+        "label": "Postponed event"
+      },
+      {
+        "id": "016-rescheduled-event-01",
+        "path": "tests/fixtures/search_gallery/event/jsonld/016-rescheduled-event-01.jsonld",
+        "source_kind": "pre",
+        "label": "Rescheduled event"
+      },
+      {
+        "id": "017-scheduled-event-01",
+        "path": "tests/fixtures/search_gallery/event/jsonld/017-scheduled-event-01.jsonld",
+        "source_kind": "pre",
+        "label": "Scheduled event"
+      },
+      {
+        "id": "025-event-that-was-rescheduled-multiple-times-01",
+        "path": "tests/fixtures/search_gallery/event/jsonld/025-event-that-was-rescheduled-multiple-times-01.jsonld",
+        "source_kind": "pre",
+        "label": "Event that was rescheduled multiple times"
+      },
+      {
+        "id": "pg-001",
+        "path": "tests/fixtures/search_gallery/event/jsonld/pg-001.jsonld",
+        "source_kind": "page_script",
+        "label": "page-script-001"
+      }
+    ]
+  },
+  "faqpage": {
+    "url": "https://developers.google.com/search/docs/appearance/structured-data/faqpage",
+    "raw_samples": [
+      "tests/fixtures/search_gallery/faqpage/raw/001-json-ld-example-code-for-faqpage-markup.txt",
+      "tests/fixtures/search_gallery/faqpage/raw/002-microdata-example-code-for-faqpage-markup.txt",
+      "tests/fixtures/search_gallery/faqpage/raw/ta-001.html",
+      "tests/fixtures/search_gallery/faqpage/raw/ta-002.html"
+    ],
+    "jsonld_samples": [
+      {
+        "id": "001-json-ld-example-code-for-faqpage-markup-01",
+        "path": "tests/fixtures/search_gallery/faqpage/jsonld/001-json-ld-example-code-for-faqpage-markup-01.jsonld",
+        "source_kind": "pre",
+        "label": "JSON-LD example code for faqpage markup"
+      },
+      {
+        "id": "pg-001",
+        "path": "tests/fixtures/search_gallery/faqpage/jsonld/pg-001.jsonld",
+        "source_kind": "page_script",
+        "label": "page-script-001"
+      }
+    ]
+  },
+  "image-license-metadata": {
+    "url": "https://developers.google.com/search/docs/appearance/structured-data/image-license-metadata",
+    "raw_samples": [
+      "tests/fixtures/search_gallery/image-license-metadata/raw/001-single-image-in-json-ld.txt",
+      "tests/fixtures/search_gallery/image-license-metadata/raw/002-single-image-in-rdfa.txt",
+      "tests/fixtures/search_gallery/image-license-metadata/raw/003-single-image-in-microdata.txt",
+      "tests/fixtures/search_gallery/image-license-metadata/raw/004-single-image-in-srcset-in-json-ld.txt",
+      "tests/fixtures/search_gallery/image-license-metadata/raw/005-single-image-in-srcset-in-rdfa.txt",
+      "tests/fixtures/search_gallery/image-license-metadata/raw/006-single-image-in-srcset-in-microdata.txt",
+      "tests/fixtures/search_gallery/image-license-metadata/raw/007-multiple-images-in-json-ld.txt",
+      "tests/fixtures/search_gallery/image-license-metadata/raw/008-multiple-images-in-rdfa.txt",
+      "tests/fixtures/search_gallery/image-license-metadata/raw/009-multiple-images-in-microdata.txt",
+      "tests/fixtures/search_gallery/image-license-metadata/raw/ta-001.html",
+      "tests/fixtures/search_gallery/image-license-metadata/raw/ta-002.html",
+      "tests/fixtures/search_gallery/image-license-metadata/raw/ta-003.html",
+      "tests/fixtures/search_gallery/image-license-metadata/raw/ta-004.html",
+      "tests/fixtures/search_gallery/image-license-metadata/raw/ta-005.html",
+      "tests/fixtures/search_gallery/image-license-metadata/raw/ta-006.html",
+      "tests/fixtures/search_gallery/image-license-metadata/raw/ta-007.html",
+      "tests/fixtures/search_gallery/image-license-metadata/raw/ta-008.html",
+      "tests/fixtures/search_gallery/image-license-metadata/raw/ta-009.html"
+    ],
+    "jsonld_samples": [
+      {
+        "id": "001-single-image-in-json-ld-01",
+        "path": "tests/fixtures/search_gallery/image-license-metadata/jsonld/001-single-image-in-json-ld-01.jsonld",
+        "source_kind": "pre",
+        "label": "Single image in JSON-LD"
+      },
+      {
+        "id": "004-single-image-in-srcset-in-json-ld-01",
+        "path": "tests/fixtures/search_gallery/image-license-metadata/jsonld/004-single-image-in-srcset-in-json-ld-01.jsonld",
+        "source_kind": "pre",
+        "label": "Single image in srcset in JSON-LD"
+      },
+      {
+        "id": "007-multiple-images-in-json-ld-01",
+        "path": "tests/fixtures/search_gallery/image-license-metadata/jsonld/007-multiple-images-in-json-ld-01.jsonld",
+        "source_kind": "pre",
+        "label": "Multiple images in JSON-LD"
+      },
+      {
+        "id": "pg-001",
+        "path": "tests/fixtures/search_gallery/image-license-metadata/jsonld/pg-001.jsonld",
+        "source_kind": "page_script",
+        "label": "page-script-001"
+      }
+    ]
+  },
+  "job-posting": {
+    "url": "https://developers.google.com/search/docs/appearance/structured-data/job-posting",
+    "raw_samples": [
+      "tests/fixtures/search_gallery/job-posting/raw/001-job-posting-markup.txt",
+      "tests/fixtures/search_gallery/job-posting/raw/002-remote-job-posting-markup.txt",
+      "tests/fixtures/search_gallery/job-posting/raw/003-applicant-requirements.txt",
+      "tests/fixtures/search_gallery/job-posting/raw/004-job-location-and-type.txt",
+      "tests/fixtures/search_gallery/job-posting/raw/005-job-location-type-and-applicant-location.txt",
+      "tests/fixtures/search_gallery/job-posting/raw/006-date-posted.txt",
+      "tests/fixtures/search_gallery/job-posting/raw/007-hiring-organization.txt",
+      "tests/fixtures/search_gallery/job-posting/raw/008-anonymous-hiring-organization.txt",
+      "tests/fixtures/search_gallery/job-posting/raw/009-hiring-organization.txt",
+      "tests/fixtures/search_gallery/job-posting/raw/010-job-location.txt",
+      "tests/fixtures/search_gallery/job-posting/raw/011-job-title.txt",
+      "tests/fixtures/search_gallery/job-posting/raw/012-remote-job-with-broad-location-requirements.txt",
+      "tests/fixtures/search_gallery/job-posting/raw/013-remote-job-with-specific-location-requirements.txt",
+      "tests/fixtures/search_gallery/job-posting/raw/014-hourly-salary.txt",
+      "tests/fixtures/search_gallery/job-posting/raw/015-salary-range.txt",
+      "tests/fixtures/search_gallery/job-posting/raw/016-contractor-employment-type.txt",
+      "tests/fixtures/search_gallery/job-posting/raw/017-full-time-contractor-employment-type.txt",
+      "tests/fixtures/search_gallery/job-posting/raw/018-unique-identifier.txt",
+      "tests/fixtures/search_gallery/job-posting/raw/019-remote-job-in-the-us.txt",
+      "tests/fixtures/search_gallery/job-posting/raw/020-job-expiration-date.txt",
+      "tests/fixtures/search_gallery/job-posting/raw/021-job-experience.txt",
+      "tests/fixtures/search_gallery/job-posting/raw/022-education-requirements.txt",
+      "tests/fixtures/search_gallery/job-posting/raw/023-utm-campaign.txt",
+      "tests/fixtures/search_gallery/job-posting/raw/024-utm-source.txt",
+      "tests/fixtures/search_gallery/job-posting/raw/025-utm-medium.txt",
+      "tests/fixtures/search_gallery/job-posting/raw/ta-001.html",
+      "tests/fixtures/search_gallery/job-posting/raw/ta-002.html",
+      "tests/fixtures/search_gallery/job-posting/raw/ta-003.html"
+    ],
+    "jsonld_samples": [
+      {
+        "id": "001-job-posting-markup-01",
+        "path": "tests/fixtures/search_gallery/job-posting/jsonld/001-job-posting-markup-01.jsonld",
+        "source_kind": "pre",
+        "label": "Job posting markup"
+      },
+      {
+        "id": "002-remote-job-posting-markup-01",
+        "path": "tests/fixtures/search_gallery/job-posting/jsonld/002-remote-job-posting-markup-01.jsonld",
+        "source_kind": "pre",
+        "label": "Remote job posting markup"
+      },
+      {
+        "id": "021-job-experience-01",
+        "path": "tests/fixtures/search_gallery/job-posting/jsonld/021-job-experience-01.jsonld",
+        "source_kind": "pre",
+        "label": "Job experience"
+      },
+      {
+        "id": "pg-001",
+        "path": "tests/fixtures/search_gallery/job-posting/jsonld/pg-001.jsonld",
+        "source_kind": "page_script",
+        "label": "page-script-001"
+      }
+    ]
+  },
+  "local-business": {
+    "url": "https://developers.google.com/search/docs/appearance/structured-data/local-business",
+    "raw_samples": [
+      "tests/fixtures/search_gallery/local-business/raw/001-business-listing-markup-example.txt",
+      "tests/fixtures/search_gallery/local-business/raw/002-restaurant-markup-example.txt",
+      "tests/fixtures/search_gallery/local-business/raw/003-opening-hours-markup-example.txt",
+      "tests/fixtures/search_gallery/local-business/raw/004-opening-hours-past-midnight-markup-example.txt",
+      "tests/fixtures/search_gallery/local-business/raw/005-opening-hours-all-day-markup-example.txt",
+      "tests/fixtures/search_gallery/local-business/raw/006-seasonal-opening-hours-markup-example.txt",
+      "tests/fixtures/search_gallery/local-business/raw/007-business-with-departments-markup-example.txt",
+      "tests/fixtures/search_gallery/local-business/raw/008-business-with-multiple-services-markup-example.txt",
+      "tests/fixtures/search_gallery/local-business/raw/009-postal-address-markup-example.txt",
+      "tests/fixtures/search_gallery/local-business/raw/010-multiple-images-example-in-json-ld.txt",
+      "tests/fixtures/search_gallery/local-business/raw/011-postal-address-markup-example.txt",
+      "tests/fixtures/search_gallery/local-business/raw/ta-001.html",
+      "tests/fixtures/search_gallery/local-business/raw/ta-002.html",
+      "tests/fixtures/search_gallery/local-business/raw/ta-003.html"
+    ],
+    "jsonld_samples": [
+      {
+        "id": "001-business-listing-markup-example-01",
+        "path": "tests/fixtures/search_gallery/local-business/jsonld/001-business-listing-markup-example-01.jsonld",
+        "source_kind": "pre",
+        "label": "business listing markup example"
+      },
+      {
+        "id": "002-restaurant-markup-example-01",
+        "path": "tests/fixtures/search_gallery/local-business/jsonld/002-restaurant-markup-example-01.jsonld",
+        "source_kind": "pre",
+        "label": "restaurant markup example"
+      },
+      {
+        "id": "007-business-with-departments-markup-example-01",
+        "path": "tests/fixtures/search_gallery/local-business/jsonld/007-business-with-departments-markup-example-01.jsonld",
+        "source_kind": "pre",
+        "label": "business with departments markup example"
+      },
+      {
+        "id": "pg-001",
+        "path": "tests/fixtures/search_gallery/local-business/jsonld/pg-001.jsonld",
+        "source_kind": "page_script",
+        "label": "page-script-001"
+      }
+    ]
+  },
+  "math-solvers": {
+    "url": "https://developers.google.com/search/docs/appearance/structured-data/math-solvers",
+    "raw_samples": [
+      "tests/fixtures/search_gallery/math-solvers/raw/001-math-home-page-example.txt",
+      "tests/fixtures/search_gallery/math-solvers/raw/002-math-home-page-with-two-solver-actions.txt",
+      "tests/fixtures/search_gallery/math-solvers/raw/003-potential-action-example.txt",
+      "tests/fixtures/search_gallery/math-solvers/raw/004-derivative-form-with-parenthesis.txt",
+      "tests/fixtures/search_gallery/math-solvers/raw/005-integral-form-with-from-and-to-variables.txt",
+      "tests/fixtures/search_gallery/math-solvers/raw/006-limits-form.txt",
+      "tests/fixtures/search_gallery/math-solvers/raw/007-derivative-form-with-variable-and-value.txt",
+      "tests/fixtures/search_gallery/math-solvers/raw/008-usage-info-example.txt",
+      "tests/fixtures/search_gallery/math-solvers/raw/009-potential-action-target-example.txt",
+      "tests/fixtures/search_gallery/math-solvers/raw/010-in-language-example.txt",
+      "tests/fixtures/search_gallery/math-solvers/raw/011-assesses-example.txt",
+      "tests/fixtures/search_gallery/math-solvers/raw/012-edu-question-type-example.txt",
+      "tests/fixtures/search_gallery/math-solvers/raw/013-learning-resource-type-example.txt",
+      "tests/fixtures/search_gallery/math-solvers/raw/ta-001.html",
+      "tests/fixtures/search_gallery/math-solvers/raw/ta-002.html"
+    ],
+    "jsonld_samples": [
+      {
+        "id": "001-math-home-page-example-01",
+        "path": "tests/fixtures/search_gallery/math-solvers/jsonld/001-math-home-page-example-01.jsonld",
+        "source_kind": "pre",
+        "label": "math home page example"
+      },
+      {
+        "id": "002-math-home-page-with-two-solver-actions-01",
+        "path": "tests/fixtures/search_gallery/math-solvers/jsonld/002-math-home-page-with-two-solver-actions-01.jsonld",
+        "source_kind": "pre",
+        "label": "math home page with two solver actions"
+      },
+      {
+        "id": "003-potential-action-example-01",
+        "path": "tests/fixtures/search_gallery/math-solvers/jsonld/003-potential-action-example-01.jsonld",
+        "source_kind": "pre",
+        "label": "potential action example"
+      },
+      {
+        "id": "008-usage-info-example-01",
+        "path": "tests/fixtures/search_gallery/math-solvers/jsonld/008-usage-info-example-01.jsonld",
+        "source_kind": "pre",
+        "label": "usage info example"
+      },
+      {
+        "id": "009-potential-action-target-example-01",
+        "path": "tests/fixtures/search_gallery/math-solvers/jsonld/009-potential-action-target-example-01.jsonld",
+        "source_kind": "pre",
+        "label": "potential action target example"
+      },
+      {
+        "id": "010-in-language-example-01",
+        "path": "tests/fixtures/search_gallery/math-solvers/jsonld/010-in-language-example-01.jsonld",
+        "source_kind": "pre",
+        "label": "in language example"
+      },
+      {
+        "id": "011-assesses-example-01",
+        "path": "tests/fixtures/search_gallery/math-solvers/jsonld/011-assesses-example-01.jsonld",
+        "source_kind": "pre",
+        "label": "assesses example"
+      },
+      {
+        "id": "012-edu-question-type-example-01",
+        "path": "tests/fixtures/search_gallery/math-solvers/jsonld/012-edu-question-type-example-01.jsonld",
+        "source_kind": "pre",
+        "label": "edu question type example"
+      },
+      {
+        "id": "013-learning-resource-type-example-01",
+        "path": "tests/fixtures/search_gallery/math-solvers/jsonld/013-learning-resource-type-example-01.jsonld",
+        "source_kind": "pre",
+        "label": "learning resource type example"
+      },
+      {
+        "id": "pg-001",
+        "path": "tests/fixtures/search_gallery/math-solvers/jsonld/pg-001.jsonld",
+        "source_kind": "page_script",
+        "label": "page-script-001"
+      }
+    ]
+  },
+  "movie": {
+    "url": "https://developers.google.com/search/docs/appearance/structured-data/movie",
+    "raw_samples": [
+      "tests/fixtures/search_gallery/movie/raw/001-summary-movie-page-in-json-ld.txt",
+      "tests/fixtures/search_gallery/movie/raw/002-all-in-one-list-page-in-json-ld.txt",
+      "tests/fixtures/search_gallery/movie/raw/003-director-name-property.txt",
+      "tests/fixtures/search_gallery/movie/raw/ta-001.html"
+    ],
+    "jsonld_samples": [
+      {
+        "id": "001-summary-movie-page-in-json-ld-01",
+        "path": "tests/fixtures/search_gallery/movie/jsonld/001-summary-movie-page-in-json-ld-01.jsonld",
+        "source_kind": "pre",
+        "label": "Summary movie page in JSON-LD"
+      },
+      {
+        "id": "002-all-in-one-list-page-in-json-ld-01",
+        "path": "tests/fixtures/search_gallery/movie/jsonld/002-all-in-one-list-page-in-json-ld-01.jsonld",
+        "source_kind": "pre",
+        "label": "All-in-one list page in JSON-LD"
+      },
+      {
+        "id": "pg-001",
+        "path": "tests/fixtures/search_gallery/movie/jsonld/pg-001.jsonld",
+        "source_kind": "page_script",
+        "label": "page-script-001"
+      }
+    ]
+  },
+  "organization": {
+    "url": "https://developers.google.com/search/docs/appearance/structured-data/organization",
+    "raw_samples": [
+      "tests/fixtures/search_gallery/organization/raw/001-organization-json-ld-example.txt",
+      "tests/fixtures/search_gallery/organization/raw/002-online-store-json-ld-example.txt",
+      "tests/fixtures/search_gallery/organization/raw/003-postal-address-example.txt",
+      "tests/fixtures/search_gallery/organization/raw/004-contact-point-example.txt",
+      "tests/fixtures/search_gallery/organization/raw/005-exact-number-of-employees-example.txt",
+      "tests/fixtures/search_gallery/organization/raw/006-number-or-employees-in-range-example.txt",
+      "tests/fixtures/search_gallery/organization/raw/ta-001.html",
+      "tests/fixtures/search_gallery/organization/raw/ta-002.html"
+    ],
+    "jsonld_samples": [
+      {
+        "id": "001-organization-json-ld-example-01",
+        "path": "tests/fixtures/search_gallery/organization/jsonld/001-organization-json-ld-example-01.jsonld",
+        "source_kind": "pre",
+        "label": "organization json-ld example"
+      },
+      {
+        "id": "002-online-store-json-ld-example-01",
+        "path": "tests/fixtures/search_gallery/organization/jsonld/002-online-store-json-ld-example-01.jsonld",
+        "source_kind": "pre",
+        "label": "online-store json-ld example"
+      },
+      {
+        "id": "pg-001",
+        "path": "tests/fixtures/search_gallery/organization/jsonld/pg-001.jsonld",
+        "source_kind": "page_script",
+        "label": "page-script-001"
+      }
+    ]
+  },
+  "product": {
+    "url": "https://developers.google.com/search/docs/appearance/structured-data/product",
+    "raw_samples": [],
+    "jsonld_samples": [
+      {
+        "id": "pg-001",
+        "path": "tests/fixtures/search_gallery/product/jsonld/pg-001.jsonld",
+        "source_kind": "page_script",
+        "label": "page-script-001"
+      }
+    ]
+  },
+  "product-snippet": {
+    "url": "https://developers.google.com/search/docs/appearance/structured-data/product-snippet",
+    "raw_samples": [
+      "tests/fixtures/search_gallery/product-snippet/raw/001-json-ld-product-reviews.txt",
+      "tests/fixtures/search_gallery/product-snippet/raw/002-rdfa-product-reviews.txt",
+      "tests/fixtures/search_gallery/product-snippet/raw/003-microdata-product-reviews.txt",
+      "tests/fixtures/search_gallery/product-snippet/raw/004-json-ld-pros-and-cons.txt",
+      "tests/fixtures/search_gallery/product-snippet/raw/005-rdfa-pros-and-cons.txt",
+      "tests/fixtures/search_gallery/product-snippet/raw/006-microdata-pros-and-cons.txt",
+      "tests/fixtures/search_gallery/product-snippet/raw/007-json-ld-aggregate-reviews.txt",
+      "tests/fixtures/search_gallery/product-snippet/raw/008-rdfa-aggregate-reviews.txt",
+      "tests/fixtures/search_gallery/product-snippet/raw/009-microdata-aggregate-reviews.txt",
+      "tests/fixtures/search_gallery/product-snippet/raw/010-product-and-car-co-type.txt",
+      "tests/fixtures/search_gallery/product-snippet/raw/011-multiple-cons.txt",
+      "tests/fixtures/search_gallery/product-snippet/raw/012-multiple-pros.txt",
+      "tests/fixtures/search_gallery/product-snippet/raw/013-price-property.txt",
+      "tests/fixtures/search_gallery/product-snippet/raw/014-product-with-0-price.txt",
+      "tests/fixtures/search_gallery/product-snippet/raw/015-price-specification-property.txt",
+      "tests/fixtures/search_gallery/product-snippet/raw/ta-001.html",
+      "tests/fixtures/search_gallery/product-snippet/raw/ta-002.html",
+      "tests/fixtures/search_gallery/product-snippet/raw/ta-003.html",
+      "tests/fixtures/search_gallery/product-snippet/raw/ta-004.html",
+      "tests/fixtures/search_gallery/product-snippet/raw/ta-005.html",
+      "tests/fixtures/search_gallery/product-snippet/raw/ta-006.html",
+      "tests/fixtures/search_gallery/product-snippet/raw/ta-007.html",
+      "tests/fixtures/search_gallery/product-snippet/raw/ta-008.html",
+      "tests/fixtures/search_gallery/product-snippet/raw/ta-009.html"
+    ],
+    "jsonld_samples": [
+      {
+        "id": "001-json-ld-product-reviews-01",
+        "path": "tests/fixtures/search_gallery/product-snippet/jsonld/001-json-ld-product-reviews-01.jsonld",
+        "source_kind": "pre",
+        "label": "JSON-LD product reviews"
+      },
+      {
+        "id": "004-json-ld-pros-and-cons-01",
+        "path": "tests/fixtures/search_gallery/product-snippet/jsonld/004-json-ld-pros-and-cons-01.jsonld",
+        "source_kind": "pre",
+        "label": "JSON-LD pros and cons"
+      },
+      {
+        "id": "007-json-ld-aggregate-reviews-01",
+        "path": "tests/fixtures/search_gallery/product-snippet/jsonld/007-json-ld-aggregate-reviews-01.jsonld",
+        "source_kind": "pre",
+        "label": "JSON-LD aggregate reviews"
+      },
+      {
+        "id": "010-product-and-car-co-type-01",
+        "path": "tests/fixtures/search_gallery/product-snippet/jsonld/010-product-and-car-co-type-01.jsonld",
+        "source_kind": "pre",
+        "label": "Product and Car co-type"
+      },
+      {
+        "id": "ta-001-01",
+        "path": "tests/fixtures/search_gallery/product-snippet/jsonld/ta-001-01.jsonld",
+        "source_kind": "textarea",
+        "label": "textarea-001"
+      },
+      {
+        "id": "pg-001",
+        "path": "tests/fixtures/search_gallery/product-snippet/jsonld/pg-001.jsonld",
+        "source_kind": "page_script",
+        "label": "page-script-001"
+      }
+    ]
+  },
+  "merchant-listing": {
+    "url": "https://developers.google.com/search/docs/appearance/structured-data/merchant-listing",
+    "raw_samples": [
+      "tests/fixtures/search_gallery/merchant-listing/raw/001-json-ld-product-with-offer.txt",
+      "tests/fixtures/search_gallery/merchant-listing/raw/002-rdfa-product-with-offer.txt",
+      "tests/fixtures/search_gallery/merchant-listing/raw/003-microdata-product-with-offer.txt",
+      "tests/fixtures/search_gallery/merchant-listing/raw/004-offer-with-a-price.txt",
+      "tests/fixtures/search_gallery/merchant-listing/raw/005-price-specification.txt",
+      "tests/fixtures/search_gallery/merchant-listing/raw/006-sale-price.txt",
+      "tests/fixtures/search_gallery/merchant-listing/raw/007-sale-price-with-two-unitpricespecification.txt",
+      "tests/fixtures/search_gallery/merchant-listing/raw/008-member-price.txt",
+      "tests/fixtures/search_gallery/merchant-listing/raw/009-member-price-with-two-unitpricespecifications.txt",
+      "tests/fixtures/search_gallery/merchant-listing/raw/010-member-price-with-two-unitpricespecifications.txt",
+      "tests/fixtures/search_gallery/merchant-listing/raw/011-member-price-with-two-unitpricespecifications.txt",
+      "tests/fixtures/search_gallery/merchant-listing/raw/012-unit-price-specification.txt",
+      "tests/fixtures/search_gallery/merchant-listing/raw/013-json-ld-offer-and-shipping.txt",
+      "tests/fixtures/search_gallery/merchant-listing/raw/014-rdfa-offer-and-shipping.txt",
+      "tests/fixtures/search_gallery/merchant-listing/raw/015-microdata-offer-and-shipping.txt",
+      "tests/fixtures/search_gallery/merchant-listing/raw/016-free-shipping.txt",
+      "tests/fixtures/search_gallery/merchant-listing/raw/017-product-return-policy.txt",
+      "tests/fixtures/search_gallery/merchant-listing/raw/018-co2-certification.txt",
+      "tests/fixtures/search_gallery/merchant-listing/raw/019-eprel-certification.txt",
+      "tests/fixtures/search_gallery/merchant-listing/raw/020-3d-model.txt",
+      "tests/fixtures/search_gallery/merchant-listing/raw/021-product-and-car-co-type.txt",
+      "tests/fixtures/search_gallery/merchant-listing/raw/022-multiple-images-example-in-json-ld.txt",
+      "tests/fixtures/search_gallery/merchant-listing/raw/023-product-and-book-co-type.txt",
+      "tests/fixtures/search_gallery/merchant-listing/raw/024-pre.txt",
+      "tests/fixtures/search_gallery/merchant-listing/raw/025-price-property.txt",
+      "tests/fixtures/search_gallery/merchant-listing/raw/026-linked-return-policy-json-ld-example.txt",
+      "tests/fixtures/search_gallery/merchant-listing/raw/027-linked-shipping-policy-json-ld-example.txt",
+      "tests/fixtures/search_gallery/merchant-listing/raw/028-mc-member-program-and-tier.txt",
+      "tests/fixtures/search_gallery/merchant-listing/raw/029-mc-member-program-and-tier.txt",
+      "tests/fixtures/search_gallery/merchant-listing/raw/030-eu-energy-efficiency-rating-example.txt",
+      "tests/fixtures/search_gallery/merchant-listing/raw/031-co2-emissions-class-example.txt",
+      "tests/fixtures/search_gallery/merchant-listing/raw/ta-001.html",
+      "tests/fixtures/search_gallery/merchant-listing/raw/ta-002.html",
+      "tests/fixtures/search_gallery/merchant-listing/raw/ta-003.html",
+      "tests/fixtures/search_gallery/merchant-listing/raw/ta-004.html",
+      "tests/fixtures/search_gallery/merchant-listing/raw/ta-005.html",
+      "tests/fixtures/search_gallery/merchant-listing/raw/ta-006.html"
+    ],
+    "jsonld_samples": [
+      {
+        "id": "001-json-ld-product-with-offer-01",
+        "path": "tests/fixtures/search_gallery/merchant-listing/jsonld/001-json-ld-product-with-offer-01.jsonld",
+        "source_kind": "pre",
+        "label": "JSON-LD product with offer"
+      },
+      {
+        "id": "006-sale-price-01",
+        "path": "tests/fixtures/search_gallery/merchant-listing/jsonld/006-sale-price-01.jsonld",
+        "source_kind": "pre",
+        "label": "Sale price"
+      },
+      {
+        "id": "007-sale-price-with-two-unitpricespecification-01",
+        "path": "tests/fixtures/search_gallery/merchant-listing/jsonld/007-sale-price-with-two-unitpricespecification-01.jsonld",
+        "source_kind": "pre",
+        "label": "Sale price with two UnitPriceSpecification"
+      },
+      {
+        "id": "013-json-ld-offer-and-shipping-01",
+        "path": "tests/fixtures/search_gallery/merchant-listing/jsonld/013-json-ld-offer-and-shipping-01.jsonld",
+        "source_kind": "pre",
+        "label": "JSON-LD offer and shipping"
+      },
+      {
+        "id": "017-product-return-policy-01",
+        "path": "tests/fixtures/search_gallery/merchant-listing/jsonld/017-product-return-policy-01.jsonld",
+        "source_kind": "pre",
+        "label": "product return policy"
+      },
+      {
+        "id": "018-co2-certification-01",
+        "path": "tests/fixtures/search_gallery/merchant-listing/jsonld/018-co2-certification-01.jsonld",
+        "source_kind": "pre",
+        "label": "CO2 certification"
+      },
+      {
+        "id": "019-eprel-certification-01",
+        "path": "tests/fixtures/search_gallery/merchant-listing/jsonld/019-eprel-certification-01.jsonld",
+        "source_kind": "pre",
+        "label": "EPREL certification"
+      },
+      {
+        "id": "020-3d-model-01",
+        "path": "tests/fixtures/search_gallery/merchant-listing/jsonld/020-3d-model-01.jsonld",
+        "source_kind": "pre",
+        "label": "3D model"
+      },
+      {
+        "id": "021-product-and-car-co-type-01",
+        "path": "tests/fixtures/search_gallery/merchant-listing/jsonld/021-product-and-car-co-type-01.jsonld",
+        "source_kind": "pre",
+        "label": "Product and Car co-type"
+      },
+      {
+        "id": "023-product-and-book-co-type-01",
+        "path": "tests/fixtures/search_gallery/merchant-listing/jsonld/023-product-and-book-co-type-01.jsonld",
+        "source_kind": "pre",
+        "label": "Product and Book co-type"
+      },
+      {
+        "id": "026-linked-return-policy-json-ld-example-01",
+        "path": "tests/fixtures/search_gallery/merchant-listing/jsonld/026-linked-return-policy-json-ld-example-01.jsonld",
+        "source_kind": "pre",
+        "label": "linked return policy json-ld example"
+      },
+      {
+        "id": "027-linked-shipping-policy-json-ld-example-01",
+        "path": "tests/fixtures/search_gallery/merchant-listing/jsonld/027-linked-shipping-policy-json-ld-example-01.jsonld",
+        "source_kind": "pre",
+        "label": "linked shipping policy json-ld example"
+      },
+      {
+        "id": "pg-001",
+        "path": "tests/fixtures/search_gallery/merchant-listing/jsonld/pg-001.jsonld",
+        "source_kind": "page_script",
+        "label": "page-script-001"
+      }
+    ]
+  },
+  "product-variants": {
+    "url": "https://developers.google.com/search/docs/appearance/structured-data/product-variants",
+    "raw_samples": [
+      "tests/fixtures/search_gallery/product-variants/raw/001-nested-under-productgroup.txt",
+      "tests/fixtures/search_gallery/product-variants/raw/002-variants-separate-from-productgroup.txt",
+      "tests/fixtures/search_gallery/product-variants/raw/003-markup-on-first-page-with-two-lightblue-variants.txt",
+      "tests/fixtures/search_gallery/product-variants/raw/004-markup-on-second-page-with-one-green-variant.txt",
+      "tests/fixtures/search_gallery/product-variants/raw/005-markup-on-first-page-with-two-lightblue-variants.txt",
+      "tests/fixtures/search_gallery/product-variants/raw/006-markup-on-second-page-with-one-green-variant.txt",
+      "tests/fixtures/search_gallery/product-variants/raw/ta-001.html",
+      "tests/fixtures/search_gallery/product-variants/raw/ta-002.html",
+      "tests/fixtures/search_gallery/product-variants/raw/ta-003.html",
+      "tests/fixtures/search_gallery/product-variants/raw/ta-004.html",
+      "tests/fixtures/search_gallery/product-variants/raw/ta-005.html",
+      "tests/fixtures/search_gallery/product-variants/raw/ta-006.html"
+    ],
+    "jsonld_samples": [
+      {
+        "id": "001-nested-under-productgroup-01",
+        "path": "tests/fixtures/search_gallery/product-variants/jsonld/001-nested-under-productgroup-01.jsonld",
+        "source_kind": "pre",
+        "label": "Nested under ProductGroup"
+      },
+      {
+        "id": "002-variants-separate-from-productgroup-01",
+        "path": "tests/fixtures/search_gallery/product-variants/jsonld/002-variants-separate-from-productgroup-01.jsonld",
+        "source_kind": "pre",
+        "label": "Variants separate from ProductGroup"
+      },
+      {
+        "id": "003-markup-on-first-page-with-two-lightblue-variants-01",
+        "path": "tests/fixtures/search_gallery/product-variants/jsonld/003-markup-on-first-page-with-two-lightblue-variants-01.jsonld",
+        "source_kind": "pre",
+        "label": "Markup on first page (with two lightblue variants)"
+      },
+      {
+        "id": "004-markup-on-second-page-with-one-green-variant-01",
+        "path": "tests/fixtures/search_gallery/product-variants/jsonld/004-markup-on-second-page-with-one-green-variant-01.jsonld",
+        "source_kind": "pre",
+        "label": "Markup on second page (with one green variant)"
+      },
+      {
+        "id": "005-markup-on-first-page-with-two-lightblue-variants-01",
+        "path": "tests/fixtures/search_gallery/product-variants/jsonld/005-markup-on-first-page-with-two-lightblue-variants-01.jsonld",
+        "source_kind": "pre",
+        "label": "Markup on first page (with two lightblue variants)"
+      },
+      {
+        "id": "006-markup-on-second-page-with-one-green-variant-01",
+        "path": "tests/fixtures/search_gallery/product-variants/jsonld/006-markup-on-second-page-with-one-green-variant-01.jsonld",
+        "source_kind": "pre",
+        "label": "Markup on second page (with one green variant)"
+      },
+      {
+        "id": "pg-001",
+        "path": "tests/fixtures/search_gallery/product-variants/jsonld/pg-001.jsonld",
+        "source_kind": "page_script",
+        "label": "page-script-001"
+      }
+    ]
+  },
+  "loyalty-program": {
+    "url": "https://developers.google.com/search/docs/appearance/structured-data/loyalty-program",
+    "raw_samples": [
+      "tests/fixtures/search_gallery/loyalty-program/raw/001-return-policy.txt",
+      "tests/fixtures/search_gallery/loyalty-program/raw/002-creditcard-required.txt",
+      "tests/fixtures/search_gallery/loyalty-program/raw/003-minimum-spending.txt",
+      "tests/fixtures/search_gallery/loyalty-program/raw/004-periodic-fee.txt",
+      "tests/fixtures/search_gallery/loyalty-program/raw/005-other-requirement.txt",
+      "tests/fixtures/search_gallery/loyalty-program/raw/ta-001.html"
+    ],
+    "jsonld_samples": [
+      {
+        "id": "001-return-policy-01",
+        "path": "tests/fixtures/search_gallery/loyalty-program/jsonld/001-return-policy-01.jsonld",
+        "source_kind": "pre",
+        "label": "Return policy"
+      },
+      {
+        "id": "pg-001",
+        "path": "tests/fixtures/search_gallery/loyalty-program/jsonld/pg-001.jsonld",
+        "source_kind": "page_script",
+        "label": "page-script-001"
+      }
+    ]
+  },
+  "return-policy": {
+    "url": "https://developers.google.com/search/docs/appearance/structured-data/return-policy",
+    "raw_samples": [
+      "tests/fixtures/search_gallery/return-policy/raw/001-organization-returns.txt",
+      "tests/fixtures/search_gallery/return-policy/raw/002-returns-full.txt",
+      "tests/fixtures/search_gallery/return-policy/raw/003-seasonal-override-example.txt",
+      "tests/fixtures/search_gallery/return-policy/raw/004-multiple-seasonal-override-example.txt",
+      "tests/fixtures/search_gallery/return-policy/raw/ta-001.html"
+    ],
+    "jsonld_samples": [
+      {
+        "id": "001-organization-returns-01",
+        "path": "tests/fixtures/search_gallery/return-policy/jsonld/001-organization-returns-01.jsonld",
+        "source_kind": "pre",
+        "label": "organization returns"
+      },
+      {
+        "id": "002-returns-full-01",
+        "path": "tests/fixtures/search_gallery/return-policy/jsonld/002-returns-full-01.jsonld",
+        "source_kind": "pre",
+        "label": "returns full"
+      },
+      {
+        "id": "pg-001",
+        "path": "tests/fixtures/search_gallery/return-policy/jsonld/pg-001.jsonld",
+        "source_kind": "page_script",
+        "label": "page-script-001"
+      }
+    ]
+  },
+  "shipping-policy": {
+    "url": "https://developers.google.com/search/docs/appearance/structured-data/shipping-policy",
+    "raw_samples": [
+      "tests/fixtures/search_gallery/shipping-policy/raw/001-shipping-policy-basic.txt",
+      "tests/fixtures/search_gallery/shipping-policy/raw/002-mc-member-program-and-tier.txt",
+      "tests/fixtures/search_gallery/shipping-policy/raw/003-mc-member-program-and-tier.txt",
+      "tests/fixtures/search_gallery/shipping-policy/raw/004-shipping-handling-time-example.txt",
+      "tests/fixtures/search_gallery/shipping-policy/raw/005-shipping-business-days-example.txt",
+      "tests/fixtures/search_gallery/shipping-policy/raw/ta-001.html"
+    ],
+    "jsonld_samples": [
+      {
+        "id": "001-shipping-policy-basic-01",
+        "path": "tests/fixtures/search_gallery/shipping-policy/jsonld/001-shipping-policy-basic-01.jsonld",
+        "source_kind": "pre",
+        "label": "shipping policy basic"
+      },
+      {
+        "id": "pg-001",
+        "path": "tests/fixtures/search_gallery/shipping-policy/jsonld/pg-001.jsonld",
+        "source_kind": "page_script",
+        "label": "page-script-001"
+      }
+    ]
+  },
+  "profile-page": {
+    "url": "https://developers.google.com/search/docs/appearance/structured-data/profile-page",
+    "raw_samples": [
+      "tests/fixtures/search_gallery/profile-page/raw/001-json-ld-example-of-valid-profile-page-markup.txt",
+      "tests/fixtures/search_gallery/profile-page/raw/002-microdata-example-of-valid-profile-page-markup.txt",
+      "tests/fixtures/search_gallery/profile-page/raw/003-json-ld-example-how-to-include-recent-creator-articles.txt",
+      "tests/fixtures/search_gallery/profile-page/raw/004-multiple-images-example-in-json-ld.txt",
+      "tests/fixtures/search_gallery/profile-page/raw/ta-001.html",
+      "tests/fixtures/search_gallery/profile-page/raw/ta-002.html"
+    ],
+    "jsonld_samples": [
+      {
+        "id": "001-json-ld-example-of-valid-profile-page-markup-01",
+        "path": "tests/fixtures/search_gallery/profile-page/jsonld/001-json-ld-example-of-valid-profile-page-markup-01.jsonld",
+        "source_kind": "pre",
+        "label": "JSON-LD example of valid profile page markup"
+      },
+      {
+        "id": "003-json-ld-example-how-to-include-recent-creator-articles-01",
+        "path": "tests/fixtures/search_gallery/profile-page/jsonld/003-json-ld-example-how-to-include-recent-creator-articles-01.jsonld",
+        "source_kind": "pre",
+        "label": "JSON-LD example how to include recent creator articles"
+      },
+      {
+        "id": "pg-001",
+        "path": "tests/fixtures/search_gallery/profile-page/jsonld/pg-001.jsonld",
+        "source_kind": "page_script",
+        "label": "page-script-001"
+      }
+    ]
+  },
+  "qapage": {
+    "url": "https://developers.google.com/search/docs/appearance/structured-data/qapage",
+    "raw_samples": [
+      "tests/fixtures/search_gallery/qapage/raw/001-json-ld-example-showing-valid-q-a-page-markup.txt",
+      "tests/fixtures/search_gallery/qapage/raw/002-microdata-example-showing-valid-q-a-page-markup.txt",
+      "tests/fixtures/search_gallery/qapage/raw/ta-001.html",
+      "tests/fixtures/search_gallery/qapage/raw/ta-002.html"
+    ],
+    "jsonld_samples": [
+      {
+        "id": "001-json-ld-example-showing-valid-q-a-page-markup-01",
+        "path": "tests/fixtures/search_gallery/qapage/jsonld/001-json-ld-example-showing-valid-q-a-page-markup-01.jsonld",
+        "source_kind": "pre",
+        "label": "JSON-LD example showing valid Q&A Page markup"
+      },
+      {
+        "id": "pg-001",
+        "path": "tests/fixtures/search_gallery/qapage/jsonld/pg-001.jsonld",
+        "source_kind": "page_script",
+        "label": "page-script-001"
+      }
+    ]
+  },
+  "recipe": {
+    "url": "https://developers.google.com/search/docs/appearance/structured-data/recipe",
+    "raw_samples": [
+      "tests/fixtures/search_gallery/recipe/raw/001-recipe-markup-in-json-ld.txt",
+      "tests/fixtures/search_gallery/recipe/raw/002-recipe-carousel-markup-in-json-ld.txt",
+      "tests/fixtures/search_gallery/recipe/raw/003-multiple-images-example-in-json-ld.txt",
+      "tests/fixtures/search_gallery/recipe/raw/004-not-recommended-keywords-property.txt",
+      "tests/fixtures/search_gallery/recipe/raw/005-recommended-keywords-property.txt",
+      "tests/fixtures/search_gallery/recipe/raw/006-recipeingredient-property.txt",
+      "tests/fixtures/search_gallery/recipe/raw/007-recipeinstructions-property.txt",
+      "tests/fixtures/search_gallery/recipe/raw/008-recipeinstructions-property-with-block-of-text.txt",
+      "tests/fixtures/search_gallery/recipe/raw/009-not-recommended-recipeinstructions-property.txt",
+      "tests/fixtures/search_gallery/recipe/raw/010-recommended-recipeinstructions-property.txt",
+      "tests/fixtures/search_gallery/recipe/raw/011-recipeyield-property.txt",
+      "tests/fixtures/search_gallery/recipe/raw/012-howtostep-properties.txt",
+      "tests/fixtures/search_gallery/recipe/raw/013-not-recommended-howtostep-property.txt",
+      "tests/fixtures/search_gallery/recipe/raw/014-recommended-howtostep-property.txt",
+      "tests/fixtures/search_gallery/recipe/raw/015-position-property.txt",
+      "tests/fixtures/search_gallery/recipe/raw/ta-001.html",
+      "tests/fixtures/search_gallery/recipe/raw/ta-002.html"
+    ],
+    "jsonld_samples": [
+      {
+        "id": "001-recipe-markup-in-json-ld-01",
+        "path": "tests/fixtures/search_gallery/recipe/jsonld/001-recipe-markup-in-json-ld-01.jsonld",
+        "source_kind": "pre",
+        "label": "Recipe markup in JSON-LD"
+      },
+      {
+        "id": "002-recipe-carousel-markup-in-json-ld-01",
+        "path": "tests/fixtures/search_gallery/recipe/jsonld/002-recipe-carousel-markup-in-json-ld-01.jsonld",
+        "source_kind": "pre",
+        "label": "Recipe carousel markup in JSON-LD"
+      },
+      {
+        "id": "012-howtostep-properties-01",
+        "path": "tests/fixtures/search_gallery/recipe/jsonld/012-howtostep-properties-01.jsonld",
+        "source_kind": "pre",
+        "label": "HowToStep properties"
+      },
+      {
+        "id": "013-not-recommended-howtostep-property-01",
+        "path": "tests/fixtures/search_gallery/recipe/jsonld/013-not-recommended-howtostep-property-01.jsonld",
+        "source_kind": "pre",
+        "label": "Not recommended HowToStep property"
+      },
+      {
+        "id": "014-recommended-howtostep-property-01",
+        "path": "tests/fixtures/search_gallery/recipe/jsonld/014-recommended-howtostep-property-01.jsonld",
+        "source_kind": "pre",
+        "label": "Recommended HowToStep property"
+      },
+      {
+        "id": "pg-001",
+        "path": "tests/fixtures/search_gallery/recipe/jsonld/pg-001.jsonld",
+        "source_kind": "page_script",
+        "label": "page-script-001"
+      }
+    ]
+  },
+  "review-snippet": {
+    "url": "https://developers.google.com/search/docs/appearance/structured-data/review-snippet",
+    "raw_samples": [
+      "tests/fixtures/search_gallery/review-snippet/raw/001-simple-review-in-json-ld.txt",
+      "tests/fixtures/search_gallery/review-snippet/raw/002-simple-review-in-rdfa.txt",
+      "tests/fixtures/search_gallery/review-snippet/raw/003-simple-review-in-microdata.txt",
+      "tests/fixtures/search_gallery/review-snippet/raw/004-nested-review-in-json-ld.txt",
+      "tests/fixtures/search_gallery/review-snippet/raw/005-nested-review-in-rdfa.txt",
+      "tests/fixtures/search_gallery/review-snippet/raw/006-nested-review-in-microdata.txt",
+      "tests/fixtures/search_gallery/review-snippet/raw/007-aggregate-rating-in-json-ld.txt",
+      "tests/fixtures/search_gallery/review-snippet/raw/008-aggregate-rating-in-rdfa.txt",
+      "tests/fixtures/search_gallery/review-snippet/raw/009-aggregate-rating-in-microdata.txt",
+      "tests/fixtures/search_gallery/review-snippet/raw/010-nested-aggregate-rating-in-json-ld.txt",
+      "tests/fixtures/search_gallery/review-snippet/raw/011-nested-aggregate-rating-in-rdfa.txt",
+      "tests/fixtures/search_gallery/review-snippet/raw/012-nested-aggregate-rating-in-microdata.txt",
+      "tests/fixtures/search_gallery/review-snippet/raw/013-name-of-the-reviewed-item.txt",
+      "tests/fixtures/search_gallery/review-snippet/raw/014-overriding-the-visible-content-in-markup.txt",
+      "tests/fixtures/search_gallery/review-snippet/raw/015-name-of-the-reviewed-item.txt",
+      "tests/fixtures/search_gallery/review-snippet/raw/ta-001.html",
+      "tests/fixtures/search_gallery/review-snippet/raw/ta-002.html",
+      "tests/fixtures/search_gallery/review-snippet/raw/ta-003.html",
+      "tests/fixtures/search_gallery/review-snippet/raw/ta-004.html",
+      "tests/fixtures/search_gallery/review-snippet/raw/ta-005.html",
+      "tests/fixtures/search_gallery/review-snippet/raw/ta-006.html",
+      "tests/fixtures/search_gallery/review-snippet/raw/ta-007.html",
+      "tests/fixtures/search_gallery/review-snippet/raw/ta-008.html",
+      "tests/fixtures/search_gallery/review-snippet/raw/ta-009.html",
+      "tests/fixtures/search_gallery/review-snippet/raw/ta-010.html",
+      "tests/fixtures/search_gallery/review-snippet/raw/ta-011.html",
+      "tests/fixtures/search_gallery/review-snippet/raw/ta-012.html"
+    ],
+    "jsonld_samples": [
+      {
+        "id": "001-simple-review-in-json-ld-01",
+        "path": "tests/fixtures/search_gallery/review-snippet/jsonld/001-simple-review-in-json-ld-01.jsonld",
+        "source_kind": "pre",
+        "label": "Simple review in JSON-LD"
+      },
+      {
+        "id": "004-nested-review-in-json-ld-01",
+        "path": "tests/fixtures/search_gallery/review-snippet/jsonld/004-nested-review-in-json-ld-01.jsonld",
+        "source_kind": "pre",
+        "label": "Nested review in JSON-LD"
+      },
+      {
+        "id": "007-aggregate-rating-in-json-ld-01",
+        "path": "tests/fixtures/search_gallery/review-snippet/jsonld/007-aggregate-rating-in-json-ld-01.jsonld",
+        "source_kind": "pre",
+        "label": "Aggregate rating in JSON-LD"
+      },
+      {
+        "id": "010-nested-aggregate-rating-in-json-ld-01",
+        "path": "tests/fixtures/search_gallery/review-snippet/jsonld/010-nested-aggregate-rating-in-json-ld-01.jsonld",
+        "source_kind": "pre",
+        "label": "Nested aggregate rating in JSON-LD"
+      },
+      {
+        "id": "013-name-of-the-reviewed-item-01",
+        "path": "tests/fixtures/search_gallery/review-snippet/jsonld/013-name-of-the-reviewed-item-01.jsonld",
+        "source_kind": "pre",
+        "label": "Name of the reviewed item"
+      },
+      {
+        "id": "015-name-of-the-reviewed-item-01",
+        "path": "tests/fixtures/search_gallery/review-snippet/jsonld/015-name-of-the-reviewed-item-01.jsonld",
+        "source_kind": "pre",
+        "label": "Name of the reviewed item"
+      },
+      {
+        "id": "pg-001",
+        "path": "tests/fixtures/search_gallery/review-snippet/jsonld/pg-001.jsonld",
+        "source_kind": "page_script",
+        "label": "page-script-001"
+      }
+    ]
+  },
+  "software-app": {
+    "url": "https://developers.google.com/search/docs/appearance/structured-data/software-app",
+    "raw_samples": [
+      "tests/fixtures/search_gallery/software-app/raw/001-software-app-in-json-ld.txt",
+      "tests/fixtures/search_gallery/software-app/raw/002-software-app-in-rdfa.txt",
+      "tests/fixtures/search_gallery/software-app/raw/003-software-app-in-microdata.txt",
+      "tests/fixtures/search_gallery/software-app/raw/004-price-property-set-to-0.txt",
+      "tests/fixtures/search_gallery/software-app/raw/005-price-property-with-currency.txt",
+      "tests/fixtures/search_gallery/software-app/raw/006-software-app-co-typed-with-mobileapplication.txt",
+      "tests/fixtures/search_gallery/software-app/raw/ta-001.html",
+      "tests/fixtures/search_gallery/software-app/raw/ta-002.html",
+      "tests/fixtures/search_gallery/software-app/raw/ta-003.html"
+    ],
+    "jsonld_samples": [
+      {
+        "id": "001-software-app-in-json-ld-01",
+        "path": "tests/fixtures/search_gallery/software-app/jsonld/001-software-app-in-json-ld-01.jsonld",
+        "source_kind": "pre",
+        "label": "Software app in JSON-LD"
+      },
+      {
+        "id": "pg-001",
+        "path": "tests/fixtures/search_gallery/software-app/jsonld/pg-001.jsonld",
+        "source_kind": "page_script",
+        "label": "page-script-001"
+      }
+    ]
+  },
+  "speakable": {
+    "url": "https://developers.google.com/search/docs/appearance/structured-data/speakable",
+    "raw_samples": [
+      "tests/fixtures/search_gallery/speakable/raw/001-speakable-markup-in-json-ld.txt",
+      "tests/fixtures/search_gallery/speakable/raw/002-speakable-cssselector-property.txt",
+      "tests/fixtures/search_gallery/speakable/raw/003-speakable-xpath-property.txt"
+    ],
+    "jsonld_samples": [
+      {
+        "id": "001-speakable-markup-in-json-ld-01",
+        "path": "tests/fixtures/search_gallery/speakable/jsonld/001-speakable-markup-in-json-ld-01.jsonld",
+        "source_kind": "pre",
+        "label": "Speakable markup in JSON-LD"
+      },
+      {
+        "id": "pg-001",
+        "path": "tests/fixtures/search_gallery/speakable/jsonld/pg-001.jsonld",
+        "source_kind": "page_script",
+        "label": "page-script-001"
+      }
+    ]
+  },
+  "paywalled-content": {
+    "url": "https://developers.google.com/search/docs/appearance/structured-data/paywalled-content",
+    "raw_samples": [
+      "tests/fixtures/search_gallery/paywalled-content/raw/001-paywalled-markup-example-in-json-ld.txt",
+      "tests/fixtures/search_gallery/paywalled-content/raw/002-adding-class-names-to-paywalled-sections.txt",
+      "tests/fixtures/search_gallery/paywalled-content/raw/003-adding-paywalled-structured-data.txt",
+      "tests/fixtures/search_gallery/paywalled-content/raw/004-multiple-paywalled-sections-with-class-names.txt",
+      "tests/fixtures/search_gallery/paywalled-content/raw/005-multiple-paywalled-sections-with-structured-data.txt",
+      "tests/fixtures/search_gallery/paywalled-content/raw/ta-001.html"
+    ],
+    "jsonld_samples": [
+      {
+        "id": "001-paywalled-markup-example-in-json-ld-01",
+        "path": "tests/fixtures/search_gallery/paywalled-content/jsonld/001-paywalled-markup-example-in-json-ld-01.jsonld",
+        "source_kind": "pre",
+        "label": "Paywalled markup example in JSON-LD"
+      },
+      {
+        "id": "pg-001",
+        "path": "tests/fixtures/search_gallery/paywalled-content/jsonld/pg-001.jsonld",
+        "source_kind": "page_script",
+        "label": "page-script-001"
+      }
+    ]
+  },
+  "vacation-rental": {
+    "url": "https://developers.google.com/search/docs/appearance/structured-data/vacation-rental",
+    "raw_samples": [
+      "tests/fixtures/search_gallery/vacation-rental/raw/001-vacation-rental-listing-page.txt",
+      "tests/fixtures/search_gallery/vacation-rental/raw/002-occupancy-example.txt",
+      "tests/fixtures/search_gallery/vacation-rental/raw/003-postal-address-example.txt",
+      "tests/fixtures/search_gallery/vacation-rental/raw/004-brand-example.txt",
+      "tests/fixtures/search_gallery/vacation-rental/raw/005-amenityfeature-example.txt",
+      "tests/fixtures/search_gallery/vacation-rental/raw/006-amenityfeature-example.txt",
+      "tests/fixtures/search_gallery/vacation-rental/raw/007-internet-type-example.txt",
+      "tests/fixtures/search_gallery/vacation-rental/raw/008-parking-type-example.txt",
+      "tests/fixtures/search_gallery/vacation-rental/raw/009-pool-type-example.txt",
+      "tests/fixtures/search_gallery/vacation-rental/raw/010-pool-type-example.txt",
+      "tests/fixtures/search_gallery/vacation-rental/raw/011-beddetails-example.txt",
+      "tests/fixtures/search_gallery/vacation-rental/raw/012-beddetails-example.txt",
+      "tests/fixtures/search_gallery/vacation-rental/raw/013-review-example.txt",
+      "tests/fixtures/search_gallery/vacation-rental/raw/ta-001.html"
+    ],
+    "jsonld_samples": [
+      {
+        "id": "001-vacation-rental-listing-page-01",
+        "path": "tests/fixtures/search_gallery/vacation-rental/jsonld/001-vacation-rental-listing-page-01.jsonld",
+        "source_kind": "pre",
+        "label": "Vacation Rental Listing Page"
+      },
+      {
+        "id": "pg-001",
+        "path": "tests/fixtures/search_gallery/vacation-rental/jsonld/pg-001.jsonld",
+        "source_kind": "page_script",
+        "label": "page-script-001"
+      }
+    ]
+  },
+  "video": {
+    "url": "https://developers.google.com/search/docs/appearance/structured-data/video",
+    "raw_samples": [
+      "tests/fixtures/search_gallery/video/raw/001-single-video-in-json-ld.txt",
+      "tests/fixtures/search_gallery/video/raw/002-single-video-in-microdata.txt",
+      "tests/fixtures/search_gallery/video/raw/003-livestreaming-video-in-json-ld.txt",
+      "tests/fixtures/search_gallery/video/raw/004-livestreaming-video-in-microdata.txt",
+      "tests/fixtures/search_gallery/video/raw/005-video-with-clips-in-json-ld.txt",
+      "tests/fixtures/search_gallery/video/raw/006-video-with-clips-in-microdata.txt",
+      "tests/fixtures/search_gallery/video/raw/007-video-with-seektoaction-in-json-ld.txt",
+      "tests/fixtures/search_gallery/video/raw/008-video-with-seektoaction-in-microdata.txt",
+      "tests/fixtures/search_gallery/video/raw/009-contenturl-property.txt",
+      "tests/fixtures/search_gallery/video/raw/010-embedurl-property.txt",
+      "tests/fixtures/search_gallery/video/raw/011-video-with-one-clip.txt",
+      "tests/fixtures/search_gallery/video/raw/012-interactionstatistic-property.txt",
+      "tests/fixtures/search_gallery/video/raw/013-livestreaming-video.txt",
+      "tests/fixtures/search_gallery/video/raw/014-url-property.txt",
+      "tests/fixtures/search_gallery/video/raw/015-potentialaction-property.txt",
+      "tests/fixtures/search_gallery/video/raw/016-startoffset-input-property.txt",
+      "tests/fixtures/search_gallery/video/raw/017-placeholder-string-for-potentialaction.txt",
+      "tests/fixtures/search_gallery/video/raw/018-target-property-highlighting-the-timestamp.txt",
+      "tests/fixtures/search_gallery/video/raw/019-target-property-with-a-placeholder-string.txt",
+      "tests/fixtures/search_gallery/video/raw/ta-001.html",
+      "tests/fixtures/search_gallery/video/raw/ta-002.html",
+      "tests/fixtures/search_gallery/video/raw/ta-003.html",
+      "tests/fixtures/search_gallery/video/raw/ta-004.html",
+      "tests/fixtures/search_gallery/video/raw/ta-005.html",
+      "tests/fixtures/search_gallery/video/raw/ta-006.html",
+      "tests/fixtures/search_gallery/video/raw/ta-007.html",
+      "tests/fixtures/search_gallery/video/raw/ta-008.html"
+    ],
+    "jsonld_samples": [
+      {
+        "id": "001-single-video-in-json-ld-01",
+        "path": "tests/fixtures/search_gallery/video/jsonld/001-single-video-in-json-ld-01.jsonld",
+        "source_kind": "pre",
+        "label": "Single video in JSON-LD"
+      },
+      {
+        "id": "003-livestreaming-video-in-json-ld-01",
+        "path": "tests/fixtures/search_gallery/video/jsonld/003-livestreaming-video-in-json-ld-01.jsonld",
+        "source_kind": "pre",
+        "label": "Livestreaming video in JSON-LD"
+      },
+      {
+        "id": "005-video-with-clips-in-json-ld-01",
+        "path": "tests/fixtures/search_gallery/video/jsonld/005-video-with-clips-in-json-ld-01.jsonld",
+        "source_kind": "pre",
+        "label": "Video with clips in JSON-LD"
+      },
+      {
+        "id": "007-video-with-seektoaction-in-json-ld-01",
+        "path": "tests/fixtures/search_gallery/video/jsonld/007-video-with-seektoaction-in-json-ld-01.jsonld",
+        "source_kind": "pre",
+        "label": "Video with SeekToAction in JSON-LD"
+      },
+      {
+        "id": "011-video-with-one-clip-01",
+        "path": "tests/fixtures/search_gallery/video/jsonld/011-video-with-one-clip-01.jsonld",
+        "source_kind": "pre",
+        "label": "video with one clip"
+      },
+      {
+        "id": "013-livestreaming-video-01",
+        "path": "tests/fixtures/search_gallery/video/jsonld/013-livestreaming-video-01.jsonld",
+        "source_kind": "pre",
+        "label": "livestreaming video"
+      },
+      {
+        "id": "015-potentialaction-property-01",
+        "path": "tests/fixtures/search_gallery/video/jsonld/015-potentialaction-property-01.jsonld",
+        "source_kind": "pre",
+        "label": "potentialAction property"
+      },
+      {
+        "id": "pg-001",
+        "path": "tests/fixtures/search_gallery/video/jsonld/pg-001.jsonld",
+        "source_kind": "page_script",
+        "label": "page-script-001"
+      }
+    ]
+  },
+  "carousels-beta": {
+    "url": "https://developers.google.com/search/docs/appearance/structured-data/carousels-beta",
+    "raw_samples": [
+      "tests/fixtures/search_gallery/carousels-beta/raw/001-high-level-carousel-structure.txt",
+      "tests/fixtures/search_gallery/carousels-beta/raw/002-multiple-images-example-in-json-ld.txt",
+      "tests/fixtures/search_gallery/carousels-beta/raw/003-rating-value-example.txt",
+      "tests/fixtures/search_gallery/carousels-beta/raw/004-amenity-feature-example.txt",
+      "tests/fixtures/search_gallery/carousels-beta/raw/005-event-price.txt",
+      "tests/fixtures/search_gallery/carousels-beta/raw/006-restaurant-carousel.txt",
+      "tests/fixtures/search_gallery/carousels-beta/raw/007-lodging-carousel.txt",
+      "tests/fixtures/search_gallery/carousels-beta/raw/008-things-to-do-carousel.txt",
+      "tests/fixtures/search_gallery/carousels-beta/raw/009-product-carousel.txt",
+      "tests/fixtures/search_gallery/carousels-beta/raw/ta-001.html",
+      "tests/fixtures/search_gallery/carousels-beta/raw/ta-002.html",
+      "tests/fixtures/search_gallery/carousels-beta/raw/ta-003.html",
+      "tests/fixtures/search_gallery/carousels-beta/raw/ta-004.html",
+      "tests/fixtures/search_gallery/carousels-beta/raw/ta-005.html"
+    ],
+    "jsonld_samples": [
+      {
+        "id": "001-high-level-carousel-structure-01",
+        "path": "tests/fixtures/search_gallery/carousels-beta/jsonld/001-high-level-carousel-structure-01.jsonld",
+        "source_kind": "pre",
+        "label": "High-level carousel structure"
+      },
+      {
+        "id": "006-restaurant-carousel-01",
+        "path": "tests/fixtures/search_gallery/carousels-beta/jsonld/006-restaurant-carousel-01.jsonld",
+        "source_kind": "pre",
+        "label": "Restaurant carousel"
+      },
+      {
+        "id": "007-lodging-carousel-01",
+        "path": "tests/fixtures/search_gallery/carousels-beta/jsonld/007-lodging-carousel-01.jsonld",
+        "source_kind": "pre",
+        "label": "Lodging carousel"
+      },
+      {
+        "id": "008-things-to-do-carousel-01",
+        "path": "tests/fixtures/search_gallery/carousels-beta/jsonld/008-things-to-do-carousel-01.jsonld",
+        "source_kind": "pre",
+        "label": "Things to do carousel"
+      },
+      {
+        "id": "009-product-carousel-01",
+        "path": "tests/fixtures/search_gallery/carousels-beta/jsonld/009-product-carousel-01.jsonld",
+        "source_kind": "pre",
+        "label": "Product carousel"
+      },
+      {
+        "id": "pg-001",
+        "path": "tests/fixtures/search_gallery/carousels-beta/jsonld/pg-001.jsonld",
+        "source_kind": "page_script",
+        "label": "page-script-001"
+      }
+    ]
+  }
+}

@@ -1,0 +1,6 @@
+"hiringOrganization": {
+  "@type": "Organization",
+  "name": "MagsRUs Wheel Company",
+  "sameAs": "http://www.magsruswheelcompany.com",
+  "logo": "https://www.example.com/images/logo.png"
+}

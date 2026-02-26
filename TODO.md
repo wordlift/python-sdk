@@ -1,5 +1,16 @@
 # TODO
 
+- [x] 2026-02-26 Make `google-image-license-metadata` opt-in in default bundled validation shape resolution (`validate_file`/`validate_jsonld_from_url` via default `shape_specs` paths).
+- [x] 2026-02-26 Add Search Gallery SHACL quality gates: per-page baseline conformance diff (`tests/tools/search_gallery_conformance_diff.py`) and explicit known non-conforming sample expectations.
+- [x] 2026-02-26 Add SHACL sanity lint checks for generated Google shapes (missing `sh:targetClass`, unknown `schema:` properties with pseudo-property allowlist).
+- [x] 2026-02-26 Add CI test workflow (`.github/workflows/tests.yml`) to run pytest+coverage and fail on Search Gallery conformance regressions.
+- [x] 2026-02-26 Extract Search Gallery code samples for all discovered feature pages into `tests/fixtures/search_gallery` and add validation coverage over generated JSON-LD fixtures.
+- [x] 2026-02-26 Prevent SHACL generator from converting paragraph "one of the following values" enum lists into property `sh:or` alternatives (job-posting regression fix).
+- [x] 2026-02-26 Downgrade conditionally required Google sections ("required when/if", "only required if") to warnings to avoid unconditional SHACL errors (return-policy regression fix).
+- [x] 2026-02-26 Publish Search Gallery SHACL page-by-page review artifact at `docs/search_gallery_shacl_review.md` with old-vs-new sample conformance status.
+- [x] 2026-02-26 Harden Google SHACL generator type-context extraction for Search Gallery pages (explicit type-definition prose + scoped plain headings) to prevent example-markup type bleed and restore expected Article/Education-QA mappings.
+- [x] 2026-02-26 Fix SHACL generator type-context bleed from paragraph schema links by using primary paragraph type only, preventing nested example types (for example `Person`) from getting feature-level required constraints.
+- [x] 2026-02-26 Fix Google image license metadata SHACL parsing so required `contentUrl` rows with documented `url` fallback emit `sh:or` (`contentUrl` or `url`).
 - [x] 2026-02-25 Fix SHACL generator Google-table parsing for option branches (`Option A`/`Option B`) and prevent enum URL literals from being emitted as property alternatives.
 - [x] 2026-02-25 Add SDK-level SHACL shape composition helpers (`resolve_shape_specs`) plus stable issue extraction/filtering (`rule_id`, `rule_set`) for host-provided validation UX/CLI layers.
 - [x] 2026-02-25 Add per-node `seovoc:importHash` handling in `kg_build` patching (hash excludes `seovoc:importHash`, node value is updated before patch, unchanged nodes with matching provided hash are skipped).

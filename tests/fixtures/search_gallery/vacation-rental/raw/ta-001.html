@@ -1,0 +1,130 @@
+<html>
+  <head>
+    <title>My Beautiful Vacation Rental</title>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "VacationRental",
+        "additionalType": "HolidayVillageRental",
+        "brand": {
+          "@type": "Brand",
+          "name": "brandIdName"
+        },
+        "containsPlace": {
+          "@type": "Accommodation",
+          "additionalType": "EntirePlace",
+          "bed": [{
+            "@type": "BedDetails",
+            "numberOfBeds" : 1,
+            "typeOfBed": "Queen"
+          },
+          {
+            "@type": "BedDetails",
+            "numberOfBeds" : 2,
+            "typeOfBed": "Single"
+          }],
+         "occupancy": {
+            "@type": "QuantitativeValue",
+            "value" : 2
+          },
+          "amenityFeature": [
+            {
+              "@type": "LocationFeatureSpecification",
+              "name": "ac",
+              "value": true
+            },
+            {
+              "@type": "LocationFeatureSpecification",
+              "name": "airportShuttle",
+              "value": true
+            },
+            {
+             "@type": "LocationFeatureSpecification",
+              "name": "balcony",
+              "value": true
+            },
+            {
+              "@type": "LocationFeatureSpecification",
+              "name": "beachAccess",
+              "value": true
+            },
+            {
+              "@type": "LocationFeatureSpecification",
+              "name": "childFriendly",
+              "value": true
+            }
+          ],
+          "floorSize": {
+            "@type": "QuantitativeValue",
+            "value" : 75,
+            "unitCode": "MTK"
+          },
+          "numberOfBathroomsTotal": 1,
+          "numberOfBedrooms": 3,
+          "numberOfRooms": 5
+        },
+        "identifier": "abc123",
+        "latitude": "42.12345",
+        "longitude": "101.12345",
+        "name": "My Beautiful Vacation Rental",
+        "address": {
+          "addressCountry": "US",
+          "addressLocality": "Mountain View",
+          "addressRegion": "California",
+          "postalCode": "94043",
+          "streetAddress": "1600 Amphitheatre Pkwy, Unit 6E"
+        },
+        "aggregateRating": {
+          "ratingValue": 4.5,
+          "ratingCount": 10,
+          "reviewCount": 3,
+          "bestRating": 5
+        },
+        "image": [
+          "https://example.com/mylisting/unit_image1.png",
+          "https://example.com/mylisting/unit_image2.png",
+          "https://example.com/mylisting/unit_image3.png",
+          "https://example.com/mylisting/unit_image4.png",
+          "https://example.com/mylisting/unit_image5.png",
+          "https://example.com/mylisting/unit_image6.png",
+          "https://example.com/mylisting/unit_image7.png",
+          "https://example.com/mylisting/unit_image8.png"
+        ],
+        "checkinTime": "18:00:00+08:00",
+        "checkoutTime": "11:00:00+08:00",
+        "description": "A great Vacation Rental in the perfect neighborhood.",
+        "knowsLanguage": ["en-US", "fr-FR"],
+        "review": [{
+          "@type": "Review",
+          "reviewRating": {
+            "@type": "Rating",
+            "ratingValue": 4,
+            "bestRating": 5
+          },
+          "author": {
+            "@type": "Person",
+            "name": "Lillian Ruiz"
+          },
+          "datePublished": "2024-12-01",
+          "contentReferenceTime": "2024-11-17"
+        },
+        {
+          "@type": "Review",
+          "reviewRating": {
+            "@type": "Rating",
+            "ratingValue": 5,
+            "bestRating": 5
+          },
+          "author": {
+            "@type": "Person",
+            "name": "John S."
+          },
+          "datePublished": "2024-10-01",
+          "contentReferenceTime": "2024-09-28"
+        }
+      ]
+      }
+    </script>
+  </head>
+  <body></body>
+  </html>

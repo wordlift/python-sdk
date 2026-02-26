@@ -1,0 +1,48 @@
+"potentialAction": {
+  "@type": "ReadAction",
+  "target": [
+    {
+      "@type": "EntryPoint",
+      "urlTemplate": "https://example.com/purchase?bookId=170",
+      "actionPlatform": [
+        "https://schema.org/DesktopWebPlatform"
+      ]
+    },
+    {
+      "@type": "EntryPoint",
+      "urlTemplate": "https://example.com/mobile/purchase?bookId=170",
+      "actionPlatform": [
+        "https://schema.org/AndroidPlatform",
+        "https://schema.org/IOSPlatform"
+      ]
+    }
+  ],
+  "expectsAcceptanceOf": [
+    {
+      "@type": "Offer",
+      "category": "noLoginRequired",
+      "availabilityStarts": "2018-04-01T11:01:00-04:00",
+      "availabilityEnds": "2018-06-30T23:59:00-04:00",
+      "eligibleRegion": [
+        {
+          "@type": "Country",
+          "name": "US"
+        },
+        {
+          "@type": "Country",
+          "name": "GB"
+        }
+      ]
+    },
+    {
+      "@type": "Offer",
+      "category": "Subscription",
+      "availabilityStarts": "2018-04-01T11:01:00-04:00",
+      "availabilityEnds": "2018-06-30T23:59:00-04:00",
+      "eligibleRegion": {
+        "@type": "Country",
+        "name": "IN"
+      }
+    }
+  ]
+}

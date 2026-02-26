@@ -1,0 +1,17 @@
+{
+  "@context": "https://schema.org",
+  "@type": "DiscussionForumPosting",
+  "headline": "Very Popular Thread",
+  "comment": [
+    {
+      "@type": "Comment",
+      "text": "This should not be this popular",
+      "comment": [
+        {
+          "@type": "Comment",
+          "text": "Yes it should"
+        }
+      ]
+    }
+  ]
+}

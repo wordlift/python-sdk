@@ -1,0 +1,8 @@
+"spatialCoverage:" {
+  "@type": "Place",
+  "geo": {
+    "@type": "GeoCoordinates",
+    "latitude": 39.3280,
+    "longitude": 120.1633
+  }
+}

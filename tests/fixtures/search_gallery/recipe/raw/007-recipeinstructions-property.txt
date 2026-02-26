@@ -1,0 +1,39 @@
+"recipeInstructions": [
+  {
+    "@type": "HowToStep",
+    "name": "Preheat",
+    "text": "Heat oven to 425°F.",
+    "url": "https://example.com/recipe#step1",
+    "image": "https://example.com/photos/recipe/step1.jpg"
+  }, {
+    "@type": "HowToStep",
+    "name": "Prepare crust",
+    "text": "Place 1 pie crust in ungreased 9-inch glass pie plate, pressing firmly against side and bottom.",
+    "url": "https://example.com/recipe#step2",
+    "image": "https://example.com/photos/recipe/step2.jpg"
+  }, {
+    "@type": "HowToStep",
+    "name": "Make filling",
+    "text": "In large bowl, gently mix filling ingredients; spoon into crust-lined pie plate.",
+    "url": "https://example.com/recipe#step3",
+    "image": "https://example.com/photos/recipe/step3.jpg"
+  }, {
+    "@type": "HowToStep",
+    "name": "Cover",
+    "text": "Top with second crust. Cut slits or shapes in several places in top crust.",
+    "url": "https://example.com/recipe#step4",
+    "image": "https://example.com/photos/recipe/step4.jpg"
+  }, {
+    "@type": "HowToStep",
+    "name": "Bake",
+    "text": "Bake 40 to 45 minutes. The pie is ready when the apples are tender and the crust is golden brown.",
+    "url": "https://example.com/recipe#step5",
+    "image": "https://example.com/photos/recipe/step5.jpg"
+  }, {
+    "@type": "HowToStep",
+    "name": "Cool",
+    "text": "Cool on cooling rack at least 2 hours before serving.",
+    "url": "https://example.com/recipe#step6",
+    "image": "https://example.com/photos/recipe/step6.jpg"
+  }
+]

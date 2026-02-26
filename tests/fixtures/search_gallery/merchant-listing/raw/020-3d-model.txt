@@ -1,0 +1,29 @@
+{
+  "@context": "https://schema.org/",
+  "@type": "Product",
+  "sku": "1234-5678",
+  "image": "https://www.example.com/sofa.jpg",
+  "name": "Water heater",
+  "description": "White 3-Seat Sofa",
+  "gtin14": "00012345600012",
+  "mpn": "S1234W3",
+  "brand": {
+    "@type": "Brand",
+    "name": "ExampleSofaBrand"
+  },
+  "subjectOf": {
+    "@type": "3DModel",
+    "encoding": {
+      "@type": "MediaObject",
+      "contentUrl": "https://example.com/sofa.gltf"
+    }
+  },
+  "offers": {
+    "@type": "Offer",
+    "url": "https://www.example.com/whitechaiselongue",
+    "itemCondition": "https://schema.org/NewCondition",
+    "availability": "https://schema.org/InStock",
+    "price": 1299.00,
+    "priceCurrency": "USD"
+  }
+}

@@ -1,0 +1,60 @@
+<html>
+    <body>
+      <div id="main-post" itemtype="https://schema.org/DiscussionForumPosting" itemscope>
+        <meta itemprop="mainEntityOfPage" content="https://example.com/post/very-popular-thread" />
+        <meta itemprop="url" content="https://example.com/post/very-popular-thread" />
+        <div class="author-block" itemprop="author" itemtype="https://schema.org/Person" itemscope>
+          <div><a href="https://example.com/user/katie-pope" itemprop="url"><span itemprop="name">Katie Pope</span></a></div>
+          <div itemprop="agentInteractionStatistic" itemtype="https://schema.org/InteractionCounter" itemscope>
+            <span itemprop="userInteractionCount">8</span>
+            <span itemprop="interactionType" content="https://schema.org/WriteAction">posts</span>
+          </div>
+        </div>
+        <div itemprop="datePublished" content="2024-03-01T08:34:34+02:00">March 1</div>
+        <div itemprop="headline">I went to the concert!</div>
+        <div>
+          <div itemprop="video" itemtype="https://schema.org/VideoObject" itemscope>
+            <meta itemprop="name" content="Video of concert" />
+            <meta itemprop="contentUrl" content="https://example.com/media/super-cool-concert.mp4" />
+            <meta itemprop="uploadDate" content="2024-03-01T06:34:34+02:00" />
+            <meta itemprop="thumbnailUrl" content="https://example.com/media/super-cool-concert-snap.jpg" />
+          </div>
+          <span itemprop="text">Look at how cool this concert was!</span>
+        </div>
+        <div itemprop="interactionStatistic" itemtype="https://schema.org/InteractionCounter" itemscope>
+          <span itemprop="userInteractionCount">27</span>
+          <span itemprop="interactionType" content="https://schema.org/LikeAction">likes</span>
+        </div>
+        <div id="comment-1" itemprop="comment" itemtype="https://schema.org/Comment" itemscope>
+          <div class="author-block" itemprop="author" itemtype="https://schema.org/Person" itemscope>
+            <div><a href="https://example.com/user/saul-douglas" itemprop="url"><span itemprop="name">Saul Douglas</span></a></div>
+            <div itemprop="agentInteractionStatistic" itemtype="https://schema.org/InteractionCounter" itemscope>
+              <span itemprop="userInteractionCount">167</span>
+              <span itemprop="interactionType" content="https://schema.org/WriteAction">posts</span>
+            </div>
+          </div>
+          <div itemprop="datePublished" content="2024-03-01T09:46:02+02:00">March 1</div>
+          <div>
+            <span itemprop="text">Who's the person you're with?</span>
+          </div>
+        </div>
+        <div id="comment-2" itemprop="comment" itemtype="https://schema.org/Comment" itemscope>
+          <div class="author-block" itemprop="author" itemtype="https://schema.org/Person" itemscope>
+            <div><a href="https://example.com/user/katie-pope" itemprop="url"><span itemprop="name">Katie Pope</span></a></div>
+            <div itemprop="agentInteractionStatistic" itemtype="https://schema.org/InteractionCounter" itemscope>
+              <span itemprop="userInteractionCount">8</span>
+              <span itemprop="interactionType" content="https://schema.org/WriteAction">posts</span>
+            </div>
+          </div>
+          <div itemprop="datePublished" content="2024-03-01T09:50:25+02:00">March 1</div>
+          <div>
+            <span itemprop="text">That's my mom, isn't she cool?</span>
+          </div>
+          <div itemprop="interactionStatistic" itemtype="https://schema.org/InteractionCounter" itemscope>
+            <span itemprop="userInteractionCount">7</span>
+            <span itemprop="interactionType" content="https://schema.org/LikeAction">likes</span>
+          </div>
+        </div>
+      </div>
+    </body>
+</html>

@@ -1,0 +1,14 @@
+"funder": [
+  {
+    "@type": "Person",
+    "sameAs": "https://orcid.org/0000-0000-0000-0002",
+    "givenName": "Jane",
+    "familyName": "Funder",
+    "name": "Jane Funder"
+  },
+  {
+    "@type": "Organization",
+    "sameAs": "https://ror.org/yyyyyyyyy",
+    "name": "Fictitious Funding Organization"
+  }
+]

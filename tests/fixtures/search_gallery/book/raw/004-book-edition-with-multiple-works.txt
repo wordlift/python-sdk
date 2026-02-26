@@ -1,0 +1,20 @@
+"workExample": [
+        {
+          "@type": "Book",
+          "@id": "https://example.com/book/200",
+          "inLanguage": "zh",
+          "isbn": "9787543321721",
+          "bookEdition": "2nd Edition",
+          "bookFormat": "https://schema.org/Hardcover",
+          "potentialAction": {...}
+        },
+        {
+          "@type": "Book",
+          "@id": "https://example.com/book/300",
+          "inLanguage": "zh",
+          "isbn": "9787543321722",
+          "bookEdition": "1st Edition",
+          "bookFormat": "https://schema.org/EBook",
+          "potentialAction": {...}
+      }
+ ]

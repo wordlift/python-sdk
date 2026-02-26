@@ -1,0 +1,8 @@
+"validForMemberTier": {
+  "@type": "MemberProgramTier",
+  "name": "silver",
+  "isTierOf": {
+    "@type": "MemberProgram",
+    "name": "member-plus"
+  }
+}

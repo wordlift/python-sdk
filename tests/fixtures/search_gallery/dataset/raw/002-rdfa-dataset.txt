@@ -1,0 +1,27 @@
+<article about="/node/1234" typeof="dcat:Dataset">
+    <dl>
+      <dt>Name:</dt>
+      <dd property="dc:title">ACME Inc Cash flow data</dd>
+      <dt>Identifiers:</dt>
+      <dd property="dc:identifier">https://doi.org/10.1000/182</dd>
+      <dd property="dc:identifier">https://identifiers.org/ark:/12345/fk1234</dd>
+      <dt>Description:</dt>
+      <dd property="dc:description">Financial Statements - Consolidated Statement of Cash Flows</dd>
+      <dt>Category:</dt>
+      <dd rel="dc:subject">Financial</dd>
+      <dt class="field-label">Downloads:</dt>
+      <dd>
+        <ul>
+          <li>
+            <a rel="dcat:distribution" href="Consolidated_Statement_of_Cash_Flows_en.csv"><span property="dcat:mediaType" content="text/csv" >Consolidated_Statement_of_Cash_Flows_en.csv</span></a>
+          </li>
+         <li>
+            <a rel="dcat:distribution"  href="files/Consolidated_Statement_of_Cash_Flows_en.xls"><span property="dcat:mediaType" content="application/vnd.ms-excel">Consolidated_Statement_of_Cash_Flows_en.xls</span></a>
+          </li>
+          <li>
+            <a rel="dcat:distribution"  href="files/consolidated_statement_of_cash_flows_en.xml"><span property="dcat:mediaType" content="application/xml">consolidated_statement_of_cash_flows_en.xml</span></a>
+          </li>
+        </ul>
+      </dd>
+    </dl>
+  </article>

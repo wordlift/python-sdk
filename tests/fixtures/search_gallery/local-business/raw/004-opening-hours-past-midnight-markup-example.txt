@@ -1,0 +1,6 @@
+"openingHoursSpecification": {
+  "@type": "OpeningHoursSpecification",
+  "dayOfWeek": "Saturday",
+  "opens": "18:00",
+  "closes": "03:00"
+}

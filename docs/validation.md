@@ -44,6 +44,11 @@ shape_specs = resolve_shape_specs(
 result = validate_file("out/structured-data.jsonld", shape_specs=shape_specs)
 ```
 
+By default, bundled-shape resolution excludes `google-image-license-metadata`.
+To validate image license metadata, opt in explicitly with
+`shape_specs=["google-image-license-metadata"]` or via
+`resolve_shape_specs(builtin_shapes=["google-image-license-metadata"])`.
+
 ### Validation issues
 `extract_validation_issues(result)` maps SHACL report nodes into stable issue objects:
 - `level` (`warning|error`)
@@ -90,3 +95,21 @@ errors_only = filter_validation_issues(issues, level="error")
 SHACL files from the schema.org grammar and Google Search Gallery feature pages.
 Google-table parsing supports both property-level "one of" alternatives and explicit
 option branches (`Option A` / `Option B`) where each branch can require multiple properties.
+Required rows that explicitly document a supported fallback (for example, `url` when
+`contentUrl` is not provided) are emitted as `sh:or` alternatives.
+Paragraph/list guidance that uses "one of the following values" is treated as enum/value
+documentation and is not emitted as property-level `sh:or`.
+Required sections with conditional language (for example "required when" / "required if")
+are emitted as warnings to avoid unconditional constraints for context-dependent rules.
+Type-context extraction for Google tables is constrained to explicit type-definition
+paragraphs and scoped plain headings (for example `Quiz`, `Question`, `DataFeed entity`)
+so example markup snippets do not create unrelated target-class shapes.
+
+Search Gallery sample fixtures are stored under `tests/fixtures/search_gallery/` and can be
+refreshed with `python tests/tools/extract_search_gallery_samples.py`.
+Conformance baselines and expected non-conforming samples are tracked in:
+- `tests/fixtures/search_gallery/baseline_conformance.json`
+- `tests/fixtures/search_gallery/expectations.json`
+
+Use `python tests/tools/search_gallery_conformance_diff.py` to print per-page
+baseline vs current conformance deltas and fail on regressions.

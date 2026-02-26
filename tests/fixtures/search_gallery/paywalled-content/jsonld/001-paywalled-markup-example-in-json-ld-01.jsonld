@@ -1,0 +1,20 @@
+{
+  "@context": "https://schema.org",
+  "@type": "NewsArticle",
+  "headline": "Article headline",
+  "image": "https://example.org/thumbnail1.jpg",
+  "datePublished": "2025-02-05T08:00:00+08:00",
+  "dateModified": "2025-02-05T09:20:00+08:00",
+  "author": {
+    "@type": "Person",
+    "name": "John Doe",
+    "url": "https://example.com/profile/johndoe123"
+  },
+  "description": "A most wonderful article",
+  "isAccessibleForFree": false,
+  "hasPart": {
+    "@type": "WebPageElement",
+    "isAccessibleForFree": false,
+    "cssSelector": ".paywall"
+  }
+}

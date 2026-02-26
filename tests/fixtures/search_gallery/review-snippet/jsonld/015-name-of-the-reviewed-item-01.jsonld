@@ -1,0 +1,11 @@
+{
+  "@context": "https://schema.org/",
+  "@type": "Game",
+  "name": "Firefly",
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": 88,
+    "bestRating": 100,
+    "ratingCount": 20
+  }
+}

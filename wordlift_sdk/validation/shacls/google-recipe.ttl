@@ -3,7 +3,7 @@
 @prefix schema: <http://schema.org/> .
 
 # Source: https://developers.google.com/search/docs/appearance/structured-data/recipe
-# Generated: 2026-02-25T16:12:11Z
+# Generated: 2026-02-26T12:53:08Z
 # Notes: required properties => errors; recommended properties => warnings.
 
 :google_HowToDirectionShape
@@ -41,15 +41,15 @@
   a sh:NodeShape ;
   sh:targetClass schema:ItemList ;
   sh:property [
-    sh:path ( schema:ListItem schema:position ) ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path ( schema:ListItem schema:url ) ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
     sh:path schema:itemListElement ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:position ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path schema:url ;
     sh:minCount 1 ;
   ] ;
 .

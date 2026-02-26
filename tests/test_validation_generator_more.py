@@ -17,6 +17,7 @@ def test_html_parsing_helpers_cover_core_patterns():
         "Article",
         "Product",
     ]
+    assert generator._extract_schema_types("<h3>Quiz</h3>") == ["Quiz"]
 
     assert (
         generator._table_kind("<table><th>Required properties</th></table>")
@@ -62,6 +63,88 @@ def test_parse_feature_extracts_types_and_one_of():
     assert any("offers" in group for group in feature.one_of["Product"])
 
 
+def test_parse_feature_expands_explicit_schema_type_list_paragraph():
+    html = """
+<h3><code>Article</code> objects</h3>
+<p>Article objects must be based on one of the following schema.org types:
+<a href="https://schema.org/Article">Article</a>,
+<a href="https://schema.org/NewsArticle">NewsArticle</a>,
+<a href="https://schema.org/BlogPosting">BlogPosting</a>.</p>
+<table><th>Recommended properties</th><tr><td><code>headline</code></td></tr></table>
+"""
+    feature = generator._parse_feature(html, "https://example.org/feature")
+
+    assert "Article" in feature.types
+    assert "NewsArticle" in feature.types
+    assert "BlogPosting" in feature.types
+    assert "headline" in feature.types["Article"]["recommended"]
+    assert "headline" in feature.types["NewsArticle"]["recommended"]
+    assert "headline" in feature.types["BlogPosting"]["recommended"]
+
+
+def test_parse_feature_uses_primary_paragraph_type_for_table_context():
+    html = """
+<h2><code>ImageObject</code></h2>
+<p>{"@context":"https://schema.org/","@type":"ImageObject","creator":{"@type":"Person"}}</p>
+<table>
+  <th>Required properties</th>
+  <tr>
+    <td><code>contentUrl</code></td>
+    <td>
+      Google also supports the <code>url</code> property if you don't include
+      <code>contentUrl</code>.
+    </td>
+  </tr>
+</table>
+"""
+    feature = generator._parse_feature(html, "https://example.org/feature")
+
+    assert "ImageObject" in feature.types
+    assert "Person" not in feature.types
+    assert {"contentUrl", "url"} in feature.one_of["ImageObject"]
+
+
+def test_parse_feature_paragraph_context_supports_multiple_explicit_types():
+    html = """
+<h2><code>ProfilePage</code></h2>
+<table>
+  <th>Required properties</th>
+  <tr><td><code>mainEntity</code></td></tr>
+</table>
+<p>The full definition of <a href="https://schema.org/Person">Person</a> and
+<a href="https://schema.org/Organization">Organization</a> is available on schema.org.</p>
+<table>
+  <th>Required properties</th>
+  <tr><td><code>name</code></td></tr>
+</table>
+"""
+    feature = generator._parse_feature(html, "https://example.org/feature")
+
+    assert "ProfilePage" in feature.types
+    assert "mainEntity" in feature.types["ProfilePage"]["required"]
+    assert "Person" in feature.types
+    assert "Organization" in feature.types
+    assert "name" in feature.types["Person"]["required"]
+    assert "name" in feature.types["Organization"]["required"]
+
+
+def test_parse_feature_initial_multi_type_paragraph_uses_primary_type():
+    html = """
+<p>{"@type":"ImageObject"}
+<code><a href="https://schema.org/ImageObject">ImageObject</a></code>
+<code><a href="https://schema.org/Person">Person</a></code></p>
+<table>
+  <th>Required properties</th>
+  <tr><td><code>contentUrl</code></td></tr>
+</table>
+"""
+    feature = generator._parse_feature(html, "https://example.org/feature")
+
+    assert "ImageObject" in feature.types
+    assert "Person" not in feature.types
+    assert "contentUrl" in feature.types["ImageObject"]["required"]
+
+
 def test_extract_table_properties_handles_option_branches_and_ignores_urls():
     table_html = """
 <table>
@@ -81,6 +164,152 @@ def test_extract_table_properties_handles_option_branches_and_ignores_urls():
     assert len(option_groups[0]) == 2
     assert {"applicableCountry", "returnPolicyCategory"} in option_groups[0]
     assert {"merchantReturnLink"} in option_groups[0]
+
+
+def test_extract_table_properties_handles_supported_fallback_alternative():
+    table_html = """
+<table>
+  <th>Required properties</th>
+  <tr>
+    <td><code>contentUrl</code></td>
+    <td>
+      <p>A URL to the actual image content.</p>
+      <aside>
+        Google also supports the <code>url</code> property if you don\u2019t include
+        <code>contentUrl</code>.
+      </aside>
+    </td>
+  </tr>
+</table>
+"""
+    props, groups, option_groups = generator._extract_table_properties(table_html)
+
+    assert props == []
+    assert {"contentUrl", "url"} in groups
+    assert option_groups == []
+
+
+def test_extract_table_properties_ignores_enum_value_lists_for_one_of():
+    table_html = """
+<table>
+  <th>Required properties</th>
+  <tr>
+    <td><code>educationRequirements.credentialCategory</code></td>
+    <td>
+      Use one of the following values:
+      <ul>
+        <li><code>high school</code></li>
+        <li><code>associate degree</code></li>
+      </ul>
+    </td>
+  </tr>
+</table>
+"""
+    props, groups, option_groups = generator._extract_table_properties(table_html)
+
+    assert "educationRequirements.credentialCategory" in props
+    assert groups == []
+    assert option_groups == []
+
+
+def test_parse_feature_downgrades_conditional_required_sections():
+    html = """
+<h2><code>MerchantReturnPolicy</code></h2>
+<p>The following properties are required when you need seasonal overrides.</p>
+<table>
+  <th>Required properties</th>
+  <tr><td><code>returnPolicySeasonalOverride</code></td></tr>
+</table>
+"""
+    feature = generator._parse_feature(html, "https://example.org/feature")
+
+    assert "MerchantReturnPolicy" in feature.types
+    assert (
+        "returnPolicySeasonalOverride"
+        not in feature.types["MerchantReturnPolicy"]["required"]
+    )
+    assert (
+        "returnPolicySeasonalOverride"
+        in feature.types["MerchantReturnPolicy"]["recommended"]
+    )
+
+
+def test_parse_feature_ignores_one_of_value_paragraph_lists():
+    html = """
+<h2><code>JobPosting</code></h2>
+<table><th>Recommended properties</th><tr><td><code>educationRequirements.credentialCategory</code></td></tr></table>
+<p>Use one of the following values:</p>
+<ul>
+  <li><code>high school</code></li>
+  <li><code>associate degree</code></li>
+</ul>
+"""
+    feature = generator._parse_feature(html, "https://example.org/feature")
+
+    assert "JobPosting" in feature.types
+    assert (
+        "educationRequirements.credentialCategory"
+        in feature.types["JobPosting"]["recommended"]
+    )
+    assert not feature.one_of.get("JobPosting")
+
+
+def test_extract_property_tokens_ignores_jsonld_meta_keys():
+    tokens = generator._extract_property_tokens("@context @type @id name")
+    assert "context" not in tokens
+    assert "type" not in tokens
+    assert "id" not in tokens
+    assert "name" in tokens
+
+
+def test_extract_property_tokens_normalizes_class_prefixed_property_path():
+    tokens = generator._extract_property_tokens("ListItem.position")
+    assert tokens == ["position"]
+
+
+def test_extract_table_properties_ignores_one_of_types_enum_lists():
+    table_html = """
+<table>
+  <th>Required properties</th>
+  <tr>
+    <td><code>expectsAcceptanceOf.category</code></td>
+    <td>
+      Use one of the following types:
+      <ul>
+        <li><code>public school</code></li>
+        <li><code>government library</code></li>
+      </ul>
+    </td>
+  </tr>
+</table>
+"""
+    props, groups, option_groups = generator._extract_table_properties(table_html)
+
+    assert "expectsAcceptanceOf.category" in props
+    assert groups == []
+    assert option_groups == []
+
+
+def test_extract_table_properties_ignores_enum_rows_without_schema_type_refs():
+    table_html = """
+<table>
+  <th>Recommended properties</th>
+  <tr>
+    <td><code>amenityFeature.name</code></td>
+    <td><code><a href="https://schema.org/Text">Text</a></code></td>
+  </tr>
+  <tr>
+    <td><code>wifi</code></td>
+    <td>Whether the property has wifi.</td>
+  </tr>
+</table>
+"""
+    props, groups, option_groups = generator._extract_table_properties(table_html)
+
+    assert "amenityFeature.name" in props
+    assert "wifi" not in props
+    assert groups == []
+    assert option_groups == []
 
 
 def test_property_and_schema_helpers():

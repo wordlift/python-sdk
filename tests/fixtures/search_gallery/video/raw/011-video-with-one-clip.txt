@@ -1,0 +1,13 @@
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org/",
+  "@type": "VideoObject",
+  "name": "Cat video",
+  "hasPart": {
+    "@type": "Clip",
+    "name": "Cat jumps",
+    "startOffset": 30,
+    "url": "https://www.example.com/example?t=30"
+  }
+}
+</script>

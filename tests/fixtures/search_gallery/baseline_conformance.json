@@ -1,0 +1,138 @@
+{
+  "article": {
+    "conforming": 2,
+    "total_with_context": 2
+  },
+  "book": {
+    "conforming": 1,
+    "total_with_context": 6
+  },
+  "breadcrumb": {
+    "conforming": 2,
+    "total_with_context": 4
+  },
+  "carousel": {
+    "conforming": 4,
+    "total_with_context": 6
+  },
+  "carousels-beta": {
+    "conforming": 6,
+    "total_with_context": 6
+  },
+  "course": {
+    "conforming": 2,
+    "total_with_context": 3
+  },
+  "dataset": {
+    "conforming": 1,
+    "total_with_context": 3
+  },
+  "discussion-forum": {
+    "conforming": 2,
+    "total_with_context": 4
+  },
+  "education-qa": {
+    "conforming": 2,
+    "total_with_context": 2
+  },
+  "employer-rating": {
+    "conforming": 1,
+    "total_with_context": 3
+  },
+  "event": {
+    "conforming": 4,
+    "total_with_context": 9
+  },
+  "factcheck": {
+    "conforming": 3,
+    "total_with_context": 3
+  },
+  "faqpage": {
+    "conforming": 2,
+    "total_with_context": 2
+  },
+  "image-license-metadata": {
+    "conforming": 4,
+    "total_with_context": 4
+  },
+  "job-posting": {
+    "conforming": 3,
+    "total_with_context": 4
+  },
+  "local-business": {
+    "conforming": 4,
+    "total_with_context": 4
+  },
+  "loyalty-program": {
+    "conforming": 2,
+    "total_with_context": 2
+  },
+  "math-solvers": {
+    "conforming": 1,
+    "total_with_context": 3
+  },
+  "merchant-listing": {
+    "conforming": 2,
+    "total_with_context": 13
+  },
+  "movie": {
+    "conforming": 3,
+    "total_with_context": 3
+  },
+  "organization": {
+    "conforming": 3,
+    "total_with_context": 3
+  },
+  "paywalled-content": {
+    "conforming": 2,
+    "total_with_context": 2
+  },
+  "product-snippet": {
+    "conforming": 5,
+    "total_with_context": 6
+  },
+  "product-variants": {
+    "conforming": 7,
+    "total_with_context": 7
+  },
+  "profile-page": {
+    "conforming": 3,
+    "total_with_context": 3
+  },
+  "qapage": {
+    "conforming": 1,
+    "total_with_context": 2
+  },
+  "recipe": {
+    "conforming": 2,
+    "total_with_context": 3
+  },
+  "return-policy": {
+    "conforming": 3,
+    "total_with_context": 3
+  },
+  "review-snippet": {
+    "conforming": 5,
+    "total_with_context": 7
+  },
+  "shipping-policy": {
+    "conforming": 1,
+    "total_with_context": 2
+  },
+  "software-app": {
+    "conforming": 1,
+    "total_with_context": 2
+  },
+  "speakable": {
+    "conforming": 2,
+    "total_with_context": 2
+  },
+  "vacation-rental": {
+    "conforming": 1,
+    "total_with_context": 2
+  },
+  "video": {
+    "conforming": 3,
+    "total_with_context": 8
+  }
+}

@@ -1,0 +1,2 @@
+"name": "The Quick, Draw! Dataset"
+"alternateName": ["Quick Draw Dataset", "quickdraw-dataset"]

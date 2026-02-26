@@ -1,0 +1,7 @@
+"spatialCoverage:" {
+  "@type": "Place",
+  "geo": {
+    "@type": "GeoShape",
+    "box": "39.3280 120.1633 40.445 123.7878"
+  }
+}

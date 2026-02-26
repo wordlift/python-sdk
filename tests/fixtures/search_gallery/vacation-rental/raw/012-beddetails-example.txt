@@ -1,0 +1,5 @@
+"floorSize": {
+  "@type": "QuantitativeValue",
+  "value" : 75,
+  "unitCode": "MTK"
+  }

@@ -1,0 +1,16 @@
+hasCertification": {
+  "@type": "Certification",
+  "issuedBy": {
+    "@type": "Organization",
+    "name": "European_Commission"
+  }
+  "name": "EPREL",
+  "url": "https://eprel.ec.europa.eu/screen/product/ovens/53553",
+  "certificationIdentification": "53553",
+  "certificationRating": {
+    "@type": "Rating",
+    "ratingValue": "A+",
+    "bestRating": "A++",
+    "worstRating": "D"
+  }
+}

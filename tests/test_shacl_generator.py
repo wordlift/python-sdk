@@ -247,6 +247,21 @@ def test_emits_one_of_group_for_product(tmp_path: Path) -> None:
     assert "sh:path schema:offers" in content
 
 
+def test_emits_fallback_alternative_one_of_group(tmp_path: Path) -> None:
+    feature = FeatureData(
+        url="https://example.com",
+        types={"ImageObject": {"required": set(), "recommended": set()}},
+        one_of={"ImageObject": [{"contentUrl", "url"}]},
+    )
+
+    content = _read_output(tmp_path, feature)
+
+    assert "sh:targetClass schema:ImageObject" in content
+    assert "sh:or (" in content
+    assert "sh:path schema:contentUrl" in content
+    assert "sh:path schema:url" in content
+
+
 def test_scopes_review_under_product_with_notes(tmp_path: Path) -> None:
     feature = FeatureData(
         url="https://example.com",

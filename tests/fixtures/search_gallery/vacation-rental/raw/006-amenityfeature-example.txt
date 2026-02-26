@@ -1,0 +1,5 @@
+"amenityFeature": {
+  "@type": "LocationFeatureSpecification",
+  "name" : "featureName",
+  "value": "detail"
+  }

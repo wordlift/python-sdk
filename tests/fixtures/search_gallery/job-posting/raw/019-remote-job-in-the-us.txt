@@ -1,0 +1,10 @@
+"jobLocation": {
+  "@type": "Place",
+  "address": {
+    "@type": "PostalAddress",
+    "addressLocality": "Tucson",
+    "addressRegion": "AZ",
+    "addressCountry": "US"
+  }
+ },
+"jobLocationType": "TELECOMMUTE"

@@ -1,0 +1,8 @@
+"address": {
+  "@type": "PostalAddress",
+  "streetAddress": "148 W 51st St",
+  "addressLocality": "New York",
+  "addressRegion": "NY",
+  "postalCode": "10019",
+  "addressCountry": "US"
+}

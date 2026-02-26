@@ -1,0 +1,8 @@
+"hasTierRequirement": {
+    "@type": "UnitPriceSpecification",
+    "price": 9.99,
+    "priceCurrency": "EUR",
+    "billingDuration": 12,
+    "billingIncrement": 1,
+    "unitCode": "MON"
+  }

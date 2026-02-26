@@ -1,0 +1,31 @@
+{
+  "@context": "https://schema.org/",
+  "@type": "Product",
+  "sku": "1234-5678",
+  "image": "https://www.example.com/led.jpg",
+  "name": "LED",
+  "description": "Dimmable LED",
+  "gtin14": "00012345600012",
+  "mpn": "WH1234",
+  "brand": {
+    "@type": "Brand",
+    "name": "ExampleLightingBrand"
+  },
+  "hasCertification": {
+    "@type": "Certification",
+    "issuedBy": {
+      "@type": "Organization",
+      "name": "European_Commission"
+    },
+    "name": "EPREL",
+    "certificationIdentification": "123456"
+  },
+  "offers": {
+    "@type": "Offer",
+    "url": "https://www.example.com/led",
+    "itemCondition": "https://schema.org/NewCondition",
+    "availability": "https://schema.org/InStock",
+    "price": 2.3,
+    "priceCurrency": "EUR"
+  }
+}

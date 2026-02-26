@@ -1,0 +1,18 @@
+<html>
+  <head>
+    <title>Legal Seafood</title>
+  </head>
+  <body>
+    <div itemscope itemtype="https://schema.org/AggregateRating">
+      <div itemprop="itemReviewed" itemscope itemtype="https://schema.org/Restaurant">
+        <img itemprop="image" src="https://example.com/photos/1x1/seafood-restaurant.jpg" alt="Legal Seafood"/>
+        <span itemprop="name">Legal Seafood</span>
+        <span itemprop="servesCuisine">Seafood</span>
+        <span itemprop="telephone">1234567</span>
+        <span itemprop="address">123 William St, New York</span>
+      </div>
+      <span itemprop="ratingValue">4.2</span> out of <span itemprop="bestRating">5</span> stars -
+      <span itemprop="ratingCount">123</span> votes
+    </div>
+  </body>
+</html>

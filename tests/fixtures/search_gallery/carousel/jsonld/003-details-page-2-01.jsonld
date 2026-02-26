@@ -1,0 +1,72 @@
+{
+  "@context": "https://schema.org/",
+  "@type": "Recipe",
+  "name": "Triple Chocolate Chunk Cookies",
+  "image": [
+    "https://example.com/photos/1x1/photo.jpg",
+    "https://example.com/photos/4x3/photo.jpg",
+    "https://example.com/photos/16x9/photo.jpg"
+  ],
+  "author": {
+    "@type": "Person",
+    "name": "Wendy Darling"
+  },
+  "datePublished": "2024-03-10",
+  "description": "This Triple Chocolate Chunk Cookie recipe is everyone's favorite",
+  "prepTime": "PT10M",
+  "cookTime": "PT25M",
+  "totalTime": "PT35M",
+  "recipeCuisine": "French",
+  "recipeCategory": "Cookies",
+  "keywords": "chocolate, cookies",
+  "recipeYield": 24,
+  "nutrition": {
+    "@type": "NutritionInformation",
+    "calories": "120 calories"
+  },
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": 5,
+    "ratingCount": 18
+  },
+  "recipeIngredient": [
+    "2 cups of melted chocolate",
+    "1/3 cup of sugar"
+  ],
+  "recipeInstructions": [
+    {
+      "@type": "HowToStep",
+      "text": "Mix together the chocolate and sugar."
+    },
+    {
+      "@type": "HowToStep",
+      "text": "Roll cookie dough into small balls and place on a cookie sheet."
+    },
+    {
+      "@type": "HowToStep",
+      "text": "Bake for 25 minutes."
+    }
+  ],
+  "video": {
+    "@type": "VideoObject",
+    "name": "How to Triple Chocolate Chunk Cookies",
+    "description": "This is how you make peanut butter cookies.",
+    "thumbnailUrl": [
+      "https://example.com/photos/1x1/photo.jpg",
+      "https://example.com/photos/4x3/photo.jpg",
+      "https://example.com/photos/16x9/photo.jpg"
+    ],
+    "contentUrl": "https://www.example.com/video123.mp4",
+    "embedUrl": "https://www.example.com/videoplayer?video=123",
+    "uploadDate": "2024-02-05T08:00:00+08:00",
+    "duration": "PT1M33S",
+    "interactionStatistic": {
+      "@type": "InteractionCounter",
+      "interactionType": {
+        "@type": "WatchAction"
+      },
+      "userInteractionCount": 2347
+    },
+    "expires": "2025-02-05T08:00:00+08:00"
+  }
+}

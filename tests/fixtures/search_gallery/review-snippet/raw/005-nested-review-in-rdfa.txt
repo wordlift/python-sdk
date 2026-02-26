@@ -1,0 +1,59 @@
+<html>
+  <head>
+    <title>The Catcher in the Rye</title>
+  </head>
+    <body>
+      <div vocab="https://schema.org/" typeof="Product">
+        <div rel="schema:brand">
+          <div typeof="schema:Brand">
+            <div property="schema:name" content="Penguin"></div>
+          </div>
+        </div>
+        <div property="schema:description" content="The Catcher in the Rye is a classic coming-of-age story: an story of teenage alienation, capturing the human need for connection and the bewildering sense of loss as we leave childhood behind."></div>
+        <div property="schema:sku" content="9780241984758"></div>
+        <div property="schema:mpn" content="925872"></div>
+        <img property="image" src="https://example.com/photos/1x1/catcher-in-the-rye-book-cover.jpg" alt="Catcher in the Rye"/>
+        <span property="name">The Catcher in the Rye</span>
+        <div property="review" typeof="Review"> Reviews:
+          <span property="reviewRating" typeof="Rating">
+            <span property="ratingValue">5</span> -
+          </span>
+          <b>"A masterpiece of literature" </b> by
+          <span property="author" typeof="Person">
+            <span property="name">John Doe</span></span>, written on
+          <meta property="datePublished" content="2006-05-04">4 May 2006
+          <div>I really enjoyed this book. It captures the essential challenge people face as they try make sense of their lives and grow to adulthood.</div>
+          <span property="publisher" typeof="Organization">
+            <meta property="name" content="Washington Times">
+          </span>
+        </div><div property="review" typeof="Review">
+          <span property="reviewRating" typeof="Rating">
+            <span property="ratingValue">1</span> -
+          </span>
+          <b>"The worst thing I've ever read" </b> by
+          <span property="author" typeof="Person">
+            <span property="name">Jane Doe</span></span>, written on
+          <meta property="datePublished" content="2006-05-10">10 May 2006
+          <span property="publisher" typeof="Organization">
+            <meta property="name" content="Washington Times">
+          </span>
+        </div>
+        <div rel="schema:aggregateRating">
+          <div typeof="schema:AggregateRating">
+            <div property="schema:reviewCount" content="89"></div>
+            <div property="schema:ratingValue" content="4.4">4,4</div> stars
+          </div>
+        </div>
+        <div rel="schema:offers">
+          <div typeof="schema:Offer">
+            <div property="schema:price" content="4.99"></div>
+            <div property="schema:availability" content="https://schema.org/InStock"></div>
+            <div property="schema:priceCurrency" content="GBP"></div>
+            <div property="schema:priceValidUntil" datatype="xsd:date" content="2024-11-21"></div>
+            <div rel="schema:url" resource="https://example.com/catcher"></div>
+            <div property="schema:itemCondition" content="https://schema.org/UsedCondition"></div>
+          </div>
+        </div>
+    </div>
+  </body>
+</html>

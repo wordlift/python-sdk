@@ -1,0 +1,7 @@
+"author": [
+  {
+    "@type": "Person",
+    "name": "Willow Lane",
+    "url": "https://www.example.com/staff/willow_lane"
+  }
+]

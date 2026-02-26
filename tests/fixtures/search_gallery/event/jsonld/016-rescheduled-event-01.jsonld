@@ -1,0 +1,8 @@
+{
+  "@context": "https://schema.org",
+  "@type": "Event",
+  "eventStatus": "https://schema.org/EventRescheduled",
+  "startDate": "2020-07-21T19:00",
+  "endDate": "2025-07-21T23:00",
+  "previousStartDate": "2025-03-21T19:00"
+}

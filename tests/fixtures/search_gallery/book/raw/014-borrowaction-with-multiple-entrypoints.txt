@@ -1,0 +1,24 @@
+"potentialAction": {
+  "@type": "BorrowAction",
+  "lender": {
+    "@type": "LibrarySystem",
+    "@id": "https://example.com/librarySystem/100"
+  },
+  "target": [
+    {
+      "@type": "EntryPoint",
+      "urlTemplate": "https://example.com/borrow?bookId=170",
+      "actionPlatform": [
+        "https://schema.org/DesktopWebPlatform"
+      ]
+    },
+    {
+      "@type": "EntryPoint",
+`      "urlTemplate": "https://example.com/mobile/borrow?bookId=170",
+      "actionPlatform": [
+        "https://schema.org/AndroidPlatform",
+        "https://schema.org/IOSPlatform"
+      ]
+    }
+  ]
+}

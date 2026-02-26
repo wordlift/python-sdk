@@ -1,0 +1,5 @@
+"identifier": {
+      "@type": "PropertyValue",
+      "propertyID": "OCLC_NUMBER",
+      "value":  "110123456"
+    }

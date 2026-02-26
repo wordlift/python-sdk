@@ -1,0 +1,5 @@
+"hasTierRequirement": {
+    "@type": "MonetaryAmount",
+    "value": 250,
+    "currency": "USD"
+  }

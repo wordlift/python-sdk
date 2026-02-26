@@ -1,0 +1,4 @@
+"numberOfEmployees": {
+  "@type": "QuantitativeValue",
+  "value": 2056
+}

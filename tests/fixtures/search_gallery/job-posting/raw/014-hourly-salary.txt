@@ -1,0 +1,9 @@
+"baseSalary": {
+  "@type": "MonetaryAmount",
+  "currency": "USD",
+  "value": {
+    "@type": "QuantitativeValue",
+    "value": 40.00,
+    "unitText": "HOUR"
+  }
+}

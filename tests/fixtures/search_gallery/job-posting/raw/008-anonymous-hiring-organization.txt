@@ -1,0 +1,4 @@
+"hiringOrganization": {
+  "@type": "Organization",
+  "name": "confidential"
+}

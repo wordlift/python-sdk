@@ -1,0 +1,17 @@
+{
+  // JSON-LD on non-threaded forum at https://example.com/post/very-popular-thread/14
+  "@context": "https://schema.org",
+  "@type": "DiscussionForumPosting",
+  "headline": "Very Popular Thread", // Only the headline/topic is explicitly present
+  "url": "https://example.com/post/very-popular-thread",
+  ...
+  "comment": [{
+    "@type": "Comment",
+    "text": "First Post on this Page",
+    ...
+  },{
+    "@type": "Comment",
+    "text": "Second Post on this Page",
+    ...
+  }]
+}

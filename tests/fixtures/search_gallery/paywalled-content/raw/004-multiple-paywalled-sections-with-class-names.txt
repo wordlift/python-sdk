@@ -1,0 +1,5 @@
+<body>
+  <div class="section1">This content is inside a paywall, and requires a subscription or registration.</div>
+  <p>This content is outside a paywall and is visible to all.</p>
+  <div class="section2">This is another section that's inside a paywall, or requires a subscription or registration.</div>
+</body>

@@ -1,0 +1,4 @@
+"validForMemberTier": {
+  "@type": "MemberProgramTier",
+  "@id": "https://www.example.com/com/member-plus#tier_silver"
+}

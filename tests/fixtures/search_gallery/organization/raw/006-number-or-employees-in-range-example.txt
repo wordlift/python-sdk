@@ -1,0 +1,5 @@
+"numberOfEmployees": {
+  "@type": "QuantitativeValue",
+  "minValue": 100,
+  "maxValue": 999
+}

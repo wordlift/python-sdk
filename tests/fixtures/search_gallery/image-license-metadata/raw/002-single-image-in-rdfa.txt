@@ -1,0 +1,19 @@
+<html>
+  <head>
+    <title>Black labrador puppy</title>
+  </head>
+  <body>
+  <div vocab="https://schema.org/" typeof="ImageObject">
+    <img alt="Black labrador puppy" property="contentUrl" src="https://example.com/photos/1x1/black-labrador-puppy.jpg" /><br>
+    <span property="license"> https://example.com/license</span><br>
+    <span property="acquireLicensePage">https://example.com/how-to-use-my-images</span>
+    <span rel="schema:creator">
+      <span typeof="schema:Person">
+        <span property="schema:name" content="Brixton Brownstone"></span>
+      </span>
+    </span>
+    <span property="copyrightNotice">Clara Kent</span><br>
+    <span property="creditText">Labrador PhotoLab</span><br>
+  </div>
+  </body>
+</html>

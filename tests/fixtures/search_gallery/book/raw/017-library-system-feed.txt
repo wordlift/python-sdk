@@ -1,0 +1,41 @@
+{
+   "@context": "https://schema.org",
+   "@type":"LibrarySystem",
+   "@id":"https://example.com/library-systems/100",
+   "name":"Santa Clara County Library District",
+   "additionalProperty":[
+      {
+         "@type":"PropertyValue",
+         "name":"librarytype",
+         "value":"public"
+      }
+   ],
+   "member":[
+      {
+         "@type":"Library",
+         "@id":"https://example.com/library-branches/1001",
+         "name":"Campbell Library",
+         "location":{
+            "@type":"PostalAddress",
+            "streetAddress":"77 Harrison Ave",
+            "addressLocality":"Campbell",
+            "addressRegion":"CA",
+            "postalCode":"95008",
+            "addressCountry":"US"
+         }
+      },
+      {
+         "@type":"Library",
+         "@id":"https://example.com/library-branches/1002",
+         "name":"Gilroy Library",
+         "location":{
+            "@type":"PostalAddress",
+            "streetAddress":"350 W 6th St",
+            "addressLocality":"Gilroy",
+            "addressRegion":"CA",
+            "postalCode":"95020",
+            "addressCountry":"US"
+         }
+      }
+   ]
+}

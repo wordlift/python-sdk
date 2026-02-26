@@ -1,0 +1,6 @@
+"interactionStatistic":
+  {
+    "@type": "InteractionCounter",
+    "interactionType": { "@type": "WatchAction" },
+    "userInteractionCount": 12345
+  }

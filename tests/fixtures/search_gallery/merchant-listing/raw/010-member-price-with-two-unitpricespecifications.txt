@@ -1,0 +1,41 @@
+"offers": {
+  "@type": "Offer",
+  "url": "https://www.example.com/trinket_offer",
+  "priceSpecification": [
+    {
+      "@type": "UnitPriceSpecification",
+      "price": 9.00,
+      "priceCurrency": "GBP"
+    },
+    {
+      "@type": "UnitPriceSpecification",
+      "priceType": "https://schema.org/StrikethroughPrice",
+      "price": 10.00,
+      "priceCurrency": "GBP"
+    },
+    {
+      "@type": "UnitPriceSpecification",
+      "price": 8.00,
+      "priceCurrency": "GBP",
+      "validForMemberTier": {
+        "@type": "MemberProgramTier",
+        "@id": "https://www.example.com/com/members#tier_silver"
+      }
+    },
+    {
+      "@type": "UnitPriceSpecification",
+      "price": 7.00,
+      "priceCurrency": "GBP",
+      "validForMemberTier": [
+        {
+          "@type": "MemberProgramTier",
+          "@id": "https://www.example.com/com/members#tier_gold"
+        },
+        {
+          "@type": "MemberProgramTier",
+          "@id": "https://www.example.com/com/members#tier_platinum"
+        }
+      ]
+    }
+  ]
+}

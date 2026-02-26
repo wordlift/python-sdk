@@ -1,0 +1,5 @@
+"contactPoint": {
+  "@type": "ContactPoint",
+  "telephone": "+9-999-999-9999",
+  "email": "contact@example.com"
+}

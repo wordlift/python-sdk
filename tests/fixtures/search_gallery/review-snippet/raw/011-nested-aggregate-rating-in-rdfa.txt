@@ -1,0 +1,21 @@
+<html>
+  <head>
+    <title>Executive Anvil</title>
+  </head>
+  <body>
+    <div vocab="https://schema.org/" typeof="Product">
+     <span property="brand" typeof="Brand">ACME</span> <span property="name">Executive Anvil</span>
+     <img property="image" src="https://example.com/photos/1x1/anvil_executive.jpg" alt="Executive Anvil logo" />
+     <span property="aggregateRating"
+           typeof="AggregateRating">
+      Average rating: <span property="ratingValue">4.4</span>, based on
+      <span property="ratingCount">89</span> reviews
+     </span>
+     <span property="offers" typeof="AggregateOffer">
+      from $<span property="lowPrice">119.99</span> to
+      $<span property="highPrice">199.99</span>
+      <meta property="priceCurrency" content="USD" />
+     </span>
+    </div>
+  </body>
+</html>

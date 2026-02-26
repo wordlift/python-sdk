@@ -1,0 +1,72 @@
+{
+  "@context": "https://schema.org",
+  "@type": "OnlineStore",
+  "name": "Example Online Store",
+  "url": "https://www.example.com",
+  "sameAs": [
+    "https://example.net/profile/example12",
+    "https://example.org/@example34"
+  ],
+  "logo": "https://www.example.com/assets/images/logo.png",
+  "contactPoint": {
+    "contactType": "Customer Service",
+    "email": "support@example.com",
+    "telephone": "+47-99-999-9900"
+  },
+  "vatID": "FR12345678901",
+  "iso6523Code": "0199:724500PMK2A2M1SQQ228",
+  "hasShippingService": [
+    {
+      "@type": "ShippingService",
+      "name": "shipping to CH and FR",
+      "description": "Shipping to CH 5% of order value, shipping to FR always free",
+      "fulfillmentType": "FulfillmentTypeDelivery",
+      "shippingConditions": [
+        {
+          "@type": "ShippingConditions",
+          "shippingOrigin": {
+            "@type": "DefinedRegion",
+            "addressCountry": "FR"
+          },
+          "shippingDestination": {
+            "@type": "DefinedRegion",
+            "addressCountry": "CH"
+          },
+          "shippingRate": {
+            "@type": "ShippingRateSettings",
+            "orderPercentage": "0.05"
+          }
+        },
+        {
+          "@type": "ShippingConditions",
+          "shippingOrigin": {
+            "@type": "DefinedRegion",
+            "addressCountry": "FR"
+          },
+          "shippingDestination": {
+            "@type": "DefinedRegion",
+            "addressCountry": "FR"
+          },
+          "shippingRate": {
+            "@type": "MonetaryAmount",
+            "value": "0",
+            "currency": "EUR"
+          }
+        }
+      ]
+    }
+  ],
+  "hasMerchantReturnPolicy": {
+    "@type": "MerchantReturnPolicy",
+    "applicableCountry": [
+      "FR",
+      "CH"
+    ],
+    "returnPolicyCountry": "FR",
+    "returnPolicyCategory": "https://schema.org/MerchantReturnFiniteReturnWindow",
+    "merchantReturnDays": 60,
+    "returnMethod": "https://schema.org/ReturnByMail",
+    "returnFees": "https://schema.org/FreeReturn",
+    "refundType": "https://schema.org/FullRefund"
+  }
+}

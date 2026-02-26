@@ -61,6 +61,41 @@ def test_resolve_shape_specs_unknown_builtin(monkeypatch: pytest.MonkeyPatch) ->
         shacl.resolve_shape_specs(builtin_shapes=["missing"])
 
 
+def test_resolve_shape_specs_default_excludes_opt_in_shapes(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        shacl,
+        "_shape_resource_names",
+        lambda: ["google-article.ttl", "google-image-license-metadata.ttl"],
+    )
+    specs = shacl.resolve_shape_specs()
+    assert specs == ["google-article.ttl"]
+
+
+def test_resolve_shape_specs_can_explicitly_include_opt_in_shapes(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        shacl,
+        "_shape_resource_names",
+        lambda: ["google-article.ttl", "google-image-license-metadata.ttl"],
+    )
+    specs = shacl.resolve_shape_specs(builtin_shapes=["google-image-license-metadata"])
+    assert specs == ["google-image-license-metadata.ttl"]
+
+
+def test_resolve_shape_sources_default_excludes_opt_in_shapes(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        shacl,
+        "_shape_resource_names",
+        lambda: ["google-article.ttl", "google-image-license-metadata.ttl"],
+    )
+    assert shacl._resolve_shape_sources(None) == ["google-article.ttl"]
+
+
 def test_extract_and_filter_issues() -> None:
     issues = shacl.extract_validation_issues(_validation_result())
     assert len(issues) == 2

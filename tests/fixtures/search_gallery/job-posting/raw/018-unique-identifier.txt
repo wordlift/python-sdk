@@ -1,0 +1,5 @@
+"identifier": {
+  "@type": "PropertyValue",
+  "name": "MagsRUs Wheel Company",
+  "value": "1234567"
+}

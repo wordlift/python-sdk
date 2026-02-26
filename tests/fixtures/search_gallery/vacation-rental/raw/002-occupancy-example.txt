@@ -1,0 +1,4 @@
+"occupancy": {
+  "@type": "QuantitativeValue",
+  "value" : 5
+  }

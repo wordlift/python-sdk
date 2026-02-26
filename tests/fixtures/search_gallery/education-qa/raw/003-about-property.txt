@@ -1,0 +1,6 @@
+{
+  "@type": "Quiz",
+  "about": {
+    "@type": "Thing"
+  }
+}

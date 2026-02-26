@@ -14,6 +14,27 @@
 - The SHACL generator treats explicit table option branches (for example
   `Option A` / `Option B`) as branch-level alternatives, supports multi-property
   branches, and ignores enum URL literals when extracting property alternatives.
+- The SHACL generator treats explicit fallback wording in required rows (for
+  example, `url` supported when `contentUrl` is omitted) as `sh:or`
+  alternatives rather than hard-requiring only the preferred property.
+- The SHACL generator ignores paragraph-level "one of the following values"
+  lists when building property alternatives, and downgrades conditional
+  required prose ("required when/if", "only required if") to warning-level
+  constraints to avoid unconditional errors for context-dependent sections.
+- Google SHACL type-context parsing is now constrained to explicit type
+  definitions (`must be based on one of the following schema.org types`,
+  `full definition of ... is available/provided`) and scoped plain headings
+  (for example `Quiz`, `Question`, `DataFeed entity`) so example markup
+  fragments do not leak nested/example types into feature-level constraints.
+- Search Gallery sample fixtures are maintained under
+  `tests/fixtures/search_gallery/` via
+  `python tests/tools/extract_search_gallery_samples.py`; the latest
+  page-by-page review artifact is `docs/search_gallery_shacl_review.md`.
+- Search Gallery quality gates include committed per-page conformance baseline
+  (`tests/fixtures/search_gallery/baseline_conformance.json`), explicit known
+  non-conforming sample IDs (`tests/fixtures/search_gallery/expectations.json`),
+  and CI regression diff reporting via
+  `python tests/tools/search_gallery_conformance_diff.py`.
 - Python support is validated against 3.10–3.14; ensure tests pass on 3.14 before
   bumping the range.
 - Schema.org grammar checks are deliberately permissive, accepting URL/text literals
@@ -24,6 +45,8 @@
   bundled include/exclude controls and extra local/remote SHACL overlays, plus
   normalized issue extraction/filtering helpers with stable issue fields
   (`rule_id`, `rule_set`) for host-side UX/CLI layers.
+- Bundled validation defaults treat `google-image-license-metadata` as opt-in
+  (excluded unless explicitly requested in `shape_specs` / `builtin_shapes`).
 - SSL verification is always enabled; on macOS the SDK uses the system CA bundle
   when available and falls back to `certifi`. Explicit CA bundle overrides are
   supported in the SDK layer.

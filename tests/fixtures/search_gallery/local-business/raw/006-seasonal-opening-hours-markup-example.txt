@@ -1,0 +1,7 @@
+"openingHoursSpecification": {
+  "@type": "OpeningHoursSpecification",
+  "opens": "00:00",
+  "closes": "00:00",
+  "validFrom": "2015-12-23",
+  "validThrough": "2016-01-05"
+}

@@ -1,0 +1,37 @@
+{
+  "@context": "https://schema.org",
+  "@type": "OnlineStore",
+  "hasMemberProgram": {
+    "@type": "MemberProgram",
+    "name": "Membership Plus",
+    "description": "For frequent shoppers this is our top-rated loyalty program",
+    "url": "https://www.example.com/membership-plus",
+    "hasTiers": [
+      {
+        "@type": "MemberProgramTier",
+        "@id": "#plus-tier-silver",
+        "name": "silver",
+        "url": "https://www.example.com/membership-plus-silver",
+        "hasTierBenefit": [
+          "https://schema.org/TierBenefitLoyaltyPoints"
+        ],
+        "membershipPointsEarned": 5
+      },
+      {
+        "@type": "MemberProgramTier",
+        "@id": "#plus-tier-gold",
+        "name": "gold",
+        "url": "https://www.example.com/membership-plus-gold",
+        "hasTierRequirement": {
+          "@type": "CreditCard",
+          "name": "Example platinum card plus"
+        },
+        "hasTierBenefit": [
+          "https://schema.org/TierBenefitLoyaltyPrice",
+          "https://schema.org/TierBenefitLoyaltyPoints"
+        ],
+        "membershipPointsEarned": 10
+      }
+    ]
+  }
+}

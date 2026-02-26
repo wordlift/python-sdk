@@ -1,0 +1,29 @@
+<html itemscope itemprop="VideoObject" itemtype="https://schema.org/VideoObject">
+<head>
+  <title itemprop="name">Bald Eagle at the Park - Livestream</title>
+</head>
+<body>
+  <meta itemprop="uploadDate" content="2024-10-27T14:00:00+00:00" />
+  <meta itemprop="duration" content="PT37M14S" />
+  <p itemprop="description">Bald eagle at the park livestream.</p>
+  <div itemprop="interactionStatistic" itemtype="https://schema.org/InteractionCounter" itemscope>
+    <meta itemprop="userInteractionCount" content="4756" />
+    <meta itemprop="interactionType" itemtype="https://schema.org/WatchAction" />
+  </div>
+  <link itemprop="embedUrl" href="https://example.com/bald-eagle-at-the-park" />
+  <meta itemprop="expires" content="2024-10-30T14:37:14+00:00" />
+  <meta itemprop="contentUrl" content="https://example.com/bald-eagle-at-the-park.mp4" />
+  <meta itemprop="regionsAllowed" content="US" />
+  <meta itemprop="thumbnailUrl" content="https://example.com/bald-eagle-at-the-park" />
+  <div itemprop="publication" itemtype="https://schema.org/BroadcastEvent" itemscope>
+    <meta itemprop="isLiveBroadcast" content="true" />
+    <meta itemprop="startDate" content="2024-10-27T14:00:00+00:00" />
+    <meta itemprop="endDate" content="2024-10-27T14:37:14+00:00" />
+  </div>
+  <div itemprop="publication" itemtype="https://schema.org/BroadcastEvent" itemscope>
+    <meta itemprop="isLiveBroadcast" content="true" />
+    <meta itemprop="startDate" content="2024-10-27T18:00:00+00:00" />
+    <meta itemprop="endDate" content="2024-10-27T18:37:14+00:00" />
+  </div>
+</body>
+</html>

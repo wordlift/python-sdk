@@ -1,0 +1,24 @@
+<html>
+  <head>
+    <title>Speakable markup example</title>
+    <meta name="description" content="This page is all about the quick brown fox" />
+    <script type="application/ld+json">
+    {
+     "@context": "https://schema.org/",
+     "@type": "WebPage",
+     "name": "Quick Brown Fox",
+     "speakable":
+     {
+      "@type": "SpeakableSpecification",
+      "xPath": [
+        "/html/head/title",
+        "/html/head/meta[@name='description']/@content"
+        ]
+      },
+     "url": "https://www.example.com/quick-brown-fox"
+     }
+    </script>
+  </head>
+  <body>
+  </body>
+</html>

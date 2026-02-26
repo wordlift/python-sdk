@@ -1,0 +1,9 @@
+{
+  "@type": "Quiz",
+  "educationalAlignment": [
+    {
+      "@type": "AlignmentObject",
+      "targetName": "Grade 7: Cell Structure"
+    }
+  ]
+}

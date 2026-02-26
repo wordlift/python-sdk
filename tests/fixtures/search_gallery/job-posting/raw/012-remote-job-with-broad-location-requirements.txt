@@ -1,0 +1,5 @@
+"applicantLocationRequirements": {
+  "@type": "Country",
+  "name": "USA"
+},
+"jobLocationType": "TELECOMMUTE"

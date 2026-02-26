@@ -1,0 +1,12 @@
+{
+  "@type": "Library",
+  "@id": "https://example.com/library-branches/1003",
+  "name": "Tokyo Metropolitan Central Library",
+  "location": {
+    "@type": "PostalAddress",
+    "streetAddress": "７-13-5 Minamiazabu, Minato City",
+    "addressLocality": "Tokyo",
+    "postalCode": "106-0047",
+    "addressCountry": "JP"
+  }
+}

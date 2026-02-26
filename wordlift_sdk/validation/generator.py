@@ -29,6 +29,19 @@ ONE_OF_RE = re.compile(
     r"(one of the following properties|one of the following|require either|must include one of|must provide one of|at least two statements)",
     re.IGNORECASE,
 )
+ONE_OF_VALUE_RE = re.compile(
+    r"(one of the following\s+values?|one of the following\s+types?|following\s+values?|following\s+types?)",
+    re.IGNORECASE,
+)
+FALLBACK_RE = re.compile(r"\bif you do(?:n['’]?t| not)\s+include\b", re.IGNORECASE)
+TYPE_LIST_RE = re.compile(
+    r"must be based on one of the following\s+schema\.org types",
+    re.IGNORECASE,
+)
+CONDITIONAL_REQUIRED_RE = re.compile(
+    r"(required when|only required if|required if)\b",
+    re.IGNORECASE,
+)
 
 SCHEMA_JSONLD_URL = "https://schema.org/version/latest/schemaorg-current-https.jsonld"
 
@@ -83,6 +96,43 @@ def _extract_schema_types(fragment: str) -> list[str]:
             value = _strip_tags(item)
             for token in re.findall(r"[A-Z][A-Za-z0-9]*", value):
                 types.append(token)
+        if types:
+            return _unique(types)
+
+        # Fallback for plain headings such as "Quiz" or "DataFeed entity".
+        heading_text = _strip_tags(fragment)
+        heading_text = re.sub(r"\s+", " ", heading_text).strip()
+        head_match = re.match(r"^([A-Z][A-Za-z0-9]+)(.*)$", heading_text)
+        if head_match:
+            head_token = head_match.group(1)
+            tail = head_match.group(2).strip().lower()
+            ignored_heads = {
+                "Feature",
+                "Prepare",
+                "Add",
+                "How",
+                "Examples",
+                "Example",
+                "Google",
+                "JSON",
+                "LD",
+                "IPTC",
+                "Structured",
+                "Data",
+                "Required",
+                "Recommended",
+            }
+            allowed_tails = {
+                "",
+                "entity",
+                "entities",
+                "object",
+                "objects",
+                "member",
+                "(member)",
+            }
+            if tail in allowed_tails and head_token not in ignored_heads:
+                return [head_token]
         return _unique(types)
 
     return []
@@ -109,9 +159,24 @@ def _extract_property_tokens(raw: str) -> list[str]:
     for token in re.findall(r"[A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z][A-Za-z0-9]*)*", value):
         if token.startswith("@"):
             continue
+        if "." in token:
+            head, tail = token.split(".", 1)
+            if head and head[0].isupper():
+                token = tail
+        if token.lower() in JSONLD_META_TOKEN_BLACKLIST:
+            continue
         if token[0].isupper() and "." not in token:
             continue
         tokens.append(token)
+    return _unique(tokens)
+
+
+def _extract_code_tokens(fragment: str) -> list[str]:
+    tokens: list[str] = []
+    for match in re.findall(
+        r"<code[^>]*>(.*?)</code>", fragment, re.DOTALL | re.IGNORECASE
+    ):
+        tokens.extend(_extract_property_tokens(match))
     return _unique(tokens)
 
 
@@ -159,15 +224,28 @@ def _extract_table_properties(
                     option_one_of_groups[current_option] = []
                 continue
 
-        primary_tokens: list[str] = []
-        code_matches = re.findall(
-            r"<code[^>]*>(.*?)</code>", tds[0], re.DOTALL | re.IGNORECASE
-        )
-        for match in code_matches:
-            primary_tokens.extend(_extract_property_tokens(match))
-        primary_tokens = _unique(primary_tokens)
+        primary_tokens = _extract_code_tokens(tds[0])
+        row_has_schema_ref = "schema.org/" in row.lower()
+        if (
+            len(primary_tokens) == 1
+            and "." not in primary_tokens[0]
+            and not row_has_schema_ref
+            and len(tds) > 1
+        ):
+            value_text = _strip_tags(tds[1]).lower()
+            if any(
+                marker in value_text
+                for marker in (
+                    "whether the",
+                    "use one of the following",
+                    "select one of the following",
+                    "the type of",
+                )
+            ):
+                primary_tokens = []
+        row_tokens = _extract_code_tokens(row)
 
-        if ONE_OF_RE.search(row_text):
+        if ONE_OF_RE.search(row_text) and not ONE_OF_VALUE_RE.search(row_text):
             list_props: list[str] = []
             for td in tds:
                 for list_html in re.findall(
@@ -199,6 +277,23 @@ def _extract_table_properties(
                 option_one_of_groups[current_option].append(set(primary_tokens))
             else:
                 one_of_groups.append(set(primary_tokens))
+        elif primary_tokens and FALLBACK_RE.search(row_text):
+            # Treat explicit fallback prose as an alternative requirement
+            # (for example: "Google supports url if you don't include contentUrl").
+            fallback_tokens = [
+                token for token in row_tokens if token not in primary_tokens
+            ]
+            fallback_group = set(primary_tokens) | set(fallback_tokens)
+            if len(fallback_group) >= 2:
+                if current_option:
+                    option_one_of_groups[current_option].append(fallback_group)
+                else:
+                    one_of_groups.append(fallback_group)
+            else:
+                if current_option:
+                    option_props[current_option].update(primary_tokens)
+                else:
+                    props.extend(primary_tokens)
         else:
             if current_option:
                 option_props[current_option].update(primary_tokens)
@@ -253,22 +348,53 @@ def _parse_feature(html: str, url: str) -> FeatureData:
     one_of: dict[str, list[set[str]]] = {}
     one_of_option_groups: dict[str, list[list[set[str]]]] = {}
     pending_one_of_types: list[str] | None = None
+    conditional_required_next_table = False
 
     for token in TOKEN_RE.findall(html):
         token_lower = token.lower()
         if pending_one_of_types and not token_lower.startswith(("<ul", "<ol")):
             pending_one_of_types = None
-        if token_lower.startswith(("<p", "<h2", "<h3")):
+        if token_lower.startswith(("<h2", "<h3", "<h4")):
             types = _extract_schema_types(token)
             if types:
                 current_types = types
-            if token_lower.startswith("<p") and ONE_OF_RE.search(_strip_tags(token)):
-                pending_one_of_types = current_types or ["Thing"]
+            conditional_required_next_table = False
             continue
-        if token_lower.startswith("<h4"):
+        if token_lower.startswith("<p"):
             types = _extract_schema_types(token)
+            text = _strip_tags(token).lower()
             if types:
-                current_types = types
+                token_lower_text = token.lower()
+                looks_like_markup_example = any(
+                    marker in token_lower_text
+                    for marker in (
+                        "@type",
+                        "itemtype=",
+                        "typeof=",
+                        '"@context"',
+                        "<script",
+                    )
+                )
+                is_explicit_type_list = bool(TYPE_LIST_RE.search(text))
+                is_full_definition_note = (
+                    "full definition of" in text
+                    and ("is available" in text or "is provided" in text)
+                    and not looks_like_markup_example
+                )
+
+                if is_explicit_type_list:
+                    current_types = types
+                elif is_full_definition_note:
+                    overlap = [
+                        type_name for type_name in current_types if type_name in types
+                    ]
+                    current_types = overlap or types
+                elif not current_types and looks_like_markup_example:
+                    current_types = [types[0]]
+            if CONDITIONAL_REQUIRED_RE.search(text):
+                conditional_required_next_table = True
+            if ONE_OF_RE.search(text) and not ONE_OF_VALUE_RE.search(text):
+                pending_one_of_types = current_types or ["Thing"]
             continue
 
         if token_lower.startswith(("<ul", "<ol")) and pending_one_of_types:
@@ -283,6 +409,11 @@ def _parse_feature(html: str, url: str) -> FeatureData:
             kind = _table_kind(token)
             if not kind:
                 continue
+            if kind == "required" and conditional_required_next_table:
+                # Google often phrases scoped requirements as "required when ...".
+                # Emit warnings instead of unconditional errors for such sections.
+                kind = "recommended"
+            conditional_required_next_table = False
             props, groups, option_groups = _extract_table_properties(token)
             if not props and not groups and not option_groups:
                 continue
@@ -937,3 +1068,6 @@ def schema_main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
     return generate_schema_shacls(Path(args.output_file), args.overwrite)
+
+
+JSONLD_META_TOKEN_BLACKLIST = {"context", "type", "id", "graph"}

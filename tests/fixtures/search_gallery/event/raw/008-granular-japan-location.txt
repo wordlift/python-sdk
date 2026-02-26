@@ -1,0 +1,10 @@
+"location": {
+  "@type": "Place",
+  "name": "ダイバーシティ東京",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "江東区青海1-10",
+    "addressLocality": "東京",
+    "addressCountry": "日本"
+  }
+}

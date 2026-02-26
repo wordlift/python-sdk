@@ -1,0 +1,1 @@
+"employmentType": ["FULL_TIME", "CONTRACTOR"]
