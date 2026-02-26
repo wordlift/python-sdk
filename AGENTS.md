@@ -40,6 +40,17 @@
   non-conforming sample IDs (`tests/fixtures/search_gallery/expectations.json`),
   and CI regression diff reporting via
   `python tests/tools/search_gallery_conformance_diff.py`.
+- Google Search Console canonical selection is available via
+  `wordlift_sdk.google_search_console.create_canonical_csv_from_gsc_impressions`:
+  input CSV (`url,title`) with optional URL regex filtering, interval parsing
+  (`XX[d|w|m]`), exact-title clustering, canonical election by highest
+  impressions (tie -> first input row), and fixed/`auto` adaptive request
+  concurrency.
+- Shared adaptive concurrency policy is centralized in
+  `wordlift_sdk.utils.auto_concurrency.AutoConcurrencyController` and reused by
+  `structured_data.batch` (and GSC canonical selection), with throttle/server
+  failures/errors reducing concurrency and all-OK batches increasing it within
+  configured bounds.
 - Python support is validated against 3.10–3.14; ensure tests pass on 3.14 before
   bumping the range.
 - Schema.org grammar checks are deliberately permissive, accepting URL/text literals

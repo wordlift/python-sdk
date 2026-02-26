@@ -13,6 +13,7 @@ from rdflib import Graph
 
 from wordlift_sdk.structured_data.yarrrml_pipeline import YarrrmlPipeline
 from wordlift_sdk.render import CleanupOptions, RenderOptions, clean_xhtml, render_html
+from wordlift_sdk.utils.auto_concurrency import AutoConcurrencyController
 
 from .io import normalize_output_format, serialize_graph, write_output
 from .materialization import MaterializationPipeline
@@ -56,19 +57,7 @@ class BatchGenerator:
         _, extension = normalize_output_format(self._output_format)
         self._output_dir.mkdir(parents=True, exist_ok=True)
 
-        auto_concurrency = self._concurrency.strip().lower() == "auto"
-        if auto_concurrency:
-            min_workers = 2
-            max_workers = 12
-            current_workers = min(max_workers, max(min_workers, 4))
-        else:
-            try:
-                current_workers = int(self._concurrency)
-            except ValueError as exc:
-                raise RuntimeError("Concurrency must be an integer or 'auto'.") from exc
-            if current_workers <= 0:
-                raise RuntimeError("Concurrency must be greater than 0.")
-            min_workers = max_workers = current_workers
+        concurrency = AutoConcurrencyController.from_value(self._concurrency)
 
         results: list[dict[str, object]] = []
         errors: list[dict[str, str]] = []
@@ -166,11 +155,13 @@ class BatchGenerator:
                     }
 
             while index < total:
-                batch = urls[index : index + current_workers]
+                batch = urls[index : index + concurrency.current_workers]
                 if not batch:
                     break
                 batch_results: list[dict[str, object]] = []
-                with ThreadPoolExecutor(max_workers=current_workers) as executor:
+                with ThreadPoolExecutor(
+                    max_workers=concurrency.current_workers
+                ) as executor:
                     futures = {executor.submit(_process_url, url): url for url in batch}
                     for future in as_completed(futures):
                         result = future.result()
@@ -185,15 +176,9 @@ class BatchGenerator:
                             )
                 results.extend(batch_results)
 
-                if auto_concurrency:
-                    buckets = {
-                        self._status_bucket(item.get("status_code"))
-                        for item in batch_results
-                    }
-                    if buckets & {"throttle", "server_error", "error"}:
-                        current_workers = max(min_workers, current_workers - 1)
-                    elif buckets == {"ok"}:
-                        current_workers = min(max_workers, current_workers + 1)
+                concurrency.update_from_status_codes(
+                    item.get("status_code") for item in batch_results
+                )
                 index += len(batch)
             progress.close()
 
@@ -207,12 +192,5 @@ class BatchGenerator:
         }
 
     def _status_bucket(self, status_code: int | None) -> str:
-        if status_code is None:
-            return "error"
-        if status_code == 429:
-            return "throttle"
-        if 500 <= status_code < 600:
-            return "server_error"
-        if 200 <= status_code < 400:
-            return "ok"
-        return "client_error"
+        # Backward-compatible delegate used by existing tests.
+        return AutoConcurrencyController.status_bucket(status_code)

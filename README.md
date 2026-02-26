@@ -8,6 +8,7 @@ A Python toolkit for orchestrating WordLift imports: fetch URLs from sitemaps, G
 - Web page imports: sends URLs to WordLift with embedding requests, output types, retry logic, and pluggable callbacks.
 - Python 3.14 compatibility: retry filters use `pydantic_core.ValidationError` via the public API.
 - Search Console refresh: triggers analytics imports when top queries are stale.
+- GSC canonical clustering helper: builds `url,title,canonical` CSV outputs from Search Console impressions with exact-title clustering, interval parsing (`XX[d|w|m]`), optional URL regex filtering, and fixed/auto adaptive concurrency controls.
 - Graph templates: renders `.ttl.liquid` templates under `data/templates` with account data and uploads the resulting RDF graphs.
 - Extensible: override protocols via `WORDLIFT_OVERRIDE_DIR` without changing the library code.
 
@@ -131,6 +132,35 @@ Override the web page import callback by placing `web_page_import_protocol.py` w
 ## Templates
 
 Add `.ttl.liquid` files under `data/templates`. Templates render with `account` fields available (e.g., `{{ account.dataset_uri }}`) and are uploaded before URL handling begins.
+
+## GSC Canonical Selection (Reusable Method)
+
+Use `wordlift_sdk.google_search_console.create_canonical_csv_from_gsc_impressions` when you need to elect one canonical URL per title-cluster using Search Console impressions.
+
+```python
+from wordlift_sdk.google_search_console import (
+    create_canonical_csv_from_gsc_impressions,
+    load_authorized_user_credentials,
+)
+
+credentials = load_authorized_user_credentials("authorized_user.json")
+result_df = create_canonical_csv_from_gsc_impressions(
+    input_csv="input.csv",                      # required columns: url,title
+    output_csv="output.csv",                    # output columns: url,title,canonical
+    site_url="sc-domain:example.com",           # GSC property
+    credentials=credentials,                    # or service_account_file=...
+    interval="28d",                             # XX[d|w|m], e.g. 14d, 4w, 2m
+    url_regex=r"^https://example.com/blog/",   # optional filter
+    concurrency="auto",                         # integer string or "auto"
+)
+```
+
+Behavior notes:
+- Cluster rule is exact `title` match.
+- Canonical is selected by highest impressions in the interval.
+- Ties are broken by first appearance in input CSV.
+- Missing/empty GSC rows are treated as `0` impressions.
+- For user-account authentication, let your host client run the OAuth browser flow, persist the token JSON, then pass `credentials` (or `authorized_user_file`) to the SDK method.
 
 ## Validation
 
@@ -336,5 +366,7 @@ poetry run pytest
 - [Ingestion Pipeline Spec](specs/INGESTION_PIPELINE.md): Internal source/loader contract and precedence rules.
 - [Profile Config Spec](specs/PROFILE_CONFIG.md): Profile inheritance, environment interpolation, and manifest postprocessor contract.
 - [Pipeline Architecture Spec](specs/PIPELINE_ARCHITECTURE.md): `kg_build` runtime flow and callback architecture.
+- [GSC Canonical Selection Spec](specs/GSC_CANONICAL_SELECTION.md): Client integration contract for GSC-based canonical election (`url,title` input, OAuth credential handoff, interval/concurrency rules).
+- [Specs Index](specs/INDEX.md): Quick index for all internal technical specs.
 - [Migration Guide](MIGRATION.md): Breaking changes for structured data refactor.
 - [Changelog](CHANGELOG.md): Versioned release notes.

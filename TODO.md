@@ -1,5 +1,7 @@
 # TODO
 
+- [x] 2026-02-26 Add client-facing internal implementation spec for GSC canonical selection (`specs/GSC_CANONICAL_SELECTION.md`) and publish discoverability links in `specs/INDEX.md` and `README.md` for SDK-upgrade consumers.
+- [x] 2026-02-26 Add reusable GSC canonical-clustering SDK method (`create_canonical_csv_from_gsc_impressions`) with optional URL regex filtering, interval parsing (`XX[d|w|m]`), user/service-account credential support, and fixed/auto adaptive concurrency; extract shared auto concurrency controller to `wordlift_sdk.utils.auto_concurrency` and reuse it in `structured_data.batch`.
 - [x] 2026-02-26 Align Merchant listing `DefinedRegion` recommendation handling with Google docs by downgrading recommended "choose either `addressRegion` or `postalCode`" from hard error to warning-level guidance in generated/bundled SHACLs, with regression tests.
 - [x] 2026-02-26 Fix additional recommended "choose either ... or ..." alternatives (`dataset`, `merchant-listing` shipping rate value/maxValue, `product-snippet` offer currency path) to warning-level `sh:or` constraints with mock JSON-LD regression coverage and scoped-type generator emission.
 - [x] 2026-02-26 Make `google-image-license-metadata` opt-in in default bundled validation shape resolution (`validate_file`/`validate_jsonld_from_url` via default `shape_specs` paths).

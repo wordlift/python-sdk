@@ -1,5 +1,27 @@
 # Changelog
 
+## 6.5.0 - 2026-02-26
+
+### Added
+
+- Add reusable Google Search Console canonical-selection API:
+  - `create_canonical_csv_from_gsc_impressions(...)`
+  - interval parsing helper `parse_interval_to_date_range("XX[d|w|m]")`
+  - credential loaders for service-account and authorized-user OAuth token files.
+- Add shared adaptive concurrency controller:
+  - `wordlift_sdk.utils.auto_concurrency.AutoConcurrencyController`
+- Add internal/client implementation specs for GSC canonical selection:
+  - `specs/GSC_CANONICAL_SELECTION.md`
+  - `specs/INDEX.md`
+
+### Changed
+
+- `structured_data.batch` now reuses shared adaptive concurrency policy from
+  `wordlift_sdk.utils.auto_concurrency`.
+- GSC canonical selection uses `concurrency="N|auto"` as the public concurrency
+  input.
+- Documentation/status sync for new GSC canonical API and specs index.
+
 ## 6.3.0 - 2026-02-25
 
 ### Added

@@ -11,6 +11,7 @@
 - `docs/kg_build_cloud_workflow_migration.md`: Migration guide to canonical `run_cloud_workflow`, source-mode selection, and runtime defaults.
 - `docs/worai_sdk_integration_contract_v6.md`: Worai-facing integration contract for SDK v6 (canonical path, explicit source/loader, callbacks, and conformance matrix).
 - `docs/google_sheets_lookup.md`: Google Sheets lookup utility.
+- `docs/google_search_console_canonical_selection.md`: Canonical URL election from `url,title` CSV using GSC impressions, interval parsing, regex filtering, and fixed/auto adaptive concurrency.
 - `docs/html_converter.md`: HTML conversion helper behavior.
 - `docs/canonical_id_policy.md`: Canonical ID scope policy, type precedence, and URL/media rewrite guarantees.
 - `docs/CUSTOMER_PROJECT_CONTRACT.md`: Profile repository contract for `kg_build`, including `_base`/profile override semantics for postprocessors, runtime settings, and exports manifests.

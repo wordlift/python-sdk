@@ -8,6 +8,7 @@ from .create_entity_patch_request import create_entity_patch_request
 from .delayed import create_delayed
 from .get_me import get_me
 from .html_converter import HtmlConverter
+from .auto_concurrency import AutoConcurrencyController
 
 __all__ = [
     "create_dataframe_from_google_sheets",
@@ -18,4 +19,5 @@ __all__ = [
     "create_delayed",
     "get_me",
     "HtmlConverter",
+    "AutoConcurrencyController",
 ]
