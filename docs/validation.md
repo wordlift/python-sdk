@@ -97,6 +97,9 @@ Google-table parsing supports both property-level "one of" alternatives and expl
 option branches (`Option A` / `Option B`) where each branch can require multiple properties.
 Required rows that explicitly document a supported fallback (for example, `url` when
 `contentUrl` is not provided) are emitted as `sh:or` alternatives.
+Recommended-table "choose either ... or ..." alternatives are emitted as warning-level
+`sh:or` constraints (including scoped/nested shapes; warn only when none of
+the alternatives is present).
 Paragraph/list guidance that uses "one of the following values" is treated as enum/value
 documentation and is not emitted as property-level `sh:or`.
 Required sections with conditional language (for example "required when" / "required if")

@@ -27,8 +27,7 @@
   },
   "dataset": {
     "known_nonconforming_sample_ids": [
-      "001-json-ld-dataset-01",
-      "022-hello-01"
+      "001-json-ld-dataset-01"
     ]
   },
   "discussion-forum": {
@@ -74,8 +73,7 @@
       "019-eprel-certification-01",
       "020-3d-model-01",
       "021-product-and-car-co-type-01",
-      "023-product-and-book-co-type-01",
-      "027-linked-shipping-policy-json-ld-example-01"
+      "023-product-and-book-co-type-01"
     ]
   },
   "product-snippet": {

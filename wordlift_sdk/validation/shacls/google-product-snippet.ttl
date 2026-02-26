@@ -3,8 +3,29 @@
 @prefix schema: <http://schema.org/> .
 
 # Source: https://developers.google.com/search/docs/appearance/structured-data/product-snippet
-# Generated: 2026-02-26T12:53:00Z
+# Generated: 2026-02-26T15:42:10Z
 # Notes: required properties => errors; recommended properties => warnings.
+
+:google_OfferRecommendedOneOf1Shape
+  a sh:NodeShape ;
+  sh:targetClass schema:Offer ;
+  sh:severity sh:Warning ;
+  sh:message "Recommended by Google: choose either priceCurrency or priceSpecification.priceCurrency." ;
+  sh:or (
+    [
+      sh:property [
+        sh:path schema:priceCurrency ;
+        sh:minCount 1 ;
+      ] ;
+    ]
+    [
+      sh:property [
+        sh:path ( schema:priceSpecification schema:priceCurrency ) ;
+        sh:minCount 1 ;
+      ] ;
+    ]
+  ) ;
+.
 
 :google_ProductShape
   a sh:NodeShape ;
@@ -50,20 +71,6 @@
                 [
                   sh:property [
                     sh:path ( schema:priceSpecification schema:price ) ;
-                    sh:minCount 1 ;
-                  ] ;
-                ]
-              ) ;
-              sh:or (
-                [
-                  sh:property [
-                    sh:path schema:priceCurrency ;
-                    sh:minCount 1 ;
-                  ] ;
-                ]
-                [
-                  sh:property [
-                    sh:path ( schema:priceSpecification schema:priceCurrency ) ;
                     sh:minCount 1 ;
                   ] ;
                 ]

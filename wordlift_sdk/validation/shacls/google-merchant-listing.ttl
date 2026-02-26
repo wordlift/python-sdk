@@ -3,7 +3,7 @@
 @prefix schema: <http://schema.org/> .
 
 # Source: https://developers.google.com/search/docs/appearance/structured-data/merchant-listing
-# Generated: 2026-02-26T12:53:01Z
+# Generated: 2026-02-26T15:42:10Z
 # Notes: required properties => errors; recommended properties => warnings.
 
 :google_3DModelShape
@@ -47,6 +47,13 @@
     sh:path schema:addressCountry ;
     sh:minCount 1 ;
   ] ;
+.
+
+:google_DefinedRegionRecommendedOneOf1Shape
+  a sh:NodeShape ;
+  sh:targetClass schema:DefinedRegion ;
+  sh:severity sh:Warning ;
+  sh:message "Recommended by Google: choose either addressRegion or postalCode." ;
   sh:or (
     [
       sh:property [
@@ -127,6 +134,13 @@
     sh:severity sh:Warning ;
     sh:message "Recommended by Google: shippingRate.currency." ;
   ] ;
+.
+
+:google_OfferShippingDetailsRecommendedOneOf1Shape
+  a sh:NodeShape ;
+  sh:targetClass schema:OfferShippingDetails ;
+  sh:severity sh:Warning ;
+  sh:message "Recommended by Google: choose either shippingRate.maxValue or shippingRate.value." ;
   sh:or (
     [
       sh:property [

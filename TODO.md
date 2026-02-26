@@ -1,5 +1,7 @@
 # TODO
 
+- [x] 2026-02-26 Align Merchant listing `DefinedRegion` recommendation handling with Google docs by downgrading recommended "choose either `addressRegion` or `postalCode`" from hard error to warning-level guidance in generated/bundled SHACLs, with regression tests.
+- [x] 2026-02-26 Fix additional recommended "choose either ... or ..." alternatives (`dataset`, `merchant-listing` shipping rate value/maxValue, `product-snippet` offer currency path) to warning-level `sh:or` constraints with mock JSON-LD regression coverage and scoped-type generator emission.
 - [x] 2026-02-26 Make `google-image-license-metadata` opt-in in default bundled validation shape resolution (`validate_file`/`validate_jsonld_from_url` via default `shape_specs` paths).
 - [x] 2026-02-26 Add Search Gallery SHACL quality gates: per-page baseline conformance diff (`tests/tools/search_gallery_conformance_diff.py`) and explicit known non-conforming sample expectations.
 - [x] 2026-02-26 Add SHACL sanity lint checks for generated Google shapes (missing `sh:targetClass`, unknown `schema:` properties with pseudo-property allowlist).

@@ -24,6 +24,8 @@ When a required property row includes alternatives (for example,
 `sh:or` group so either property satisfies the requirement.
 Rows with explicit fallback wording (for example, "supports `url` if you don't
 include `contentUrl`") are also modeled as `sh:or` alternatives.
+Recommended-table alternatives phrased as "choose either ... or ..." are modeled
+as warning-level `sh:or` constraints, including scoped/nested type constraints.
 Paragraph/list text that says "one of the following values" is treated as value
 guidance and must not be converted into property-level `sh:or` alternatives.
 

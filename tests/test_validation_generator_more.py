@@ -234,6 +234,32 @@ def test_parse_feature_downgrades_conditional_required_sections():
     )
 
 
+def test_parse_feature_treats_recommended_one_of_as_recommended_props():
+    html = """
+<h2><code>DefinedRegion</code></h2>
+<table>
+  <th>Required properties</th>
+  <tr><td><code>addressCountry</code></td></tr>
+</table>
+<table>
+  <th>Recommended properties</th>
+  <tr>
+    <td>Choose either <code>addressRegion</code> or <code>postalCode</code></td>
+    <td>Delivery area hint.</td>
+  </tr>
+</table>
+"""
+    feature = generator._parse_feature(html, "https://example.org/feature")
+
+    assert "DefinedRegion" in feature.types
+    assert "addressCountry" in feature.types["DefinedRegion"]["required"]
+    assert "addressRegion" not in feature.types["DefinedRegion"]["recommended"]
+    assert "postalCode" not in feature.types["DefinedRegion"]["recommended"]
+    assert {"addressRegion", "postalCode"} in feature.one_of_recommended[
+        "DefinedRegion"
+    ]
+
+
 def test_parse_feature_ignores_one_of_value_paragraph_lists():
     html = """
 <h2><code>JobPosting</code></h2>
@@ -429,3 +455,21 @@ def test_write_feature_respects_overwrite(tmp_path: Path):
     output_path = tmp_path / "google-thing.ttl"
     assert generator._write_feature(feature, output_path, overwrite=True) is True
     assert generator._write_feature(feature, output_path, overwrite=False) is False
+
+
+def test_write_feature_emits_recommended_one_of_for_scoped_types(tmp_path: Path):
+    feature = FeatureData(
+        url="https://example.org",
+        types={
+            "Product": {"required": {"offers"}, "recommended": set()},
+            "Offer": {"required": {"price"}, "recommended": set()},
+        },
+        one_of_recommended={
+            "Offer": [{"priceCurrency", "priceSpecification.priceCurrency"}]
+        },
+    )
+    output_path = tmp_path / "google-product.ttl"
+    assert generator._write_feature(feature, output_path, overwrite=True) is True
+    content = output_path.read_text(encoding="utf-8")
+    assert ":google_OfferRecommendedOneOf1Shape" in content
+    assert "choose either priceCurrency or priceSpecification.priceCurrency" in content

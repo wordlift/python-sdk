@@ -58,6 +58,10 @@ class FeatureData:
     types: dict[str, dict[str, set[str]]]
     one_of: dict[str, list[set[str]]] = field(default_factory=dict)
     one_of_option_groups: dict[str, list[list[set[str]]]] = field(default_factory=dict)
+    one_of_recommended: dict[str, list[set[str]]] = field(default_factory=dict)
+    one_of_option_groups_recommended: dict[str, list[list[set[str]]]] = field(
+        default_factory=dict
+    )
 
 
 @dataclass
@@ -347,6 +351,8 @@ def _parse_feature(html: str, url: str) -> FeatureData:
     type_data: dict[str, dict[str, set[str]]] = {}
     one_of: dict[str, list[set[str]]] = {}
     one_of_option_groups: dict[str, list[list[set[str]]]] = {}
+    one_of_recommended: dict[str, list[set[str]]] = {}
+    one_of_option_groups_recommended: dict[str, list[list[set[str]]]] = {}
     pending_one_of_types: list[str] | None = None
     conditional_required_next_table = False
 
@@ -424,9 +430,17 @@ def _parse_feature(html: str, url: str) -> FeatureData:
                 )
                 bucket[kind].update(props)
                 if groups:
-                    one_of.setdefault(t, []).extend(groups)
+                    if kind == "required":
+                        one_of.setdefault(t, []).extend(groups)
+                    else:
+                        one_of_recommended.setdefault(t, []).extend(groups)
                 if option_groups:
-                    one_of_option_groups.setdefault(t, []).extend(option_groups)
+                    if kind == "required":
+                        one_of_option_groups.setdefault(t, []).extend(option_groups)
+                    else:
+                        one_of_option_groups_recommended.setdefault(t, []).extend(
+                            option_groups
+                        )
 
     for t, bucket in type_data.items():
         bucket["recommended"].difference_update(bucket["required"])
@@ -444,11 +458,26 @@ def _parse_feature(html: str, url: str) -> FeatureData:
                 bucket["required"].difference_update(branch)
                 bucket["recommended"].difference_update(branch)
 
+    for t, groups in one_of_recommended.items():
+        bucket = type_data.setdefault(t, {"required": set(), "recommended": set()})
+        for group in groups:
+            bucket["required"].difference_update(group)
+            bucket["recommended"].difference_update(group)
+
+    for t, option_sets in one_of_option_groups_recommended.items():
+        bucket = type_data.setdefault(t, {"required": set(), "recommended": set()})
+        for branches in option_sets:
+            for branch in branches:
+                bucket["required"].difference_update(branch)
+                bucket["recommended"].difference_update(branch)
+
     return FeatureData(
         url=url,
         types=type_data,
         one_of=one_of,
         one_of_option_groups=one_of_option_groups,
+        one_of_recommended=one_of_recommended,
+        one_of_option_groups_recommended=one_of_option_groups_recommended,
     )
 
 
@@ -770,65 +799,113 @@ def _write_feature(feature: FeatureData, output_path: Path, overwrite: bool) -> 
     lines.append("")
 
     for type_name in sorted(feature.types.keys()):
-        if type_name in scoped_types:
-            continue
-        bucket = feature.types[type_name]
-        shape_name = f":google_{type_name}Shape"
-        lines.append(shape_name)
-        lines.append("  a sh:NodeShape ;")
-        lines.append(f"  sh:targetClass schema:{type_name} ;")
+        if type_name not in scoped_types:
+            bucket = feature.types[type_name]
+            shape_name = f":google_{type_name}Shape"
+            lines.append(shape_name)
+            lines.append("  a sh:NodeShape ;")
+            lines.append(f"  sh:targetClass schema:{type_name} ;")
 
-        for prop in sorted(bucket["required"]):
-            child_types = _SCOPED_CHILD_RULES.get(type_name, {}).get(prop)
-            _emit_property(
+            for prop in sorted(bucket["required"]):
+                child_types = _SCOPED_CHILD_RULES.get(type_name, {}).get(prop)
+                _emit_property(
+                    lines,
+                    prop,
+                    required=True,
+                    child_types=child_types,
+                    indent=2,
+                    buckets=feature.types,
+                    visited={type_name},
+                    one_of_map=feature.one_of,
+                    one_of_option_map=feature.one_of_option_groups,
+                )
+
+            for prop in sorted(bucket["recommended"]):
+                child_types = _SCOPED_CHILD_RULES.get(type_name, {}).get(prop)
+                _emit_property(
+                    lines,
+                    prop,
+                    required=False,
+                    child_types=child_types,
+                    indent=2,
+                    buckets=feature.types,
+                    visited={type_name},
+                    one_of_map=feature.one_of,
+                    one_of_option_map=feature.one_of_option_groups,
+                )
+
+            _emit_one_of_groups(
                 lines,
-                prop,
-                required=True,
-                child_types=child_types,
-                indent=2,
-                buckets=feature.types,
-                visited={type_name},
-                one_of_map=feature.one_of,
-                one_of_option_map=feature.one_of_option_groups,
+                feature.one_of.get(type_name, []),
+                type_name,
+                2,
+                feature.types,
+                {type_name},
+                feature.one_of,
+                feature.one_of_option_groups,
+            )
+            _emit_one_of_option_groups(
+                lines,
+                feature.one_of_option_groups.get(type_name, []),
+                type_name,
+                2,
+                feature.types,
+                {type_name},
+                feature.one_of,
+                feature.one_of_option_groups,
             )
 
-        for prop in sorted(bucket["recommended"]):
-            child_types = _SCOPED_CHILD_RULES.get(type_name, {}).get(prop)
-            _emit_property(
-                lines,
-                prop,
-                required=False,
-                child_types=child_types,
-                indent=2,
-                buckets=feature.types,
-                visited={type_name},
-                one_of_map=feature.one_of,
-                one_of_option_map=feature.one_of_option_groups,
+            lines.append(".")
+            lines.append("")
+
+        recommended_one_of_groups = feature.one_of_recommended.get(type_name, [])
+        for idx, group in enumerate(recommended_one_of_groups, start=1):
+            shape_name = f":google_{type_name}RecommendedOneOf{idx}Shape"
+            lines.append(shape_name)
+            lines.append("  a sh:NodeShape ;")
+            lines.append(f"  sh:targetClass schema:{type_name} ;")
+            lines.append("  sh:severity sh:Warning ;")
+            joined = " or ".join(sorted(group))
+            lines.append(
+                f'  sh:message "Recommended by Google: choose either {joined}." ;'
             )
+            _emit_one_of_groups(
+                lines,
+                [group],
+                type_name,
+                2,
+                feature.types,
+                {type_name},
+                feature.one_of,
+                feature.one_of_option_groups,
+            )
+            lines.append(".")
+            lines.append("")
 
-        _emit_one_of_groups(
-            lines,
-            feature.one_of.get(type_name, []),
-            type_name,
-            2,
-            feature.types,
-            {type_name},
-            feature.one_of,
-            feature.one_of_option_groups,
+        recommended_option_groups = feature.one_of_option_groups_recommended.get(
+            type_name, []
         )
-        _emit_one_of_option_groups(
-            lines,
-            feature.one_of_option_groups.get(type_name, []),
-            type_name,
-            2,
-            feature.types,
-            {type_name},
-            feature.one_of,
-            feature.one_of_option_groups,
-        )
-
-        lines.append(".")
-        lines.append("")
+        for idx, branches in enumerate(recommended_option_groups, start=1):
+            shape_name = f":google_{type_name}RecommendedOption{idx}Shape"
+            lines.append(shape_name)
+            lines.append("  a sh:NodeShape ;")
+            lines.append(f"  sh:targetClass schema:{type_name} ;")
+            lines.append("  sh:severity sh:Warning ;")
+            lines.append(
+                '  sh:message "Recommended by Google: satisfy one of the documented option branches." ;'
+            )
+            _emit_one_of_option_groups(
+                lines,
+                [branches],
+                type_name,
+                2,
+                feature.types,
+                {type_name},
+                feature.one_of,
+                feature.one_of_option_groups,
+            )
+            lines.append(".")
+            lines.append("")
 
     output_path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
     return True

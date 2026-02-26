@@ -17,6 +17,11 @@
 - The SHACL generator treats explicit fallback wording in required rows (for
   example, `url` supported when `contentUrl` is omitted) as `sh:or`
   alternatives rather than hard-requiring only the preferred property.
+- The SHACL generator treats recommended-table "choose either ... or ..."
+  alternatives as warning-level `sh:or` constraints (including scoped/nested
+  types), warning only when all alternatives are absent (for example, Merchant
+  listing `DefinedRegion`, Merchant listing shipping rate value/maxValue, and
+  Product snippet offer currency path alternatives).
 - The SHACL generator ignores paragraph-level "one of the following values"
   lists when building property alternatives, and downgrades conditional
   required prose ("required when/if", "only required if") to warning-level

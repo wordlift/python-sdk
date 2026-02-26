@@ -3,7 +3,7 @@
 @prefix schema: <http://schema.org/> .
 
 # Source: https://developers.google.com/search/docs/appearance/structured-data/employer-rating
-# Generated: 2026-02-26T12:52:51Z
+# Generated: 2026-02-26T15:42:00Z
 # Notes: required properties => errors; recommended properties => warnings.
 
 :google_EmployerAggregateRatingShape

@@ -3,7 +3,7 @@
 @prefix schema: <http://schema.org/> .
 
 # Source: https://developers.google.com/search/docs/appearance/structured-data/paywalled-content
-# Generated: 2026-02-26T12:53:12Z
+# Generated: 2026-02-26T15:42:21Z
 # Notes: required properties => errors; recommended properties => warnings.
 
 :google_CreativeWorkShape
