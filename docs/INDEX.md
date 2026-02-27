@@ -2,6 +2,7 @@
 
 - `docs/public_entry_points.md`: Task-oriented public API inventory for clients/agents.
 - `docs/ingestion_pipeline.md`: Two-axis ingestion architecture, config precedence, compatibility mapping, async-safe Playwright loader behavior, Playwright failure diagnostics in `ingest.item_failed.meta`, and bridge-handler diagnostics surfacing (`diagnostics=<json>`).
+- `docs/local_agent_type_classification.md`: Ingestion-backed local CLI (`claude|codex|gemini`) type classification CSV export (`url,main_type,additional_types,explanation`) with `trafilatura` markdown extraction.
 - `docs/structured_data.md`: Structured data architecture and workflows.
 - `docs/validation.md`: SHACL validation usage, bundled/custom shape selection, and SDK-side issue filtering helpers.
 - `docs/search_gallery_shacl_review.md`: Current page-by-page SHACL change review for Search Gallery pages with extracted sample conformance metrics.

@@ -38,6 +38,7 @@ Alias support:
 - `INGEST_TIMEOUT_MS`
 - `INGEST_RETRY_ATTEMPTS`
 - `INGEST_RETRY_BACKOFF_MS`
+- `URL_REGEX`
 
 ### Deterministic Rules
 
@@ -45,6 +46,8 @@ Alias support:
 - `INGEST_LOADER` is required and must be one of `simple|proxy|playwright|premium_scraper|web_scrape_api|passthrough`.
 - Legacy resolver fallback from `WEB_PAGE_IMPORT_*` and implicit source auto-priority is not supported.
 - Source-specific required fields are validated strictly (`URLS`, `SITEMAP_URL`, or full `SHEETS_*` tuple, depending on `INGEST_SOURCE`).
+- `URL_REGEX` is validated at resolve time and applied uniformly before loader execution.
+- `SITEMAP_URL_PATTERN` is deprecated; for `INGEST_SOURCE=sitemap` it is accepted as an alias when `URL_REGEX` is unset.
 
 ## Passthrough Precedence
 

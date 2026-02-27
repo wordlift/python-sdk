@@ -57,6 +57,7 @@ def _config(**kwargs) -> ResolvedIngestionConfig:
         "retry_backoff_ms": 2000,
         "source_config": {},
         "loader_config": {},
+        "url_regex": None,
         "warnings": tuple(),
     }
     defaults.update(kwargs)
@@ -113,6 +114,35 @@ def test_item_failure_emits_structured_error_event() -> None:
     assert len(failed) == 1
     assert failed[0]["code"] == "INGEST_LOAD_NETWORK_ERROR"
     assert failed[0]["retryable"] is True
+
+
+def test_url_regex_filters_non_matching_items_silently() -> None:
+    source_registry: AdapterRegistry[object] = AdapterRegistry(kind="source")
+    source_registry.register(
+        "urls",
+        _Source(
+            [
+                SourceItem(id="1", url="https://example.com/a"),
+                SourceItem(id="2", url="https://example.com/b"),
+            ]
+        ),
+    )
+
+    loader_registry: AdapterRegistry[object] = AdapterRegistry(kind="loader")
+    loader_registry.register("simple", _Loader("simple"))
+    loader_registry.register("passthrough", _Loader("passthrough"))
+
+    orchestrator = IngestionOrchestrator(
+        source_registry=source_registry,
+        loader_registry=loader_registry,
+    )
+    result = orchestrator.run(
+        _config(loader_name="simple", passthrough_when_html=False, url_regex=r"/a$")
+    )
+
+    assert [page.url for page in result.pages] == ["https://example.com/a"]
+    summary = [e for e in result.events if e["event"] == "ingest.summary"][0]
+    assert summary["meta"] == {"total": 1, "loaded": 1, "failed": 0}
 
 
 def test_warning_event_shape_is_machine_parseable() -> None:

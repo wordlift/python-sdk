@@ -19,6 +19,7 @@ from .resolver import (
     resolve_ingestion_config_from_mapping,
     resolve_ingestion_config_from_provider,
 )
+from .type_classification import create_type_classification_csv_from_ingestion
 
 __all__ = [
     "AdapterRegistry",
@@ -39,6 +40,7 @@ __all__ = [
     "create_loader_registry",
     "create_orchestrator",
     "create_source_registry",
+    "create_type_classification_csv_from_ingestion",
     "run_ingestion",
     "resolve_ingestion_config_from_getter",
     "resolve_ingestion_config_from_mapping",

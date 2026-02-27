@@ -43,8 +43,6 @@ class UrlListSourceAdapter:
 class SitemapSourceAdapter:
     def iter_items(self, config: ResolvedIngestionConfig) -> Iterator[SourceItem]:
         sitemap_url = config.source_config.get("sitemap_url")
-        pattern_raw = config.source_config.get("sitemap_url_pattern")
-        pattern = re.compile(pattern_raw) if pattern_raw else None
         request_headers = build_browser_like_headers()
 
         try:
@@ -67,8 +65,6 @@ class SitemapSourceAdapter:
         for idx, row in sitemap_df.iterrows():
             url = str(row.get("loc", "")).strip()
             if not url:
-                continue
-            if pattern and not pattern.search(url):
                 continue
             date_modified = row.get("lastmod_as_datetime")
             metadata: dict[str, Any] = {}

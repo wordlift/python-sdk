@@ -27,6 +27,7 @@ def _config(**kwargs) -> ResolvedIngestionConfig:
         "retry_backoff_ms": 1,
         "source_config": {},
         "loader_config": {},
+        "url_regex": None,
         "warnings": tuple(),
     }
     defaults.update(kwargs)
@@ -71,12 +72,11 @@ def test_sitemap_source_adapter(monkeypatch: pytest.MonkeyPatch) -> None:
     cfg = _config(
         source_config={
             "sitemap_url": "https://example.com/sitemap.xml",
-            "sitemap_url_pattern": r"^https://example.com/1$",
         }
     )
 
     items = list(adapter.iter_items(cfg))
-    assert len(items) == 1
+    assert len(items) == 2
     assert items[0].url == "https://example.com/1"
     assert "date_modified" in items[0].metadata
     assert calls == [

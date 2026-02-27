@@ -65,3 +65,53 @@ def test_premium_options_require_premium_loader() -> None:
             }
         )
     assert exc.value.code == "INGEST_CFG_INVALID_OPTION_COMBINATION"
+
+
+def test_url_regex_is_resolved_and_validated() -> None:
+    cfg = resolve_ingestion_config_from_mapping(
+        {
+            "INGEST_SOURCE": "urls",
+            "INGEST_LOADER": "web_scrape_api",
+            "URLS": ["https://example.com"],
+            "URL_REGEX": r"/article/",
+        }
+    )
+    assert cfg.url_regex == r"/article/"
+
+    with pytest.raises(IngestionConfigError) as exc:
+        resolve_ingestion_config_from_mapping(
+            {
+                "INGEST_SOURCE": "urls",
+                "INGEST_LOADER": "web_scrape_api",
+                "URLS": ["https://example.com"],
+                "URL_REGEX": r"([",
+            }
+        )
+    assert exc.value.code == "INGEST_CFG_INVALID_URL_REGEX"
+
+
+def test_sitemap_url_pattern_is_deprecated_alias_for_url_regex() -> None:
+    cfg = resolve_ingestion_config_from_mapping(
+        {
+            "INGEST_SOURCE": "sitemap",
+            "INGEST_LOADER": "web_scrape_api",
+            "SITEMAP_URL": "https://example.com/sitemap.xml",
+            "SITEMAP_URL_PATTERN": r"/article/",
+        }
+    )
+    assert cfg.url_regex == r"/article/"
+    assert len(cfg.warnings) == 1
+    assert cfg.warnings[0].code == "INGEST_CFG_DEPRECATED_OPTION"
+
+    cfg2 = resolve_ingestion_config_from_mapping(
+        {
+            "INGEST_SOURCE": "sitemap",
+            "INGEST_LOADER": "web_scrape_api",
+            "SITEMAP_URL": "https://example.com/sitemap.xml",
+            "SITEMAP_URL_PATTERN": r"/legacy/",
+            "URL_REGEX": r"/new/",
+        }
+    )
+    assert cfg2.url_regex == r"/new/"
+    assert len(cfg2.warnings) == 1
+    assert cfg2.warnings[0].winner == "URL_REGEX"

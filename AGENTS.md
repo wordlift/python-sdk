@@ -166,6 +166,14 @@
   mapping (`WEB_PAGE_IMPORT_MODE default -> web_scrape_api`, `proxy -> proxy`,
   `premium_scraper -> premium_scraper`); `local` and `debug-cloud` source names
   are treated as aliases.
+- Ingestion URL filtering is now standardized on global `URL_REGEX` (applied
+  across `urls|sitemap|sheets|local` before loader execution); sitemap-specific
+  `SITEMAP_URL_PATTERN` is deprecated and mapped as alias when `URL_REGEX` is
+  unset.
+- Ingestion exposes local CLI type classification export via
+  `create_type_classification_csv_from_ingestion`, using `trafilatura` markdown
+  extraction and non-interactive local CLI auto-selection
+  (`claude` -> `codex` -> `gemini`).
 - Ingestion resolver skips legacy `SHEETS_*` completeness validation when
   `INGEST_SOURCE` is explicitly set to a non-`sheets` source; strict sheets
   validation is still enforced for explicit `sheets` and auto/legacy detection.

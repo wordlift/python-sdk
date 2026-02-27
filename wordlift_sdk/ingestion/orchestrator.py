@@ -2,9 +2,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timezone
+import re
 from typing import Any, Callable
 
-from .errors import IngestionError
+from .errors import IngestionConfigError, IngestionError
 from .models import LoadedPage
 from .registry import AdapterRegistry
 from .resolver import ResolvedIngestionConfig
@@ -38,6 +39,16 @@ class IngestionOrchestrator:
         events: list[dict[str, Any]] = []
         pages: list[LoadedPage] = []
         failed = 0
+        url_pattern: re.Pattern[str] | None = None
+        if config.url_regex:
+            try:
+                url_pattern = re.compile(config.url_regex)
+            except re.error as exc:
+                raise IngestionConfigError(
+                    "Invalid URL_REGEX pattern.",
+                    code="INGEST_CFG_INVALID_URL_REGEX",
+                    details={"url_regex": config.url_regex},
+                ) from exc
 
         def emit(payload: dict[str, Any]) -> None:
             events.append(payload)
@@ -51,6 +62,8 @@ class IngestionOrchestrator:
         configured_loader = config.loader_name
 
         for item in source.iter_items(config):
+            if url_pattern is not None and not url_pattern.search(item.url):
+                continue
             effective_loader = configured_loader
             if config.passthrough_when_html and item.html:
                 effective_loader = "passthrough"

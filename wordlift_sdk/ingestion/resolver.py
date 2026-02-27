@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import re
 from typing import Any, Callable, Mapping
 
 from wordlift_sdk.client.client_configuration_factory import ClientConfigurationFactory
@@ -66,6 +67,7 @@ class ResolvedIngestionConfig:
     retry_backoff_ms: int
     source_config: dict[str, Any] = field(default_factory=dict)
     loader_config: dict[str, Any] = field(default_factory=dict)
+    url_regex: str | None = None
     warnings: tuple[IngestionWarning, ...] = field(default_factory=tuple)
 
 
@@ -93,10 +95,7 @@ def _build_source_config(
                 "SITEMAP_URL is required for INGEST_SOURCE=sitemap",
                 code="INGEST_CFG_MISSING_SOURCE",
             )
-        return {
-            "sitemap_url": sitemap_url,
-            "sitemap_url_pattern": get_value("SITEMAP_URL_PATTERN"),
-        }
+        return {"sitemap_url": sitemap_url}
 
     if source_name == "sheets":
         sheets_url = get_value("SHEETS_URL")
@@ -192,6 +191,49 @@ def resolve_ingestion_config_from_getter(
 
     source_config = _build_source_config(source_name, get_value)
 
+    url_regex_raw = get_value("URL_REGEX")
+    sitemap_pattern_raw = get_value("SITEMAP_URL_PATTERN")
+    url_regex: str | None = None
+    if url_regex_raw not in (None, ""):
+        url_regex = str(url_regex_raw).strip()
+        if source_name == "sitemap" and sitemap_pattern_raw not in (None, ""):
+            warnings.append(
+                IngestionWarning(
+                    code="INGEST_CFG_DEPRECATED_OPTION",
+                    message=(
+                        "SITEMAP_URL_PATTERN is deprecated and ignored when URL_REGEX is set."
+                    ),
+                    new_key="URL_REGEX",
+                    new_value=url_regex,
+                    legacy_key="SITEMAP_URL_PATTERN",
+                    legacy_value=sitemap_pattern_raw,
+                    winner="URL_REGEX",
+                )
+            )
+    elif source_name == "sitemap" and sitemap_pattern_raw not in (None, ""):
+        # Backward-compatible alias for sitemap-only filtering.
+        url_regex = str(sitemap_pattern_raw).strip()
+        warnings.append(
+            IngestionWarning(
+                code="INGEST_CFG_DEPRECATED_OPTION",
+                message="SITEMAP_URL_PATTERN is deprecated; use URL_REGEX instead.",
+                new_key="URL_REGEX",
+                new_value=url_regex,
+                legacy_key="SITEMAP_URL_PATTERN",
+                legacy_value=sitemap_pattern_raw,
+                winner="URL_REGEX",
+            )
+        )
+    if url_regex is not None:
+        try:
+            re.compile(url_regex)
+        except re.error as exc:
+            raise IngestionConfigError(
+                "Invalid URL_REGEX pattern.",
+                code="INGEST_CFG_INVALID_URL_REGEX",
+                details={"url_regex": url_regex},
+            ) from exc
+
     loader_config = {
         "timeout_ms": timeout_ms,
         "retry_attempts": retry_attempts,
@@ -215,6 +257,7 @@ def resolve_ingestion_config_from_getter(
         retry_backoff_ms=retry_backoff_ms,
         source_config=source_config,
         loader_config=loader_config,
+        url_regex=url_regex,
         warnings=tuple(warnings),
     )
 

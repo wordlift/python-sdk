@@ -1,5 +1,27 @@
 # Changelog
 
+## 6.6.0 - 2026-02-27
+
+### Added
+
+- Add shared local agent CLI module:
+  - `wordlift_sdk.agent_cli.LocalAgentCliRunner`
+  - non-interactive local CLI execution for `claude|codex|gemini`
+  - auto-selection order when unspecified: `claude` -> `codex` -> `gemini`.
+- Add ingestion-backed type classification export API:
+  - `wordlift_sdk.ingestion.create_type_classification_csv_from_ingestion(...)`
+  - output columns: `url,main_type,additional_types,explanation`
+  - markdown body extraction via `trafilatura`.
+
+### Changed
+
+- Add global ingestion URL filtering via `URL_REGEX` across all ingestion
+  sources (`urls|sitemap|sheets|local`) before loader execution.
+- Deprecate `SITEMAP_URL_PATTERN`; for sitemap sources it is now treated as an
+  alias of `URL_REGEX` when `URL_REGEX` is unset.
+- Documentation/spec indices and ingestion pipeline docs updated for the new
+  URL filter contract and local agent classification workflow.
+
 ## 6.5.0 - 2026-02-26
 
 ### Added

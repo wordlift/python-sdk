@@ -50,12 +50,14 @@ The orchestrator resolves adapters via registries and emits uniform events.
 - `INGEST_TIMEOUT_MS`: int milliseconds (default `30000`)
 - `INGEST_RETRY_ATTEMPTS`: int (default `5`)
 - `INGEST_RETRY_BACKOFF_MS`: int milliseconds (default `2000`)
+- `URL_REGEX`: optional regex applied to all source URLs before loader execution
 
 ### Precedence
 
 1. `INGEST_SOURCE` and `INGEST_LOADER` are explicit and required.
 2. Legacy resolver fallback (`WEB_PAGE_IMPORT_MODE`, `WEB_PAGE_IMPORT_TIMEOUT`, implicit source auto-priority) is removed.
 - Passthrough shortcut: if item has embedded HTML and `INGEST_PASSTHROUGH_WHEN_HTML=true`, effective loader is `passthrough`.
+- `SITEMAP_URL_PATTERN` is deprecated and treated as a sitemap-only alias for `URL_REGEX`.
 
 Source alias compatibility:
 
@@ -125,6 +127,7 @@ result = run_ingestion(
         "INGEST_SOURCE": "urls",
         "URLS": ["https://example.com/a"],
         "INGEST_LOADER": "web_scrape_api",
+        "URL_REGEX": r"^https://example.com/",
         "WORDLIFT_KEY": "...",
     }
 )
@@ -146,6 +149,7 @@ for page in result.pages:
 - `wordlift_sdk.ingestion.create_loader_registry()`
 - `wordlift_sdk.ingestion.IngestionOrchestrator`
 - `wordlift_sdk.ingestion.run_ingestion(...)`
+- `wordlift_sdk.ingestion.create_type_classification_csv_from_ingestion(...)`
 
 ### Deprecated/Internal APIs
 

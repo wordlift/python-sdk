@@ -43,6 +43,7 @@ def _config(**kwargs) -> ResolvedIngestionConfig:
             "premium_proxy": None,
             "block_ads": None,
         },
+        "url_regex": None,
         "warnings": tuple(),
     }
     defaults.update(kwargs)

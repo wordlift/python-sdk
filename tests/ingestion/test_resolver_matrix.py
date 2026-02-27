@@ -22,7 +22,7 @@ def _source_payload(source: str) -> dict[str, object]:
     if source == "sitemap":
         return {
             "SITEMAP_URL": "https://example.com/sitemap.xml",
-            "SITEMAP_URL_PATTERN": r"^https://example.com/articles/",
+            "URL_REGEX": r"^https://example.com/articles/",
         }
     if source == "sheets":
         return {

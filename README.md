@@ -3,7 +3,7 @@
 A Python toolkit for orchestrating WordLift imports: fetch URLs from sitemaps, Google Sheets, or explicit lists, filter out already imported pages, enqueue search console jobs, push RDF graphs, and call the WordLift APIs to import web pages.
 
 ## Features
-- URL sources: XML sitemaps (with optional regex filtering), Google Sheets (`url` column), or Python lists.
+- URL sources: XML sitemaps, Google Sheets (`url` column), or Python lists, with global optional `URL_REGEX` filtering.
 - Sitemap discovery requests use a browser-like header bundle aligned with Playwright defaults (including `User-Agent`, `Accept`, `Accept-Language`, `Referer`, and `Sec-CH-*` headers).
 - Change detection: skips URLs that are already imported unless `OVERWRITE` is enabled; re-imports when `lastmod` is newer.
 - Web page imports: sends URLs to WordLift with embedding requests, output types, retry logic, and pluggable callbacks.
@@ -30,7 +30,8 @@ Settings are read in order: `config/default.py` (or a custom path you pass to `C
 Common options:
 - `WORDLIFT_KEY` (required): WordLift API key.
 - `API_URL`: WordLift API base URL, defaults to `https://api.wordlift.io`.
-- `SITEMAP_URL`: XML sitemap to crawl; `SITEMAP_URL_PATTERN` optional regex to filter URLs.
+- `SITEMAP_URL`: XML sitemap to crawl.
+- `URL_REGEX`: optional regex applied to all ingestion sources (`urls|sitemap|sheets|local`).
 - `SHEETS_URL`, `SHEETS_NAME`, `SHEETS_SERVICE_ACCOUNT`: use a Google Sheet as source; service account points to credentials file.
 - `URLS`: list of URLs (e.g., `["https://example.com/a", "https://example.com/b"]`).
 - `OVERWRITE`: re-import URLs even if already present (default `False`).
@@ -87,7 +88,7 @@ Example `config/default.py`:
 ```python
 WORDLIFT_KEY = "your-api-key"
 SITEMAP_URL = "https://example.com/sitemap.xml"
-SITEMAP_URL_PATTERN = r"^https://example.com/article/.*$"
+URL_REGEX = r"^https://example.com/article/.*$"
 GOOGLE_SEARCH_CONSOLE = True
 WEB_PAGE_TYPES = ["http://schema.org/Article"]
 EMBEDDING_PROPERTIES = [
@@ -314,9 +315,11 @@ The SDK now includes a reusable 2-axis ingestion module under `wordlift_sdk.inge
 Default loader is `web_scrape_api`. If an item already includes embedded HTML and
 `INGEST_PASSTHROUGH_WHEN_HTML=True` (default), ingestion uses `passthrough`
 before network loaders.
+`URL_REGEX` can be used to filter all source URLs before loading.
 
 `INGEST_SOURCE` and `INGEST_LOADER` are required. Legacy resolver fallback from
 `WEB_PAGE_IMPORT_MODE`/`WEB_PAGE_IMPORT_TIMEOUT` is removed.
+`SITEMAP_URL_PATTERN` is deprecated; use `URL_REGEX` instead.
 Playwright ingestion failures keep stable top-level code/message and expose root-cause
 diagnostics (`root_exception_type`, `root_exception_message`, `phase`, `url`,
 `wait_until`, `timeout_ms`, `headless`) in `ingest.item_failed.meta`.
@@ -338,8 +341,28 @@ result = run_ingestion(
         "INGEST_SOURCE": "urls",
         "URLS": ["https://example.com"],
         "INGEST_LOADER": "web_scrape_api",
+        "URL_REGEX": r"^https://example.com/articles/",
         "WORDLIFT_KEY": "your-api-key",
     }
+)
+```
+
+You can also classify ingested URLs via local non-interactive agent CLIs (`claude`, `codex`, `gemini`) and write:
+`url,main_type,additional_types,explanation`.
+
+```python
+from wordlift_sdk.ingestion import create_type_classification_csv_from_ingestion
+
+df = create_type_classification_csv_from_ingestion(
+    source_bundle={
+        "INGEST_SOURCE": "urls",
+        "INGEST_LOADER": "web_scrape_api",
+        "URLS": ["https://example.com/a", "https://example.com/b"],
+        "URL_REGEX": r"^https://example.com/",
+        "WORDLIFT_KEY": "your-api-key",
+    },
+    output_csv="url-types.csv",
+    agent_cli=None,  # auto-picks first available: claude -> codex -> gemini
 )
 ```
 
@@ -354,6 +377,7 @@ poetry run pytest
 
 - [Documentation Index](docs/INDEX.md): Quick index for all user and agent-facing docs.
 - [Ingestion Pipeline](docs/ingestion_pipeline.md): 2-axis source/loader architecture and compatibility rules.
+- [Local Agent Type Classification](docs/local_agent_type_classification.md): Build `url,main_type,additional_types,explanation` CSV outputs from ingestion + local `claude|codex|gemini` CLIs.
 - [Public Entry Points](docs/public_entry_points.md): Task-oriented inventory of client APIs by module file.
 - [Google Sheets Lookup](docs/google_sheets_lookup.md): Utility for O(1) lookups from Google Sheets.
 - [Web Page Import](docs/web_page_import.md): Configure fetch options, proxies, and JS rendering.
@@ -365,6 +389,7 @@ poetry run pytest
 - [Customer Project Contract](docs/CUSTOMER_PROJECT_CONTRACT.md): Profile repo contract and manifest-based postprocessor runtime.
 - [Structured Data Spec](specs/structured_data.md): Internal technical details for runtime placeholder resolution.
 - [Ingestion Pipeline Spec](specs/INGESTION_PIPELINE.md): Internal source/loader contract and precedence rules.
+- [Local Agent Type Classification Spec](specs/LOCAL_AGENT_TYPE_CLASSIFICATION.md): Internal contract for ingestion-backed local CLI type suggestion export.
 - [Profile Config Spec](specs/PROFILE_CONFIG.md): Profile inheritance, environment interpolation, and manifest postprocessor contract.
 - [Pipeline Architecture Spec](specs/PIPELINE_ARCHITECTURE.md): `kg_build` runtime flow and callback architecture.
 - [GSC Canonical Selection Spec](specs/GSC_CANONICAL_SELECTION.md): Client integration contract for GSC-based canonical election (`url,title` input, OAuth credential handoff, interval/concurrency rules).

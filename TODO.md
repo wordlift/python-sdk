@@ -1,6 +1,7 @@
 # TODO
 
 - [x] 2026-02-27 Add callback-graph canonical nesting for dependent `schema:Action` subjects via `schema:potentialAction`/`schema:action` parent links, with regression coverage.
+- [x] 2026-02-27 Standardize ingestion URL filtering on global `URL_REGEX` (deprecate sitemap-only `SITEMAP_URL_PATTERN` alias), add shared local `claude|codex|gemini` CLI runner, and add ingestion-backed type-classification CSV export with `trafilatura` extraction.
 - [x] 2026-02-27 Expand `kg_build` callback-graph canonical ID behavior to rewrite all subject IRIs (URIRef subjects) that are not already under canonical dataset root prefixes, with regression coverage for non-canonical dataset-prefixed subjects.
 - [x] 2026-02-27 Fix GitHub Actions main-branch test workflow bootstrap failure by adding `coverage` as a Poetry dev dependency (workflow uses `poetry run coverage ...`), and release patch `6.5.3`.
 - [x] 2026-02-27 Align advertools sitemap fetch headers with Playwright browser defaults by centralizing reusable browser-like headers and reusing them in sitemap input/source paths; add regression tests and docs/spec updates.
