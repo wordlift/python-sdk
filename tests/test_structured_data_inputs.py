@@ -8,6 +8,7 @@ import pandas as pd
 import pytest
 
 from wordlift_sdk.structured_data import inputs
+from wordlift_sdk.render.render_options import DEFAULT_USER_AGENT
 
 
 def test_is_url():
@@ -18,23 +19,30 @@ def test_is_url():
 
 
 def test_urls_from_sitemap_prefers_loc_then_url(monkeypatch):
-    fake_adv = types.SimpleNamespace(
-        sitemap_to_df=lambda _s: pd.DataFrame(
+    observed: dict[str, object] = {}
+
+    def _sitemap_to_df(_s, request_headers=None):
+        observed["request_headers"] = request_headers
+        return pd.DataFrame(
             {
                 "loc": ["https://a.example", None, "https://b.example"],
                 "url": ["https://ignored.example", None, None],
             }
         )
-    )
+
+    fake_adv = types.SimpleNamespace(sitemap_to_df=_sitemap_to_df)
     monkeypatch.setitem(sys.modules, "advertools", fake_adv)
 
     out = inputs.urls_from_sitemap("sitemap.xml")
     assert out == ["https://a.example", "https://b.example"]
+    assert observed["request_headers"] == {"User-Agent": DEFAULT_USER_AGENT}
 
 
 def test_urls_from_sitemap_uses_url_column_when_loc_missing(monkeypatch):
     fake_adv = types.SimpleNamespace(
-        sitemap_to_df=lambda _s: pd.DataFrame({"url": ["https://u.example", ""]})
+        sitemap_to_df=lambda _s, request_headers=None: pd.DataFrame(
+            {"url": ["https://u.example", ""]}
+        )
     )
     monkeypatch.setitem(sys.modules, "advertools", fake_adv)
 
@@ -44,7 +52,9 @@ def test_urls_from_sitemap_uses_url_column_when_loc_missing(monkeypatch):
 
 def test_urls_from_sitemap_falls_back_to_first_column(monkeypatch):
     fake_adv = types.SimpleNamespace(
-        sitemap_to_df=lambda _s: pd.DataFrame({"first": ["https://f.example", None]})
+        sitemap_to_df=lambda _s, request_headers=None: pd.DataFrame(
+            {"first": ["https://f.example", None]}
+        )
     )
     monkeypatch.setitem(sys.modules, "advertools", fake_adv)
 
@@ -53,7 +63,9 @@ def test_urls_from_sitemap_falls_back_to_first_column(monkeypatch):
 
 
 def test_urls_from_sitemap_empty(monkeypatch):
-    fake_adv = types.SimpleNamespace(sitemap_to_df=lambda _s: pd.DataFrame())
+    fake_adv = types.SimpleNamespace(
+        sitemap_to_df=lambda _s, request_headers=None: pd.DataFrame()
+    )
     monkeypatch.setitem(sys.modules, "advertools", fake_adv)
     assert inputs.urls_from_sitemap("sitemap.xml") == []
 

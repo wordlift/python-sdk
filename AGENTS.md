@@ -95,6 +95,10 @@
 - Ingestion resolver requires explicit `INGEST_SOURCE` and `INGEST_LOADER`;
   legacy fallback from `WEB_PAGE_IMPORT_MODE`/`WEB_PAGE_IMPORT_TIMEOUT` and
   implicit source auto-priority are intentionally removed.
+- Sitemap ingestion source discovery (`SitemapSourceAdapter`) sets
+  `request_headers={"User-Agent": <Playwright default UA>}` for
+  `advertools.sitemaps.sitemap_to_df`, so sitemap fetch identity matches the
+  Playwright/browser ingestion default UA.
 - `wordlift_sdk.kg_build` callback patch preparation annotates first-level
   URI-subject nodes in the generated callback graph with
   `seovoc:source = "web-page-import"` using dataset ID depth

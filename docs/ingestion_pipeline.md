@@ -73,6 +73,13 @@ Managed API loader mode. SDK treats it as a single loader mode and does not add 
 - `request_id` (if available)
 - `provider_status` / `provider_details` (if available)
 
+### Sitemap source request headers
+
+Sitemap discovery (`INGEST_SOURCE=sitemap`) uses `advertools` with an explicit
+`User-Agent` header aligned to the Playwright loader default UA
+(`Mozilla/5.0 ... Chrome/120.0.0.0 Safari/537.36`) so sitemap fetch identity is
+consistent with browser-based page rendering defaults.
+
 ### `playwright`
 
 If Playwright is unavailable, loader raises typed error `INGEST_LOAD_PLAYWRIGHT_UNAVAILABLE`.

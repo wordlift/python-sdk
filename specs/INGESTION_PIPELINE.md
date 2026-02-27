@@ -100,6 +100,13 @@ Bridge-handler failure surfacing contract:
 - Appended diagnostics are key-whitelisted, JSON-serialized with stable keys, and
   truncated/sanitized for safe logs (`root_exception_message` capped; payload capped).
 
+## Sitemap Fetch Identity
+
+- `SitemapSourceAdapter` must call `advertools.sitemaps.sitemap_to_df` with
+  `request_headers={"User-Agent": <playwright-default-ua>}`.
+- The configured loader (`INGEST_LOADER`) is still applied per discovered URL
+  by the orchestrator; sitemap fetch headers only affect source discovery.
+
 ## web_scrape_api Semantics
 
 `web_scrape_api` is a managed API loader mode.

@@ -8,6 +8,7 @@ import pytest
 
 from wordlift_sdk.ingestion.errors import SourceConfigError, SourceRuntimeError
 from wordlift_sdk.ingestion.resolver import ResolvedIngestionConfig
+from wordlift_sdk.render.render_options import DEFAULT_USER_AGENT
 from wordlift_sdk.ingestion.sources import (
     GoogleSheetsSourceAdapter,
     LocalSourceAdapter,
@@ -51,15 +52,20 @@ def test_url_list_source_adapter() -> None:
 
 def test_sitemap_source_adapter(monkeypatch: pytest.MonkeyPatch) -> None:
     adapter = SitemapSourceAdapter()
+    calls: list[dict[str, object]] = []
 
-    monkeypatch.setattr(
-        "wordlift_sdk.ingestion.sources.adv.sitemaps.sitemap_to_df",
-        lambda sitemap_url: pd.DataFrame(
+    def _mock_sitemap_to_df(*, sitemap_url: str, request_headers: dict[str, str]):
+        calls.append({"sitemap_url": sitemap_url, "request_headers": request_headers})
+        return pd.DataFrame(
             {
                 "loc": ["https://example.com/1", "https://example.com/skip"],
                 "lastmod": ["2026-01-01", None],
             }
-        ),
+        )
+
+    monkeypatch.setattr(
+        "wordlift_sdk.ingestion.sources.adv.sitemaps.sitemap_to_df",
+        _mock_sitemap_to_df,
     )
 
     cfg = _config(
@@ -73,6 +79,12 @@ def test_sitemap_source_adapter(monkeypatch: pytest.MonkeyPatch) -> None:
     assert len(items) == 1
     assert items[0].url == "https://example.com/1"
     assert "date_modified" in items[0].metadata
+    assert calls == [
+        {
+            "sitemap_url": "https://example.com/sitemap.xml",
+            "request_headers": {"User-Agent": DEFAULT_USER_AGENT},
+        }
+    ]
 
 
 def test_sitemap_source_adapter_handles_missing_lastmod_and_failures(
@@ -81,7 +93,9 @@ def test_sitemap_source_adapter_handles_missing_lastmod_and_failures(
     adapter = SitemapSourceAdapter()
     monkeypatch.setattr(
         "wordlift_sdk.ingestion.sources.adv.sitemaps.sitemap_to_df",
-        lambda sitemap_url: pd.DataFrame({"loc": ["https://example.com/1", ""]}),
+        lambda *, sitemap_url, request_headers: pd.DataFrame(
+            {"loc": ["https://example.com/1", ""]}
+        ),
     )
     items = list(
         adapter.iter_items(
@@ -93,7 +107,9 @@ def test_sitemap_source_adapter_handles_missing_lastmod_and_failures(
 
     monkeypatch.setattr(
         "wordlift_sdk.ingestion.sources.adv.sitemaps.sitemap_to_df",
-        lambda sitemap_url: (_ for _ in ()).throw(RuntimeError("boom")),
+        lambda *, sitemap_url, request_headers: (_ for _ in ()).throw(
+            RuntimeError("boom")
+        ),
     )
     with pytest.raises(SourceRuntimeError):
         list(

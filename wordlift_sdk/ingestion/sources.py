@@ -9,6 +9,7 @@ import advertools as adv
 import gspread
 import pandas as pd
 
+from wordlift_sdk.render.render_options import DEFAULT_USER_AGENT
 from wordlift_sdk.utils.create_dataframe_from_google_sheets import (
     create_dataframe_from_google_sheets,
 )
@@ -44,9 +45,12 @@ class SitemapSourceAdapter:
         sitemap_url = config.source_config.get("sitemap_url")
         pattern_raw = config.source_config.get("sitemap_url_pattern")
         pattern = re.compile(pattern_raw) if pattern_raw else None
+        request_headers = {"User-Agent": DEFAULT_USER_AGENT}
 
         try:
-            sitemap_df = adv.sitemaps.sitemap_to_df(sitemap_url=sitemap_url)
+            sitemap_df = adv.sitemaps.sitemap_to_df(
+                sitemap_url=sitemap_url, request_headers=request_headers
+            )
         except Exception as exc:
             raise SourceRuntimeError(
                 f"Failed to read sitemap: {sitemap_url}",

@@ -18,6 +18,7 @@ from wordlift_client import (
 from wordlift_sdk.render.browser import BrowserOperationError
 from wordlift_sdk.render import HtmlRenderer, RenderOptions
 from wordlift_sdk.render.html_renderer import RenderOperationError
+from wordlift_sdk.render.render_options import DEFAULT_USER_AGENT
 
 from .errors import IngestionError, LoaderConfigError, LoaderRuntimeError
 from .models import LoadedPage, SourceItem
@@ -83,13 +84,7 @@ class SimpleLoaderAdapter(BaseLoaderAdapter):
             try:
                 request = urllib.request.Request(
                     item.url,
-                    headers={
-                        "User-Agent": (
-                            "Mozilla/5.0 (X11; Linux x86_64) "
-                            "AppleWebKit/537.36 (KHTML, like Gecko) "
-                            "Chrome/120.0.0.0 Safari/537.36"
-                        )
-                    },
+                    headers={"User-Agent": DEFAULT_USER_AGENT},
                 )
                 with urllib.request.urlopen(request, timeout=timeout_sec) as resp:
                     html_bytes = resp.read()
