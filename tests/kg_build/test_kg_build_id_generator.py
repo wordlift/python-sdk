@@ -139,3 +139,74 @@ def test_custom_policy_can_prefer_service_container() -> None:
     subjects = list(output.subjects(RDF.type, URIRef(f"{SCHEMA}Service")))
     assert len(subjects) == 1
     assert str(subjects[0]).startswith(f"{DATASET}/services/")
+
+
+def test_rewrites_non_canonical_dataset_subject_prefix() -> None:
+    graph = Graph()
+    subject = URIRef(
+        "https://kg.smallpdf.com/smallpdf/articles/"
+        "https://smallpdf.com/blog/how-to-delete-pages-from-a-pdf/"
+        "actions/convert-pdf-to-word"
+    )
+    graph.add((subject, RDF.type, URIRef(f"{SCHEMA}Article")))
+    graph.add(
+        (
+            subject,
+            URIRef(f"{SCHEMA}url"),
+            Literal("https://smallpdf.com/blog/how-to-delete-pages-from-a-pdf"),
+        )
+    )
+
+    output = CanonicalIdGenerator().apply(graph, "https://kg.smallpdf.com")
+
+    assert (subject, RDF.type, URIRef(f"{SCHEMA}Article")) not in output
+    rewritten_articles = list(output.subjects(RDF.type, URIRef(f"{SCHEMA}Article")))
+    assert len(rewritten_articles) == 1
+    assert str(rewritten_articles[0]).startswith("https://kg.smallpdf.com/articles/")
+
+
+def test_keeps_subject_with_canonical_root_prefix() -> None:
+    graph = Graph()
+    subject = URIRef("https://data.example.com/products/alpha/offers/offer-1")
+    graph.add((subject, RDF.type, URIRef(f"{SCHEMA}Offer")))
+
+    output = CanonicalIdGenerator().apply(graph, DATASET)
+
+    assert (subject, RDF.type, URIRef(f"{SCHEMA}Offer")) in output
+
+
+def test_rewrites_action_subject_as_nested_dependent_entity() -> None:
+    graph = Graph()
+    article = URIRef(
+        "https://kg.smallpdf.com/smallpdf/articles/"
+        "https://smallpdf.com/blog/how-to-print-secured-pdf"
+    )
+    action = URIRef(
+        "https://kg.smallpdf.com/smallpdf/articles/"
+        "https://smallpdf.com/blog/how-to-print-secured-pdf/"
+        "actions/convert-pdf-to-word"
+    )
+    graph.add((article, RDF.type, URIRef(f"{SCHEMA}Article")))
+    graph.add(
+        (
+            article,
+            URIRef(f"{SCHEMA}url"),
+            Literal("https://smallpdf.com/blog/how-to-print-secured-pdf"),
+        )
+    )
+    graph.add((article, URIRef(f"{SCHEMA}potentialAction"), action))
+    graph.add((action, RDF.type, URIRef(f"{SCHEMA}Action")))
+    graph.add((action, URIRef(f"{SCHEMA}name"), Literal("Convert PDF to Word")))
+
+    output = CanonicalIdGenerator().apply(graph, "https://kg.smallpdf.com")
+
+    rewritten_articles = list(output.subjects(RDF.type, URIRef(f"{SCHEMA}Article")))
+    assert len(rewritten_articles) == 1
+    rewritten_article = rewritten_articles[0]
+    nested_actions = list(
+        output.objects(rewritten_article, URIRef(f"{SCHEMA}potentialAction"))
+    )
+    assert len(nested_actions) == 1
+    nested_action = nested_actions[0]
+    assert str(nested_action).startswith(f"{rewritten_article}/actions/")
+    assert (nested_action, RDF.type, URIRef(f"{SCHEMA}Action")) in output

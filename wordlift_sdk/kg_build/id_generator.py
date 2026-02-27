@@ -33,7 +33,113 @@ class CanonicalIdGenerator:
 
         self._rewrite_pages_and_children(graph, dataset_uri)
         self._rewrite_entity_roots(graph, dataset_uri)
+        self._rewrite_remaining_subjects(graph, dataset_uri)
+        self._rewrite_actions_as_dependents(graph)
         return graph
+
+    def _rewrite_remaining_subjects(self, graph: Graph, dataset_uri: str) -> None:
+        subjects = sorted(
+            {s for s in graph.subjects() if isinstance(s, URIRef)}, key=str
+        )
+        for subject in subjects:
+            if not self._should_rewrite_subject(subject, dataset_uri):
+                continue
+
+            gtin = self._first_value(graph, subject, "gtin")
+            if gtin:
+                candidate = URIRef(f"{dataset_uri}/01/{normalize_slug(gtin)}")
+            else:
+                preferred_type = self._preferred_type_name(graph, subject)
+                normalized_type = self._policy.normalize_type_name(preferred_type)
+                container = self._policy.container_for_type(normalized_type)
+                slug = self._entity_slug(
+                    graph,
+                    subject,
+                    default_base=normalized_type,
+                    url_value=self._first_value(graph, subject, "url"),
+                )
+                candidate = URIRef(f"{dataset_uri}/{container}/{slug}")
+
+            new_iri = self._ensure_unique_subject_iri(graph, subject, candidate)
+            self._swap_iri(graph, subject, new_iri)
+
+    def _rewrite_actions_as_dependents(self, graph: Graph) -> None:
+        action_type = URIRef(f"{SCHEMA}Action")
+        actions = sorted(
+            {
+                subject
+                for subject in graph.subjects(RDF.type, action_type)
+                if isinstance(subject, URIRef)
+            },
+            key=str,
+        )
+        for action in actions:
+            parents = self._action_parents(graph, action)
+            if not parents:
+                continue
+
+            parent = parents[0]
+            prefix = f"{parent}/{self._policy.container_for_type('Action')}/"
+            if str(action).startswith(prefix):
+                continue
+
+            slug = self._entity_slug(
+                graph,
+                action,
+                default_base="action",
+                url_value=self._first_value(graph, action, "url"),
+            )
+            candidate = URIRef(f"{prefix}{slug}")
+            new_iri = self._ensure_unique_subject_iri(graph, action, candidate)
+            self._swap_iri(graph, action, new_iri)
+
+    @staticmethod
+    def _action_parents(graph: Graph, action: URIRef) -> list[URIRef]:
+        predicates = (
+            URIRef(f"{SCHEMA}potentialAction"),
+            URIRef(f"{SCHEMA}action"),
+        )
+        parents = {
+            subject
+            for predicate in predicates
+            for subject in graph.subjects(predicate, action)
+            if isinstance(subject, URIRef)
+        }
+        return sorted(parents, key=str)
+
+    def _should_rewrite_subject(self, subject: URIRef, dataset_uri: str) -> bool:
+        text = str(subject)
+        prefix = f"{dataset_uri}/"
+        if not text.startswith(prefix):
+            return True
+
+        relative = text[len(prefix) :]
+        first = relative.split("/", 1)[0]
+        return first not in self._canonical_root_prefixes()
+
+    def _canonical_root_prefixes(self) -> set[str]:
+        prefixes = {"01"}
+        for type_name in self._policy.root_type_precedence:
+            normalized = self._policy.normalize_type_name(type_name)
+            prefixes.add(self._policy.container_for_type(normalized))
+        return prefixes
+
+    @staticmethod
+    def _ensure_unique_subject_iri(
+        graph: Graph, subject: URIRef, candidate: URIRef
+    ) -> URIRef:
+        if candidate == subject:
+            return candidate
+        if candidate not in set(graph.subjects()):
+            return candidate
+
+        base = str(candidate)
+        index = 2
+        while True:
+            suffixed = URIRef(f"{base}-{index}")
+            if suffixed == subject or suffixed not in set(graph.subjects()):
+                return suffixed
+            index += 1
 
     def _rewrite_pages_and_children(self, graph: Graph, dataset_uri: str) -> None:
         page_nodes = {

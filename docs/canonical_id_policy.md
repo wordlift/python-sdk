@@ -50,3 +50,19 @@ Media rewrites are constrained:
 Entity-root canonicalization rewrites all linked `schema:offers` nodes and all
 `schema:priceSpecification` nodes per offer, preserving graph linkage across
 rewrites.
+
+## Subject IRI Coverage (Callback Graphs)
+
+For `kg_build` callback-emitted graphs, canonicalization now applies a fallback
+rewrite pass so every non-blank-node subject IRI is canonicalized into
+dataset-rooted paths when needed.
+
+- Existing root/dependent canonicalization rules still run first.
+- Subjects already under canonical dataset root prefixes are preserved.
+- Non-canonical dataset prefixes (for example `/smallpdf/articles/...`) are
+  rewritten to canonical dataset container paths.
+- `schema:Action` dependent subjects linked from parents via
+  `schema:potentialAction`/`schema:action` are nested under the canonical parent
+  IRI path (`<parent>/actions/<slug>`).
+- Static template graphs are patched through a separate startup path and are not
+  part of callback graph emission rewriting.

@@ -1,5 +1,7 @@
 # TODO
 
+- [x] 2026-02-27 Add callback-graph canonical nesting for dependent `schema:Action` subjects via `schema:potentialAction`/`schema:action` parent links, with regression coverage.
+- [x] 2026-02-27 Expand `kg_build` callback-graph canonical ID behavior to rewrite all subject IRIs (URIRef subjects) that are not already under canonical dataset root prefixes, with regression coverage for non-canonical dataset-prefixed subjects.
 - [x] 2026-02-27 Fix GitHub Actions main-branch test workflow bootstrap failure by adding `coverage` as a Poetry dev dependency (workflow uses `poetry run coverage ...`), and release patch `6.5.3`.
 - [x] 2026-02-27 Align advertools sitemap fetch headers with Playwright browser defaults by centralizing reusable browser-like headers and reusing them in sitemap input/source paths; add regression tests and docs/spec updates.
 - [x] 2026-02-26 Add client-facing internal implementation spec for GSC canonical selection (`specs/GSC_CANONICAL_SELECTION.md`) and publish discoverability links in `specs/INDEX.md` and `README.md` for SDK-upgrade consumers.

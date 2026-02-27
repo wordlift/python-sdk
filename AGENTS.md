@@ -110,6 +110,14 @@
   dataset-scoped nodes (excluding `seovoc:importHash` from hash input), writes the
   computed value back to the node, and applies `import_hash_mode` (`on|write|off`)
   for unchanged-node skip behavior.
+- `wordlift_sdk.kg_build` canonical ID generation for callback-emitted graphs now
+  includes a fallback subject-IRI rewrite pass: all URIRef subjects are
+  canonicalized unless already under canonical dataset root prefixes; static
+  template patching remains separate.
+- `wordlift_sdk.kg_build` canonical ID generation nests `schema:Action` subjects
+  under canonical parent subject IRIs when linked via
+  `schema:potentialAction`/`schema:action` (for example
+  `<parent>/actions/<slug>`).
 - `wordlift_sdk.kg_build` tracks run-level graph-sync KPIs from dataset-scoped
   entities actually patched in callback/static graphs (`total_entities`,
   `type_assertions_total`, `property_assertions_total`, `entities_by_type`,

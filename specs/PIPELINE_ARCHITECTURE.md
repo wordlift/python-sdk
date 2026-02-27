@@ -109,6 +109,13 @@ Runtime-isolated execution:
 Current implementation status:
 
 - built-in canonical IDs: implemented in `wordlift_sdk.kg_build.id_generator` + `wordlift_sdk.kg_build.id_policy` + `wordlift_sdk.kg_build.id_postprocessor` with policy-driven root scope (`page_root_types` vs `entity_root_types`), deterministic multi-type precedence, URL-preserving `schema:url` handling, and complete offer/priceSpecification rewrite traversal.
+- callback graph canonicalization includes a fallback subject pass so non-blank
+  subject IRIs are rewritten to canonical dataset-rooted paths when they are not
+  already under canonical root prefixes; static-template graph patching remains
+  separate from callback graph emission.
+- callback graph canonicalization nests `schema:Action` dependent subjects under
+  parent subject paths when linked through `schema:potentialAction` or
+  `schema:action`.
 - manifest-based postprocessor execution (selected-manifest precedence, subprocess isolation, N-Quads exchange): implemented in `wordlift_sdk.kg_build.postprocessors`.
 - profile-specific processors are external to the SDK and loaded by class path from manifests.
 
