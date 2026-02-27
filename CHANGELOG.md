@@ -1,5 +1,12 @@
 # Changelog
 
+## 6.6.1 - 2026-02-27
+
+### Changed
+
+- Regenerate `poetry.lock` after adding `trafilatura` so CI and tag-based PyPI
+  publish workflows install from an up-to-date lock file.
+
 ## 6.6.0 - 2026-02-27
 
 ### Added
