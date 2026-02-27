@@ -1,5 +1,6 @@
 # TODO
 
+- [x] 2026-02-27 Fix GitHub Actions main-branch test workflow bootstrap failure by adding `coverage` as a Poetry dev dependency (workflow uses `poetry run coverage ...`), and release patch `6.5.3`.
 - [x] 2026-02-27 Align advertools sitemap fetch headers with Playwright browser defaults by centralizing reusable browser-like headers and reusing them in sitemap input/source paths; add regression tests and docs/spec updates.
 - [x] 2026-02-26 Add client-facing internal implementation spec for GSC canonical selection (`specs/GSC_CANONICAL_SELECTION.md`) and publish discoverability links in `specs/INDEX.md` and `README.md` for SDK-upgrade consumers.
 - [x] 2026-02-26 Add reusable GSC canonical-clustering SDK method (`create_canonical_csv_from_gsc_impressions`) with optional URL regex filtering, interval parsing (`XX[d|w|m]`), user/service-account credential support, and fixed/auto adaptive concurrency; extract shared auto concurrency controller to `wordlift_sdk.utils.auto_concurrency` and reuse it in `structured_data.batch`.

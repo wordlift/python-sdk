@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "wordlift-sdk"
-version = "6.5.2"
+version = "6.5.3"
 description = "Python toolkit for orchestrating WordLift imports and structured data workflows."
 authors = ["David Riccitelli <david@wordlift.io>"]
 readme = "README.md"
@@ -40,6 +40,7 @@ playwright = "^1.52.0"
 pytest = "^8.3.3"
 pytest-asyncio = "^0.24.0"
 docker = "^7.1.0"
+coverage = "^7.10.7"
 ruff = "^0.11.13"
 pre-commit = "^4.2.0"
 pandas-stubs = "^2.3.3.251201"
