@@ -103,7 +103,9 @@ Bridge-handler failure surfacing contract:
 ## Sitemap Fetch Identity
 
 - `SitemapSourceAdapter` must call `advertools.sitemaps.sitemap_to_df` with
-  `request_headers={"User-Agent": <playwright-default-ua>}`.
+  browser-like `request_headers` built from Playwright defaults (`User-Agent`,
+  `Accept`, `Accept-Language`, `Referer`, `Upgrade-Insecure-Requests`,
+  `Sec-CH-UA`, `Sec-CH-UA-Mobile`, `Sec-CH-UA-Platform`).
 - The configured loader (`INGEST_LOADER`) is still applied per discovered URL
   by the orchestrator; sitemap fetch headers only affect source discovery.
 

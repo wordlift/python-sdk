@@ -9,7 +9,7 @@ import advertools as adv
 import gspread
 import pandas as pd
 
-from wordlift_sdk.render.render_options import DEFAULT_USER_AGENT
+from wordlift_sdk.render.render_options import build_browser_like_headers
 from wordlift_sdk.utils.create_dataframe_from_google_sheets import (
     create_dataframe_from_google_sheets,
 )
@@ -45,7 +45,7 @@ class SitemapSourceAdapter:
         sitemap_url = config.source_config.get("sitemap_url")
         pattern_raw = config.source_config.get("sitemap_url_pattern")
         pattern = re.compile(pattern_raw) if pattern_raw else None
-        request_headers = {"User-Agent": DEFAULT_USER_AGENT}
+        request_headers = build_browser_like_headers()
 
         try:
             sitemap_df = adv.sitemaps.sitemap_to_df(

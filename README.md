@@ -4,7 +4,7 @@ A Python toolkit for orchestrating WordLift imports: fetch URLs from sitemaps, G
 
 ## Features
 - URL sources: XML sitemaps (with optional regex filtering), Google Sheets (`url` column), or Python lists.
-- Sitemap discovery requests use the same browser-like User-Agent string as the Playwright loader default.
+- Sitemap discovery requests use a browser-like header bundle aligned with Playwright defaults (including `User-Agent`, `Accept`, `Accept-Language`, `Referer`, and `Sec-CH-*` headers).
 - Change detection: skips URLs that are already imported unless `OVERWRITE` is enabled; re-imports when `lastmod` is newer.
 - Web page imports: sends URLs to WordLift with embedding requests, output types, retry logic, and pluggable callbacks.
 - Python 3.14 compatibility: retry filters use `pydantic_core.ValidationError` via the public API.

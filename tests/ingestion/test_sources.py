@@ -8,7 +8,7 @@ import pytest
 
 from wordlift_sdk.ingestion.errors import SourceConfigError, SourceRuntimeError
 from wordlift_sdk.ingestion.resolver import ResolvedIngestionConfig
-from wordlift_sdk.render.render_options import DEFAULT_USER_AGENT
+from wordlift_sdk.render.render_options import build_browser_like_headers
 from wordlift_sdk.ingestion.sources import (
     GoogleSheetsSourceAdapter,
     LocalSourceAdapter,
@@ -82,7 +82,7 @@ def test_sitemap_source_adapter(monkeypatch: pytest.MonkeyPatch) -> None:
     assert calls == [
         {
             "sitemap_url": "https://example.com/sitemap.xml",
-            "request_headers": {"User-Agent": DEFAULT_USER_AGENT},
+            "request_headers": build_browser_like_headers(),
         }
     ]
 

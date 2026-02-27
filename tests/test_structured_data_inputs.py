@@ -7,8 +7,8 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
+from wordlift_sdk.render.render_options import build_browser_like_headers
 from wordlift_sdk.structured_data import inputs
-from wordlift_sdk.render.render_options import DEFAULT_USER_AGENT
 
 
 def test_is_url():
@@ -35,7 +35,7 @@ def test_urls_from_sitemap_prefers_loc_then_url(monkeypatch):
 
     out = inputs.urls_from_sitemap("sitemap.xml")
     assert out == ["https://a.example", "https://b.example"]
-    assert observed["request_headers"] == {"User-Agent": DEFAULT_USER_AGENT}
+    assert observed["request_headers"] == build_browser_like_headers()
 
 
 def test_urls_from_sitemap_uses_url_column_when_loc_missing(monkeypatch):

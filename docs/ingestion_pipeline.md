@@ -76,9 +76,10 @@ Managed API loader mode. SDK treats it as a single loader mode and does not add 
 ### Sitemap source request headers
 
 Sitemap discovery (`INGEST_SOURCE=sitemap`) uses `advertools` with an explicit
-`User-Agent` header aligned to the Playwright loader default UA
-(`Mozilla/5.0 ... Chrome/120.0.0.0 Safari/537.36`) so sitemap fetch identity is
-consistent with browser-based page rendering defaults.
+browser-like header bundle aligned to Playwright/browser defaults (`User-Agent`,
+`Accept`, `Accept-Language`, `Referer`, `Upgrade-Insecure-Requests`, and
+`Sec-CH-*` client hints) so sitemap fetch identity is closer to page-rendering
+requests.
 
 ### `playwright`
 

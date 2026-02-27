@@ -6,6 +6,8 @@ from contextlib import AbstractContextManager
 from dataclasses import dataclass
 from time import perf_counter
 
+from .render_options import DEFAULT_BROWSER_REQUEST_HEADERS
+
 try:
     from playwright.sync_api import Error as PlaywrightError
     from playwright.sync_api import sync_playwright
@@ -28,16 +30,6 @@ class BrowserOperationError(RuntimeError):
 
 
 class Browser(AbstractContextManager):
-    _DEFAULT_HEADERS = {
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.9",
-        "Referer": "https://wordlift.io",
-        "Upgrade-Insecure-Requests": "1",
-        "Sec-CH-UA": '"Not A(Brand";v="99", "Chromium";v="120", "Google Chrome";v="120"',
-        "Sec-CH-UA-Mobile": "?0",
-        "Sec-CH-UA-Platform": '"macOS"',
-    }
-
     def __init__(
         self,
         *,
@@ -84,7 +76,7 @@ class Browser(AbstractContextManager):
                 viewport = {"width": 1365, "height": 768}
             context_kwargs["viewport"] = viewport
             context_kwargs["ignore_https_errors"] = self.ignore_https_errors
-            context_kwargs["extra_http_headers"] = dict(self._DEFAULT_HEADERS)
+            context_kwargs["extra_http_headers"] = dict(DEFAULT_BROWSER_REQUEST_HEADERS)
             self._context = self._browser.new_context(**context_kwargs)
             self._context.add_init_script(
                 """

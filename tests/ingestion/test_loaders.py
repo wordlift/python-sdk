@@ -23,6 +23,7 @@ from wordlift_sdk.ingestion.models import SourceItem
 from wordlift_sdk.ingestion.resolver import ResolvedIngestionConfig
 from wordlift_sdk.render.browser import BrowserOperationError
 from wordlift_sdk.render.html_renderer import RenderOperationError
+from wordlift_sdk.render.render_options import build_browser_like_headers
 
 
 def _config(**kwargs) -> ResolvedIngestionConfig:
@@ -89,6 +90,7 @@ def test_web_scrape_api_loader_emits_required_fetch_meta(
 
 def test_simple_loader_adapter(monkeypatch: pytest.MonkeyPatch) -> None:
     loader = SimpleLoaderAdapter()
+    observed: dict[str, object] = {}
 
     class _Resp(BytesIO):
         status = 200
@@ -105,12 +107,21 @@ def test_simple_loader_adapter(monkeypatch: pytest.MonkeyPatch) -> None:
         def __exit__(self, exc_type, exc, tb):
             return False
 
-    monkeypatch.setattr("urllib.request.urlopen", lambda request, timeout: _Resp())
+    def _urlopen(request, timeout):
+        observed["request_headers"] = {
+            key.lower(): value for key, value in dict(request.header_items()).items()
+        }
+        return _Resp()
+
+    monkeypatch.setattr("urllib.request.urlopen", _urlopen)
 
     page = loader.load(SourceItem(id="1", url="https://example.com"), _config())
     assert page.status_code == 200
     assert page.final_url == "https://example.com/final"
     assert page.fetch_meta["backend"] == "simple"
+    assert observed["request_headers"] == {
+        key.lower(): value for key, value in build_browser_like_headers().items()
+    }
 
 
 def test_simple_loader_adapter_wraps_url_errors(

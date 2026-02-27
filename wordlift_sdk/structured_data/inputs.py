@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from urllib.parse import urlparse
 
-from wordlift_sdk.render.render_options import DEFAULT_USER_AGENT
+from wordlift_sdk.render.render_options import build_browser_like_headers
 
 
 def is_url(value: str) -> bool:
@@ -20,7 +20,7 @@ def urls_from_sitemap(source: str) -> list[str]:
         raise RuntimeError(
             "advertools is required. Install with: pip install advertools"
         ) from exc
-    df = adv.sitemap_to_df(source, request_headers={"User-Agent": DEFAULT_USER_AGENT})
+    df = adv.sitemap_to_df(source, request_headers=build_browser_like_headers())
     if df is None or df.empty:
         return []
     for column in ("loc", "url"):
