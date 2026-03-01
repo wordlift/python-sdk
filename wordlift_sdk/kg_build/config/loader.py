@@ -207,11 +207,10 @@ def _build_routes(
 
 def _profile_defaults(name: str, raw: dict[str, Any], has_base: bool) -> dict[str, Any]:
     result = deepcopy(raw)
+    result.setdefault("mapping", "default.yarrrml")
 
     if name != "_base":
         result.setdefault("inherit", "_base" if has_base else None)
-    else:
-        result.setdefault("mapping", "default.yarrrml")
 
     result.setdefault("mapping_mode", "xpath")
     result.setdefault("strict_mapping", True)
@@ -297,6 +296,9 @@ def load_profile_config(
         if parent_name:
             parent = resolve_raw(parent_name, stack + [name])
             merged = _deep_merge(parent, prepared)
+            # Keep inherited mapping when a child profile did not explicitly set one.
+            if "mapping" not in node and "mapping" in parent:
+                merged["mapping"] = parent["mapping"]
         else:
             merged = prepared
 

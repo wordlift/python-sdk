@@ -6,7 +6,7 @@ from types import SimpleNamespace
 import pytest
 from rdflib import Literal, URIRef
 
-from wordlift_sdk.kg_build.config.loader import load_profile_config
+from wordlift_sdk.kg_build.config.loader import ProfileConfigError, load_profile_config
 from wordlift_sdk.kg_build.protocol import ProfileImportProtocol
 
 
@@ -71,6 +71,194 @@ def test_validation_settings_parse_into_profile_settings(tmp_path: Path) -> None
     assert profile.settings["shacl_exclude_builtin_shapes"] == ["schemaorg-grammar"]
     assert profile.settings["shacl_extra_shapes"] == ["https://example.com/custom.ttl"]
     assert profile.settings["import_hash_mode"] == "write"
+
+
+def test_profile_with_only_api_key_uses_default_mapping_and_routes(
+    tmp_path: Path,
+) -> None:
+    _write(
+        tmp_path / "worai.toml",
+        """
+        [profiles.en]
+        api_key = "test-key"
+        """,
+    )
+
+    profile = load_profile_config(tmp_path / "worai.toml").get("en")
+    assert profile.mapping == "default.yarrrml"
+    assert [(route.pattern, route.mapping) for route in profile.routes] == [
+        (".*", "default.yarrrml")
+    ]
+
+
+def test_base_mapping_is_inherited_when_selected_profile_omits_mapping(
+    tmp_path: Path,
+) -> None:
+    _write(
+        tmp_path / "worai.toml",
+        """
+        [profiles._base]
+        mapping = "base.yarrrml"
+
+        [profiles.alpha]
+        """,
+    )
+
+    profile = load_profile_config(tmp_path / "worai.toml").get("alpha")
+    assert profile.mapping == "base.yarrrml"
+    assert [(route.pattern, route.mapping) for route in profile.routes] == [
+        (".*", "base.yarrrml")
+    ]
+
+
+def test_explicit_mappings_without_catch_all_append_fallback_mapping(
+    tmp_path: Path,
+) -> None:
+    _write(
+        tmp_path / "worai.toml",
+        """
+        [profiles.alpha]
+        mapping = "fallback.yarrrml"
+        mappings = [
+          { pattern = "^https://example.com/news/", mapping = "news.yarrrml" },
+          { pattern = "^https://example.com/blog/", mapping = "blog.yarrrml" }
+        ]
+        """,
+    )
+
+    profile = load_profile_config(tmp_path / "worai.toml").get("alpha")
+    assert [(route.pattern, route.mapping) for route in profile.routes] == [
+        ("^https://example.com/news/", "news.yarrrml"),
+        ("^https://example.com/blog/", "blog.yarrrml"),
+        (".*", "fallback.yarrrml"),
+    ]
+
+
+def test_explicit_mappings_with_catch_all_preserve_existing_behavior(
+    tmp_path: Path,
+) -> None:
+    _write(
+        tmp_path / "worai.toml",
+        """
+        [profiles.alpha]
+        mapping = "fallback.yarrrml"
+        mappings = [
+          { pattern = "^https://example.com/news/", mapping = "news.yarrrml" },
+          { pattern = ".*", mapping = "all.yarrrml" }
+        ]
+        """,
+    )
+
+    profile = load_profile_config(tmp_path / "worai.toml").get("alpha")
+    assert [(route.pattern, route.mapping) for route in profile.routes] == [
+        ("^https://example.com/news/", "news.yarrrml"),
+        (".*", "all.yarrrml"),
+    ]
+
+
+def test_invalid_mapping_mode_raises_profile_config_error(tmp_path: Path) -> None:
+    _write(
+        tmp_path / "worai.toml",
+        """
+        [profiles.alpha]
+        mapping_mode = "jsonpath"
+        """,
+    )
+
+    with pytest.raises(ProfileConfigError, match="only mapping_mode='xpath'"):
+        load_profile_config(tmp_path / "worai.toml")
+
+
+def test_mappings_must_be_array_of_tables(tmp_path: Path) -> None:
+    _write(
+        tmp_path / "worai.toml",
+        """
+        [profiles.alpha]
+        mappings = "invalid"
+        """,
+    )
+
+    with pytest.raises(
+        ProfileConfigError, match="'mappings' must be an array of tables"
+    ):
+        load_profile_config(tmp_path / "worai.toml")
+
+
+def test_mapping_routes_require_table_items(tmp_path: Path) -> None:
+    _write(
+        tmp_path / "worai.toml",
+        """
+        [profiles.alpha]
+        mappings = ["invalid"]
+        """,
+    )
+
+    with pytest.raises(ProfileConfigError, match="each mapping route must be a table"):
+        load_profile_config(tmp_path / "worai.toml")
+
+
+def test_mapping_routes_require_pattern_and_mapping(tmp_path: Path) -> None:
+    _write(
+        tmp_path / "worai.toml",
+        """
+        [profiles.alpha]
+        mappings = [{ pattern = "^https://example.com/" }]
+        """,
+    )
+
+    with pytest.raises(
+        ProfileConfigError, match="each mapping route requires 'pattern' and 'mapping'"
+    ):
+        load_profile_config(tmp_path / "worai.toml")
+
+
+def test_unknown_profile_lookup_raises_profile_config_error(tmp_path: Path) -> None:
+    _write(
+        tmp_path / "worai.toml",
+        """
+        [profiles.alpha]
+        """,
+    )
+
+    config = load_profile_config(tmp_path / "worai.toml")
+    with pytest.raises(ProfileConfigError, match="Unknown profile: missing"):
+        config.get("missing")
+
+
+def test_missing_config_file_raises_file_not_found(tmp_path: Path) -> None:
+    with pytest.raises(FileNotFoundError, match="Config not found"):
+        load_profile_config(tmp_path / "missing.toml")
+
+
+def test_missing_profiles_section_raises_profile_config_error(tmp_path: Path) -> None:
+    _write(
+        tmp_path / "worai.toml",
+        """
+        [not_profiles]
+        value = "x"
+        """,
+    )
+
+    with pytest.raises(
+        ProfileConfigError, match="must define a non-empty \\[profiles\\] section"
+    ):
+        load_profile_config(tmp_path / "worai.toml")
+
+
+def test_strict_env_interpolation_missing_value_raises(tmp_path: Path) -> None:
+    _write(
+        tmp_path / "worai.toml",
+        """
+        [profiles.alpha]
+        api_key = "${WORDLIFT_API_KEY_EN}"
+        """,
+    )
+
+    with pytest.raises(
+        ProfileConfigError,
+        match="Missing environment variable 'WORDLIFT_API_KEY_EN' for profile 'alpha'",
+    ):
+        load_profile_config(tmp_path / "worai.toml", env={})
 
 
 def test_template_override_prefers_selected_relative_path(tmp_path: Path) -> None:
