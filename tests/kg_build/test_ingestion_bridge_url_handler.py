@@ -106,6 +106,86 @@ async def test_ingestion_bridge_handler_raises_on_failed_ingestion(
 
 
 @pytest.mark.asyncio
+async def test_ingestion_bridge_handler_raises_and_skips_callback_on_http_404(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    callback = AsyncMock()
+    provider = MagicMock()
+    provider.get_value.side_effect = lambda key, default=None: {
+        "WORDLIFT_KEY": "key",
+        "API_URL": "https://api.wordlift.io",
+        "INGEST_LOADER": "web_scrape_api",
+    }.get(key, default)
+
+    handler = IngestionWebPageScrapeUrlHandler(
+        context=MagicMock(),
+        configuration_provider=provider,
+        web_page_scrape_callback=callback,
+    )
+
+    monkeypatch.setattr(
+        "wordlift_sdk.workflow.url_handler.ingestion_web_page_scrape_url_handler.run_ingestion",
+        lambda settings: SimpleNamespace(
+            pages=[
+                SimpleNamespace(
+                    item_id="id",
+                    url="https://example.com/missing",
+                    final_url="https://example.com/missing",
+                    status_code=404,
+                    html="<html>not found</html>",
+                    fetch_meta={"backend": "web_scrape_api"},
+                )
+            ],
+            events=[],
+        ),
+    )
+
+    with pytest.raises(RuntimeError, match="status_code=404"):
+        await handler(Url(value="https://example.com/missing"))
+    callback.callback.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_ingestion_bridge_handler_raises_and_skips_callback_on_http_500(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    callback = AsyncMock()
+    provider = MagicMock()
+    provider.get_value.side_effect = lambda key, default=None: {
+        "WORDLIFT_KEY": "key",
+        "API_URL": "https://api.wordlift.io",
+        "INGEST_LOADER": "web_scrape_api",
+    }.get(key, default)
+
+    handler = IngestionWebPageScrapeUrlHandler(
+        context=MagicMock(),
+        configuration_provider=provider,
+        web_page_scrape_callback=callback,
+    )
+
+    monkeypatch.setattr(
+        "wordlift_sdk.workflow.url_handler.ingestion_web_page_scrape_url_handler.run_ingestion",
+        lambda settings: SimpleNamespace(
+            pages=[
+                SimpleNamespace(
+                    item_id="id",
+                    url="https://example.com/error",
+                    final_url="https://example.com/error",
+                    status_code=500,
+                    html="<html>error</html>",
+                    fetch_meta={"backend": "web_scrape_api"},
+                )
+            ],
+            events=[],
+        ),
+    )
+
+    with pytest.raises(RuntimeError, match="status_code=500"):
+        await handler(Url(value="https://example.com/error"))
+    callback.callback.assert_not_called()
+
+
+@pytest.mark.asyncio
 async def test_ingestion_bridge_handler_surfaces_failed_meta_diagnostics(
     monkeypatch: pytest.MonkeyPatch,
     caplog: pytest.LogCaptureFixture,

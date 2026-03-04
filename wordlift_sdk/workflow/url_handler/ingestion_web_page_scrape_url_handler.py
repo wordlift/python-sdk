@@ -63,6 +63,15 @@ class IngestionWebPageScrapeUrlHandler(UrlHandler):
             raise RuntimeError(f"Ingestion loader produced no page for {url.value}")
 
         page = result.pages[0]
+        # Do not emit callback imports for HTTP error pages even when HTML exists.
+        if _is_http_error_status(page.status_code):
+            message = (
+                f"Ingestion loader returned HTTP error status for {url.value}: "
+                f"status_code={page.status_code} final_url={page.final_url or page.url}"
+            )
+            logger.error(message)
+            raise RuntimeError(message)
+
         response = WebPageScrapeResponse(
             web_page=WebPage(
                 url=page.final_url or page.url,
@@ -107,6 +116,12 @@ class IngestionWebPageScrapeUrlHandler(UrlHandler):
             }
         ]
         return settings
+
+
+def _is_http_error_status(status_code: Any) -> bool:
+    if not isinstance(status_code, int):
+        return False
+    return status_code >= 400
 
 
 def _format_failure_diagnostics(meta: Any) -> str | None:

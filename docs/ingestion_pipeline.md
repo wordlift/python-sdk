@@ -116,6 +116,10 @@ Failure payloads include machine-parseable `code` and `retryable`.
 When the ingestion bridge URL handler raises on loader failure, it appends a parseable
 `diagnostics=<json>` suffix (when failure meta exists) with sanitized/truncated
 `ingest.item_failed.meta` fields.
+For `kg_build` ingestion bridge execution, callback emission is skipped when
+`LoadedPage.status_code >= 400` (for example HTTP 404/500). The handler raises
+for that URL so downstream graph/import callback processing does not run on
+error-status pages.
 
 ## Quick Usage
 

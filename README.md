@@ -113,6 +113,10 @@ The workflow:
 2. Builds the configured URL source and filters out unchanged URLs (unless `OVERWRITE`).
 3. Sends each URL to WordLift for import with retries and optional Search Console refresh.
 
+`kg_build` bridge behavior: when ingestion resolves a page with HTTP
+`status_code >= 400` (for example 404/500), the web-page callback is skipped for
+that URL so downstream import/graph processing is not emitted for error pages.
+
 You can build components yourself when you need more control:
 
 ```python

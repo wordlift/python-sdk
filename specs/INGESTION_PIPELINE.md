@@ -102,6 +102,9 @@ Bridge-handler failure surfacing contract:
   `diagnostics=<json>` when `ingest.item_failed.meta` includes diagnostic fields.
 - Appended diagnostics are key-whitelisted, JSON-serialized with stable keys, and
   truncated/sanitized for safe logs (`root_exception_message` capped; payload capped).
+- In `kg_build` bridge execution, when ingestion returns a `LoadedPage` with
+  `status_code >= 400`, the handler must raise and skip callback emission for
+  that URL to prevent graph/import processing on HTTP error pages.
 
 ## Sitemap Fetch Identity
 

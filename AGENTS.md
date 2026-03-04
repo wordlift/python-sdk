@@ -92,6 +92,10 @@
 - `wordlift_sdk.kg_build` URL handling uses `WebPageScrapeApi` and conditionally
   runs Search Console refresh when `GOOGLE_SEARCH_CONSOLE` is enabled, while
   the legacy `ApplicationContainer` workflow continues to use web page imports.
+- `wordlift_sdk.kg_build` ingestion bridge suppresses callback emission for
+  pages with HTTP error statuses (`status_code >= 400`), raising per-URL handler
+  errors so downstream import/graph processing is skipped for not-found/server
+  error pages.
 - Ingestion resolver requires explicit `INGEST_SOURCE` and `INGEST_LOADER`;
   legacy fallback from `WEB_PAGE_IMPORT_MODE`/`WEB_PAGE_IMPORT_TIMEOUT` and
   implicit source auto-priority are intentionally removed.
