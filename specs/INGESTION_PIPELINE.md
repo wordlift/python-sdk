@@ -47,6 +47,9 @@ Alias support:
 - Legacy resolver fallback from `WEB_PAGE_IMPORT_*` and implicit source auto-priority is not supported.
 - Source-specific required fields are validated strictly (`URLS`, `SITEMAP_URL`, or full `SHEETS_*` tuple, depending on `INGEST_SOURCE`).
 - `URL_REGEX` is validated at resolve time and applied uniformly before loader execution.
+- Graph-sync URL-source bridging (`AdapterUrlSource` -> `NewOrChangedUrlSource`)
+  must also enforce resolved `url_regex` before GraphQL `new_or_changed` lookup,
+  so out-of-scope URLs are excluded before change detection/import.
 - `SITEMAP_URL_PATTERN` is deprecated; for `INGEST_SOURCE=sitemap` it is accepted as an alias when `URL_REGEX` is unset.
 
 ## Passthrough Precedence

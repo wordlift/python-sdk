@@ -51,6 +51,7 @@ The orchestrator resolves adapters via registries and emits uniform events.
 - `INGEST_RETRY_ATTEMPTS`: int (default `5`)
 - `INGEST_RETRY_BACKOFF_MS`: int milliseconds (default `2000`)
 - `URL_REGEX`: optional regex applied to all source URLs before loader execution
+  and in the graph-sync URL-source bridge before `new_or_changed` GraphQL lookup
 
 ### Precedence
 

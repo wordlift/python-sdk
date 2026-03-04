@@ -177,6 +177,10 @@
   across `urls|sitemap|sheets|local` before loader execution); sitemap-specific
   `SITEMAP_URL_PATTERN` is deprecated and mapped as alias when `URL_REGEX` is
   unset.
+- Graph-sync URL sourcing now enforces resolved ingestion URL scoping in
+  `AdapterUrlSource` before `NewOrChangedUrlSource` GraphQL lookup, so
+  out-of-scope sitemap URLs are excluded from `new_or_changed` consideration
+  and import requests.
 - Ingestion exposes local CLI type classification export via
   `create_type_classification_csv_from_ingestion`, using `trafilatura` markdown
   extraction and non-interactive local CLI auto-selection

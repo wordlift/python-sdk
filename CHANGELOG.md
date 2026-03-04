@@ -1,5 +1,21 @@
 # Changelog
 
+## 6.6.5 - 2026-03-04
+
+### Fixed
+
+- Enforce sitemap URL scoping in graph-sync URL bridging before
+  `NewOrChangedUrlSource` GraphQL lookup so out-of-scope URLs are excluded from
+  `new_or_changed` lookup/import requests.
+
+### Changed
+
+- `URL_REGEX` and sitemap alias (`SITEMAP_URL_PATTERN`) behavior is now
+  consistently enforced in both ingestion orchestrator and graph-sync source
+  selection paths.
+- Added graph-sync regression tests for full URL regex, path-style alias regex,
+  and no-filter sitemap behavior.
+
 ## 6.6.3 - 2026-03-04
 
 ### Changed

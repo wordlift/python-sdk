@@ -3,7 +3,7 @@
 A Python toolkit for orchestrating WordLift imports: fetch URLs from sitemaps, Google Sheets, or explicit lists, filter out already imported pages, enqueue search console jobs, push RDF graphs, and call the WordLift APIs to import web pages.
 
 ## Features
-- URL sources: XML sitemaps, Google Sheets (`url` column), or Python lists, with global optional `URL_REGEX` filtering.
+- URL sources: XML sitemaps, Google Sheets (`url` column), or Python lists, with global optional `URL_REGEX` filtering (also enforced in graph-sync source selection before `new_or_changed` GraphQL lookup).
 - Sitemap discovery requests use a browser-like header bundle aligned with Playwright defaults (including `User-Agent`, `Accept`, `Accept-Language`, `Referer`, and `Sec-CH-*` headers).
 - Change detection: skips URLs that are already imported unless `OVERWRITE` is enabled; re-imports when `lastmod` is newer.
 - Web page imports: sends URLs to WordLift with embedding requests, output types, retry logic, and pluggable callbacks.
@@ -110,7 +110,7 @@ if __name__ == "__main__":
 
 The workflow:
 1. Renders and uploads RDF graphs from `data/templates/*.ttl.liquid` using account info.
-2. Builds the configured URL source and filters out unchanged URLs (unless `OVERWRITE`).
+2. Builds the configured URL source (applying `URL_REGEX` / sitemap alias scoping) and filters out unchanged URLs (unless `OVERWRITE`).
 3. Sends each URL to WordLift for import with retries and optional Search Console refresh.
 
 `kg_build` bridge behavior: when ingestion resolves a page with HTTP
