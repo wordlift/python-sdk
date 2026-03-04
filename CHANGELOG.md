@@ -1,5 +1,16 @@
 # Changelog
 
+## 6.6.3 - 2026-03-04
+
+### Changed
+
+- `kg_build` callback canonical ID generation now runs after profile
+  postprocessors so postprocessor-minted IDs are canonicalized in the final
+  graph before sync patching.
+- Added regression coverage for callback graphs where postprocessors mint
+  `/articles/...` roots and fragment offer IDs (for example
+  `#aggregate-offer-*`), ensuring final patched IDs use canonical dataset paths.
+
 ## 6.6.1 - 2026-02-27
 
 ### Changed

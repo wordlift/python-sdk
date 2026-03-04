@@ -48,9 +48,9 @@ Minimum profile requirements:
 
 Execution order:
 
-1. Built-in core ID postprocessor
-2. entries from `profiles/<profile>/postprocessors.toml` when present
-3. otherwise entries from `profiles/_base/postprocessors.toml`
+1. entries from `profiles/<profile>/postprocessors.toml` when present
+2. otherwise entries from `profiles/_base/postprocessors.toml`
+3. built-in core ID canonicalization runs after profile postprocessors
 
 Manifest contract:
 

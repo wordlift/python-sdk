@@ -261,6 +261,7 @@ The SDK now includes a profile-driven cloud mapping module under `wordlift_sdk.k
 1. `profiles/<profile>/postprocessors.toml` (exclusive when present)
 2. fallback `profiles/_base/postprocessors.toml`
 3. otherwise no postprocessors
+- Callback canonicalization order: profile postprocessors run first, then built-in canonical ID generation runs on the postprocessed graph immediately before patching.
 - Execution is manifest-based only (hard cutover): no legacy `.py` or `*.command.toml` discovery.
 - During callback patch preparation, the SDK annotates first-level URI-subject nodes in the generated graph with `seovoc:source "web-page-import"` where first-level is dataset ID depth `/<dataset>/<bucket>/<id>` (for example `https://data.host/dataset/types/name`); deeper child IDs and blank nodes are not annotated.
 - Before patching each dataset-scoped node, the SDK computes a per-node `seovoc:importHash` from graph snapshot triples (excluding `seovoc:importHash` itself), writes the hash back to the node, and can skip API patching when a provided `seovoc:importHash` already matches.

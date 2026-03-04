@@ -39,9 +39,10 @@ Sequence:
    - render mapping template with shared `exports`
    - materialize XHTML/XPath mapping
    - optionally reconcile root IRI when URL source provides an existing ID
+   - run postprocessors from selected manifest precedence (`profiles/<name>/postprocessors.toml`, else `_base`, else none)
+   - apply built-in canonical ID generation on the postprocessed graph
    - set `seovoc:source` to `"web-page-import"` on first-level URI-subject entities in host-generated callback graph output, where first-level follows dataset ID depth `/<dataset>/<bucket>/<id>`
    - compute per-node `seovoc:importHash` before patching (hash excludes `seovoc:importHash` itself), write it back to the node, and apply `import_hash_mode` (`on|write|off`) for skip behavior
-   - run postprocessors from selected manifest precedence (`profiles/<name>/postprocessors.toml`, else `_base`, else none)
    - aggregate run-level KPI counters for dataset-scoped entities in the patched graph (`total_entities`, type/property totals, and by-type/by-predicate breakdowns)
    - optionally run SHACL validation for each graph (`off`/`warn`/`fail`) and aggregate validation KPI counters (`total`, `pass`, `fail`, warnings/errors counts and per-shape sources)
    - in `fail` mode, emit failing progress payload first, then raise to stop the failing graph/static-template sync path
@@ -69,9 +70,9 @@ Responsibility:
 3. Apply profile mapping template for current URL.
 4. Reconcile callback root IRI.
    - only when `existing_web_page_id` is provided
-5. Set `seovoc:source` to `"web-page-import"` on first-level URI subjects in the host-side callback graph before patching (dataset ID depth `/<dataset>/<bucket>/<id>`; blank nodes excluded).
-6. Apply built-in canonical ID generation (standard policy).
-7. Apply profile postprocessors (no hardcoded customer extractor references).
+5. Apply profile postprocessors (no hardcoded customer extractor references).
+6. Apply built-in canonical ID generation (standard policy) on the postprocessed graph.
+7. Set `seovoc:source` to `"web-page-import"` on first-level URI subjects in the host-side callback graph before patching (dataset ID depth `/<dataset>/<bucket>/<id>`; blank nodes excluded).
 8. Patch graph triples, and optionally write debug graph/source files.
 9. Expose cumulative run KPIs via `get_kpi_summary()` for host emission/reporting.
 10. Cloud workflow can stream progress events (`on_progress`) and emit final KPI payload (`on_kpi`); legacy `on_info` remains supported and can be used concurrently.

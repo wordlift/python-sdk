@@ -229,6 +229,80 @@ async def test_profile_protocol_sets_source_only_on_first_level_uri_subjects():
 
 
 @pytest.mark.asyncio
+async def test_callback_runs_canonical_ids_after_postprocessors() -> None:
+    protocol = ProfileImportProtocol(
+        context=_make_context(),
+        profile=_make_profile(),
+        root_dir=Path.cwd(),
+    )
+    protocol._patch_static_templates_once = AsyncMock()
+    protocol._resolve_mapping_path = MagicMock(return_value=Path("mapping.yarrrml"))
+    protocol._get_mapping_content = MagicMock(return_value="mapping")
+    protocol.patcher.patch_all = AsyncMock()
+
+    root = URIRef(
+        "https://data.example.com/dataset/articles/"
+        "article-7554bd49a18cf19eba0ecce8991880cd599582f9fe7eea595c471334d72921ef"
+    )
+    mapped_graph = Graph()
+    mapped_graph.add((root, RDF.type, URIRef("http://schema.org/Article")))
+    mapped_graph.add(
+        (
+            root,
+            URIRef("http://schema.org/url"),
+            Literal("https://translated.com/developers"),
+        )
+    )
+    protocol.rml_service.apply_mapping = AsyncMock(return_value=mapped_graph)
+
+    def _inject_service_product_and_fragment_offer(
+        graph: Graph, *_args, **_kwargs
+    ) -> Graph:
+        graph.add((root, RDF.type, URIRef("http://schema.org/Product")))
+        graph.add((root, RDF.type, URIRef("http://schema.org/Service")))
+        graph.add(
+            (
+                root,
+                URIRef("http://schema.org/url"),
+                Literal("https://translated.com/developers"),
+            )
+        )
+        graph.add(
+            (
+                root,
+                URIRef("http://schema.org/offers"),
+                URIRef(f"{root}#aggregate-offer-usd"),
+            )
+        )
+        return graph
+
+    protocol._apply_postprocessors = MagicMock(
+        side_effect=_inject_service_product_and_fragment_offer
+    )
+
+    response = WebPageScrapeResponse(
+        web_page=WebPage(url="https://translated.com/developers", html="<html></html>")
+    )
+    await protocol.callback(response)
+
+    patched_graph = protocol.patcher.patch_all.call_args.args[0]
+    product_subjects = list(
+        patched_graph.subjects(RDF.type, URIRef("http://schema.org/Product"))
+    )
+    assert len(product_subjects) == 1
+    product_subject = product_subjects[0]
+    assert str(product_subject).startswith("https://data.example.com/dataset/products/")
+    assert "/articles/" not in str(product_subject)
+
+    offers = list(
+        patched_graph.objects(product_subject, URIRef("http://schema.org/offers"))
+    )
+    assert len(offers) == 1
+    assert str(offers[0]).startswith(f"{product_subject}/offers/offer-")
+    assert "#aggregate-offer-" not in str(offers[0])
+
+
+@pytest.mark.asyncio
 async def test_profile_protocol_applies_existing_import_hash_to_all_uri_subjects() -> (
     None
 ):

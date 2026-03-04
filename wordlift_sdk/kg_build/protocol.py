@@ -193,10 +193,12 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
 
         if existing_web_page_id:
             self._reconcile_root_id(graph, existing_web_page_id)
+        graph = self._apply_postprocessors(graph, url, response, existing_web_page_id)
+        # Canonical IDs must run after custom postprocessors so any nodes minted
+        # by local logic are normalized before graph sync patching.
         graph = self._core_ids.process_graph(
             graph, self._build_pp_context(url, response, existing_web_page_id)
         )
-        graph = self._apply_postprocessors(graph, url, response, existing_web_page_id)
         self._set_source(graph, existing_web_page_id)
         self._set_existing_import_hash(graph, existing_import_hash)
 

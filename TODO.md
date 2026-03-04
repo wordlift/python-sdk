@@ -1,5 +1,6 @@
 # TODO
 
+- [x] 2026-03-04 Move `kg_build` callback canonical ID pass to run after profile postprocessors so postprocessor-minted IDs (for example `/articles/...` roots and `#aggregate-offer-*` offers) are normalized before graph sync patching; add regression coverage.
 - [x] 2026-02-27 Add callback-graph canonical nesting for dependent `schema:Action` subjects via `schema:potentialAction`/`schema:action` parent links, with regression coverage.
 - [x] 2026-02-27 Standardize ingestion URL filtering on global `URL_REGEX` (deprecate sitemap-only `SITEMAP_URL_PATTERN` alias), add shared local `claude|codex|gemini` CLI runner, and add ingestion-backed type-classification CSV export with `trafilatura` extraction.
 - [x] 2026-02-27 Expand `kg_build` callback-graph canonical ID behavior to rewrite all subject IRIs (URIRef subjects) that are not already under canonical dataset root prefixes, with regression coverage for non-canonical dataset-prefixed subjects.

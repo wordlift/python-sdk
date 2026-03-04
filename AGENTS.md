@@ -114,6 +114,9 @@
   includes a fallback subject-IRI rewrite pass: all URIRef subjects are
   canonicalized unless already under canonical dataset root prefixes; static
   template patching remains separate.
+- `wordlift_sdk.kg_build` callback ordering runs customer postprocessors before
+  built-in canonical ID generation, so IDs minted or rewritten in local
+  postprocessing are canonicalized in the final graph before sync patching.
 - `wordlift_sdk.kg_build` canonical ID generation nests `schema:Action` subjects
   under canonical parent subject IRIs when linked via
   `schema:potentialAction`/`schema:action` (for example
