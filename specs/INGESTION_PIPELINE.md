@@ -118,6 +118,17 @@ Bridge-handler failure surfacing contract:
 - The configured loader (`INGEST_LOADER`) is still applied per discovered URL
   by the orchestrator; sitemap fetch headers only affect source discovery.
 
+## Source-Only Discovery API
+
+- The ingestion module exposes `resolve_ingestion_source_items(...)` for clients
+  that need source URL records without running page loaders.
+- The API reuses the same resolver, source registries, URL regex filtering, and
+  warning event semantics as full ingestion.
+- The ingestion module also exposes
+  `create_structured_data_inventory_from_ingestion(...)` for structured-data
+  inventory generation using the same source resolution and loader execution
+  contracts as shared ingestion.
+
 ## web_scrape_api Semantics
 
 `web_scrape_api` is a managed API loader mode.

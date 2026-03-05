@@ -1,4 +1,4 @@
-from .api import run_ingestion
+from .api import SourceResolutionResult, resolve_ingestion_source_items, run_ingestion
 from .errors import (
     IngestionConfigError,
     IngestionError,
@@ -9,6 +9,10 @@ from .errors import (
 )
 from .events import IngestionWarning
 from .factory import create_loader_registry, create_orchestrator, create_source_registry
+from .inventory import (
+    StructuredDataInventoryRow,
+    create_structured_data_inventory_from_ingestion,
+)
 from .models import LoadedPage, SourceItem
 from .orchestrator import IngestionOrchestrator, IngestionResult
 from .protocols import LoaderAdapter, SourceAdapter
@@ -39,10 +43,14 @@ __all__ = [
     "SourceRuntimeError",
     "create_loader_registry",
     "create_orchestrator",
+    "create_structured_data_inventory_from_ingestion",
     "create_source_registry",
     "create_type_classification_csv_from_ingestion",
+    "SourceResolutionResult",
+    "resolve_ingestion_source_items",
     "run_ingestion",
     "resolve_ingestion_config_from_getter",
     "resolve_ingestion_config_from_mapping",
     "resolve_ingestion_config_from_provider",
+    "StructuredDataInventoryRow",
 ]

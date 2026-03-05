@@ -154,6 +154,8 @@ for page in result.pages:
 - `wordlift_sdk.ingestion.create_loader_registry()`
 - `wordlift_sdk.ingestion.IngestionOrchestrator`
 - `wordlift_sdk.ingestion.run_ingestion(...)`
+- `wordlift_sdk.ingestion.resolve_ingestion_source_items(...)`
+- `wordlift_sdk.ingestion.create_structured_data_inventory_from_ingestion(...)`
 - `wordlift_sdk.ingestion.create_type_classification_csv_from_ingestion(...)`
 
 ### Deprecated/Internal APIs

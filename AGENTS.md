@@ -2,6 +2,14 @@
 
 ## Project Notes
 
+- Ingestion now exposes source-only URL discovery via
+  `wordlift_sdk.ingestion.resolve_ingestion_source_items`, reusing resolver,
+  source adapters, URL filtering, and warning event semantics from the shared
+  ingestion stack.
+- Structured-data inventory generation is available in SDK ingestion via
+  `wordlift_sdk.ingestion.create_structured_data_inventory_from_ingestion`,
+  including inventory row construction (`faq_markup`, `faq_markup_from_graph`,
+  `types`, merged `structured_data`) over shared ingestion source+loader runs.
 - Generated Google SHACLs scope contained type requirements under container types
   (for example `ItemList`/`BreadcrumbList` → `ListItem`, `QAPage`/`FAQPage`/`Quiz`
   → `Question`/`Answer`/`Comment`, `ProfilePage` → `Person`/`Organization`,

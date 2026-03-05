@@ -1,5 +1,19 @@
 # Changelog
 
+## 6.7.0 - 2026-03-05
+
+### Added
+
+- Add source-only ingestion discovery API:
+  - `wordlift_sdk.ingestion.resolve_ingestion_source_items(...)`
+  - returns resolved `SourceItem` records plus machine-parseable discovery
+    events, reusing existing ingestion resolver/source registries and URL regex
+    filtering semantics.
+- Add SDK ingestion-based structured-data inventory API:
+  - `wordlift_sdk.ingestion.create_structured_data_inventory_from_ingestion(...)`
+  - builds inventory rows (`url`, FAQ flags, detected schema types, combined
+    JSON-LD graph) from shared ingestion source+loader configuration.
+
 ## 6.6.5 - 2026-03-04
 
 ### Fixed

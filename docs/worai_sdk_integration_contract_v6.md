@@ -11,6 +11,15 @@ Canonical entry point:
 
 No alternate orchestration path is in scope for worai integration.
 
+Exception for source-only inventory use cases:
+
+- `wordlift_sdk.ingestion.resolve_ingestion_source_items(...)` is the canonical
+  SDK API for URL discovery-only commands (for example
+  `worai structured-data inventory`) that do not run loaders/materialization.
+- `wordlift_sdk.ingestion.create_structured_data_inventory_from_ingestion(...)`
+  is the canonical SDK API when worai inventory needs full inventory row
+  generation (URL + FAQ flags + types + merged JSON-LD) over shared ingestion.
+
 ## Required Runtime Contract
 
 ### 1) Source Mode (exactly one per run)
@@ -76,6 +85,8 @@ verify:
 2. source-specific required fields are enforced
 3. unsupported source/loader fails fast
 4. canonical cloud flow emits expected source keys and callbacks
+5. source-only inventory path reuses ingestion resolver/source adapters via
+   `resolve_ingestion_source_items(...)` (no local duplicated sitemap resolver)
 
 Reference test suites:
 

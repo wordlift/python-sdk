@@ -1,5 +1,7 @@
 # TODO
 
+- [x] 2026-03-05 Add SDK source-only ingestion discovery API (`resolve_ingestion_source_items`) so worai structured-data inventory can reuse shared ingestion resolver/source logic (including sitemap/urls/sheets/local handling, URL filtering, and warning events) without maintaining a parallel local resolver path.
+- [x] 2026-03-05 Move structured-data inventory core logic into SDK ingestion (`create_structured_data_inventory_from_ingestion`) so worai can call an SDK-native method instead of maintaining inventory row construction/parsing logic locally.
 - [x] 2026-03-04 Fix graph-sync sitemap URL scoping by enforcing resolved `URL_REGEX` (`SITEMAP_URL_PATTERN` alias compatible) in the URL-source bridge before `NewOrChangedUrlSource` GraphQL lookup; add regression tests for full URL regex, path-style alias regex, and no-filter behavior.
 - [x] 2026-03-04 Suppress `kg_build` ingestion-bridge callback emission for HTTP error pages (`status_code >= 400`) so 404/5xx URLs do not emit downstream import/graph processing; add bridge regression tests and docs/spec/index updates.
 - [x] 2026-03-04 Move `kg_build` callback canonical ID pass to run after profile postprocessors so postprocessor-minted IDs (for example `/articles/...` roots and `#aggregate-offer-*` offers) are normalized before graph sync patching; add regression coverage.

@@ -352,6 +352,24 @@ result = run_ingestion(
 )
 ```
 
+You can also resolve source URL records without loading page HTML. This is intended for
+inventory-like commands that only need URL discovery and metadata while reusing the
+same source resolver/normalization stack.
+
+```python
+from wordlift_sdk.ingestion import resolve_ingestion_source_items
+
+result = resolve_ingestion_source_items(
+    {
+        "INGEST_SOURCE": "sitemap",
+        "INGEST_LOADER": "playwright",  # kept for compatibility with shared config
+        "SITEMAP_URL": "https://example.com/sitemap.xml",
+        "URL_REGEX": r"^https://example.com/articles/",
+    }
+)
+urls = [item.url for item in result.items]
+```
+
 You can also classify ingested URLs via local non-interactive agent CLIs (`claude`, `codex`, `gemini`) and write:
 `url,main_type,additional_types,explanation`.
 
@@ -368,6 +386,22 @@ df = create_type_classification_csv_from_ingestion(
     },
     output_csv="url-types.csv",
     agent_cli=None,  # auto-picks first available: claude -> codex -> gemini
+)
+```
+
+You can also build a structured-data inventory from shared ingestion:
+
+```python
+from wordlift_sdk.ingestion import create_structured_data_inventory_from_ingestion
+
+df = create_structured_data_inventory_from_ingestion(
+    source_bundle={
+        "INGEST_SOURCE": "sitemap",
+        "INGEST_LOADER": "web_scrape_api",
+        "SITEMAP_URL": "https://example.com/sitemap.xml",
+    },
+    api_key="your-api-key",
+    output_csv="structured-data-inventory.csv",
 )
 ```
 
