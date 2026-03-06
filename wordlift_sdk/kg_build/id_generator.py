@@ -8,6 +8,7 @@ from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 from rdflib import Graph, Literal, RDF, URIRef
 
 from .id_policy import DEFAULT_ID_POLICY, IdPolicy
+from .iri_lookup import IriLookup
 
 SCHEMA = "http://schema.org/"
 
@@ -26,39 +27,71 @@ class CanonicalIdGenerator:
     def __init__(self, policy: IdPolicy | None = None) -> None:
         self._policy = policy or DEFAULT_ID_POLICY
 
-    def apply(self, graph: Graph, dataset_uri: str) -> Graph:
+    def apply(
+        self,
+        graph: Graph,
+        dataset_uri: str,
+        iri_lookup: IriLookup | None = None,
+    ) -> Graph:
         dataset_uri = dataset_uri.rstrip("/")
         if not dataset_uri:
             return graph
 
-        self._rewrite_pages_and_children(graph, dataset_uri)
-        self._rewrite_entity_roots(graph, dataset_uri)
-        self._rewrite_remaining_subjects(graph, dataset_uri)
+        root_subjects = self._root_subjects(graph)
+        # Lookup-mapped IRIs are treated as authoritative and must not be
+        # rewritten again in subsequent canonicalization passes.
+        locked_subjects: set[URIRef] = set()
+        self._rewrite_pages_and_children(
+            graph, dataset_uri, iri_lookup, root_subjects, locked_subjects
+        )
+        self._rewrite_entity_roots(
+            graph, dataset_uri, iri_lookup, root_subjects, locked_subjects
+        )
+        self._rewrite_remaining_subjects(
+            graph, dataset_uri, iri_lookup, root_subjects, locked_subjects
+        )
         self._rewrite_actions_as_dependents(graph)
         return graph
 
-    def _rewrite_remaining_subjects(self, graph: Graph, dataset_uri: str) -> None:
+    def _rewrite_remaining_subjects(
+        self,
+        graph: Graph,
+        dataset_uri: str,
+        iri_lookup: IriLookup | None,
+        root_subjects: set[URIRef],
+        locked_subjects: set[URIRef],
+    ) -> None:
         subjects = sorted(
             {s for s in graph.subjects() if isinstance(s, URIRef)}, key=str
         )
         for subject in subjects:
+            if subject in locked_subjects:
+                continue
+            if self._is_dependent_subject(graph, subject):
+                continue
             if not self._should_rewrite_subject(subject, dataset_uri):
                 continue
 
-            gtin = self._first_value(graph, subject, "gtin")
-            if gtin:
-                candidate = URIRef(f"{dataset_uri}/01/{normalize_slug(gtin)}")
+            lookup_iri = self._lookup_iri(
+                graph, subject, iri_lookup, root_subjects, locked_subjects
+            )
+            if lookup_iri is not None:
+                candidate = lookup_iri
             else:
-                preferred_type = self._preferred_type_name(graph, subject)
-                normalized_type = self._policy.normalize_type_name(preferred_type)
-                container = self._policy.container_for_type(normalized_type)
-                slug = self._entity_slug(
-                    graph,
-                    subject,
-                    default_base=normalized_type,
-                    url_value=self._first_value(graph, subject, "url"),
-                )
-                candidate = URIRef(f"{dataset_uri}/{container}/{slug}")
+                gtin = self._first_value(graph, subject, "gtin")
+                if gtin:
+                    candidate = URIRef(f"{dataset_uri}/01/{normalize_slug(gtin)}")
+                else:
+                    preferred_type = self._preferred_type_name(graph, subject)
+                    normalized_type = self._policy.normalize_type_name(preferred_type)
+                    container = self._policy.container_for_type(normalized_type)
+                    slug = self._entity_slug(
+                        graph,
+                        subject,
+                        default_base=normalized_type,
+                        url_value=self._first_value(graph, subject, "url"),
+                    )
+                    candidate = URIRef(f"{dataset_uri}/{container}/{slug}")
 
             new_iri = self._ensure_unique_subject_iri(graph, subject, candidate)
             self._swap_iri(graph, subject, new_iri)
@@ -141,7 +174,14 @@ class CanonicalIdGenerator:
                 return suffixed
             index += 1
 
-    def _rewrite_pages_and_children(self, graph: Graph, dataset_uri: str) -> None:
+    def _rewrite_pages_and_children(
+        self,
+        graph: Graph,
+        dataset_uri: str,
+        iri_lookup: IriLookup | None,
+        root_subjects: set[URIRef],
+        locked_subjects: set[URIRef],
+    ) -> None:
         page_nodes = {
             subject
             for subject in graph.subjects()
@@ -149,16 +189,22 @@ class CanonicalIdGenerator:
         }
 
         for old_page in sorted(page_nodes, key=str):
-            url = graph.value(old_page, URIRef(f"{SCHEMA}url"))
-            page_slug = self._entity_slug(
-                graph,
-                old_page,
-                default_base="web-page",
-                url_value=str(url) if isinstance(url, (Literal, URIRef)) else None,
+            lookup_iri = self._lookup_iri(
+                graph, old_page, iri_lookup, root_subjects, locked_subjects
             )
-            new_page = URIRef(
-                f"{dataset_uri}/{self._policy.container_for_type('WebPage')}/{page_slug}"
-            )
+            if lookup_iri is not None:
+                new_page = lookup_iri
+            else:
+                url = graph.value(old_page, URIRef(f"{SCHEMA}url"))
+                page_slug = self._entity_slug(
+                    graph,
+                    old_page,
+                    default_base="web-page",
+                    url_value=str(url) if isinstance(url, (Literal, URIRef)) else None,
+                )
+                new_page = URIRef(
+                    f"{dataset_uri}/{self._policy.container_for_type('WebPage')}/{page_slug}"
+                )
             self._swap_iri(graph, old_page, new_page)
             self._rewrite_faq(graph, new_page)
             self._rewrite_videos(graph, new_page)
@@ -280,7 +326,14 @@ class CanonicalIdGenerator:
                 )
                 self._swap_iri(graph, step, new_step)
 
-    def _rewrite_entity_roots(self, graph: Graph, dataset_uri: str) -> None:
+    def _rewrite_entity_roots(
+        self,
+        graph: Graph,
+        dataset_uri: str,
+        iri_lookup: IriLookup | None,
+        root_subjects: set[URIRef],
+        locked_subjects: set[URIRef],
+    ) -> None:
         products = {
             subject
             for subject in graph.subjects()
@@ -288,25 +341,31 @@ class CanonicalIdGenerator:
         }
         seen: defaultdict[str, int] = defaultdict(int)
         for product in sorted(products, key=str):
-            gtin = self._first_value(graph, product, "gtin")
-            if gtin:
-                product_iri = URIRef(f"{dataset_uri}/01/{normalize_slug(gtin)}")
+            lookup_iri = self._lookup_iri(
+                graph, product, iri_lookup, root_subjects, locked_subjects
+            )
+            if lookup_iri is not None:
+                product_iri = lookup_iri
             else:
-                product_url = self._first_value(graph, product, "url")
-                subject_type = self._preferred_type_name(graph, product)
-                product_slug = self._entity_slug(
-                    graph,
-                    product,
-                    default_base=subject_type,
-                    url_value=product_url,
-                )
-                seen[product_slug] += 1
-                if not product_url and seen[product_slug] > 1:
-                    product_slug = f"{product_slug}-{seen[product_slug]}"
+                gtin = self._first_value(graph, product, "gtin")
+                if gtin:
+                    product_iri = URIRef(f"{dataset_uri}/01/{normalize_slug(gtin)}")
+                else:
+                    product_url = self._first_value(graph, product, "url")
+                    subject_type = self._preferred_type_name(graph, product)
+                    product_slug = self._entity_slug(
+                        graph,
+                        product,
+                        default_base=subject_type,
+                        url_value=product_url,
+                    )
+                    seen[product_slug] += 1
+                    if not product_url and seen[product_slug] > 1:
+                        product_slug = f"{product_slug}-{seen[product_slug]}"
 
-                normalized_type = self._policy.normalize_type_name(subject_type)
-                container = self._policy.container_for_type(normalized_type)
-                product_iri = URIRef(f"{dataset_uri}/{container}/{product_slug}")
+                    normalized_type = self._policy.normalize_type_name(subject_type)
+                    container = self._policy.container_for_type(normalized_type)
+                    product_iri = URIRef(f"{dataset_uri}/{container}/{product_slug}")
 
             self._swap_iri(graph, product, product_iri)
 
@@ -460,3 +519,50 @@ class CanonicalIdGenerator:
     @staticmethod
     def _is_local_dependent_node(subject: URIRef, parent: URIRef) -> bool:
         return str(subject).startswith(str(parent))
+
+    def _is_dependent_subject(self, graph: Graph, subject: URIRef) -> bool:
+        subject_types = self._schema_type_names(graph, subject)
+        for subject_type in subject_types:
+            rule = self._policy.dependency_rule_for(subject_type)
+            if rule is None:
+                continue
+            for predicate in rule.parent_predicates:
+                parent_predicate = URIRef(f"{SCHEMA}{predicate}")
+                if any(
+                    isinstance(parent, URIRef)
+                    for parent in graph.subjects(parent_predicate, subject)
+                ):
+                    return True
+        return False
+
+    def _lookup_iri(
+        self,
+        graph: Graph,
+        subject: URIRef,
+        iri_lookup: IriLookup | None,
+        root_subjects: set[URIRef],
+        locked_subjects: set[URIRef],
+    ) -> URIRef | None:
+        if iri_lookup is None:
+            return None
+        # Lookup is intentionally root-only to avoid remapping dependent nodes
+        # (Offer/Answer/Action/etc.) away from canonical parent nesting.
+        if subject not in root_subjects:
+            return None
+        value = iri_lookup.iri_for_subject(graph, subject)
+        if not value:
+            return None
+        iri = URIRef(str(value).strip())
+        locked_subjects.add(iri)
+        return iri
+
+    @staticmethod
+    def _root_subjects(graph: Graph) -> set[URIRef]:
+        subjects = {s for s in graph.subjects() if isinstance(s, URIRef)}
+        referenced = {
+            o
+            for _, _, o in graph.triples((None, None, None))
+            if isinstance(o, URIRef) and o in subjects
+        }
+        roots = subjects - referenced
+        return roots or subjects

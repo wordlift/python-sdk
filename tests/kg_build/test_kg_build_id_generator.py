@@ -3,6 +3,7 @@ from __future__ import annotations
 from rdflib import Graph, Literal, RDF, URIRef
 
 from wordlift_sdk.kg_build.id_generator import CanonicalIdGenerator
+from wordlift_sdk.kg_build.iri_lookup import IriLookup
 from wordlift_sdk.kg_build.id_policy import DEFAULT_ID_POLICY, IdPolicy
 
 SCHEMA = "http://schema.org/"
@@ -210,3 +211,53 @@ def test_rewrites_action_subject_as_nested_dependent_entity() -> None:
     nested_action = nested_actions[0]
     assert str(nested_action).startswith(f"{rewritten_article}/actions/")
     assert (nested_action, RDF.type, URIRef(f"{SCHEMA}Action")) in output
+
+
+class _DictLookup(IriLookup):
+    def __init__(self, mapping: dict[str, str]) -> None:
+        self._mapping = mapping
+
+    def iri_for_subject(self, graph: Graph, subject: URIRef) -> str | None:
+        value = graph.value(subject, URIRef(f"{SCHEMA}url"))
+        if value is None:
+            return None
+        return self._mapping.get(str(value))
+
+
+def test_lookup_rewrites_only_root_subjects_not_dependent_nodes() -> None:
+    graph = Graph()
+    root = URIRef("https://example.com/product")
+    offer = URIRef("https://example.com/product#offer")
+    graph.add((root, RDF.type, URIRef(f"{SCHEMA}Product")))
+    graph.add((root, URIRef(f"{SCHEMA}url"), Literal("https://example.com/product")))
+    graph.add((root, URIRef(f"{SCHEMA}offers"), offer))
+    graph.add((offer, RDF.type, URIRef(f"{SCHEMA}Offer")))
+    graph.add((offer, URIRef(f"{SCHEMA}url"), Literal("https://example.com/product")))
+
+    lookup = _DictLookup(
+        {"https://example.com/product": "https://kg.example.com/products/from-lookup"}
+    )
+    output = CanonicalIdGenerator().apply(graph, DATASET, iri_lookup=lookup)
+
+    root_iri = URIRef("https://kg.example.com/products/from-lookup")
+    assert (root_iri, RDF.type, URIRef(f"{SCHEMA}Product")) in output
+    # Offer remains canonically nested under the root and is not directly replaced
+    # with the same lookup IRI as the parent.
+    nested_offers = list(output.objects(root_iri, URIRef(f"{SCHEMA}offers")))
+    assert len(nested_offers) == 1
+    assert str(nested_offers[0]).startswith(f"{root_iri}/offers/")
+
+
+def test_lookup_miss_falls_back_to_default_generation() -> None:
+    graph = Graph()
+    root = URIRef("https://example.com/article")
+    graph.add((root, RDF.type, URIRef(f"{SCHEMA}Article")))
+    graph.add((root, URIRef(f"{SCHEMA}url"), Literal("https://example.com/article")))
+
+    output = CanonicalIdGenerator().apply(
+        graph, DATASET, iri_lookup=_DictLookup(mapping={})
+    )
+
+    rewritten_articles = list(output.subjects(RDF.type, URIRef(f"{SCHEMA}Article")))
+    assert len(rewritten_articles) == 1
+    assert str(rewritten_articles[0]).startswith(f"{DATASET}/articles/")

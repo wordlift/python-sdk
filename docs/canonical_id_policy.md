@@ -66,3 +66,22 @@ dataset-rooted paths when needed.
   IRI path (`<parent>/actions/<slug>`).
 - Static template graphs are patched through a separate startup path and are not
   part of callback graph emission rewriting.
+
+## Optional Lookup Reuse
+
+Canonical generation can optionally reuse existing root IRIs through a lookup
+hook:
+
+- context key: `Context.extensions["kg_build.iri_lookup"]`
+- protocol: `IriLookup.iri_for_subject(graph, subject) -> str | None`
+- builtin dataframe implementation:
+  `wordlift_sdk.kg_build.DataFrameUrlIriLookup` (`url`/`iri` columns)
+
+Behavior:
+
+- lookup is applied only to root candidates (first-level URI subjects)
+- dependent nodes are not lookup-remapped and still follow canonical
+  parent-nested rewrite rules
+- duplicate URL rows in dataframe lookup resolve to the shortest IRI path depth
+  (tie-break: shorter full IRI, then first row order)
+- lookup misses fall back to normal canonical ID generation

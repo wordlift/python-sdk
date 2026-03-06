@@ -19,6 +19,8 @@ __all__ = [
     "IdAllocator",
     "CanonicalIdGenerator",
     "CanonicalIdsPostprocessor",
+    "IriLookup",
+    "DataFrameUrlIriLookup",
     "KgBuildKpiCollector",
     "DependentRule",
     "IdPolicy",
@@ -70,6 +72,11 @@ _EXPORTS: dict[str, tuple[str, str]] = {
     "CanonicalIdsPostprocessor": (
         "wordlift_sdk.kg_build.id_postprocessor",
         "CanonicalIdsPostprocessor",
+    ),
+    "IriLookup": ("wordlift_sdk.kg_build.iri_lookup", "IriLookup"),
+    "DataFrameUrlIriLookup": (
+        "wordlift_sdk.kg_build.iri_lookup",
+        "DataFrameUrlIriLookup",
     ),
     "KgBuildKpiCollector": ("wordlift_sdk.kg_build.kpi", "KgBuildKpiCollector"),
     "DependentRule": ("wordlift_sdk.kg_build.id_policy", "DependentRule"),

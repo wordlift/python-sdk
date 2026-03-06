@@ -1,4 +1,5 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from typing import Any
 
 from wordlift_client import AccountInfo, Configuration
 
@@ -19,3 +20,4 @@ class Context:
     # Queues where clients can append data to be written to the graph.
     graph_queue: GraphQueue
     entity_patch_queue: EntityPatchQueue
+    extensions: dict[str, Any] = field(default_factory=dict)

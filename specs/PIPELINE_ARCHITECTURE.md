@@ -40,7 +40,7 @@ Sequence:
    - materialize XHTML/XPath mapping
    - optionally reconcile root IRI when URL source provides an existing ID
    - run postprocessors from selected manifest precedence (`profiles/<name>/postprocessors.toml`, else `_base`, else none)
-   - apply built-in canonical ID generation on the postprocessed graph
+   - apply built-in canonical ID generation on the postprocessed graph (with optional root-Iri reuse via `Context.extensions["kg_build.iri_lookup"]`)
    - set `seovoc:source` to `"web-page-import"` on first-level URI-subject entities in host-generated callback graph output, where first-level follows dataset ID depth `/<dataset>/<bucket>/<id>`
    - compute per-node `seovoc:importHash` before patching (hash excludes `seovoc:importHash` itself), write it back to the node, and apply `import_hash_mode` (`on|write|off`) for skip behavior
    - aggregate run-level KPI counters for dataset-scoped entities in the patched graph (`total_entities`, type/property totals, and by-type/by-predicate breakdowns)
@@ -110,6 +110,10 @@ Runtime-isolated execution:
 Current implementation status:
 
 - built-in canonical IDs: implemented in `wordlift_sdk.kg_build.id_generator` + `wordlift_sdk.kg_build.id_policy` + `wordlift_sdk.kg_build.id_postprocessor` with policy-driven root scope (`page_root_types` vs `entity_root_types`), deterministic multi-type precedence, URL-preserving `schema:url` handling, and complete offer/priceSpecification rewrite traversal.
+- canonical IDs can optionally reuse existing IRIs from an injected lookup
+  (`IriLookup.iri_for_subject(graph, subject)`) resolved via
+  `Context.extensions["kg_build.iri_lookup"]`; lookup applies only to root
+  subjects and falls back to generated IDs on misses.
 - callback graph canonicalization includes a fallback subject pass so non-blank
   subject IRIs are rewritten to canonical dataset-rooted paths when they are not
   already under canonical root prefixes; static-template graph patching remains

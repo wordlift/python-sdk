@@ -25,3 +25,27 @@ def test_id_postprocessor_applies_generator_when_dataset_uri_present() -> None:
     )
     out = post.process_graph(graph, context)
     assert isinstance(out, Graph)
+
+
+def test_id_postprocessor_uses_lookup_from_context_extensions() -> None:
+    graph = Graph()
+    subject = URIRef("https://example.com/item")
+    graph.add(
+        (subject, URIRef("http://schema.org/url"), URIRef("https://example.com/item"))
+    )
+
+    class _Lookup:
+        def iri_for_subject(self, graph, subject):
+            return "https://kg.example.com/items/from-lookup"
+
+    post = CanonicalIdsPostprocessor()
+    context = SimpleNamespace(
+        account=SimpleNamespace(dataset_uri="https://data.example.com/dataset"),
+        extensions={"kg_build.iri_lookup": _Lookup()},
+    )
+    out = post.process_graph(graph, context)
+    assert (
+        URIRef("https://kg.example.com/items/from-lookup"),
+        URIRef("http://schema.org/url"),
+        URIRef("https://example.com/item"),
+    ) in out
