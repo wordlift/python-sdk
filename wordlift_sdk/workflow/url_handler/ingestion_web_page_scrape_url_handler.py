@@ -43,7 +43,17 @@ class IngestionWebPageScrapeUrlHandler(UrlHandler):
 
     async def __call__(self, url: Url) -> None:
         settings = self._build_settings(url)
+        logger.info(f"Running ingestion loader for {url.value}")
+        from time import perf_counter
+        before = perf_counter()
         result = run_ingestion(settings)
+        after = perf_counter()
+        duration_ms = (after - before) * 1000.0
+        logger.info(
+            "Ingestion loader completed for %s in %.2fms",
+            url.value,
+            duration_ms,
+        )
 
         if not result.pages:
             failed = [

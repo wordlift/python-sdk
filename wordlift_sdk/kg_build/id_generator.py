@@ -110,12 +110,10 @@ class CanonicalIdGenerator:
     def _should_rewrite_subject(self, subject: URIRef, dataset_uri: str) -> bool:
         text = str(subject)
         prefix = f"{dataset_uri}/"
-        if not text.startswith(prefix):
-            return True
-
-        relative = text[len(prefix) :]
-        first = relative.split("/", 1)[0]
-        return first not in self._canonical_root_prefixes()
+        if text.startswith(prefix):
+            relative = text[len(prefix) :]
+            return True if not relative else False
+        return True
 
     def _canonical_root_prefixes(self) -> set[str]:
         prefixes = {"01"}
