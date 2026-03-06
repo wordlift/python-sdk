@@ -12,7 +12,8 @@ import pandas as pd
 
 from wordlift_sdk.structured_data.structured_data_engine import StructuredDataEngine
 
-from .api import resolve_ingestion_source_items, run_ingestion
+from .api import resolve_ingestion_source_items
+from .factory import create_orchestrator
 
 
 @dataclass(frozen=True)
@@ -66,16 +67,36 @@ def create_structured_data_inventory_from_ingestion(
 
     ingest_config = _normalize_source_bundle(source_bundle)
     source_result = resolve_ingestion_source_items(ingest_config)
-    ingestion_result = run_ingestion(ingest_config)
-    dataset_uri = _get_dataset_uri(
-        api_key=api_key,
-        base_url=base_url,
-        ssl_ca_cert=ssl_ca_cert,
-    )
-
-    loaded_by_item = {page.item_id: page for page in ingestion_result.pages}
-    rows: list[StructuredDataInventoryRow] = []
     total = len(source_result.items)
+    completed = 0
+
+    def _on_ingest_event(payload: dict[str, Any]) -> None:
+        nonlocal completed
+        if on_progress is None:
+            return
+        event_name = str(payload.get("event") or "")
+        if event_name == "ingest.item_loaded":
+            status = "ok"
+        elif event_name == "ingest.item_failed":
+            status = "error"
+        else:
+            return
+        completed += 1
+        url = str(payload.get("url") or "")
+        on_progress(
+            {
+                "event": "inventory.progress.updated",
+                "timestamp": _utc_now_iso(),
+                "meta": {
+                    "total": total,
+                    "completed": completed,
+                    "remaining": max(total - completed, 0),
+                    "url": url,
+                    "status": status,
+                },
+            }
+        )
+
     if on_progress is not None:
         on_progress(
             {
@@ -85,10 +106,22 @@ def create_structured_data_inventory_from_ingestion(
             }
         )
 
-    for index, item in enumerate(source_result.items, start=1):
+    ingestion_result = create_orchestrator(emit=_on_ingest_event).run_with_items(
+        source_result.resolved,
+        source_result.items,
+    )
+    dataset_uri = _get_dataset_uri(
+        api_key=api_key,
+        base_url=base_url,
+        ssl_ca_cert=ssl_ca_cert,
+    )
+
+    loaded_by_item = {page.item_id: page for page in ingestion_result.pages}
+    rows: list[StructuredDataInventoryRow] = []
+
+    for item in source_result.items:
         page = loaded_by_item.get(item.id)
         url = item.url
-        status = "empty"
         if page is None:
             row = _empty_row(url=url)
         else:
@@ -97,25 +130,9 @@ def create_structured_data_inventory_from_ingestion(
                 row = _build_inventory_row(
                     url=url, html=page.html, dataset_uri=dataset_uri
                 )
-                status = "ok"
             except Exception:
                 row = _empty_row(url=url)
-                status = "error"
         rows.append(row)
-        if on_progress is not None:
-            on_progress(
-                {
-                    "event": "inventory.progress.updated",
-                    "timestamp": _utc_now_iso(),
-                    "meta": {
-                        "total": total,
-                        "completed": index,
-                        "remaining": total - index,
-                        "url": url,
-                        "status": status,
-                    },
-                }
-            )
 
     data = [asdict(row) for row in rows]
     result = pd.DataFrame(

@@ -158,6 +158,8 @@ for page in result.pages:
 - `wordlift_sdk.ingestion.create_structured_data_inventory_from_ingestion(...)`
   supports optional `on_progress(payload)` callback emission
   (`inventory.progress.started|updated|completed`).
+  Inventory resolves source items once and reuses that ordered list for
+  ingestion, avoiding duplicate source traversal in inventory runs.
 - `wordlift_sdk.ingestion.create_type_classification_csv_from_ingestion(...)`
   supports optional `on_progress(payload)` callback emission
   (`type_classification.progress.started|updated|completed`).

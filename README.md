@@ -266,6 +266,8 @@ The SDK now includes a profile-driven cloud mapping module under `wordlift_sdk.k
 2. fallback `profiles/_base/postprocessors.toml`
 3. otherwise no postprocessors
 - Callback canonicalization order: profile postprocessors run first, then built-in canonical ID generation runs on the postprocessed graph immediately before patching.
+- Built-in canonical IDs support optional lookup-based root IRI reuse via `Context.extensions["kg_build.iri_lookup"]` (`IriLookup.iri_for_subject(graph, subject)`), with default fallback to generated IDs when lookup misses.
+- Lookup-based reuse is root-only: dependent nodes (for example `Offer`, `Answer`, `Action`) still follow canonical parent-nested rewrite rules.
 - Execution is manifest-based only (hard cutover): no legacy `.py` or `*.command.toml` discovery.
 - During callback patch preparation, the SDK annotates first-level URI-subject nodes in the generated graph with `seovoc:source "web-page-import"` where first-level is dataset ID depth `/<dataset>/<bucket>/<id>` (for example `https://data.host/dataset/types/name`); deeper child IDs and blank nodes are not annotated.
 - Before patching each dataset-scoped node, the SDK computes a per-node `seovoc:importHash` from graph snapshot triples (excluding `seovoc:importHash` itself), writes the hash back to the node, and can skip API patching when a provided `seovoc:importHash` already matches.
@@ -430,6 +432,9 @@ create_structured_data_inventory_from_ingestion(
     on_progress=events.append,  # inventory.progress.started|updated|completed
 )
 ```
+
+`inventory.progress.updated` starts during ingestion (`ingest.item_loaded` /
+`ingest.item_failed` mapping), so host progress bars move before row-building.
 
 ## Testing
 

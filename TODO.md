@@ -1,5 +1,8 @@
 # TODO
 
+- [x] 2026-03-06 Update PyPI publish GitHub Action tag triggers to support both bare semver (`1.2.3`) and `v`-prefixed tags (`v1.2.3`) with explicit tag-ref job guard.
+- [x] 2026-03-06 Refactor structured-data inventory ingestion to avoid duplicate source traversal (single source pass reused for ingestion) and emit ingest-time `inventory.progress.updated` events so host CLIs no longer remain at `0/N` until post-ingestion row building.
+- [x] 2026-03-06 Add optional `kg_build` canonical-ID lookup hook (`IriLookup.iri_for_subject`) with dataframe-backed URL→IRI resolver, root-only lookup application, deterministic duplicate URL policy (shortest-path parent IRI), `Context.extensions["kg_build.iri_lookup"]` injection, and regression coverage.
 - [x] 2026-03-05 Add optional inventory progress callback (`on_progress`) to `create_structured_data_inventory_from_ingestion` with stable `inventory.progress.started|updated|completed` payloads so worai CLI can own progress-bar rendering without SDK-coupled terminal UI.
 - [x] 2026-03-05 Add optional classify-types progress callback (`on_progress`) to `create_type_classification_csv_from_ingestion` with stable `type_classification.progress.started|updated|completed` payloads (including failure update metadata before re-raise) so host CLIs can own progress-bar rendering.
 - [x] 2026-03-05 Add SDK source-only ingestion discovery API (`resolve_ingestion_source_items`) so worai structured-data inventory can reuse shared ingestion resolver/source logic (including sitemap/urls/sheets/local handling, URL filtering, and warning events) without maintaining a parallel local resolver path.

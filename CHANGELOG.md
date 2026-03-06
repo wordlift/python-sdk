@@ -1,6 +1,6 @@
 # Changelog
 
-## 6.8.0 - 2026-03-06
+## 6.8.1 - 2026-03-06
 
 ### Added
 
@@ -22,6 +22,15 @@
     `type_classification.progress.started|updated|completed` events.
   - failure updates emit `error_type` and `error_message` metadata before
     re-raising extraction/CLI errors.
+
+### Changed
+
+- Structured-data inventory ingestion now avoids duplicate source traversal:
+  source resolution runs once, and inventory ingestion reuses the resolved item
+  list instead of triggering a second source pass.
+- `inventory.progress.updated` events now begin during ingestion via
+  `ingest.item_loaded`/`ingest.item_failed` mapping, so host CLIs no longer
+  stay at `0/N` until ingestion completes.
 
 ## 6.6.5 - 2026-03-04
 

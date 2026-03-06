@@ -10,10 +10,14 @@
   `wordlift_sdk.ingestion.create_structured_data_inventory_from_ingestion`,
   including inventory row construction (`faq_markup`, `faq_markup_from_graph`,
   `types`, merged `structured_data`) over shared ingestion source+loader runs.
+  Inventory uses a single source-resolution pass (no duplicate sitemap/source
+  traversal) by reusing resolved items for ingestion.
   Inventory generation also emits optional host-facing progress callbacks
   (`inventory.progress.started|updated|completed`) via
   `on_progress(payload)` so CLI/UI layers can render progress bars without
-  SDK-owned terminal output.
+  SDK-owned terminal output; `updated` starts during ingestion
+  (`ingest.item_loaded`/`ingest.item_failed` mapping), not only after
+  ingestion completes.
 - Generated Google SHACLs scope contained type requirements under container types
   (for example `ItemList`/`BreadcrumbList` → `ListItem`, `QAPage`/`FAQPage`/`Quiz`
   → `Question`/`Answer`/`Comment`, `ProfilePage` → `Person`/`Organization`,
@@ -137,6 +141,10 @@
   under canonical parent subject IRIs when linked via
   `schema:potentialAction`/`schema:action` (for example
   `<parent>/actions/<slug>`).
+- `wordlift_sdk.kg_build` canonical ID generation supports optional lookup-based
+  root IRI reuse via `Context.extensions["kg_build.iri_lookup"]`
+  (`IriLookup.iri_for_subject(graph, subject)`), with root-only application
+  so dependent nodes still follow canonical parent-nesting rules.
 - `wordlift_sdk.kg_build` tracks run-level graph-sync KPIs from dataset-scoped
   entities actually patched in callback/static graphs (`total_entities`,
   `type_assertions_total`, `property_assertions_total`, `entities_by_type`,
