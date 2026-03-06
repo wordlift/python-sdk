@@ -129,3 +129,80 @@ def test_create_structured_data_inventory_from_ingestion_writes_csv(
     )
     assert output.exists()
     assert df.iloc[0]["url"] == "https://example.com/a?final=1"
+
+
+def test_create_structured_data_inventory_from_ingestion_emits_progress_events(
+    monkeypatch,
+) -> None:
+    source_items = [
+        SourceItem(id="u:1", url="https://example.com/a"),
+        SourceItem(id="u:2", url="https://example.com/b"),
+    ]
+    monkeypatch.setattr(
+        "wordlift_sdk.ingestion.inventory.resolve_ingestion_source_items",
+        lambda _cfg: SourceResolutionResult(
+            items=source_items,
+            events=[],
+            resolved=_resolved_config(),
+        ),
+    )
+    monkeypatch.setattr(
+        "wordlift_sdk.ingestion.inventory.run_ingestion",
+        lambda _cfg: IngestionResult(
+            pages=[
+                LoadedPage(
+                    item_id="u:2",
+                    url="https://example.com/b",
+                    final_url="https://example.com/b?final=1",
+                    status_code=200,
+                    html="<html/>",
+                    fetch_meta={},
+                )
+            ],
+            events=[],
+        ),
+    )
+    monkeypatch.setattr(
+        "wordlift_sdk.ingestion.inventory._get_dataset_uri",
+        lambda **_kwargs: "https://dataset.example",
+    )
+    monkeypatch.setattr(
+        "wordlift_sdk.ingestion.inventory._build_inventory_row",
+        lambda **kwargs: (_ for _ in ()).throw(RuntimeError("boom"))
+        if kwargs["url"] == "https://example.com/b?final=1"
+        else None,
+    )
+
+    events: list[dict[str, object]] = []
+    create_structured_data_inventory_from_ingestion(
+        source_bundle={
+            "INGEST_SOURCE": "urls",
+            "INGEST_LOADER": "simple",
+            "URLS": ["https://example.com/a", "https://example.com/b"],
+        },
+        api_key="key",
+        on_progress=events.append,
+    )
+
+    assert [event["event"] for event in events] == [
+        "inventory.progress.started",
+        "inventory.progress.updated",
+        "inventory.progress.updated",
+        "inventory.progress.completed",
+    ]
+    assert events[0]["meta"] == {"total": 2}
+    assert events[1]["meta"] == {
+        "total": 2,
+        "completed": 1,
+        "remaining": 1,
+        "url": "https://example.com/a",
+        "status": "empty",
+    }
+    assert events[2]["meta"] == {
+        "total": 2,
+        "completed": 2,
+        "remaining": 0,
+        "url": "https://example.com/b?final=1",
+        "status": "error",
+    }
+    assert events[3]["meta"] == {"total": 2, "completed": 2}

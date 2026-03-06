@@ -128,6 +128,12 @@ Bridge-handler failure surfacing contract:
   `create_structured_data_inventory_from_ingestion(...)` for structured-data
   inventory generation using the same source resolution and loader execution
   contracts as shared ingestion.
+- `create_structured_data_inventory_from_ingestion(...)` accepts optional
+  `on_progress(payload)` callback emission for host-owned progress UX:
+  - `inventory.progress.started` with `meta.total`
+  - `inventory.progress.updated` with
+    `meta.total`, `meta.completed`, `meta.remaining`, `meta.url`, `meta.status`
+  - `inventory.progress.completed` with `meta.total`, `meta.completed`
 
 ## web_scrape_api Semantics
 

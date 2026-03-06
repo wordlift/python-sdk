@@ -1,6 +1,6 @@
 # Changelog
 
-## 6.7.0 - 2026-03-05
+## 6.8.0 - 2026-03-06
 
 ### Added
 
@@ -13,6 +13,15 @@
   - `wordlift_sdk.ingestion.create_structured_data_inventory_from_ingestion(...)`
   - builds inventory rows (`url`, FAQ flags, detected schema types, combined
     JSON-LD graph) from shared ingestion source+loader configuration.
+  - accepts optional `on_progress(payload)` callback with
+    `inventory.progress.started|updated|completed` events for host-rendered
+    progress UX (for example worai CLI progress bars).
+- Add progress callback support to ingestion-backed local type classification:
+  - `wordlift_sdk.ingestion.create_type_classification_csv_from_ingestion(...)`
+  - accepts optional `on_progress(payload)` callback with
+    `type_classification.progress.started|updated|completed` events.
+  - failure updates emit `error_type` and `error_message` metadata before
+    re-raising extraction/CLI errors.
 
 ## 6.6.5 - 2026-03-04
 

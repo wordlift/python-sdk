@@ -17,6 +17,7 @@ Inputs:
 - `agent_cli`: optional explicit CLI (`claude|codex|gemini`)
 - `agent_timeout_sec`
 - `max_markdown_chars`
+- `on_progress`: optional callback receiving progress payloads
 
 Output columns:
 
@@ -37,6 +38,14 @@ Output columns:
 - Prompt requests strict JSON with keys:
   `main_type`, `additional_types`, `explanation`.
 - Fails when extraction or CLI execution/JSON parsing fails.
+- `on_progress(payload)` callback events:
+  - `type_classification.progress.started` with `meta.total`
+  - `type_classification.progress.updated` with
+    `meta.total`, `meta.completed`, `meta.remaining`, `meta.url`, `meta.status`
+  - Failure updates include `meta.error_type`, `meta.error_message` before
+    the exception is re-raised.
+  - `type_classification.progress.completed` with
+    `meta.total`, `meta.completed` (success-only terminal event).
 
 ## Backward Compatibility
 

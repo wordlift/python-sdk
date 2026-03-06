@@ -389,6 +389,19 @@ df = create_type_classification_csv_from_ingestion(
 )
 ```
 
+For host-controlled progress (for example worai CLI progress bars), pass
+`on_progress` and render UI outside the SDK:
+
+```python
+events: list[dict[str, object]] = []
+
+create_type_classification_csv_from_ingestion(
+    source_bundle={...},
+    output_csv="url-types.csv",
+    on_progress=events.append,  # type_classification.progress.started|updated|completed
+)
+```
+
 You can also build a structured-data inventory from shared ingestion:
 
 ```python
@@ -402,6 +415,19 @@ df = create_structured_data_inventory_from_ingestion(
     },
     api_key="your-api-key",
     output_csv="structured-data-inventory.csv",
+)
+```
+
+If you need host-controlled progress (for example worai CLI progress bars), pass
+an `on_progress` callback and render UI outside the SDK:
+
+```python
+events: list[dict[str, object]] = []
+
+create_structured_data_inventory_from_ingestion(
+    source_bundle={...},
+    api_key="your-api-key",
+    on_progress=events.append,  # inventory.progress.started|updated|completed
 )
 ```
 

@@ -25,6 +25,18 @@ df = create_type_classification_csv_from_ingestion(
 )
 ```
 
+Progress callbacks are optional and intended for host/UI rendering:
+
+```python
+events: list[dict[str, object]] = []
+
+create_type_classification_csv_from_ingestion(
+    source_bundle={...},
+    output_csv="url-types.csv",
+    on_progress=events.append,
+)
+```
+
 ## Notes
 
 - `URL_REGEX` is global and source-agnostic.
@@ -32,3 +44,9 @@ df = create_type_classification_csv_from_ingestion(
 - `agent_cli=None` auto-selects the first installed CLI in order:
   `claude`, then `codex`, then `gemini`.
 - `additional_types` is serialized as JSON array text in the CSV cell.
+- `on_progress(payload)` emits:
+  - `type_classification.progress.started` (`meta.total`)
+  - `type_classification.progress.updated`
+    (`meta.total`, `meta.completed`, `meta.remaining`, `meta.url`, `meta.status`)
+    and on failures also `meta.error_type`, `meta.error_message` before raising.
+  - `type_classification.progress.completed` (`meta.total`, `meta.completed`)

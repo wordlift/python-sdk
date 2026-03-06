@@ -156,7 +156,11 @@ for page in result.pages:
 - `wordlift_sdk.ingestion.run_ingestion(...)`
 - `wordlift_sdk.ingestion.resolve_ingestion_source_items(...)`
 - `wordlift_sdk.ingestion.create_structured_data_inventory_from_ingestion(...)`
+  supports optional `on_progress(payload)` callback emission
+  (`inventory.progress.started|updated|completed`).
 - `wordlift_sdk.ingestion.create_type_classification_csv_from_ingestion(...)`
+  supports optional `on_progress(payload)` callback emission
+  (`type_classification.progress.started|updated|completed`).
 
 ### Deprecated/Internal APIs
 

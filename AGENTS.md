@@ -10,6 +10,10 @@
   `wordlift_sdk.ingestion.create_structured_data_inventory_from_ingestion`,
   including inventory row construction (`faq_markup`, `faq_markup_from_graph`,
   `types`, merged `structured_data`) over shared ingestion source+loader runs.
+  Inventory generation also emits optional host-facing progress callbacks
+  (`inventory.progress.started|updated|completed`) via
+  `on_progress(payload)` so CLI/UI layers can render progress bars without
+  SDK-owned terminal output.
 - Generated Google SHACLs scope contained type requirements under container types
   (for example `ItemList`/`BreadcrumbList` → `ListItem`, `QAPage`/`FAQPage`/`Quiz`
   → `Question`/`Answer`/`Comment`, `ProfilePage` → `Person`/`Organization`,
@@ -191,7 +195,9 @@
   and import requests.
 - Ingestion exposes local CLI type classification export via
   `create_type_classification_csv_from_ingestion`, using `trafilatura` markdown
-  extraction and non-interactive local CLI auto-selection
+  extraction, optional host-facing progress callbacks
+  (`type_classification.progress.started|updated|completed`), and
+  non-interactive local CLI auto-selection
   (`claude` -> `codex` -> `gemini`).
 - Ingestion resolver skips legacy `SHEETS_*` completeness validation when
   `INGEST_SOURCE` is explicitly set to a non-`sheets` source; strict sheets

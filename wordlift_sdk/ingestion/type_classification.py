@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any, Callable, Mapping
 
 import pandas as pd
 
@@ -18,6 +19,7 @@ def create_type_classification_csv_from_ingestion(
     agent_cli: str | None = None,
     agent_timeout_sec: float = 120.0,
     max_markdown_chars: int = 24000,
+    on_progress: Callable[[dict[str, Any]], None] | None = None,
 ) -> pd.DataFrame:
     """Classify ingested URLs and write `url,main_type,additional_types,explanation`."""
 
@@ -26,20 +28,77 @@ def create_type_classification_csv_from_ingestion(
     runner = LocalAgentCliRunner(cli=agent_cli, timeout_sec=agent_timeout_sec)
 
     rows: list[dict[str, str]] = []
-    for page in ingestion_result.pages:
-        url = page.final_url or page.url
-        markdown = _extract_markdown_body(
-            page.html, max_markdown_chars=max_markdown_chars
+    total = len(ingestion_result.pages)
+    if on_progress is not None:
+        on_progress(
+            {
+                "event": "type_classification.progress.started",
+                "timestamp": _utc_now_iso(),
+                "meta": {"total": total},
+            }
         )
-        payload = runner.run_json(_classification_prompt(url=url, markdown=markdown))
-        rows.append(_row_from_payload(url=url, payload=payload))
+
+    for index, page in enumerate(ingestion_result.pages, start=1):
+        url = page.final_url or page.url
+        try:
+            markdown = _extract_markdown_body(
+                page.html, max_markdown_chars=max_markdown_chars
+            )
+            payload = runner.run_json(
+                _classification_prompt(url=url, markdown=markdown)
+            )
+            rows.append(_row_from_payload(url=url, payload=payload))
+            if on_progress is not None:
+                on_progress(
+                    {
+                        "event": "type_classification.progress.updated",
+                        "timestamp": _utc_now_iso(),
+                        "meta": {
+                            "total": total,
+                            "completed": index,
+                            "remaining": total - index,
+                            "url": url,
+                            "status": "ok",
+                        },
+                    }
+                )
+        except Exception as exc:
+            if on_progress is not None:
+                on_progress(
+                    {
+                        "event": "type_classification.progress.updated",
+                        "timestamp": _utc_now_iso(),
+                        "meta": {
+                            "total": total,
+                            "completed": index,
+                            "remaining": total - index,
+                            "url": url,
+                            "status": "error",
+                            "error_type": type(exc).__name__,
+                            "error_message": str(exc),
+                        },
+                    }
+                )
+            raise
 
     result = pd.DataFrame(
         rows,
         columns=["url", "main_type", "additional_types", "explanation"],
     )
     result.to_csv(output_csv, index=False)
+    if on_progress is not None:
+        on_progress(
+            {
+                "event": "type_classification.progress.completed",
+                "timestamp": _utc_now_iso(),
+                "meta": {"total": total, "completed": total},
+            }
+        )
     return result
+
+
+def _utc_now_iso() -> str:
+    return datetime.now(timezone.utc).isoformat()
 
 
 def _normalize_source_bundle(source_bundle: Mapping[str, Any]) -> dict[str, Any]:

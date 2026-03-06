@@ -2,10 +2,11 @@ from __future__ import annotations
 
 import json
 from dataclasses import asdict, dataclass
+from datetime import datetime, timezone
 from html.parser import HTMLParser
 from io import StringIO
 from pathlib import Path
-from typing import Any, Iterable, Mapping
+from typing import Any, Callable, Iterable, Mapping
 
 import pandas as pd
 
@@ -59,6 +60,7 @@ def create_structured_data_inventory_from_ingestion(
     output_csv: str | Path | None = None,
     base_url: str = "https://api.wordlift.io",
     ssl_ca_cert: str | None = None,
+    on_progress: Callable[[dict[str, Any]], None] | None = None,
 ) -> pd.DataFrame:
     """Build a structured-data inventory table from shared ingestion settings."""
 
@@ -73,18 +75,47 @@ def create_structured_data_inventory_from_ingestion(
 
     loaded_by_item = {page.item_id: page for page in ingestion_result.pages}
     rows: list[StructuredDataInventoryRow] = []
-    for item in source_result.items:
+    total = len(source_result.items)
+    if on_progress is not None:
+        on_progress(
+            {
+                "event": "inventory.progress.started",
+                "timestamp": _utc_now_iso(),
+                "meta": {"total": total},
+            }
+        )
+
+    for index, item in enumerate(source_result.items, start=1):
         page = loaded_by_item.get(item.id)
+        url = item.url
+        status = "empty"
         if page is None:
-            rows.append(_empty_row(url=item.url))
-            continue
-        url = page.final_url or page.url
-        try:
-            rows.append(
-                _build_inventory_row(url=url, html=page.html, dataset_uri=dataset_uri)
+            row = _empty_row(url=url)
+        else:
+            url = page.final_url or page.url
+            try:
+                row = _build_inventory_row(
+                    url=url, html=page.html, dataset_uri=dataset_uri
+                )
+                status = "ok"
+            except Exception:
+                row = _empty_row(url=url)
+                status = "error"
+        rows.append(row)
+        if on_progress is not None:
+            on_progress(
+                {
+                    "event": "inventory.progress.updated",
+                    "timestamp": _utc_now_iso(),
+                    "meta": {
+                        "total": total,
+                        "completed": index,
+                        "remaining": total - index,
+                        "url": url,
+                        "status": status,
+                    },
+                }
             )
-        except Exception:
-            rows.append(_empty_row(url=url))
 
     data = [asdict(row) for row in rows]
     result = pd.DataFrame(
@@ -99,7 +130,19 @@ def create_structured_data_inventory_from_ingestion(
     )
     if output_csv is not None:
         result.to_csv(output_csv, index=False)
+    if on_progress is not None:
+        on_progress(
+            {
+                "event": "inventory.progress.completed",
+                "timestamp": _utc_now_iso(),
+                "meta": {"total": total, "completed": total},
+            }
+        )
     return result
+
+
+def _utc_now_iso() -> str:
+    return datetime.now(timezone.utc).isoformat()
 
 
 def _normalize_source_bundle(source_bundle: Mapping[str, Any]) -> dict[str, Any]:

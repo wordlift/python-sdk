@@ -19,6 +19,9 @@ Exception for source-only inventory use cases:
 - `wordlift_sdk.ingestion.create_structured_data_inventory_from_ingestion(...)`
   is the canonical SDK API when worai inventory needs full inventory row
   generation (URL + FAQ flags + types + merged JSON-LD) over shared ingestion.
+  For host-owned progress bars, worai should pass
+  `on_progress(payload)` and render UI from emitted
+  `inventory.progress.started|updated|completed` events.
 
 ## Required Runtime Contract
 

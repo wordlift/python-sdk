@@ -1,5 +1,7 @@
 # TODO
 
+- [x] 2026-03-05 Add optional inventory progress callback (`on_progress`) to `create_structured_data_inventory_from_ingestion` with stable `inventory.progress.started|updated|completed` payloads so worai CLI can own progress-bar rendering without SDK-coupled terminal UI.
+- [x] 2026-03-05 Add optional classify-types progress callback (`on_progress`) to `create_type_classification_csv_from_ingestion` with stable `type_classification.progress.started|updated|completed` payloads (including failure update metadata before re-raise) so host CLIs can own progress-bar rendering.
 - [x] 2026-03-05 Add SDK source-only ingestion discovery API (`resolve_ingestion_source_items`) so worai structured-data inventory can reuse shared ingestion resolver/source logic (including sitemap/urls/sheets/local handling, URL filtering, and warning events) without maintaining a parallel local resolver path.
 - [x] 2026-03-05 Move structured-data inventory core logic into SDK ingestion (`create_structured_data_inventory_from_ingestion`) so worai can call an SDK-native method instead of maintaining inventory row construction/parsing logic locally.
 - [x] 2026-03-04 Fix graph-sync sitemap URL scoping by enforcing resolved `URL_REGEX` (`SITEMAP_URL_PATTERN` alias compatible) in the URL-source bridge before `NewOrChangedUrlSource` GraphQL lookup; add regression tests for full URL regex, path-style alias regex, and no-filter behavior.
