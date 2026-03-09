@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
-from rdflib import Graph, URIRef
+from rdflib import Graph, Literal, RDF, URIRef
 
 from wordlift_sdk.kg_build.id_postprocessor import CanonicalIdsPostprocessor
 
@@ -49,3 +49,31 @@ def test_id_postprocessor_uses_lookup_from_context_extensions() -> None:
         URIRef("http://schema.org/url"),
         URIRef("https://example.com/item"),
     ) in out
+
+
+def test_id_postprocessor_rebases_non_canonical_child_ids_with_root() -> None:
+    graph = Graph()
+    dataset_uri = "https://data.example.com"
+    service = URIRef(f"{dataset_uri}/services/https://example.com/page")
+    rating = URIRef(f"{service}/aggregate-rating/trustpilot")
+    graph.add((service, RDF.type, URIRef("http://schema.org/Service")))
+    graph.add((service, URIRef("http://schema.org/name"), Literal("Managed VPS")))
+    graph.add(
+        (
+            service,
+            URIRef("http://schema.org/url"),
+            Literal("https://example.com/page"),
+        )
+    )
+    graph.add((service, URIRef("http://schema.org/aggregateRating"), rating))
+    graph.add((rating, RDF.type, URIRef("http://schema.org/AggregateRating")))
+
+    post = CanonicalIdsPostprocessor()
+    context = SimpleNamespace(account=SimpleNamespace(dataset_uri=dataset_uri))
+    out = post.process_graph(graph, context)
+
+    assert any(
+        str(subject).startswith(f"{dataset_uri}/services/managed-vps-")
+        for subject in out.subjects(RDF.type, URIRef("http://schema.org/Service"))
+    )
+    assert not any(str(subject).startswith(f"{service}/") for subject in out.subjects())

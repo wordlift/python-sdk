@@ -166,14 +166,63 @@ def test_rewrites_non_canonical_dataset_subject_prefix() -> None:
     assert str(rewritten_articles[0]).startswith("https://kg.smallpdf.com/articles/")
 
 
-def test_keeps_subject_with_canonical_root_prefix() -> None:
+def test_should_rewrite_subject_requires_full_canonical_shape() -> None:
+    generator = CanonicalIdGenerator()
+
+    assert (
+        generator._should_rewrite_subject(
+            URIRef(f"{DATASET}/services/https://example.com/page"),
+            DATASET,
+        )
+        is True
+    )
+    assert (
+        generator._should_rewrite_subject(
+            URIRef(f"{DATASET}/services/service-123"),
+            DATASET,
+        )
+        is False
+    )
+
+
+def test_rewrites_bad_service_root_and_child_ids_and_is_idempotent() -> None:
     graph = Graph()
-    subject = URIRef("https://data.example.com/products/alpha/offers/offer-1")
-    graph.add((subject, RDF.type, URIRef(f"{SCHEMA}Offer")))
+    bad_service = URIRef(f"{DATASET}/services/https://example.com/page")
+    bad_rating = URIRef(f"{bad_service}/aggregate-rating/trustpilot")
+    graph.add((bad_service, RDF.type, URIRef(f"{SCHEMA}Service")))
+    graph.add((bad_service, URIRef(f"{SCHEMA}name"), Literal("Managed VPS")))
+    graph.add(
+        (bad_service, URIRef(f"{SCHEMA}url"), Literal("https://example.com/page"))
+    )
+    graph.add((bad_service, URIRef(f"{SCHEMA}aggregateRating"), bad_rating))
+    graph.add((bad_rating, RDF.type, URIRef(f"{SCHEMA}AggregateRating")))
+    graph.add((bad_rating, URIRef(f"{SCHEMA}name"), Literal("Trustpilot")))
 
-    output = CanonicalIdGenerator().apply(graph, DATASET)
+    generator = CanonicalIdGenerator()
+    output = generator.apply(graph, DATASET)
 
-    assert (subject, RDF.type, URIRef(f"{SCHEMA}Offer")) in output
+    service_hash = generator._url_hash("https://example.com/page")
+    canonical_service = URIRef(f"{DATASET}/services/managed-vps-{service_hash}")
+    canonical_rating = URIRef(f"{canonical_service}/aggregate-rating/trustpilot")
+
+    assert (bad_service, RDF.type, URIRef(f"{SCHEMA}Service")) not in output
+    assert (bad_rating, RDF.type, URIRef(f"{SCHEMA}AggregateRating")) not in output
+    assert (canonical_service, RDF.type, URIRef(f"{SCHEMA}Service")) in output
+    assert (
+        canonical_service,
+        URIRef(f"{SCHEMA}aggregateRating"),
+        canonical_rating,
+    ) in output
+    assert (canonical_rating, RDF.type, URIRef(f"{SCHEMA}AggregateRating")) in output
+    assert (
+        canonical_service,
+        URIRef(f"{SCHEMA}url"),
+        Literal("https://example.com/page"),
+    ) in output
+
+    first_pass = set(output)
+    second_pass = generator.apply(output, DATASET)
+    assert set(second_pass) == first_pass
 
 
 def test_rewrites_action_subject_as_nested_dependent_entity() -> None:
