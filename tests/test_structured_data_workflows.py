@@ -64,6 +64,11 @@ from wordlift_sdk.structured_data import (  # noqa: E402
     GenerateRequest,
     GenerateWorkflow,
 )
+from wordlift_sdk.structured_data.engine import StructuredDataOptions  # noqa: E402
+from wordlift_sdk.render.render_options import (  # noqa: E402
+    DEFAULT_PLAYWRIGHT_TIMEOUT_MS,
+    DEFAULT_PLAYWRIGHT_WAIT_UNTIL,
+)
 
 
 class _FakeRendered:
@@ -98,6 +103,16 @@ class _FakeValidator:
     def validate(self, jsonld_path: Path, target_type: str, workdir: Path) -> str:
         self.calls.append((jsonld_path, target_type, workdir))
         return "OK"
+
+
+def test_structured_data_options_use_shared_playwright_defaults() -> None:
+    options = StructuredDataOptions(
+        url="https://example.com",
+        target_type="Thing",
+        dataset_uri="urn:dataset",
+    )
+    assert options.timeout_ms == DEFAULT_PLAYWRIGHT_TIMEOUT_MS
+    assert options.wait_until == DEFAULT_PLAYWRIGHT_WAIT_UNTIL
 
 
 def test_create_workflow_writes_outputs(

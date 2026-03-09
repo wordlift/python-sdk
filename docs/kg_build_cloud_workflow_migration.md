@@ -13,10 +13,13 @@
    - `sitemap_url` (optional `sitemap_url_pattern`)
    - `sheets_url` + `sheets_name`
 3. Default postprocessor runtime is now `persistent`.
-4. Legacy loader fallback keys are removed:
+4. Legacy loader fallback keys are removed from the shared ingestion resolver:
    - `WEB_PAGE_IMPORT_MODE`
    - `WEB_PAGE_IMPORT_TIMEOUT`
-   Use explicit `INGEST_LOADER` and `INGEST_TIMEOUT_MS`.
+   Use explicit `INGEST_LOADER`, `INGEST_TIMEOUT_MS`, and `PLAYWRIGHT_WAIT_UNTIL`.
+   `run_cloud_workflow` still accepts legacy timeout compatibility input via
+   `extra_settings["WEB_PAGE_IMPORT_TIMEOUT"]` only when
+   `CloudWorkflowConfig.ingest_timeout_ms` is unset.
 
 ## Source Mode Mapping
 
@@ -36,6 +39,8 @@ Do not configure multiple source modes in the same `CloudWorkflowConfig`.
 
 - Configure `CloudWorkflowConfig.ingest_loader` explicitly.
 - Optional timeout control: `CloudWorkflowConfig.ingest_timeout_ms`.
+- Optional Playwright wait strategy control:
+  `CloudWorkflowConfig.playwright_wait_until`.
 
 ## Callback Contract
 

@@ -38,6 +38,7 @@ def test_loader_defaults_are_explicit_and_no_legacy_warnings() -> None:
     )
     assert cfg.loader_name == "web_scrape_api"
     assert cfg.warnings == ()
+    assert cfg.timeout_ms == 30000
     assert cfg.loader_config["wait_until"] == "domcontentloaded"
 
 

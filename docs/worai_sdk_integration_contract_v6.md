@@ -42,11 +42,17 @@ Set loader explicitly:
 Optional timeout:
 
 - `CloudWorkflowConfig.ingest_timeout_ms`
+- `CloudWorkflowConfig.playwright_wait_until`
 
-Legacy resolver fallback keys are removed and must not be used for integration:
+Legacy resolver fallback keys are removed from the shared ingestion resolver and
+must not be used as the primary integration contract:
 
 - `WEB_PAGE_IMPORT_MODE`
 - `WEB_PAGE_IMPORT_TIMEOUT`
+
+Compatibility note: `run_cloud_workflow` still backfills `INGEST_TIMEOUT_MS`
+from `extra_settings["WEB_PAGE_IMPORT_TIMEOUT"]` only when the modern typed
+`ingest_timeout_ms` is not set. Modern typed settings take precedence.
 
 ### 3) Callback Contract
 

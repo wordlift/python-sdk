@@ -13,6 +13,8 @@ DEFAULT_ACCEPT_HEADER = (
     "image/avif,image/webp,*/*;q=0.8"
 )
 DEFAULT_ACCEPT_LANGUAGE_HEADER = "en-US,en;q=0.9"
+DEFAULT_PLAYWRIGHT_TIMEOUT_MS = 30000
+DEFAULT_PLAYWRIGHT_WAIT_UNTIL = "domcontentloaded"
 DEFAULT_BROWSER_REQUEST_HEADERS = {
     "Accept": DEFAULT_ACCEPT_HEADER,
     "Accept-Language": DEFAULT_ACCEPT_LANGUAGE_HEADER,
@@ -34,8 +36,8 @@ def build_browser_like_headers(user_agent: str = DEFAULT_USER_AGENT) -> dict[str
 class RenderOptions:
     url: str
     headless: bool = True
-    timeout_ms: int = 30000
-    wait_until: str = "domcontentloaded"
+    timeout_ms: int = DEFAULT_PLAYWRIGHT_TIMEOUT_MS
+    wait_until: str = DEFAULT_PLAYWRIGHT_WAIT_UNTIL
     locale: str = "en-US"
     user_agent: str | None = DEFAULT_USER_AGENT
     viewport_width: int = 1365

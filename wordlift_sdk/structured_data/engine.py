@@ -20,6 +20,10 @@ from wordlift_client.models.ask_request import AskRequest
 from rdflib import Graph, Namespace, RDF
 from rdflib.term import BNode, Identifier, Literal, URIRef
 
+from wordlift_sdk.render.render_options import (
+    DEFAULT_PLAYWRIGHT_TIMEOUT_MS,
+    DEFAULT_PLAYWRIGHT_WAIT_UNTIL,
+)
 from wordlift_sdk.structured_data.constants import DEFAULT_BASE_URL
 from wordlift_sdk.utils.ssl_ca_bundle import resolve_ssl_ca_cert
 from wordlift_sdk.validation.shacl import ValidationResult, validate_file
@@ -48,8 +52,8 @@ class StructuredDataOptions:
     target_type: str | None
     dataset_uri: str
     headless: bool = True
-    timeout_ms: int = 30000
-    wait_until: str = "networkidle"
+    timeout_ms: int = DEFAULT_PLAYWRIGHT_TIMEOUT_MS
+    wait_until: str = DEFAULT_PLAYWRIGHT_WAIT_UNTIL
     max_retries: int = 2
     max_xhtml_chars: int = 40000
     max_text_node_chars: int = 400

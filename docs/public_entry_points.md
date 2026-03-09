@@ -217,7 +217,9 @@ File: `wordlift_sdk/kg_build/cloud_flow.py`
   - required: `wordlift_key: str`.
   - conditional: `sheets_service_account_json: str | None` (required only for sheets source mode).
   - source (exactly one mode): `urls: Sequence[str] | None`, or `sitemap_url: str | None` (+ optional `sitemap_url_pattern: str | None`), or `sheets_url: str | None` + `sheets_name: str | None`.
-  - execution: `overwrite: bool`, `concurrency: int`, `ingest_loader: str`, `ingest_timeout_ms: int`.
+  - execution: `overwrite: bool`, `concurrency: int`, `ingest_loader: str`, `ingest_timeout_ms: int | None`, `playwright_wait_until: str | None`.
+  - default Playwright ingestion settings emitted by cloud flow: `INGEST_TIMEOUT_MS = 30000`, `PLAYWRIGHT_WAIT_UNTIL = "domcontentloaded"`.
+  - timeout precedence in cloud flow: typed `ingest_timeout_ms`, then compatibility keys in `extra_settings` (`INGEST_TIMEOUT_MS` / `WEB_PAGE_IMPORT_TIMEOUT`), then SDK default `30000`.
   - optional: `extra_settings`, `debug`, `debug_profile_name`.
 
 - `get_debug_output_dir(config, root_dir=None) -> Path | None`

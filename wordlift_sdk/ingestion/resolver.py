@@ -5,6 +5,10 @@ import re
 from typing import Any, Callable, Mapping
 
 from wordlift_sdk.client.client_configuration_factory import ClientConfigurationFactory
+from wordlift_sdk.render.render_options import (
+    DEFAULT_PLAYWRIGHT_TIMEOUT_MS,
+    DEFAULT_PLAYWRIGHT_WAIT_UNTIL,
+)
 
 from .errors import IngestionConfigError, SourceConfigError
 from .events import IngestionWarning
@@ -183,7 +187,9 @@ def resolve_ingestion_config_from_getter(
     passthrough_when_html = _parse_bool(
         get_value("INGEST_PASSTHROUGH_WHEN_HTML"), default=True
     )
-    timeout_ms = _parse_int(get_value("INGEST_TIMEOUT_MS"), default=30000)
+    timeout_ms = _parse_int(
+        get_value("INGEST_TIMEOUT_MS"), default=DEFAULT_PLAYWRIGHT_TIMEOUT_MS
+    )
     retry_attempts = _parse_int(get_value("INGEST_RETRY_ATTEMPTS"), default=5)
     retry_backoff_ms = _parse_int(get_value("INGEST_RETRY_BACKOFF_MS"), default=2000)
 
@@ -244,7 +250,7 @@ def resolve_ingestion_config_from_getter(
         "country_code": get_value("WEB_PAGE_IMPORT_COUNTRY_CODE"),
         "premium_proxy": get_value("WEB_PAGE_IMPORT_PREMIUM_PROXY"),
         "block_ads": get_value("WEB_PAGE_IMPORT_BLOCK_ADS"),
-        "wait_until": get_value("PLAYWRIGHT_WAIT_UNTIL", "domcontentloaded"),
+        "wait_until": get_value("PLAYWRIGHT_WAIT_UNTIL", DEFAULT_PLAYWRIGHT_WAIT_UNTIL),
         "headless": _parse_bool(get_value("PLAYWRIGHT_HEADLESS"), default=True),
     }
 

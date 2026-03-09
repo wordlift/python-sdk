@@ -8,6 +8,11 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Awaitable, Callable, Mapping, Sequence
 
+from wordlift_sdk.render.render_options import (
+    DEFAULT_PLAYWRIGHT_TIMEOUT_MS,
+    DEFAULT_PLAYWRIGHT_WAIT_UNTIL,
+)
+
 
 ProviderFactory = Callable[[str], Any]
 ContainerFactory = Callable[[Any], Any]
@@ -26,7 +31,8 @@ class CloudWorkflowConfig:
     overwrite: bool = False
     concurrency: int = 4
     ingest_loader: str = "web_scrape_api"
-    ingest_timeout_ms: int = 60000
+    ingest_timeout_ms: int | None = None
+    playwright_wait_until: str | None = None
     urls: Sequence[str] | None = None
     sitemap_url: str | None = None
     sitemap_url_pattern: str | None = None
@@ -43,6 +49,48 @@ class CloudWorkflowConfigError(ValueError):
 
 def _append_py_setting(lines: list[str], key: str, value: Any) -> None:
     lines.append(f"{key} = {repr(value)}")
+
+
+def _extra_setting(
+    extra_settings: Mapping[str, Any] | None,
+    *keys: str,
+) -> Any | None:
+    if not extra_settings:
+        return None
+    for key in keys:
+        if key in extra_settings:
+            return extra_settings[key]
+    return None
+
+
+def _resolved_ingest_timeout_ms(config: CloudWorkflowConfig) -> int:
+    # Prefer the typed modern field, then modern/legacy compatibility keys, then SDK defaults.
+    if config.ingest_timeout_ms is not None:
+        return config.ingest_timeout_ms
+    value = _extra_setting(
+        config.extra_settings,
+        "INGEST_TIMEOUT_MS",
+        "ingest_timeout_ms",
+        "WEB_PAGE_IMPORT_TIMEOUT",
+        "web_page_import_timeout",
+    )
+    if value is None:
+        return DEFAULT_PLAYWRIGHT_TIMEOUT_MS
+    return int(value)
+
+
+def _resolved_playwright_wait_until(config: CloudWorkflowConfig) -> str:
+    # Prefer the typed field and only fall back to generic extra settings for compatibility.
+    if config.playwright_wait_until is not None:
+        return config.playwright_wait_until
+    value = _extra_setting(
+        config.extra_settings,
+        "PLAYWRIGHT_WAIT_UNTIL",
+        "playwright_wait_until",
+    )
+    if value is None:
+        return DEFAULT_PLAYWRIGHT_WAIT_UNTIL
+    return str(value)
 
 
 def get_debug_output_dir(
@@ -116,12 +164,24 @@ def _build_settings_lines(
     lines = [f"WORDLIFT_KEY = {repr(config.wordlift_key)}"]
     lines.extend(source_lines)
     lines.append(f"INGEST_LOADER = {repr(config.ingest_loader)}")
-    lines.append(f"INGEST_TIMEOUT_MS = {repr(config.ingest_timeout_ms)}")
+    lines.append(f"INGEST_TIMEOUT_MS = {repr(_resolved_ingest_timeout_ms(config))}")
+    lines.append(
+        f"PLAYWRIGHT_WAIT_UNTIL = {repr(_resolved_playwright_wait_until(config))}"
+    )
     lines.append(f"CONCURRENCY = {repr(config.concurrency)}")
     lines.append(f"OVERWRITE = {repr(config.overwrite)}")
 
     if config.extra_settings:
         for key, value in config.extra_settings.items():
+            if key in {
+                "INGEST_TIMEOUT_MS",
+                "ingest_timeout_ms",
+                "WEB_PAGE_IMPORT_TIMEOUT",
+                "web_page_import_timeout",
+                "PLAYWRIGHT_WAIT_UNTIL",
+                "playwright_wait_until",
+            }:
+                continue
             _append_py_setting(lines, key, value)
 
     return lines

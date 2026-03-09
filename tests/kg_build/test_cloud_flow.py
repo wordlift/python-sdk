@@ -172,7 +172,8 @@ def test_build_settings_lines_with_sheets_and_extra_settings() -> None:
     assert "SHEETS_URL = 'https://docs.google.com/sheets/d/x'" in lines
     assert "SHEETS_NAME = 'Sheet1'" in lines
     assert "INGEST_LOADER = 'web_scrape_api'" in lines
-    assert "INGEST_TIMEOUT_MS = 60000" in lines
+    assert "INGEST_TIMEOUT_MS = 30000" in lines
+    assert "PLAYWRIGHT_WAIT_UNTIL = 'domcontentloaded'" in lines
     assert "A = 1" in lines
 
 
@@ -187,6 +188,69 @@ def test_build_settings_lines_with_sitemap_and_pattern() -> None:
     assert "INGEST_SOURCE = 'sitemap'" in lines
     assert "SITEMAP_URL = 'https://example.com/sitemap.xml'" in lines
     assert "SITEMAP_URL_PATTERN = '^https://example.com/blog/'" in lines
+
+
+def test_build_settings_lines_uses_typed_playwright_wait_until_and_timeout_override() -> (
+    None
+):
+    lines = _build_settings_lines(
+        CloudWorkflowConfig(
+            wordlift_key="k",
+            sheets_service_account_json="{}",
+            urls=["https://example.com"],
+            ingest_timeout_ms=45000,
+            playwright_wait_until="networkidle",
+        ),
+        "/tmp/sa.json",
+    )
+    assert "INGEST_TIMEOUT_MS = 45000" in lines
+    assert "PLAYWRIGHT_WAIT_UNTIL = 'networkidle'" in lines
+
+
+def test_build_settings_lines_prefers_modern_timeout_over_legacy_alias() -> None:
+    lines = _build_settings_lines(
+        CloudWorkflowConfig(
+            wordlift_key="k",
+            sheets_service_account_json="{}",
+            urls=["https://example.com"],
+            ingest_timeout_ms=12000,
+            extra_settings={
+                "WEB_PAGE_IMPORT_TIMEOUT": 9000,
+                "INGEST_TIMEOUT_MS": 8000,
+            },
+        ),
+        "/tmp/sa.json",
+    )
+    assert "INGEST_TIMEOUT_MS = 12000" in lines
+    assert "WEB_PAGE_IMPORT_TIMEOUT = 9000" not in lines
+
+
+def test_build_settings_lines_uses_legacy_timeout_alias_only_as_fallback() -> None:
+    lines = _build_settings_lines(
+        CloudWorkflowConfig(
+            wordlift_key="k",
+            sheets_service_account_json="{}",
+            urls=["https://example.com"],
+            extra_settings={"web_page_import_timeout": 15000},
+        ),
+        "/tmp/sa.json",
+    )
+    assert "INGEST_TIMEOUT_MS = 15000" in lines
+    assert "web_page_import_timeout = 15000" not in lines
+
+
+def test_build_settings_lines_prefers_typed_wait_until_over_extra_settings() -> None:
+    lines = _build_settings_lines(
+        CloudWorkflowConfig(
+            wordlift_key="k",
+            sheets_service_account_json="{}",
+            urls=["https://example.com"],
+            playwright_wait_until="commit",
+            extra_settings={"PLAYWRIGHT_WAIT_UNTIL": "load"},
+        ),
+        "/tmp/sa.json",
+    )
+    assert "PLAYWRIGHT_WAIT_UNTIL = 'commit'" in lines
 
 
 def test_build_settings_lines_requires_source_fields() -> None:
@@ -398,7 +462,8 @@ async def test_cloud_flow_canonical_path_source_mode_conformance(
     for expected_line in expected_source_lines:
         assert expected_line in captured_config_lines
     assert "INGEST_LOADER = 'web_scrape_api'" in captured_config_lines
-    assert "INGEST_TIMEOUT_MS = 60000" in captured_config_lines
+    assert "INGEST_TIMEOUT_MS = 30000" in captured_config_lines
+    assert "PLAYWRIGHT_WAIT_UNTIL = 'domcontentloaded'" in captured_config_lines
     assert any("Initializing SDK with dynamic config" in msg for msg in info_events)
     assert any("Creating Cloud Import Workflow..." in msg for msg in info_events)
     assert any(

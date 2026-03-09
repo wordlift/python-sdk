@@ -18,7 +18,10 @@ from wordlift_client import (
 from wordlift_sdk.render.browser import BrowserOperationError
 from wordlift_sdk.render import HtmlRenderer, RenderOptions
 from wordlift_sdk.render.html_renderer import RenderOperationError
-from wordlift_sdk.render.render_options import build_browser_like_headers
+from wordlift_sdk.render.render_options import (
+    DEFAULT_PLAYWRIGHT_WAIT_UNTIL,
+    build_browser_like_headers,
+)
 
 from .errors import IngestionError, LoaderConfigError, LoaderRuntimeError
 from .models import LoadedPage, SourceItem
@@ -125,7 +128,9 @@ class PlaywrightLoaderAdapter(BaseLoaderAdapter):
                 timeout_ms=config.timeout_ms,
                 headless=bool(config.loader_config.get("headless", True)),
                 wait_until=str(
-                    config.loader_config.get("wait_until", "domcontentloaded")
+                    config.loader_config.get(
+                        "wait_until", DEFAULT_PLAYWRIGHT_WAIT_UNTIL
+                    )
                 ),
             )
             try:
