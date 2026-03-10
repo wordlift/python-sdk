@@ -81,7 +81,8 @@ DEFAULT_ID_POLICY = IdPolicy(
         DependentRule(
             child_type="FAQPage",
             parent_type="WebPage",
-            parent_predicates=("hasPart", "mainEntity"),
+            # subjectOf covers the pattern MainEntity -> subjectOf -> FAQPage
+            parent_predicates=("hasPart", "mainEntity", "subjectOf"),
         ),
         DependentRule(
             child_type="Question",
@@ -92,6 +93,11 @@ DEFAULT_ID_POLICY = IdPolicy(
             child_type="Answer",
             parent_type="Question",
             parent_predicates=("acceptedAnswer",),
+        ),
+        DependentRule(
+            child_type="Rating",
+            parent_type="Review",
+            parent_predicates=("reviewRating",),
         ),
         DependentRule(
             child_type="HowTo",

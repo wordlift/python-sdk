@@ -81,8 +81,13 @@ class CanonicalIdGenerator:
         subjects = sorted(
             {s for s in graph.subjects() if isinstance(s, URIRef)}, key=str
         )
+        # Track subjects already rewritten as dependents of a parent entity so
+        # the loop does not attempt a second flat-rewrite on their stale IRIs.
+        already_processed: set[URIRef] = set()
         for subject in subjects:
             if subject in locked_subjects:
+                continue
+            if subject in already_processed:
                 continue
             if self._is_dependent_subject(graph, subject):
                 continue
@@ -120,6 +125,11 @@ class CanonicalIdGenerator:
             new_iri = self._ensure_unique_subject_iri(graph, subject, candidate)
             self._swap_iri(graph, subject, new_iri)
             self._record_rewrite(rewritten_subjects, subject, new_iri)
+            # Rewrite FAQPage/Question/Answer nodes linked via subjectOf and
+            # Rating nodes linked via reviewRating as nested dependents.
+            self._rewrite_entity_linked_faq_and_rating(
+                graph, new_iri, already_processed
+            )
 
     def _rewrite_actions_as_dependents(self, graph: Graph) -> None:
         action_type = URIRef(f"{SCHEMA}Action")
@@ -291,6 +301,82 @@ class CanonicalIdGenerator:
                     a_container = self._policy.container_for_type("Answer")
                     new_answer = URIRef(f"{new_question}/{a_container}/answer-1")
                     self._swap_iri(graph, answer, new_answer)
+
+    def _rewrite_entity_linked_faq_and_rating(
+        self,
+        graph: Graph,
+        entity_iri: URIRef,
+        already_processed: set[URIRef],
+    ) -> None:
+        """Rewrite FAQPage/Question/Answer and Rating nodes that are dependents
+        of a non-page entity (e.g. Review, Article) via:
+          - entity -> schema:subjectOf -> FAQPage
+          - FAQPage -> schema:about -> entity  (inverse)
+          - entity -> schema:reviewRating -> Rating
+        """
+        # --- FAQPage discovery ---
+        faq_nodes: set[URIRef] = set()
+        for obj in graph.objects(entity_iri, URIRef(f"{SCHEMA}subjectOf")):
+            if isinstance(obj, URIRef) and self._is_typed_as(graph, obj, "FAQPage"):
+                faq_nodes.add(obj)
+        for subj in graph.subjects(URIRef(f"{SCHEMA}about"), entity_iri):
+            if isinstance(subj, URIRef) and self._is_typed_as(graph, subj, "FAQPage"):
+                faq_nodes.add(subj)
+
+        for idx, faq in enumerate(sorted(faq_nodes, key=str), start=1):
+            original_faq = faq
+            suffix = "" if len(faq_nodes) == 1 else f"-{idx}"
+            faq_container = self._policy.container_for_type("FAQPage")
+            new_faq = URIRef(f"{entity_iri}/{faq_container}/faq-page{suffix}")
+            self._swap_iri(graph, faq, new_faq)
+            already_processed.add(original_faq)
+
+            questions = sorted(
+                {
+                    q
+                    for q in graph.objects(new_faq, URIRef(f"{SCHEMA}mainEntity"))
+                    if isinstance(q, URIRef)
+                },
+                key=str,
+            )
+            for q_idx, question in enumerate(questions, start=1):
+                original_q = question
+                question_slug = self._entity_slug(
+                    graph,
+                    question,
+                    default_base="question",
+                    url_value=None,
+                    index=q_idx,
+                    force_index=len(questions) > 1,
+                )
+                q_container = self._policy.container_for_type("Question")
+                new_question = URIRef(f"{new_faq}/{q_container}/{question_slug}")
+                self._swap_iri(graph, question, new_question)
+                already_processed.add(original_q)
+
+                answer = graph.value(new_question, URIRef(f"{SCHEMA}acceptedAnswer"))
+                if isinstance(answer, URIRef):
+                    original_a = answer
+                    a_container = self._policy.container_for_type("Answer")
+                    new_answer = URIRef(f"{new_question}/{a_container}/answer-1")
+                    self._swap_iri(graph, answer, new_answer)
+                    already_processed.add(original_a)
+
+        # --- Rating discovery (e.g. Review -> reviewRating -> Rating) ---
+        rating_nodes = sorted(
+            {
+                obj
+                for obj in graph.objects(entity_iri, URIRef(f"{SCHEMA}reviewRating"))
+                if isinstance(obj, URIRef)
+            },
+            key=str,
+        )
+        for r_idx, rating in enumerate(rating_nodes, start=1):
+            original_r = rating
+            r_container = self._policy.container_for_type("Rating")
+            new_rating = URIRef(f"{entity_iri}/{r_container}/rating-{r_idx}")
+            self._swap_iri(graph, rating, new_rating)
+            already_processed.add(original_r)
 
     def _rewrite_videos(self, graph: Graph, page_iri: URIRef) -> None:
         videos: set[URIRef] = set()

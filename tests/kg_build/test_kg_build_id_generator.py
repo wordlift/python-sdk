@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from rdflib import Graph, Literal, RDF, URIRef
+from rdflib.namespace import XSD
 
 from wordlift_sdk.kg_build.id_generator import CanonicalIdGenerator
 from wordlift_sdk.kg_build.iri_lookup import IriLookup
@@ -295,6 +296,289 @@ def test_lookup_rewrites_only_root_subjects_not_dependent_nodes() -> None:
     nested_offers = list(output.objects(root_iri, URIRef(f"{SCHEMA}offers")))
     assert len(nested_offers) == 1
     assert str(nested_offers[0]).startswith(f"{root_iri}/offers/")
+
+
+def test_review_linked_faqpage_is_nested_not_flat() -> None:
+    """FAQPage linked via Review -> subjectOf -> FAQPage must be canonicalized
+    under the Review IRI, not as a dataset-root /faq-pages/faqpage."""
+    graph = Graph()
+    review = URIRef("https://example.com/review/product-x")
+    faq = URIRef("https://example.com/faq-pages/product-x-faq")
+    question = URIRef("https://example.com/questions/is-auto-approve-legit")
+    answer = URIRef("https://example.com/answers/answer-1")
+    rating = URIRef("https://example.com/ratings/rating-1")
+
+    graph.add((review, RDF.type, URIRef(f"{SCHEMA}Review")))
+    graph.add((review, URIRef(f"{SCHEMA}name"), Literal("Product X Review")))
+    graph.add((review, URIRef(f"{SCHEMA}subjectOf"), faq))
+    graph.add((review, URIRef(f"{SCHEMA}reviewRating"), rating))
+
+    graph.add((faq, RDF.type, URIRef(f"{SCHEMA}FAQPage")))
+    graph.add((faq, URIRef(f"{SCHEMA}about"), review))
+    graph.add((faq, URIRef(f"{SCHEMA}mainEntity"), question))
+
+    graph.add((question, RDF.type, URIRef(f"{SCHEMA}Question")))
+    graph.add((question, URIRef(f"{SCHEMA}name"), Literal("Is auto-approve legit?")))
+    graph.add((question, URIRef(f"{SCHEMA}acceptedAnswer"), answer))
+
+    graph.add((answer, RDF.type, URIRef(f"{SCHEMA}Answer")))
+    graph.add((answer, URIRef(f"{SCHEMA}text"), Literal("Yes.")))
+
+    graph.add((rating, RDF.type, URIRef(f"{SCHEMA}Rating")))
+    graph.add((rating, URIRef(f"{SCHEMA}ratingValue"), Literal("4.5")))
+
+    output = CanonicalIdGenerator().apply(graph, DATASET)
+
+    reviews = list(output.subjects(RDF.type, URIRef(f"{SCHEMA}Review")))
+    assert len(reviews) == 1
+    review_iri = reviews[0]
+    assert str(review_iri).startswith(f"{DATASET}/reviews/"), review_iri
+
+    # FAQPage must be nested under the review, not at dataset root
+    faqs = list(output.subjects(RDF.type, URIRef(f"{SCHEMA}FAQPage")))
+    assert len(faqs) == 1
+    faq_iri = faqs[0]
+    assert str(faq_iri).startswith(str(review_iri)), (
+        f"FAQPage {faq_iri} not nested under Review {review_iri}"
+    )
+    assert "/faq-pages/" in str(faq_iri)
+
+    # Question must be nested under the FAQPage
+    questions = list(output.subjects(RDF.type, URIRef(f"{SCHEMA}Question")))
+    assert len(questions) == 1
+    question_iri = questions[0]
+    assert str(question_iri).startswith(str(faq_iri)), (
+        f"Question {question_iri} not nested under FAQPage {faq_iri}"
+    )
+
+    # Answer must be nested under the Question
+    answers = list(output.subjects(RDF.type, URIRef(f"{SCHEMA}Answer")))
+    assert len(answers) == 1
+    answer_iri = answers[0]
+    assert str(answer_iri).startswith(str(question_iri)), (
+        f"Answer {answer_iri} not nested under Question {question_iri}"
+    )
+
+    # Rating must be nested under the Review
+    ratings = list(output.subjects(RDF.type, URIRef(f"{SCHEMA}Rating")))
+    assert len(ratings) == 1
+    rating_iri = ratings[0]
+    assert str(rating_iri).startswith(str(review_iri)), (
+        f"Rating {rating_iri} not nested under Review {review_iri}"
+    )
+    assert "/ratings/" in str(rating_iri)
+
+    # No dataset-root flat IRIs should be produced for these node types
+    all_subjects = {str(s) for s in output.subjects() if isinstance(s, URIRef)}
+    assert not any(s == f"{DATASET}/faq-pages/faqpage" for s in all_subjects)
+    assert not any(s.startswith(f"{DATASET}/questions/") for s in all_subjects)
+    assert not any(s.startswith(f"{DATASET}/answers/") for s in all_subjects)
+    assert not any(s.startswith(f"{DATASET}/ratings/") for s in all_subjects)
+
+
+def test_article_linked_faqpage_via_subject_of_is_nested() -> None:
+    """FAQPage linked via Article -> subjectOf -> FAQPage must be nested under
+    the Article IRI (same pattern as Review but with Article type)."""
+    graph = Graph()
+    article = URIRef("https://example.com/blog/article-1")
+    faq = URIRef("https://example.com/faq-pages/article-1-faq")
+    question = URIRef("https://example.com/questions/what-is-this")
+    answer = URIRef("https://example.com/answers/answer-1")
+
+    graph.add((article, RDF.type, URIRef(f"{SCHEMA}Article")))
+    graph.add((article, URIRef(f"{SCHEMA}name"), Literal("Article 1")))
+    graph.add((article, URIRef(f"{SCHEMA}subjectOf"), faq))
+
+    graph.add((faq, RDF.type, URIRef(f"{SCHEMA}FAQPage")))
+    graph.add((faq, URIRef(f"{SCHEMA}about"), article))
+    graph.add((faq, URIRef(f"{SCHEMA}mainEntity"), question))
+
+    graph.add((question, RDF.type, URIRef(f"{SCHEMA}Question")))
+    graph.add((question, URIRef(f"{SCHEMA}name"), Literal("What is this?")))
+    graph.add((question, URIRef(f"{SCHEMA}acceptedAnswer"), answer))
+
+    graph.add((answer, RDF.type, URIRef(f"{SCHEMA}Answer")))
+    graph.add((answer, URIRef(f"{SCHEMA}text"), Literal("It is an article.")))
+
+    output = CanonicalIdGenerator().apply(graph, DATASET)
+
+    articles = list(output.subjects(RDF.type, URIRef(f"{SCHEMA}Article")))
+    assert len(articles) == 1
+    article_iri = articles[0]
+    assert str(article_iri).startswith(f"{DATASET}/articles/")
+
+    faqs = list(output.subjects(RDF.type, URIRef(f"{SCHEMA}FAQPage")))
+    assert len(faqs) == 1
+    faq_iri = faqs[0]
+    assert str(faq_iri).startswith(str(article_iri)), (
+        f"FAQPage {faq_iri} not nested under Article {article_iri}"
+    )
+
+    questions = list(output.subjects(RDF.type, URIRef(f"{SCHEMA}Question")))
+    assert len(questions) == 1
+    question_iri = questions[0]
+    assert str(question_iri).startswith(str(faq_iri))
+
+    answers = list(output.subjects(RDF.type, URIRef(f"{SCHEMA}Answer")))
+    assert len(answers) == 1
+    answer_iri = answers[0]
+    assert str(answer_iri).startswith(str(question_iri))
+
+
+def test_review_linked_faqpage_canonicalization_is_idempotent() -> None:
+    """Applying canonicalization twice must yield the same graph."""
+    graph = Graph()
+    review = URIRef("https://example.com/review/product-y")
+    faq = URIRef("https://example.com/faq-pages/product-y-faq")
+    question = URIRef("https://example.com/questions/is-it-good")
+    answer = URIRef("https://example.com/answers/answer-1")
+    rating = URIRef("https://example.com/ratings/rating-1")
+
+    graph.add((review, RDF.type, URIRef(f"{SCHEMA}Review")))
+    graph.add((review, URIRef(f"{SCHEMA}name"), Literal("Product Y Review")))
+    graph.add((review, URIRef(f"{SCHEMA}subjectOf"), faq))
+    graph.add((review, URIRef(f"{SCHEMA}reviewRating"), rating))
+
+    graph.add((faq, RDF.type, URIRef(f"{SCHEMA}FAQPage")))
+    graph.add((faq, URIRef(f"{SCHEMA}about"), review))
+    graph.add((faq, URIRef(f"{SCHEMA}mainEntity"), question))
+
+    graph.add((question, RDF.type, URIRef(f"{SCHEMA}Question")))
+    graph.add((question, URIRef(f"{SCHEMA}name"), Literal("Is it good?")))
+    graph.add((question, URIRef(f"{SCHEMA}acceptedAnswer"), answer))
+
+    graph.add((answer, RDF.type, URIRef(f"{SCHEMA}Answer")))
+    graph.add((answer, URIRef(f"{SCHEMA}text"), Literal("Yes.")))
+
+    graph.add((rating, RDF.type, URIRef(f"{SCHEMA}Rating")))
+    graph.add((rating, URIRef(f"{SCHEMA}ratingValue"), Literal("5")))
+
+    generator = CanonicalIdGenerator()
+    first_pass = generator.apply(graph, DATASET)
+    first_triples = set(first_pass)
+    second_pass = generator.apply(first_pass, DATASET)
+    assert set(second_pass) == first_triples
+
+
+def test_review_with_faq_and_rating_real_world_graph() -> None:
+    """Regression test using a realistic production-shaped graph.
+
+    Verifies that FAQPage/Question/Answer/Rating nodes are all canonicalized
+    as nested IRIs under the owning Review — never as dataset-root flat paths.
+
+    Forbidden flat IRIs that must NOT appear:
+      .../faq-pages/faqpage
+      .../questions/is-auto-approve-legit
+      .../answers/answer
+      .../ratings/rating
+    """
+    DATASET = "https://data.wordlift.io/example"
+
+    g = Graph()
+    review = URIRef(f"{DATASET}/reviews/review-seed")
+    product = URIRef(f"{DATASET}/products/product-seed")
+    faq = URIRef(f"{DATASET}/faq-pages/auto-approve-da7741d47cf8756e")
+    question = URIRef(f"{faq}/questions/question-b7a1b63ec70f217e")
+    answer = URIRef(f"{question}/answers/answer-1")
+    rating = URIRef(
+        f"{DATASET}/reviews/auto-approve-da7741d47cf8756e/ratings/review-rating-da7741d47cf8"
+    )
+
+    g.add((review, RDF.type, URIRef(f"{SCHEMA}Review")))
+    g.add(
+        (
+            review,
+            URIRef(f"{SCHEMA}url"),
+            Literal(
+                "https://www.example.com/auto/reviews/auto-approve/",
+                datatype=XSD.string,
+            ),
+        )
+    )
+    g.add(
+        (review, URIRef(f"{SCHEMA}name"), Literal("2026 Auto Approve Auto Loan Review"))
+    )
+    g.add(
+        (
+            review,
+            URIRef(f"{SCHEMA}headline"),
+            Literal("2026 Auto Approve Auto Loan Review"),
+        )
+    )
+    g.add((review, URIRef(f"{SCHEMA}itemReviewed"), product))
+    g.add((review, URIRef(f"{SCHEMA}subjectOf"), faq))
+    g.add((review, URIRef(f"{SCHEMA}reviewRating"), rating))
+
+    g.add((product, RDF.type, URIRef(f"{SCHEMA}Product")))
+    g.add((product, URIRef(f"{SCHEMA}name"), Literal("Auto Approve")))
+
+    g.add((faq, RDF.type, URIRef(f"{SCHEMA}FAQPage")))
+    g.add((faq, URIRef(f"{SCHEMA}about"), review))
+    g.add((faq, URIRef(f"{SCHEMA}mainEntity"), question))
+
+    g.add((question, RDF.type, URIRef(f"{SCHEMA}Question")))
+    g.add(
+        (
+            question,
+            URIRef(f"{SCHEMA}name"),
+            Literal("Is Auto Approve legit?", datatype=XSD.string),
+        )
+    )
+    g.add((question, URIRef(f"{SCHEMA}acceptedAnswer"), answer))
+
+    g.add((answer, RDF.type, URIRef(f"{SCHEMA}Answer")))
+    g.add((answer, URIRef(f"{SCHEMA}text"), Literal("Yes.", datatype=XSD.string)))
+
+    g.add((rating, RDF.type, URIRef(f"{SCHEMA}Rating")))
+    g.add(
+        (rating, URIRef(f"{SCHEMA}ratingValue"), Literal("4.79", datatype=XSD.decimal))
+    )
+
+    out = CanonicalIdGenerator().apply(g, DATASET)
+
+    def one(type_name: str) -> str:
+        subjects = list(out.subjects(RDF.type, URIRef(f"{SCHEMA}{type_name}")))
+        assert len(subjects) == 1, f"Expected 1 {type_name}, got {subjects}"
+        return str(subjects[0])
+
+    review_iri = one("Review")
+    product_iri = one("Product")
+    faq_iri = one("FAQPage")
+    question_iri = one("Question")
+    answer_iri = one("Answer")
+    rating_iri = one("Rating")
+
+    # Review and Product get dataset-root canonical paths
+    assert review_iri.startswith(f"{DATASET}/reviews/"), review_iri
+    assert product_iri.startswith(f"{DATASET}/products/"), product_iri
+
+    # FAQPage must be nested under the review, not at dataset root
+    assert faq_iri.startswith(review_iri + "/faq-pages/"), (
+        f"FAQPage not nested under Review:\n  FAQ:    {faq_iri}\n  Review: {review_iri}"
+    )
+    # Question must be nested under the FAQPage
+    assert question_iri.startswith(faq_iri + "/questions/"), (
+        f"Question not nested under FAQPage:\n  Q:   {question_iri}\n  FAQ: {faq_iri}"
+    )
+    # Answer must be nested under the Question
+    assert answer_iri.startswith(question_iri + "/answers/"), (
+        f"Answer not nested under Question:\n  A: {answer_iri}\n  Q: {question_iri}"
+    )
+    # Rating must be nested under the Review
+    assert rating_iri.startswith(review_iri + "/ratings/"), (
+        f"Rating not nested under Review:\n  Rating: {rating_iri}\n  Review: {review_iri}"
+    )
+
+    # None of the known bad flat paths may appear
+    all_subjects = {str(s) for s in out.subjects() if isinstance(s, URIRef)}
+    forbidden = [
+        f"{DATASET}/faq-pages/faqpage",
+        f"{DATASET}/questions/is-auto-approve-legit",
+        f"{DATASET}/answers/answer",
+        f"{DATASET}/ratings/rating",
+    ]
+    for bad in forbidden:
+        assert bad not in all_subjects, f"Forbidden flat IRI produced: {bad}"
 
 
 def test_lookup_miss_falls_back_to_default_generation() -> None:
