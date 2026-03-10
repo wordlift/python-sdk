@@ -7,6 +7,7 @@ from .create_dataframe_of_url_iri import create_dataframe_of_url_iri
 from .create_entity_patch_request import create_entity_patch_request
 from .delayed import create_delayed
 from .get_me import get_me
+from .reset_me import reset_me
 from .html_converter import HtmlConverter
 from .auto_concurrency import AutoConcurrencyController
 
@@ -18,6 +19,7 @@ __all__ = [
     "create_entity_patch_request",
     "create_delayed",
     "get_me",
+    "reset_me",
     "HtmlConverter",
     "AutoConcurrencyController",
 ]
