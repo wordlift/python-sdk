@@ -353,3 +353,71 @@ def test_auditor_returns_report(tmp_path: Path) -> None:
     assert "schema_compliance" in d
     text = report.to_text()
     assert "Graph Audit Report" in text
+
+
+# ---------------------------------------------------------------------------
+# AuditOptions — shape selection and issue_level
+# ---------------------------------------------------------------------------
+
+
+def test_exclude_builtin_shapes_reduces_spec_count() -> None:
+    from wordlift_sdk.graph.audit._profile import shape_specs_for_profile
+    from wordlift_sdk.validation.shacl import resolve_shape_specs
+
+    default = resolve_shape_specs()
+    reduced = shape_specs_for_profile(
+        None, exclude_builtin_shapes=["google-article.ttl"]
+    )
+    assert len(reduced) == len(default) - 1
+    assert "google-article.ttl" not in reduced
+
+
+def test_builtin_shapes_include_list() -> None:
+    from wordlift_sdk.graph.audit._profile import shape_specs_for_profile
+
+    specs = shape_specs_for_profile(None, builtin_shapes=["google-article.ttl"])
+    assert specs == ["google-article.ttl"]
+
+
+def test_extra_shapes_appended(tmp_path: Path) -> None:
+    from wordlift_sdk.graph.audit._profile import shape_specs_for_profile
+
+    fake_shape = tmp_path / "custom.ttl"
+    fake_shape.write_text(
+        "@prefix sh: <http://www.w3.org/ns/shacl#> .\n"
+        "@prefix schema: <http://schema.org/> .\n"
+    )
+    specs = shape_specs_for_profile(None, extra_shapes=[str(fake_shape)])
+    assert str(fake_shape) in specs
+
+
+def test_issue_level_error_suppresses_warnings() -> None:
+    from wordlift_sdk.graph.audit.kpis.schema_compliance import _extract_issues
+
+    from rdflib import Literal as RLiteral
+    from rdflib.namespace import SH as SH_NS
+
+    report_graph = Graph()
+    w_node = URIRef("urn:w1")
+    report_graph.add((w_node, SH_NS.resultSeverity, SH_NS.Warning))
+    report_graph.add((w_node, SH_NS.resultMessage, RLiteral("just a warning")))
+
+    errors, warnings = _extract_issues(report_graph, {}, issue_level="error")
+    assert errors == []
+    assert warnings == []  # suppressed by error-only level
+
+
+def test_issue_level_warning_keeps_warnings() -> None:
+    from wordlift_sdk.graph.audit.kpis.schema_compliance import _extract_issues
+
+    from rdflib import Literal as RLiteral
+    from rdflib.namespace import SH as SH_NS
+
+    report_graph = Graph()
+    w_node = URIRef("urn:w1")
+    report_graph.add((w_node, SH_NS.resultSeverity, SH_NS.Warning))
+    report_graph.add((w_node, SH_NS.resultMessage, RLiteral("just a warning")))
+
+    errors, warnings = _extract_issues(report_graph, {}, issue_level="warning")
+    assert errors == []
+    assert len(warnings) == 1

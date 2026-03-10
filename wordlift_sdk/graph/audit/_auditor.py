@@ -36,6 +36,14 @@ class AuditOptions:
     list_isolated_components: bool = False
     rich_snippets_granularity: Literal["counts", "entities"] = "counts"
     max_workers: int | None = None
+    # Shape selection — explicit values override profile settings.
+    # Provide *either* builtin_shapes (include-list) *or* exclude_builtin_shapes
+    # (exclude-list); providing both is an error in resolve_shape_specs.
+    builtin_shapes: list[str] | None = None
+    exclude_builtin_shapes: list[str] | None = None
+    extra_shapes: list[str] | None = None
+    # Issue level: "warning" returns warnings + errors; "error" returns errors only.
+    issue_level: Literal["warning", "error"] = "warning"
 
 
 class GraphAuditor:
@@ -61,7 +69,12 @@ class GraphAuditor:
         options: AuditOptions | None = None,
     ) -> GraphAuditReport:
         opts = options or AuditOptions()
-        shape_specs = shape_specs_for_profile(opts.profile)
+        shape_specs = shape_specs_for_profile(
+            opts.profile,
+            builtin_shapes=opts.builtin_shapes,
+            exclude_builtin_shapes=opts.exclude_builtin_shapes,
+            extra_shapes=opts.extra_shapes,
+        )
 
         load_result = load_graph(path)
         graph = load_result.graph
@@ -100,6 +113,7 @@ class GraphAuditor:
         schema_kpi = SchemaComplianceKpi(
             shape_specs=shape_specs,
             depth=opts.subgraph_depth,
+            issue_level=opts.issue_level,
             max_workers=opts.max_workers,
         )
         results["schema_compliance"] = schema_kpi.collect(graph)

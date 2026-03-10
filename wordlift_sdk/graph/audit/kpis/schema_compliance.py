@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass
+from typing import Literal as TypingLiteral
 
 from rdflib import BNode, Graph, Literal, URIRef
 from rdflib.namespace import SH
@@ -71,7 +72,7 @@ def _init_worker(
 
 
 def _validate_url_worker(
-    args: tuple[str, str],
+    args: tuple[str, str, str],
 ) -> UrlComplianceResult:
     """
     Worker entry-point: validate one subgraph (serialised as N-Triples).
@@ -79,15 +80,17 @@ def _validate_url_worker(
     Uses the pre-warmed per-process Validator instances so shape harvest runs
     only once per worker process, not once per URL.
     """
-    url, subgraph_nt = args
+    url, subgraph_nt, issue_level = args
 
     subgraph = Graph()
     if subgraph_nt:
         subgraph.parse(data=subgraph_nt, format="nt")
 
-    errors, warnings = _run_with_validator(_main_validator, subgraph, _main_source_map)
+    errors, warnings = _run_with_validator(
+        _main_validator, subgraph, _main_source_map, issue_level
+    )
     m_errors, m_warnings = _run_with_validator(
-        _merchant_validator, subgraph, _merchant_source_map
+        _merchant_validator, subgraph, _merchant_source_map, issue_level
     )
 
     return UrlComplianceResult(
@@ -211,9 +214,11 @@ class SchemaComplianceKpi:
         self,
         shape_specs: list[str],
         depth: int = 1,
+        issue_level: TypingLiteral["warning", "error"] = "warning",
         max_workers: int | None = None,
     ) -> None:
         self._depth = depth
+        self._issue_level = issue_level
         self._max_workers = max_workers
 
         merchant_specs = [s for s in shape_specs if s.endswith(_MERCHANT_SHAPE)]
@@ -244,11 +249,15 @@ class SchemaComplianceKpi:
         all_subjects = {s for s in normalized.subjects() if isinstance(s, URIRef)}
 
         # Build every subgraph in the main process (no SHACL overhead here).
-        tasks: list[tuple[str, str]] = []
+        tasks: list[tuple[str, str, str]] = []
         for url in webpage_urls:
             subgraph = _build_subgraph(normalized, url, self._depth, all_subjects)
             tasks.append(
-                (url, subgraph.serialize(format="nt") if len(subgraph) else "")
+                (
+                    url,
+                    subgraph.serialize(format="nt") if len(subgraph) else "",
+                    self._issue_level,
+                )
             )
 
         results: list[UrlComplianceResult] = []
@@ -332,6 +341,7 @@ def _run_with_validator(
     validator,
     data_graph: Graph,
     source_map: dict[str, str],
+    issue_level: str = "warning",
 ) -> tuple[list[IssueEntry], list[IssueEntry]]:
     """Run a pre-warmed Validator on *data_graph*, reusing the shapes cache."""
     if validator is None or len(data_graph) == 0:
@@ -343,12 +353,13 @@ def _run_with_validator(
     validator._target_graph = None  # force rebuild from data_graph
 
     _, report_graph, _ = validator.run()
-    return _extract_issues(report_graph, source_map)
+    return _extract_issues(report_graph, source_map, issue_level)
 
 
 def _extract_issues(
     report_graph: Graph,
     source_map: dict[str, str],
+    issue_level: str = "warning",
 ) -> tuple[list[IssueEntry], list[IssueEntry]]:
     errors: list[IssueEntry] = []
     warnings: list[IssueEntry] = []
@@ -383,6 +394,9 @@ def _extract_issues(
             errors.append(entry)
         else:
             warnings.append(entry)
+
+    if issue_level == "error":
+        warnings = []
 
     return errors, warnings
 
