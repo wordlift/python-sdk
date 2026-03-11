@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "wordlift-sdk"
-version = "6.12.0"
+version = "6.12.1"
 description = "Python toolkit for orchestrating WordLift imports and structured data workflows."
 authors = ["David Riccitelli <david@wordlift.io>"]
 readme = "README.md"
@@ -28,7 +28,7 @@ gspread = "^6.1.2"
 google-auth = "^2.35.0"
 tqdm = "^4.67.1"
 advertools = ">0.16.6,<1.0.0"
-pycountry = "^24.6.1"
+pycountry = "^26.0.0"
 python-liquid = "^2.0.1"
 jinja2 = "^3.1.6"
 morph-kgc = "^2.10.0"
@@ -38,11 +38,11 @@ playwright = "^1.52.0"
 trafilatura = "^2.0.0"
 
 [tool.poetry.group.dev.dependencies]
-pytest = "^8.3.3"
-pytest-asyncio = "^0.24.0"
+pytest = "^9.0.0"
+pytest-asyncio = "^1.0.0"
 docker = "^7.1.0"
 coverage = "^7.10.7"
-ruff = "^0.11.13"
+ruff = "^0.15.0"
 pre-commit = "^4.2.0"
 pandas-stubs = "^2.3.3.251201"
 
