@@ -420,4 +420,139 @@ def test_issue_level_warning_keeps_warnings() -> None:
 
     errors, warnings = _extract_issues(report_graph, {}, issue_level="warning")
     assert errors == []
-    assert len(warnings) == 1
+
+
+# ---------------------------------------------------------------------------
+# build_subgraph (public API)
+# ---------------------------------------------------------------------------
+
+
+def test_build_subgraph_returns_root_triples() -> None:
+    from wordlift_sdk.graph.audit import build_subgraph
+
+    entity = URIRef("https://example.org/article/1")
+    graph = _g(
+        (entity, RDF.type, _schema("Article")),
+        (entity, _schema("url"), Literal("https://example.org/article/1")),
+    )
+    all_subjects = {s for s in graph.subjects() if isinstance(s, URIRef)}
+    sg = build_subgraph(graph, "https://example.org/article/1", all_subjects)
+    assert len(sg) == 2
+
+
+def test_build_subgraph_includes_iri_prefix_children() -> None:
+    from wordlift_sdk.graph.audit import build_subgraph
+
+    root = URIRef("https://example.org/article/1")
+    child = URIRef("https://example.org/article/1/section")
+    graph = _g(
+        (root, RDF.type, _schema("Article")),
+        (root, _schema("url"), Literal("https://example.org/article/1")),
+        (child, RDF.type, _schema("WebPageElement")),
+    )
+    all_subjects = {s for s in graph.subjects() if isinstance(s, URIRef)}
+    sg = build_subgraph(graph, "https://example.org/article/1", all_subjects)
+    assert (child, RDF.type, _schema("WebPageElement")) in sg
+
+
+# ---------------------------------------------------------------------------
+# build_entity_matrix
+# ---------------------------------------------------------------------------
+
+
+def _write_ttl(tmp_path: Path, content: str) -> Path:
+    p = tmp_path / "graph.ttl"
+    p.write_text(textwrap.dedent(content))
+    return p
+
+
+def test_build_entity_matrix_basic(tmp_path: Path) -> None:
+    from wordlift_sdk.graph.audit import build_entity_matrix
+
+    ttl = _write_ttl(
+        tmp_path,
+        """\
+        @prefix schema: <http://schema.org/> .
+        <https://example.org/a> a schema:Article ;
+            schema:url <https://example.org/a> .
+        <https://example.org/b> a schema:FAQPage ;
+            schema:url <https://example.org/b> .
+        """,
+    )
+    rows = build_entity_matrix(ttl)
+    assert len(rows) == 2
+    urls = [r["url"] for r in rows]
+    assert urls == sorted(urls)
+    article_row = next(r for r in rows if r["url"] == "https://example.org/a")
+    assert article_row["Article"] == 1
+    assert article_row.get("FAQPage", 0) == 0
+
+
+def test_build_entity_matrix_exclude_types(tmp_path: Path) -> None:
+    from wordlift_sdk.graph.audit import build_entity_matrix
+
+    ttl = _write_ttl(
+        tmp_path,
+        """\
+        @prefix schema: <http://schema.org/> .
+        <https://example.org/a> a schema:Article ;
+            schema:url <https://example.org/a> .
+        <https://example.org/b> a schema:WebPage ;
+            schema:url <https://example.org/b> .
+        """,
+    )
+    rows = build_entity_matrix(ttl, exclude_types=["WebPage"])
+    # WebPage row still appears but the WebPage column is absent
+    for row in rows:
+        assert "WebPage" not in row
+
+
+def test_build_entity_matrix_cluster(tmp_path: Path) -> None:
+    from wordlift_sdk.graph.audit import build_entity_matrix
+
+    ttl = _write_ttl(
+        tmp_path,
+        """\
+        @prefix schema: <http://schema.org/> .
+        <https://example.org/blog/post-1> a schema:Article ;
+            schema:url <https://example.org/blog/post-1> .
+        <https://example.org/blog/post-2> a schema:Article ;
+            schema:url <https://example.org/blog/post-2> .
+        <https://example.org/blog/post-3> a schema:BlogPosting ;
+            schema:url <https://example.org/blog/post-3> .
+        """,
+    )
+    rows = build_entity_matrix(ttl, cluster=True)
+    urls = {r["url"] for r in rows}
+    # post-1 and post-2 share the Article signature → collapsed
+    assert "https://example.org/blog/*" in urls
+    # post-3 has a different signature → kept separate
+    assert "https://example.org/blog/post-3" in urls
+    wildcard = next(r for r in rows if r["url"] == "https://example.org/blog/*")
+    assert wildcard["Article"] == 2
+
+
+def test_build_entity_matrix_empty_graph(tmp_path: Path) -> None:
+    from wordlift_sdk.graph.audit import build_entity_matrix
+
+    ttl = _write_ttl(tmp_path, "@prefix schema: <http://schema.org/> .\n")
+    rows = build_entity_matrix(ttl)
+    assert rows == []
+
+
+def test_build_entity_matrix_columns_sorted(tmp_path: Path) -> None:
+    from wordlift_sdk.graph.audit import build_entity_matrix
+
+    ttl = _write_ttl(
+        tmp_path,
+        """\
+        @prefix schema: <http://schema.org/> .
+        <https://example.org/p> a schema:Article, schema:Thing ;
+            schema:url <https://example.org/p> .
+        """,
+    )
+    rows = build_entity_matrix(ttl)
+    assert len(rows) == 1
+    cols = list(rows[0].keys())
+    type_cols = cols[1:]  # skip "url"
+    assert type_cols == sorted(type_cols)

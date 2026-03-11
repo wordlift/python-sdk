@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from ._auditor import AuditOptions, GraphAuditor
+from ._entity_matrix import build_entity_matrix
 from ._loader import LoadError, LoadResult, load_graph
 from ._profile import shape_specs_for_profile
 from ._report import GraphAuditReport
@@ -35,6 +36,7 @@ from .kpis import (
     UniqueUrlsResult,
     UrlComplianceResult,
 )
+from .kpis.schema_compliance import build_subgraph
 
 __all__ = [
     "AuditOptions",
@@ -69,6 +71,8 @@ __all__ = [
     "UniqueUrlsKpi",
     "UniqueUrlsResult",
     "UrlComplianceResult",
+    "build_entity_matrix",
+    "build_subgraph",
     "load_graph",
     "shape_specs_for_profile",
 ]

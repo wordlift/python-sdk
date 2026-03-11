@@ -408,10 +408,40 @@ def _extract_issues(
     return errors, warnings
 
 
+def build_subgraph(
+    graph: Graph,
+    webpage_url: str,
+    all_subjects: set[URIRef],
+    depth: int = 1,
+) -> Graph:
+    """
+    Build a subgraph for *webpage_url* from *graph*.
+
+    This is the public equivalent of the internal ``_build_subgraph`` helper.
+    See :class:`SchemaComplianceKpi` for the full subgraph-assembly rules.
+
+    Parameters
+    ----------
+    graph:
+        The full RDF graph (already normalised if required).
+    webpage_url:
+        The ``schema:url`` value identifying the page entity.
+    all_subjects:
+        Pre-computed set of all ``URIRef`` subjects in *graph*; pass
+        ``{s for s in graph.subjects() if isinstance(s, URIRef)}`` when
+        building outside a hot loop.
+    depth:
+        Number of relationship hops to follow when expanding referenced
+        entities (default ``1``).
+    """
+    return _build_subgraph(graph, webpage_url, depth, all_subjects)
+
+
 __all__ = [
     "IssueEntry",
     "MerchantResult",
     "SchemaComplianceKpi",
     "SchemaComplianceResult",
     "UrlComplianceResult",
+    "build_subgraph",
 ]
