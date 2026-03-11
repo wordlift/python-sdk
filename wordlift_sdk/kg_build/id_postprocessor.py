@@ -14,8 +14,9 @@ class CanonicalIdsPostprocessor:
         generator: CanonicalIdGenerator | None = None,
         iri_lookup: IriLookup | None = None,
         context_key: str = "kg_build.iri_lookup",
+        strategy: str = "legacy",
     ) -> None:
-        self._generator = generator or CanonicalIdGenerator()
+        self._generator = generator or CanonicalIdGenerator(strategy=strategy)
         self._iri_lookup = iri_lookup
         self._context_key = context_key
 

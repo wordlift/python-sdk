@@ -89,7 +89,17 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         self._mapping_cache: dict[Path, str] = {}
         self._static_templates_patched = False
         self._static_templates_lock = asyncio.Lock()
-        self._core_ids = CanonicalIdsPostprocessor()
+        canonical_id_strategy = (
+            str(
+                self.profile.settings.get(
+                    "canonical_id_strategy",
+                    self.profile.settings.get("CANONICAL_ID_STRATEGY", "legacy"),
+                )
+            )
+            .strip()
+            .lower()
+        )
+        self._core_ids = CanonicalIdsPostprocessor(strategy=canonical_id_strategy)
         self._postprocessor_runtime = _resolve_postprocessor_runtime(
             dict(self.profile.settings)
         )

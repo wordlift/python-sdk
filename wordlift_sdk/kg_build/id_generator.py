@@ -24,8 +24,13 @@ def normalize_slug(value: str) -> str:
 class CanonicalIdGenerator:
     """Pure graph-ID canonicalization logic."""
 
-    def __init__(self, policy: IdPolicy | None = None) -> None:
+    def __init__(
+        self,
+        policy: IdPolicy | None = None,
+        strategy: str = "legacy",
+    ) -> None:
         self._policy = policy or DEFAULT_ID_POLICY
+        self._strategy = strategy
 
     def apply(
         self,
@@ -36,6 +41,9 @@ class CanonicalIdGenerator:
         dataset_uri = dataset_uri.rstrip("/")
         if not dataset_uri:
             return graph
+
+        if self._strategy == "dependency_graph":
+            return self._apply_dependency_graph_strategy(graph, dataset_uri, iri_lookup)
 
         root_subjects = self._root_subjects(graph)
         # Lookup-mapped IRIs are treated as authoritative and must not be
@@ -68,6 +76,222 @@ class CanonicalIdGenerator:
         )
         self._rewrite_actions_as_dependents(graph)
         return graph
+
+    # ------------------------------------------------------------------
+    # dependency_graph strategy
+    # ------------------------------------------------------------------
+
+    def _apply_dependency_graph_strategy(
+        self,
+        graph: Graph,
+        dataset_uri: str,
+        iri_lookup: IriLookup | None,
+    ) -> Graph:
+        """Rewrite root IRIs first, then reparent dependents generically via
+        IdPolicy.dependent_rules — no hard-coded root-type branches."""
+        root_subjects = self._root_subjects(graph)
+        locked_subjects: set[URIRef] = set()
+        rewritten_subjects: dict[URIRef, URIRef] = {}
+
+        # Phase 1: rewrite page root IRIs (no inline child reparenting)
+        for old_page in sorted(
+            {s for s in graph.subjects() if self._has_page_root_type(graph, s)},
+            key=str,
+        ):
+            lookup_iri = self._lookup_iri(
+                graph, old_page, iri_lookup, root_subjects, locked_subjects
+            )
+            if lookup_iri is not None:
+                new_page = lookup_iri
+            else:
+                url = graph.value(old_page, URIRef(f"{SCHEMA}url"))
+                page_slug = self._entity_slug(
+                    graph,
+                    old_page,
+                    default_base="web-page",
+                    url_value=str(url) if isinstance(url, (Literal, URIRef)) else None,
+                )
+                new_page = URIRef(
+                    f"{dataset_uri}"
+                    f"/{self._policy.container_for_type('WebPage')}"
+                    f"/{page_slug}"
+                )
+            self._swap_iri(graph, old_page, new_page)
+            self._record_rewrite(rewritten_subjects, old_page, new_page)
+
+        # Phase 2: rewrite entity root IRIs (no inline child reparenting)
+        seen: defaultdict[str, int] = defaultdict(int)
+        for entity in sorted(
+            {s for s in graph.subjects() if self._has_entity_root_type(graph, s)},
+            key=str,
+        ):
+            lookup_iri = self._lookup_iri(
+                graph, entity, iri_lookup, root_subjects, locked_subjects
+            )
+            if lookup_iri is not None:
+                entity_iri = lookup_iri
+            else:
+                gtin = self._first_value(graph, entity, "gtin")
+                if gtin:
+                    entity_iri = URIRef(f"{dataset_uri}/01/{normalize_slug(gtin)}")
+                else:
+                    entity_url = self._first_value(graph, entity, "url")
+                    subject_type = self._preferred_type_name(graph, entity)
+                    entity_slug = self._entity_slug(
+                        graph,
+                        entity,
+                        default_base=subject_type,
+                        url_value=entity_url,
+                    )
+                    seen[entity_slug] += 1
+                    if not entity_url and seen[entity_slug] > 1:
+                        entity_slug = f"{entity_slug}-{seen[entity_slug]}"
+                    normalized_type = self._policy.normalize_type_name(subject_type)
+                    container = self._policy.container_for_type(normalized_type)
+                    entity_iri = URIRef(f"{dataset_uri}/{container}/{entity_slug}")
+            self._swap_iri(graph, entity, entity_iri)
+            self._record_rewrite(rewritten_subjects, entity, entity_iri)
+
+        # Phase 3: rewrite remaining independent subjects (no inline child reparenting)
+        for subject in sorted(
+            {s for s in graph.subjects() if isinstance(s, URIRef)},
+            key=str,
+        ):
+            if subject in locked_subjects:
+                continue
+            if self._is_dependent_subject(graph, subject):
+                continue
+
+            candidate = self._rebased_subject_from_rewrites(subject, rewritten_subjects)
+            if candidate is None:
+                if not self._should_rewrite_subject(subject, dataset_uri):
+                    continue
+                lookup_iri = self._lookup_iri(
+                    graph, subject, iri_lookup, root_subjects, locked_subjects
+                )
+                if lookup_iri is not None:
+                    candidate = lookup_iri
+                else:
+                    gtin = self._first_value(graph, subject, "gtin")
+                    if gtin:
+                        candidate = URIRef(f"{dataset_uri}/01/{normalize_slug(gtin)}")
+                    else:
+                        preferred_type = self._preferred_type_name(graph, subject)
+                        normalized_type = self._policy.normalize_type_name(
+                            preferred_type
+                        )
+                        container = self._policy.container_for_type(normalized_type)
+                        slug = self._entity_slug(
+                            graph,
+                            subject,
+                            default_base=normalized_type,
+                            url_value=self._first_value(graph, subject, "url"),
+                        )
+                        candidate = URIRef(f"{dataset_uri}/{container}/{slug}")
+
+            if not self._should_rewrite_subject(subject, dataset_uri, candidate):
+                continue
+
+            new_iri = self._ensure_unique_subject_iri(graph, subject, candidate)
+            self._swap_iri(graph, subject, new_iri)
+            self._record_rewrite(rewritten_subjects, subject, new_iri)
+
+        # Actions are still reparented as in legacy mode
+        self._rewrite_actions_as_dependents(graph)
+
+        # Phase 4: generic dependent reparenting driven entirely by IdPolicy rules
+        visited: set[URIRef] = set()
+        for iri in sorted(
+            {
+                s
+                for s in graph.subjects()
+                if isinstance(s, URIRef) and not self._is_dependent_subject(graph, s)
+            },
+            key=str,
+        ):
+            self._rewrite_dependents_by_policy(graph, iri, visited)
+
+        return graph
+
+    def _rewrite_dependents_by_policy(
+        self,
+        graph: Graph,
+        parent_iri: URIRef,
+        visited: set[URIRef],
+    ) -> None:
+        """Recursively reparent dependent nodes under *parent_iri* by walking
+        every rule in IdPolicy.dependent_rules whose parent_predicates lead to
+        a child typed as rule.child_type.  parent_type in the rule is intentionally
+        not enforced here — the predicate + child type check is sufficient and
+        makes the strategy work for any root type (Article, BlogPosting, etc.)."""
+        if parent_iri in visited:
+            return
+        visited.add(parent_iri)
+
+        for rule in self._policy.dependent_rules:
+            for predicate_name in rule.parent_predicates:
+                predicate = URIRef(f"{SCHEMA}{predicate_name}")
+                children = sorted(
+                    {
+                        obj
+                        for obj in graph.objects(parent_iri, predicate)
+                        if isinstance(obj, URIRef)
+                        and self._is_typed_as(graph, obj, rule.child_type)
+                    },
+                    key=str,
+                )
+                if not children:
+                    continue
+                container = self._policy.container_for_type(rule.child_type)
+                count = len(children)
+                for idx, child in enumerate(children, start=1):
+                    slug = self._dependent_slug(
+                        graph, child, rule.child_type, idx, count
+                    )
+                    new_child = URIRef(f"{parent_iri}/{container}/{slug}")
+                    new_child = self._ensure_unique_subject_iri(graph, child, new_child)
+                    self._swap_iri(graph, child, new_child)
+                    self._rewrite_dependents_by_policy(graph, new_child, visited)
+
+    def _dependent_slug(
+        self,
+        graph: Graph,
+        subject: URIRef,
+        child_type: str,
+        index: int,
+        count: int,
+    ) -> str:
+        """Slug for a policy-dependent child node.
+
+        Prefers a name/headline/title-derived slug, then falls back to the
+        dashed type name (e.g. ``faq-page``, ``question``, ``answer``) with an
+        index suffix when there are multiple siblings of the same type.
+        """
+        url_value = self._first_value(graph, subject, "url", "embedUrl", "contentUrl")
+        for pred in ("name", "headline", "title"):
+            value = graph.value(subject, URIRef(f"{SCHEMA}{pred}"))
+            if isinstance(value, (Literal, URIRef)):
+                text = str(value).strip()
+                if text:
+                    base = normalize_slug(text) or "thing"
+                    if url_value:
+                        return f"{base}-{self._url_hash(url_value)}"
+                    if count > 1:
+                        return f"{base}-{index}"
+                    return base
+
+        default_base = self._dashed_type_name(child_type)
+        if url_value:
+            return f"{default_base}-{self._url_hash(url_value)}"
+        if count > 1:
+            return f"{default_base}-{index}"
+        return default_base
+
+    @staticmethod
+    def _dashed_type_name(type_name: str) -> str:
+        """``FAQPage`` → ``faq-page``, ``HowToStep`` → ``how-to-step``."""
+        s1 = re.sub("(.)([A-Z][a-z]+)", r"\1-\2", type_name)
+        return re.sub("([a-z0-9])([A-Z])", r"\1-\2", s1).lower()
 
     def _rewrite_remaining_subjects(
         self,

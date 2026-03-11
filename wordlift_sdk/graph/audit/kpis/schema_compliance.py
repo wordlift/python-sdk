@@ -328,6 +328,13 @@ def _build_subgraph(
         if not frontier:
             break
 
+    # 3b. IRI-prefix children of referenced entities
+    for iri in set(visited) - root_iris - child_iris:
+        prefix = str(iri).rstrip("/") + "/"
+        for s in all_subjects:
+            if str(s).startswith(prefix):
+                visited.add(s)
+
     # 4. Build subgraph — no blank nodes
     subgraph = Graph()
     for iri in visited:

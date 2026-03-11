@@ -102,6 +102,7 @@ ENV_PARSERS: dict[str, Callable[[str], Any]] = {
         u.strip() for u in re.split(r"[\n,]", v) if u.strip()
     ],
     "import_hash_mode": str,
+    "canonical_id_strategy": str,
 }
 
 

@@ -594,3 +594,196 @@ def test_lookup_miss_falls_back_to_default_generation() -> None:
     rewritten_articles = list(output.subjects(RDF.type, URIRef(f"{SCHEMA}Article")))
     assert len(rewritten_articles) == 1
     assert str(rewritten_articles[0]).startswith(f"{DATASET}/articles/")
+
+
+# ---------------------------------------------------------------------------
+# dependency_graph strategy tests
+# ---------------------------------------------------------------------------
+
+
+def test_dependency_graph_strategy_reparents_faq_under_article_typed_as_faqpage() -> (
+    None
+):
+    """Article+FAQPage root: Questions/Answers are reparented generically.
+
+    The Article is typed both ``schema:Article`` and ``schema:FAQPage`` — no
+    intermediate FAQPage node.  The dependency_graph strategy must walk the
+    ``Question -> FAQPage -> mainEntity`` rule (matching because FAQPage is in
+    the root's type set) and reparent the Question (and its Answer) under the
+    newly canonical Article IRI.
+
+    Expected transformation:
+      old root  : .../articles/article-1
+      new root  : .../articles/credit-card-debt-relief-freedom-debt-relief-<hash>
+      question  : .../articles/<new>/questions/<q-slug>
+      answer    : .../articles/<new>/questions/<q-slug>/answers/answer
+    """
+    graph = Graph()
+    article = URIRef("https://example.com/articles/article-1")
+    question = URIRef("https://example.com/articles/article-1/questions/question-abc")
+    answer = URIRef(
+        "https://example.com/articles/article-1/questions/question-abc/answers/answer-1"
+    )
+
+    graph.add((article, RDF.type, URIRef(f"{SCHEMA}Article")))
+    graph.add((article, RDF.type, URIRef(f"{SCHEMA}FAQPage")))
+    graph.add(
+        (
+            article,
+            URIRef(f"{SCHEMA}name"),
+            Literal("Credit Card Debt Relief Freedom Debt Relief"),
+        )
+    )
+    graph.add(
+        (
+            article,
+            URIRef(f"{SCHEMA}url"),
+            Literal("https://example.com/articles/article-1"),
+        )
+    )
+    graph.add((article, URIRef(f"{SCHEMA}mainEntity"), question))
+
+    graph.add((question, RDF.type, URIRef(f"{SCHEMA}Question")))
+    graph.add((question, URIRef(f"{SCHEMA}name"), Literal("What is debt relief?")))
+    graph.add((question, URIRef(f"{SCHEMA}acceptedAnswer"), answer))
+
+    graph.add((answer, RDF.type, URIRef(f"{SCHEMA}Answer")))
+    graph.add((answer, URIRef(f"{SCHEMA}text"), Literal("Debt relief reduces debt.")))
+
+    generator = CanonicalIdGenerator(strategy="dependency_graph")
+    output = generator.apply(graph, DATASET)
+
+    articles = list(output.subjects(RDF.type, URIRef(f"{SCHEMA}Article")))
+    assert len(articles) == 1
+    article_iri = str(articles[0])
+    url_hash = generator._url_hash("https://example.com/articles/article-1")
+    assert article_iri == (
+        f"{DATASET}/articles/credit-card-debt-relief-freedom-debt-relief-{url_hash}"
+    ), article_iri
+
+    questions = list(output.subjects(RDF.type, URIRef(f"{SCHEMA}Question")))
+    assert len(questions) == 1
+    question_iri = str(questions[0])
+    assert question_iri.startswith(f"{article_iri}/questions/"), question_iri
+
+    answers = list(output.subjects(RDF.type, URIRef(f"{SCHEMA}Answer")))
+    assert len(answers) == 1
+    answer_iri = str(answers[0])
+    assert answer_iri.startswith(f"{question_iri}/answers/"), answer_iri
+
+    # No stale article-1 path may remain anywhere in the graph
+    all_iris = {str(s) for s in output.subjects() if isinstance(s, URIRef)}
+    assert not any("article-1" in iri for iri in all_iris), all_iris
+
+
+def test_dependency_graph_strategy_is_generic_product_offer_pricespec() -> None:
+    """Non-FAQ case: Product → Offer → PriceSpecification reparented generically.
+
+    Verifies that the dependency_graph strategy is truly generic and not limited
+    to FAQ hierarchies.
+    """
+    graph = Graph()
+    product = URIRef("https://example.com/products/widget")
+    offer_a = URIRef("https://example.com/offers/a")
+    offer_b = URIRef("https://example.com/offers/b")
+    price_1 = URIRef("https://example.com/prices/1")
+    price_2 = URIRef("https://example.com/prices/2")
+
+    graph.add((product, RDF.type, URIRef(f"{SCHEMA}Product")))
+    graph.add((product, URIRef(f"{SCHEMA}name"), Literal("Widget Pro")))
+    graph.add(
+        (
+            product,
+            URIRef(f"{SCHEMA}url"),
+            Literal("https://example.com/products/widget"),
+        )
+    )
+    graph.add((product, URIRef(f"{SCHEMA}offers"), offer_a))
+    graph.add((product, URIRef(f"{SCHEMA}offers"), offer_b))
+
+    graph.add((offer_a, RDF.type, URIRef(f"{SCHEMA}Offer")))
+    graph.add((offer_a, URIRef(f"{SCHEMA}priceSpecification"), price_1))
+    graph.add((offer_b, RDF.type, URIRef(f"{SCHEMA}Offer")))
+    graph.add((offer_b, URIRef(f"{SCHEMA}priceSpecification"), price_2))
+
+    graph.add((price_1, RDF.type, URIRef(f"{SCHEMA}PriceSpecification")))
+    graph.add((price_1, URIRef(f"{SCHEMA}price"), Literal("9.99")))
+    graph.add((price_2, RDF.type, URIRef(f"{SCHEMA}PriceSpecification")))
+    graph.add((price_2, URIRef(f"{SCHEMA}price"), Literal("19.99")))
+
+    generator = CanonicalIdGenerator(strategy="dependency_graph")
+    output = generator.apply(graph, DATASET)
+
+    products = list(output.subjects(RDF.type, URIRef(f"{SCHEMA}Product")))
+    assert len(products) == 1
+    product_iri = str(products[0])
+    assert product_iri.startswith(f"{DATASET}/products/")
+
+    offers = sorted(output.subjects(RDF.type, URIRef(f"{SCHEMA}Offer")), key=str)
+    assert len(offers) == 2
+    for offer_iri in offers:
+        assert str(offer_iri).startswith(f"{product_iri}/offers/"), offer_iri
+
+    price_specs = sorted(
+        output.subjects(RDF.type, URIRef(f"{SCHEMA}PriceSpecification")), key=str
+    )
+    assert len(price_specs) == 2
+    for ps_iri in price_specs:
+        # Each PriceSpecification must be nested under its parent Offer
+        parent_offers = list(
+            output.subjects(URIRef(f"{SCHEMA}priceSpecification"), ps_iri)
+        )
+        assert len(parent_offers) == 1
+        assert str(ps_iri).startswith(
+            str(parent_offers[0]) + "/price-specifications/"
+        ), ps_iri
+
+    # No stale flat price/offer paths
+    all_iris = {str(s) for s in output.subjects() if isinstance(s, URIRef)}
+    assert not any(s.startswith("https://example.com/") for s in all_iris), all_iris
+
+
+def test_dependency_graph_strategy_default_is_legacy() -> None:
+    """Default strategy must remain 'legacy' — no regression for existing callers."""
+    graph = Graph()
+    review = URIRef("https://example.com/review/x")
+    faq = URIRef("https://example.com/faq/x")
+    question = URIRef("https://example.com/questions/q1")
+    answer = URIRef("https://example.com/answers/a1")
+    rating = URIRef("https://example.com/ratings/r1")
+
+    graph.add((review, RDF.type, URIRef(f"{SCHEMA}Review")))
+    graph.add((review, URIRef(f"{SCHEMA}name"), Literal("Review X")))
+    graph.add((review, URIRef(f"{SCHEMA}subjectOf"), faq))
+    graph.add((review, URIRef(f"{SCHEMA}reviewRating"), rating))
+
+    graph.add((faq, RDF.type, URIRef(f"{SCHEMA}FAQPage")))
+    graph.add((faq, URIRef(f"{SCHEMA}about"), review))
+    graph.add((faq, URIRef(f"{SCHEMA}mainEntity"), question))
+
+    graph.add((question, RDF.type, URIRef(f"{SCHEMA}Question")))
+    graph.add((question, URIRef(f"{SCHEMA}name"), Literal("Is it good?")))
+    graph.add((question, URIRef(f"{SCHEMA}acceptedAnswer"), answer))
+
+    graph.add((answer, RDF.type, URIRef(f"{SCHEMA}Answer")))
+    graph.add((answer, URIRef(f"{SCHEMA}text"), Literal("Yes.")))
+
+    graph.add((rating, RDF.type, URIRef(f"{SCHEMA}Rating")))
+    graph.add((rating, URIRef(f"{SCHEMA}ratingValue"), Literal("5")))
+
+    # Default (no strategy arg) must behave identically to strategy="legacy"
+    out_default = CanonicalIdGenerator().apply(graph, DATASET)
+    out_legacy = CanonicalIdGenerator(strategy="legacy").apply(graph, DATASET)
+    assert set(out_default) == set(out_legacy)
+
+    # FAQ/Question/Answer/Rating must be nested under the Review in both cases
+    reviews = list(out_default.subjects(RDF.type, URIRef(f"{SCHEMA}Review")))
+    assert len(reviews) == 1
+    review_iri = str(reviews[0])
+    assert review_iri.startswith(f"{DATASET}/reviews/")
+
+    faqs = list(out_default.subjects(RDF.type, URIRef(f"{SCHEMA}FAQPage")))
+    assert str(faqs[0]).startswith(review_iri)
+
+    ratings = list(out_default.subjects(RDF.type, URIRef(f"{SCHEMA}Rating")))
+    assert str(ratings[0]).startswith(review_iri)

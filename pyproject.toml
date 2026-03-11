@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "wordlift-sdk"
-version = "6.12.3"
+version = "6.12.4"
 description = "Python toolkit for orchestrating WordLift imports and structured data workflows."
 authors = ["David Riccitelli <david@wordlift.io>"]
 readme = "README.md"
