@@ -1,0 +1,3322 @@
+@prefix : <https://wordlift.io/shacl/gs1-grammar/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix gs1: <https://ref.gs1.org/voc/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# Source: https://ref.gs1.org/voc/data/gs1Voc.ttl
+# Generated: 2026-03-12T13:25:19Z
+# Notes: GS1 vocabulary grammar checks only; all constraints are warnings.
+
+:gs1_AdditionalProductClassificationDetailsShape
+  a sh:NodeShape ;
+  sh:targetClass gs1:AdditionalProductClassificationDetails ;
+  sh:property [
+    sh:path gs1:additionalProductClassificationCode ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ] ) ;
+    sh:message "GS1 range check: additionalProductClassificationCode." ;
+  ] ;
+  sh:property [
+    sh:path gs1:additionalProductClassificationCodeDescription ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: additionalProductClassificationCodeDescription." ;
+  ] ;
+  sh:property [
+    sh:path gs1:additionalProductClassificationValue ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ] ) ;
+    sh:message "GS1 range check: additionalProductClassificationValue." ;
+  ] ;
+.
+
+:gs1_AdditiveDetailsShape
+  a sh:NodeShape ;
+  sh:targetClass gs1:AdditiveDetails ;
+  sh:property [
+    sh:path gs1:additiveLevelOfContainment ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:LevelOfContainmentCode ] ) ;
+    sh:message "GS1 range check: additiveLevelOfContainment." ;
+  ] ;
+  sh:property [
+    sh:path gs1:additiveName ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: additiveName." ;
+  ] ;
+.
+
+:gs1_AllergenDetailsShape
+  a sh:NodeShape ;
+  sh:targetClass gs1:AllergenDetails ;
+  sh:property [
+    sh:path gs1:allergenLevelOfContainmentCode ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:LevelOfContainmentCode ] ) ;
+    sh:message "GS1 range check: allergenLevelOfContainmentCode." ;
+  ] ;
+  sh:property [
+    sh:path gs1:allergenType ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:AllergenTypeCode ] ) ;
+    sh:message "GS1 range check: allergenType." ;
+  ] ;
+.
+
+:gs1_AuthenticityDetailsShape
+  a sh:NodeShape ;
+  sh:targetClass gs1:AuthenticityDetails ;
+  sh:property [
+    sh:path gs1:authenticitySecurityFeatureInstructions ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: authenticitySecurityFeatureInstructions." ;
+  ] ;
+  sh:property [
+    sh:path gs1:authenticitySecurityFeatureInstructionsURL ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#anyURI> ] ) ;
+    sh:message "GS1 range check: authenticitySecurityFeatureInstructionsURL." ;
+  ] ;
+  sh:property [
+    sh:path gs1:authenticitySecurityFeatureRegularExpression ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ] ) ;
+    sh:message "GS1 range check: authenticitySecurityFeatureRegularExpression." ;
+  ] ;
+  sh:property [
+    sh:path gs1:authenticitySecurityFeatureType ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:SecurityMarking ] ) ;
+    sh:message "GS1 range check: authenticitySecurityFeatureType." ;
+  ] ;
+  sh:property [
+    sh:path gs1:authenticitySecurityFeatureValue ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ] ) ;
+    sh:message "GS1 range check: authenticitySecurityFeatureValue." ;
+  ] ;
+.
+
+:gs1_AwardPrizeDetailsShape
+  a sh:NodeShape ;
+  sh:targetClass gs1:AwardPrizeDetails ;
+  sh:property [
+    sh:path gs1:awardPrizeCode ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ] ) ;
+    sh:message "GS1 range check: awardPrizeCode." ;
+  ] ;
+  sh:property [
+    sh:path gs1:awardPrizeCountryCode ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:Country ] ) ;
+    sh:message "GS1 range check: awardPrizeCountryCode." ;
+  ] ;
+  sh:property [
+    sh:path gs1:awardPrizeDescription ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: awardPrizeDescription." ;
+  ] ;
+  sh:property [
+    sh:path gs1:awardPrizeJury ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: awardPrizeJury." ;
+  ] ;
+  sh:property [
+    sh:path gs1:awardPrizeName ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: awardPrizeName." ;
+  ] ;
+  sh:property [
+    sh:path gs1:awardPrizeYear ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#gYear> ] ) ;
+    sh:message "GS1 range check: awardPrizeYear." ;
+  ] ;
+.
+
+:gs1_BeverageShape
+  a sh:NodeShape ;
+  sh:targetClass gs1:Beverage ;
+  sh:property [
+    sh:path gs1:alcoholicBeverageSubregion ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: alcoholicBeverageSubregion." ;
+  ] ;
+  sh:property [
+    sh:path gs1:beverageVintage ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ] ) ;
+    sh:message "GS1 range check: beverageVintage." ;
+  ] ;
+  sh:property [
+    sh:path gs1:isCarbonated ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:NonbinaryLogicCode ] ) ;
+    sh:message "GS1 range check: isCarbonated." ;
+  ] ;
+  sh:property [
+    sh:path gs1:isDecaffeinated ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:NonbinaryLogicCode ] ) ;
+    sh:message "GS1 range check: isDecaffeinated." ;
+  ] ;
+  sh:property [
+    sh:path gs1:isFromConcentrate ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:NonbinaryLogicCode ] ) ;
+    sh:message "GS1 range check: isFromConcentrate." ;
+  ] ;
+  sh:property [
+    sh:path gs1:isVintage ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:NonbinaryLogicCode ] ) ;
+    sh:message "GS1 range check: isVintage." ;
+  ] ;
+  sh:property [
+    sh:path gs1:percentageOfAlcoholByVolume ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#float> ] ) ;
+    sh:message "GS1 range check: percentageOfAlcoholByVolume." ;
+  ] ;
+  sh:property [
+    sh:path gs1:sweetnessLevelOfAlcoholicBeverage ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:SweetnessLevelOfAlcoholicBeverageCode ] ) ;
+    sh:message "GS1 range check: sweetnessLevelOfAlcoholicBeverage." ;
+  ] ;
+  sh:property [
+    sh:path gs1:vintner ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: vintner." ;
+  ] ;
+.
+
+:gs1_BrandShape
+  a sh:NodeShape ;
+  sh:targetClass gs1:Brand ;
+  sh:property [
+    sh:path gs1:brandName ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: brandName." ;
+  ] ;
+  sh:property [
+    sh:path gs1:subBrandName ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: subBrandName." ;
+  ] ;
+.
+
+:gs1_CertificationDetailsShape
+  a sh:NodeShape ;
+  sh:targetClass gs1:CertificationDetails ;
+  sh:property [
+    sh:path gs1:certificationAgency ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: certificationAgency." ;
+  ] ;
+  sh:property [
+    sh:path gs1:certificationAgencyURL ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:Organization ] ) ;
+    sh:message "GS1 range check: certificationAgencyURL." ;
+  ] ;
+  sh:property [
+    sh:path gs1:certificationAuditDate ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#date> ] ) ;
+    sh:message "GS1 range check: certificationAuditDate." ;
+  ] ;
+  sh:property [
+    sh:path gs1:certificationEndDate ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#date> ] ) ;
+    sh:message "GS1 range check: certificationEndDate." ;
+  ] ;
+  sh:property [
+    sh:path gs1:certificationIdentification ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ] ) ;
+    sh:message "GS1 range check: certificationIdentification." ;
+  ] ;
+  sh:property [
+    sh:path gs1:certificationStandard ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: certificationStandard." ;
+  ] ;
+  sh:property [
+    sh:path gs1:certificationStartDate ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#date> ] ) ;
+    sh:message "GS1 range check: certificationStartDate." ;
+  ] ;
+  sh:property [
+    sh:path gs1:certificationStatement ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: certificationStatement." ;
+  ] ;
+  sh:property [
+    sh:path gs1:certificationStatus ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:CertificationStatus ] ) ;
+    sh:message "GS1 range check: certificationStatus." ;
+  ] ;
+  sh:property [
+    sh:path gs1:certificationSubject ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2002/07/owl#Thing> ] ) ;
+    sh:message "GS1 range check: certificationSubject." ;
+  ] ;
+  sh:property [
+    sh:path gs1:certificationType ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2002/07/owl#Thing> ] ) ;
+    sh:message "GS1 range check: certificationType." ;
+  ] ;
+  sh:property [
+    sh:path gs1:certificationURI ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#anyURI> ] ) ;
+    sh:message "GS1 range check: certificationURI." ;
+  ] ;
+  sh:property [
+    sh:path gs1:certificationValue ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: certificationValue." ;
+  ] ;
+  sh:property [
+    sh:path gs1:initialCertificationDate ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#date> ] ) ;
+    sh:message "GS1 range check: initialCertificationDate." ;
+  ] ;
+.
+
+:gs1_ClothingShape
+  a sh:NodeShape ;
+  sh:targetClass gs1:Clothing ;
+  sh:property [
+    sh:path gs1:clothingCut ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: clothingCut." ;
+  ] ;
+  sh:property [
+    sh:path gs1:collarType ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: collarType." ;
+  ] ;
+  sh:property [
+    sh:path gs1:isMaternity ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:NonbinaryLogicCode ] ) ;
+    sh:message "GS1 range check: isMaternity." ;
+  ] ;
+  sh:property [
+    sh:path gs1:textileMaterial ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:TextileMaterialDetails ] ) ;
+    sh:message "GS1 range check: textileMaterial." ;
+  ] ;
+.
+
+:gs1_ColourCodeDetailsShape
+  a sh:NodeShape ;
+  sh:targetClass gs1:ColourCodeDetails ;
+  sh:property [
+    sh:path gs1:colourCodeList ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:ColourCodeListCode ] ) ;
+    sh:message "GS1 range check: colourCodeList." ;
+  ] ;
+  sh:property [
+    sh:path gs1:colourCodeValue ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ] ) ;
+    sh:message "GS1 range check: colourCodeValue." ;
+  ] ;
+.
+
+:gs1_CompulsoryAdditionalInformationShape
+  a sh:NodeShape ;
+  sh:targetClass gs1:CompulsoryAdditionalInformation ;
+  sh:property [
+    sh:path gs1:compulsoryAdditionalLabelInformation ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: compulsoryAdditionalLabelInformation." ;
+  ] ;
+  sh:property [
+    sh:path gs1:compulsoryAdditionalLabelInformationType ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:CompulsoryAdditionalLabelInformationTypeCode ] ) ;
+    sh:message "GS1 range check: compulsoryAdditionalLabelInformationType." ;
+  ] ;
+.
+
+:gs1_ContactPointShape
+  a sh:NodeShape ;
+  sh:targetClass gs1:ContactPoint ;
+  sh:property [
+    sh:path gs1:availableLanguage ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ] ) ;
+    sh:message "GS1 range check: availableLanguage." ;
+  ] ;
+  sh:property [
+    sh:path gs1:contactRoleCode ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:ContactRoleType ] ) ;
+    sh:message "GS1 range check: contactRoleCode." ;
+  ] ;
+  sh:property [
+    sh:path gs1:contactTitle ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: contactTitle." ;
+  ] ;
+  sh:property [
+    sh:path gs1:contactType ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: contactType." ;
+  ] ;
+  sh:property [
+    sh:path gs1:email ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ] ) ;
+    sh:message "GS1 range check: email." ;
+  ] ;
+  sh:property [
+    sh:path gs1:faxNumber ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ] ) ;
+    sh:message "GS1 range check: faxNumber." ;
+  ] ;
+  sh:property [
+    sh:path gs1:responsibility ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: responsibility." ;
+  ] ;
+  sh:property [
+    sh:path gs1:telephone ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ] ) ;
+    sh:message "GS1 range check: telephone." ;
+  ] ;
+.
+
+:gs1_CountryShape
+  a sh:NodeShape ;
+  sh:targetClass gs1:Country ;
+  sh:property [
+    sh:path gs1:countryCode ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ] ) ;
+    sh:message "GS1 range check: countryCode." ;
+  ] ;
+  sh:property [
+    sh:path gs1:countrySubdivisionCode ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ] ) ;
+    sh:message "GS1 range check: countrySubdivisionCode." ;
+  ] ;
+.
+
+:gs1_DietTypeCodeDetailsShape
+  a sh:NodeShape ;
+  sh:targetClass gs1:DietTypeCodeDetails ;
+  sh:property [
+    sh:path gs1:dietType ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:DietTypeCode ] ) ;
+    sh:message "GS1 range check: dietType." ;
+  ] ;
+  sh:property [
+    sh:path gs1:dietTypeSubcode ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: dietTypeSubcode." ;
+  ] ;
+.
+
+:gs1_DiscountShape
+  a sh:NodeShape ;
+  sh:targetClass gs1:Discount ;
+  sh:property [
+    sh:path gs1:discountRepeatsPerMultipleMinimum ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#boolean> ] ) ;
+    sh:message "GS1 range check: discountRepeatsPerMultipleMinimum." ;
+  ] ;
+  sh:property [
+    sh:path gs1:discountType ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:DiscountTypeCode ] ) ;
+    sh:message "GS1 range check: discountType." ;
+  ] ;
+  sh:property [
+    sh:path gs1:eligibleTradeChannel ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:TradeChannelCode ] ) ;
+    sh:message "GS1 range check: eligibleTradeChannel." ;
+  ] ;
+  sh:property [
+    sh:path gs1:exactDiscountAmount ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:PriceSpecification ] ) ;
+    sh:message "GS1 range check: exactDiscountAmount." ;
+  ] ;
+  sh:property [
+    sh:path gs1:exactDiscountPercentage ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#float> ] ) ;
+    sh:message "GS1 range check: exactDiscountPercentage." ;
+  ] ;
+  sh:property [
+    sh:path gs1:exclusionDescription ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: exclusionDescription." ;
+  ] ;
+  sh:property [
+    sh:path gs1:isOnlyAvailableThroughRetailer ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#boolean> ] ) ;
+    sh:message "GS1 range check: isOnlyAvailableThroughRetailer." ;
+  ] ;
+  sh:property [
+    sh:path gs1:isOnlyWithMailingListSignup ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#boolean> ] ) ;
+    sh:message "GS1 range check: isOnlyWithMailingListSignup." ;
+  ] ;
+  sh:property [
+    sh:path gs1:isOnlyWithPaymentCard ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:PaymentMethod ] ) ;
+    sh:message "GS1 range check: isOnlyWithPaymentCard." ;
+  ] ;
+  sh:property [
+    sh:path gs1:isOnlyWithRetailerLoyaltyCard ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#boolean> ] ) ;
+    sh:message "GS1 range check: isOnlyWithRetailerLoyaltyCard." ;
+  ] ;
+  sh:property [
+    sh:path gs1:isOnlyWithRetailerPaymentCard ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#boolean> ] ) ;
+    sh:message "GS1 range check: isOnlyWithRetailerPaymentCard." ;
+  ] ;
+  sh:property [
+    sh:path gs1:isPromoterExclusiveOffer ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#boolean> ] ) ;
+    sh:message "GS1 range check: isPromoterExclusiveOffer." ;
+  ] ;
+  sh:property [
+    sh:path gs1:maximumDiscountAmount ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:PriceSpecification ] ) ;
+    sh:message "GS1 range check: maximumDiscountAmount." ;
+  ] ;
+  sh:property [
+    sh:path gs1:maximumDiscountPercentage ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#float> ] ) ;
+    sh:message "GS1 range check: maximumDiscountPercentage." ;
+  ] ;
+  sh:property [
+    sh:path gs1:maximumQualifyingItems ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#integer> ] ) ;
+    sh:message "GS1 range check: maximumQualifyingItems." ;
+  ] ;
+  sh:property [
+    sh:path gs1:maximumQualifyingSpend ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:PriceSpecification ] ) ;
+    sh:message "GS1 range check: maximumQualifyingSpend." ;
+  ] ;
+  sh:property [
+    sh:path gs1:minimumDiscountAmount ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:PriceSpecification ] ) ;
+    sh:message "GS1 range check: minimumDiscountAmount." ;
+  ] ;
+  sh:property [
+    sh:path gs1:minimumDiscountPercentage ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#float> ] ) ;
+    sh:message "GS1 range check: minimumDiscountPercentage." ;
+  ] ;
+  sh:property [
+    sh:path gs1:minimumQualifyingItems ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#integer> ] ) ;
+    sh:message "GS1 range check: minimumQualifyingItems." ;
+  ] ;
+  sh:property [
+    sh:path gs1:minimumQualifyingSpend ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:PriceSpecification ] ) ;
+    sh:message "GS1 range check: minimumQualifyingSpend." ;
+  ] ;
+  sh:property [
+    sh:path gs1:offerRedemptionType ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:OfferRedemptionTypeCode ] ) ;
+    sh:message "GS1 range check: offerRedemptionType." ;
+  ] ;
+  sh:property [
+    sh:path gs1:offerRestrictionDescription ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: offerRestrictionDescription." ;
+  ] ;
+  sh:property [
+    sh:path gs1:qualifyingBrandName ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: qualifyingBrandName." ;
+  ] ;
+  sh:property [
+    sh:path gs1:qualifyingGPCs ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ] ) ;
+    sh:message "GS1 range check: qualifyingGPCs." ;
+  ] ;
+  sh:property [
+    sh:path gs1:qualifyingProductCategoryDescription ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: qualifyingProductCategoryDescription." ;
+  ] ;
+  sh:property [
+    sh:path gs1:qualifyingProductClassificationCode ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:AdditionalProductClassificationDetails ] ) ;
+    sh:message "GS1 range check: qualifyingProductClassificationCode." ;
+  ] ;
+  sh:property [
+    sh:path gs1:qualifyingProductGTINs ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ] ) ;
+    sh:message "GS1 range check: qualifyingProductGTINs." ;
+  ] ;
+  sh:property [
+    sh:path gs1:qualifyingSubBrandName ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: qualifyingSubBrandName." ;
+  ] ;
+  sh:property [
+    sh:path gs1:selectedProductsOnly ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#boolean> ] ) ;
+    sh:message "GS1 range check: selectedProductsOnly." ;
+  ] ;
+.
+
+:gs1_FoodAndBeveragePreparationInformationShape
+  a sh:NodeShape ;
+  sh:targetClass gs1:FoodAndBeveragePreparationInformation ;
+  sh:property [
+    sh:path gs1:convenienceLevelPercent ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#float> ] ) ;
+    sh:message "GS1 range check: convenienceLevelPercent." ;
+  ] ;
+  sh:property [
+    sh:path gs1:manufacturerPreparationCode ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:PreparationTypeCode ] ) ;
+    sh:message "GS1 range check: manufacturerPreparationCode." ;
+  ] ;
+  sh:property [
+    sh:path gs1:maximumOptimumConsumptionTemperature ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:QuantitativeValue ] ) ;
+    sh:message "GS1 range check: maximumOptimumConsumptionTemperature." ;
+  ] ;
+  sh:property [
+    sh:path gs1:minimumOptimumConsumptionTemperature ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:QuantitativeValue ] ) ;
+    sh:message "GS1 range check: minimumOptimumConsumptionTemperature." ;
+  ] ;
+  sh:property [
+    sh:path gs1:preparationCode ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:PreparationTypeCode ] ) ;
+    sh:message "GS1 range check: preparationCode." ;
+  ] ;
+  sh:property [
+    sh:path gs1:preparationConsumptionPrecautions ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: preparationConsumptionPrecautions." ;
+  ] ;
+  sh:property [
+    sh:path gs1:preparationInstructions ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: preparationInstructions." ;
+  ] ;
+  sh:property [
+    sh:path gs1:yield ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:ProductYieldDetails ] ) ;
+    sh:message "GS1 range check: yield." ;
+  ] ;
+.
+
+:gs1_FoodBeverageTobaccoIngredientDetailsShape
+  a sh:NodeShape ;
+  sh:targetClass gs1:FoodBeverageTobaccoIngredientDetails ;
+  sh:property [
+    sh:path gs1:ingredientContentPercentage ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#float> ] ) ;
+    sh:message "GS1 range check: ingredientContentPercentage." ;
+  ] ;
+  sh:property [
+    sh:path gs1:ingredientName ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: ingredientName." ;
+  ] ;
+  sh:property [
+    sh:path gs1:ingredientSequence ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#integer> ] ) ;
+    sh:message "GS1 range check: ingredientSequence." ;
+  ] ;
+.
+
+:gs1_FoodBeverageTobaccoProductShape
+  a sh:NodeShape ;
+  sh:targetClass gs1:FoodBeverageTobaccoProduct ;
+  sh:property [
+    sh:path gs1:allergenSpecificationAgency ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: allergenSpecificationAgency." ;
+  ] ;
+  sh:property [
+    sh:path gs1:allergenSpecificationName ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: allergenSpecificationName." ;
+  ] ;
+  sh:property [
+    sh:path gs1:allergenStatement ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: allergenStatement." ;
+  ] ;
+  sh:property [
+    sh:path gs1:biotinPerNutrientBasis ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:NutritionMeasurementType ] ) ;
+    sh:message "GS1 range check: biotinPerNutrientBasis." ;
+  ] ;
+  sh:property [
+    sh:path gs1:calciumPerNutrientBasis ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:NutritionMeasurementType ] ) ;
+    sh:message "GS1 range check: calciumPerNutrientBasis." ;
+  ] ;
+  sh:property [
+    sh:path gs1:carbohydratesPerNutrientBasis ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:NutritionMeasurementType ] ) ;
+    sh:message "GS1 range check: carbohydratesPerNutrientBasis." ;
+  ] ;
+  sh:property [
+    sh:path gs1:chloridePerNutrientBasis ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:NutritionMeasurementType ] ) ;
+    sh:message "GS1 range check: chloridePerNutrientBasis." ;
+  ] ;
+  sh:property [
+    sh:path gs1:cholesterolPerNutrientBasis ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:NutritionMeasurementType ] ) ;
+    sh:message "GS1 range check: cholesterolPerNutrientBasis." ;
+  ] ;
+  sh:property [
+    sh:path gs1:chromiumPerNutrientBasis ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:NutritionMeasurementType ] ) ;
+    sh:message "GS1 range check: chromiumPerNutrientBasis." ;
+  ] ;
+  sh:property [
+    sh:path gs1:copperPerNutrientBasis ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:NutritionMeasurementType ] ) ;
+    sh:message "GS1 range check: copperPerNutrientBasis." ;
+  ] ;
+  sh:property [
+    sh:path gs1:dietCode ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:DietTypeCodeDetails ] ) ;
+    sh:message "GS1 range check: dietCode." ;
+  ] ;
+  sh:property [
+    sh:path gs1:dietTypeDescription ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: dietTypeDescription." ;
+  ] ;
+  sh:property [
+    sh:path gs1:drainedWeight ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:QuantitativeValue ] ) ;
+    sh:message "GS1 range check: drainedWeight." ;
+  ] ;
+  sh:property [
+    sh:path gs1:energyFromFatPerNutrientBasis ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:NutritionMeasurementType ] ) ;
+    sh:message "GS1 range check: energyFromFatPerNutrientBasis." ;
+  ] ;
+  sh:property [
+    sh:path gs1:energyPerNutrientBasis ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:NutritionMeasurementType ] ) ;
+    sh:message "GS1 range check: energyPerNutrientBasis." ;
+  ] ;
+  sh:property [
+    sh:path gs1:fatPerNutrientBasis ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:NutritionMeasurementType ] ) ;
+    sh:message "GS1 range check: fatPerNutrientBasis." ;
+  ] ;
+  sh:property [
+    sh:path gs1:fibrePerNutrientBasis ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:NutritionMeasurementType ] ) ;
+    sh:message "GS1 range check: fibrePerNutrientBasis." ;
+  ] ;
+  sh:property [
+    sh:path gs1:fluoridePerNutrientBasis ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:NutritionMeasurementType ] ) ;
+    sh:message "GS1 range check: fluoridePerNutrientBasis." ;
+  ] ;
+  sh:property [
+    sh:path gs1:folicAcidPerNutrientBasis ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:NutritionMeasurementType ] ) ;
+    sh:message "GS1 range check: folicAcidPerNutrientBasis." ;
+  ] ;
+  sh:property [
+    sh:path gs1:foodBeverageRefrigerationClaim ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:FoodBeverageRefrigerationClaimCode ] ) ;
+    sh:message "GS1 range check: foodBeverageRefrigerationClaim." ;
+  ] ;
+  sh:property [
+    sh:path gs1:foodBeverageTargetUse ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:FoodBeverageTargetUseCode ] ) ;
+    sh:message "GS1 range check: foodBeverageTargetUse." ;
+  ] ;
+  sh:property [
+    sh:path gs1:geneticallyModifiedDeclaration ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:LevelOfContainmentCode ] ) ;
+    sh:message "GS1 range check: geneticallyModifiedDeclaration." ;
+  ] ;
+  sh:property [
+    sh:path gs1:hasAllergen ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:AllergenDetails ] ) ;
+    sh:message "GS1 range check: hasAllergen." ;
+  ] ;
+  sh:property [
+    sh:path gs1:ingredient ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:FoodBeverageTobaccoIngredientDetails ] ) ;
+    sh:message "GS1 range check: ingredient." ;
+  ] ;
+  sh:property [
+    sh:path gs1:ingredientOfConcern ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: ingredientOfConcern." ;
+  ] ;
+  sh:property [
+    sh:path gs1:ingredientStatement ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: ingredientStatement." ;
+  ] ;
+  sh:property [
+    sh:path gs1:iodinePerNutrientBasis ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:NutritionMeasurementType ] ) ;
+    sh:message "GS1 range check: iodinePerNutrientBasis." ;
+  ] ;
+  sh:property [
+    sh:path gs1:ironPerNutrientBasis ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:NutritionMeasurementType ] ) ;
+    sh:message "GS1 range check: ironPerNutrientBasis." ;
+  ] ;
+  sh:property [
+    sh:path gs1:irradiatedCode ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:NonbinaryLogicCode ] ) ;
+    sh:message "GS1 range check: irradiatedCode." ;
+  ] ;
+  sh:property [
+    sh:path gs1:isInstant ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:NonbinaryLogicCode ] ) ;
+    sh:message "GS1 range check: isInstant." ;
+  ] ;
+  sh:property [
+    sh:path gs1:isSliced ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:NonbinaryLogicCode ] ) ;
+    sh:message "GS1 range check: isSliced." ;
+  ] ;
+  sh:property [
+    sh:path gs1:juiceContentPercent ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#float> ] ) ;
+    sh:message "GS1 range check: juiceContentPercent." ;
+  ] ;
+  sh:property [
+    sh:path gs1:magnesiumPerNutrientBasis ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:NutritionMeasurementType ] ) ;
+    sh:message "GS1 range check: magnesiumPerNutrientBasis." ;
+  ] ;
+  sh:property [
+    sh:path gs1:manganesePerNutrientBasis ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:NutritionMeasurementType ] ) ;
+    sh:message "GS1 range check: manganesePerNutrientBasis." ;
+  ] ;
+  sh:property [
+    sh:path gs1:molybdenumPerNutrientBasis ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:NutritionMeasurementType ] ) ;
+    sh:message "GS1 range check: molybdenumPerNutrientBasis." ;
+  ] ;
+  sh:property [
+    sh:path gs1:monounsaturatedFatPerNutrientBasis ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:NutritionMeasurementType ] ) ;
+    sh:message "GS1 range check: monounsaturatedFatPerNutrientBasis." ;
+  ] ;
+  sh:property [
+    sh:path gs1:niacinPerNutrientBasis ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:NutritionMeasurementType ] ) ;
+    sh:message "GS1 range check: niacinPerNutrientBasis." ;
+  ] ;
+  sh:property [
+    sh:path gs1:numberOfServingsPerPackage ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#float> ] ) ;
+    sh:message "GS1 range check: numberOfServingsPerPackage." ;
+  ] ;
+  sh:property [
+    sh:path gs1:numberOfServingsPerPackageMeasurementPrecision ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:MeasurementPrecisionCode ] ) ;
+    sh:message "GS1 range check: numberOfServingsPerPackageMeasurementPrecision." ;
+  ] ;
+  sh:property [
+    sh:path gs1:numberOfServingsRangeDescription ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: numberOfServingsRangeDescription." ;
+  ] ;
+  sh:property [
+    sh:path gs1:nutrientBasisQuantity ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:QuantitativeValue ] ) ;
+    sh:message "GS1 range check: nutrientBasisQuantity." ;
+  ] ;
+  sh:property [
+    sh:path gs1:nutrientBasisQuantityType ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:NutrientBasisQuantityCode ] ) ;
+    sh:message "GS1 range check: nutrientBasisQuantityType." ;
+  ] ;
+  sh:property [
+    sh:path gs1:nutrientMeasurementPrecision ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:MeasurementPrecisionCode ] ) ;
+    sh:message "GS1 range check: nutrientMeasurementPrecision." ;
+  ] ;
+  sh:property [
+    sh:path gs1:nutritionalClaim ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:NutritionalClaimTypeCode ] ) ;
+    sh:message "GS1 range check: nutritionalClaim." ;
+  ] ;
+  sh:property [
+    sh:path gs1:nutritionalClaimStatement ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: nutritionalClaimStatement." ;
+  ] ;
+  sh:property [
+    sh:path gs1:packagingMarkedDietAllergenType ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:PackagingMarkedDietAllergenCode ] ) ;
+    sh:message "GS1 range check: packagingMarkedDietAllergenType." ;
+  ] ;
+  sh:property [
+    sh:path gs1:packagingMarkedFreeFrom ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:PackagingMarkedFreeFromCode ] ) ;
+    sh:message "GS1 range check: packagingMarkedFreeFrom." ;
+  ] ;
+  sh:property [
+    sh:path gs1:pantothenicAcidPerNutrientBasis ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:NutritionMeasurementType ] ) ;
+    sh:message "GS1 range check: pantothenicAcidPerNutrientBasis." ;
+  ] ;
+  sh:property [
+    sh:path gs1:phosphorusPerNutrientBasis ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:NutritionMeasurementType ] ) ;
+    sh:message "GS1 range check: phosphorusPerNutrientBasis." ;
+  ] ;
+  sh:property [
+    sh:path gs1:polyolsPerNutrientBasis ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:NutritionMeasurementType ] ) ;
+    sh:message "GS1 range check: polyolsPerNutrientBasis." ;
+  ] ;
+  sh:property [
+    sh:path gs1:polyunsaturatedFatPerNutrientBasis ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:NutritionMeasurementType ] ) ;
+    sh:message "GS1 range check: polyunsaturatedFatPerNutrientBasis." ;
+  ] ;
+  sh:property [
+    sh:path gs1:potassiumPerNutrientBasis ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:NutritionMeasurementType ] ) ;
+    sh:message "GS1 range check: potassiumPerNutrientBasis." ;
+  ] ;
+  sh:property [
+    sh:path gs1:preparationInformation ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:FoodAndBeveragePreparationInformation ] ) ;
+    sh:message "GS1 range check: preparationInformation." ;
+  ] ;
+  sh:property [
+    sh:path gs1:preservationTechnique ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:PreservationTechniqueCode ] ) ;
+    sh:message "GS1 range check: preservationTechnique." ;
+  ] ;
+  sh:property [
+    sh:path gs1:proteinPerNutrientBasis ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:NutritionMeasurementType ] ) ;
+    sh:message "GS1 range check: proteinPerNutrientBasis." ;
+  ] ;
+  sh:property [
+    sh:path gs1:reheatingClaim ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:NonbinaryLogicCode ] ) ;
+    sh:message "GS1 range check: reheatingClaim." ;
+  ] ;
+  sh:property [
+    sh:path gs1:riboflavinPerNutrientBasis ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:NutritionMeasurementType ] ) ;
+    sh:message "GS1 range check: riboflavinPerNutrientBasis." ;
+  ] ;
+  sh:property [
+    sh:path gs1:saltPerNutrientBasis ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:NutritionMeasurementType ] ) ;
+    sh:message "GS1 range check: saltPerNutrientBasis." ;
+  ] ;
+  sh:property [
+    sh:path gs1:saturatedFatPerNutrientBasis ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:NutritionMeasurementType ] ) ;
+    sh:message "GS1 range check: saturatedFatPerNutrientBasis." ;
+  ] ;
+  sh:property [
+    sh:path gs1:seleniumPerNutrientBasis ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:NutritionMeasurementType ] ) ;
+    sh:message "GS1 range check: seleniumPerNutrientBasis." ;
+  ] ;
+  sh:property [
+    sh:path gs1:servingSize ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:QuantitativeValue ] ) ;
+    sh:message "GS1 range check: servingSize." ;
+  ] ;
+  sh:property [
+    sh:path gs1:servingSizeDescription ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: servingSizeDescription." ;
+  ] ;
+  sh:property [
+    sh:path gs1:servingSuggestion ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: servingSuggestion." ;
+  ] ;
+  sh:property [
+    sh:path gs1:sodiumPerNutrientBasis ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:NutritionMeasurementType ] ) ;
+    sh:message "GS1 range check: sodiumPerNutrientBasis." ;
+  ] ;
+  sh:property [
+    sh:path gs1:sourceAnimal ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:SourceAnimalCode ] ) ;
+    sh:message "GS1 range check: sourceAnimal." ;
+  ] ;
+  sh:property [
+    sh:path gs1:starchPerNutrientBasis ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:NutritionMeasurementType ] ) ;
+    sh:message "GS1 range check: starchPerNutrientBasis." ;
+  ] ;
+  sh:property [
+    sh:path gs1:sugarsPerNutrientBasis ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:NutritionMeasurementType ] ) ;
+    sh:message "GS1 range check: sugarsPerNutrientBasis." ;
+  ] ;
+  sh:property [
+    sh:path gs1:thiaminPerNutrientBasis ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:NutritionMeasurementType ] ) ;
+    sh:message "GS1 range check: thiaminPerNutrientBasis." ;
+  ] ;
+  sh:property [
+    sh:path gs1:transFatPerNutrientBasis ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:NutritionMeasurementType ] ) ;
+    sh:message "GS1 range check: transFatPerNutrientBasis." ;
+  ] ;
+  sh:property [
+    sh:path gs1:vitaminAPerNutrientBasis ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:NutritionMeasurementType ] ) ;
+    sh:message "GS1 range check: vitaminAPerNutrientBasis." ;
+  ] ;
+  sh:property [
+    sh:path gs1:vitaminB12PerNutrientBasis ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:NutritionMeasurementType ] ) ;
+    sh:message "GS1 range check: vitaminB12PerNutrientBasis." ;
+  ] ;
+  sh:property [
+    sh:path gs1:vitaminB6PerNutrientBasis ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:NutritionMeasurementType ] ) ;
+    sh:message "GS1 range check: vitaminB6PerNutrientBasis." ;
+  ] ;
+  sh:property [
+    sh:path gs1:vitaminCPerNutrientBasis ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:NutritionMeasurementType ] ) ;
+    sh:message "GS1 range check: vitaminCPerNutrientBasis." ;
+  ] ;
+  sh:property [
+    sh:path gs1:vitaminDPerNutrientBasis ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:NutritionMeasurementType ] ) ;
+    sh:message "GS1 range check: vitaminDPerNutrientBasis." ;
+  ] ;
+  sh:property [
+    sh:path gs1:vitaminEPerNutrientBasis ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:NutritionMeasurementType ] ) ;
+    sh:message "GS1 range check: vitaminEPerNutrientBasis." ;
+  ] ;
+  sh:property [
+    sh:path gs1:vitaminKPerNutrientBasis ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:NutritionMeasurementType ] ) ;
+    sh:message "GS1 range check: vitaminKPerNutrientBasis." ;
+  ] ;
+  sh:property [
+    sh:path gs1:zincPerNutrientBasis ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:NutritionMeasurementType ] ) ;
+    sh:message "GS1 range check: zincPerNutrientBasis." ;
+  ] ;
+.
+
+:gs1_FootwearShape
+  a sh:NodeShape ;
+  sh:targetClass gs1:Footwear ;
+  sh:property [
+    sh:path gs1:footwearFasteningType ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:FootwearFasteningTypeCode ] ) ;
+    sh:message "GS1 range check: footwearFasteningType." ;
+  ] ;
+  sh:property [
+    sh:path gs1:footwearUpperType ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:UpperTypeCode ] ) ;
+    sh:message "GS1 range check: footwearUpperType." ;
+  ] ;
+  sh:property [
+    sh:path gs1:upperMaterialType ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:TextileMaterialDetails ] ) ;
+    sh:message "GS1 range check: upperMaterialType." ;
+  ] ;
+.
+
+:gs1_FruitsVegetablesShape
+  a sh:NodeShape ;
+  sh:targetClass gs1:FruitsVegetables ;
+  sh:property [
+    sh:path gs1:isPittedStoned ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:NonbinaryLogicCode ] ) ;
+    sh:message "GS1 range check: isPittedStoned." ;
+  ] ;
+  sh:property [
+    sh:path gs1:isSeedless ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:NonbinaryLogicCode ] ) ;
+    sh:message "GS1 range check: isSeedless." ;
+  ] ;
+  sh:property [
+    sh:path gs1:isShelledPeeled ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:NonbinaryLogicCode ] ) ;
+    sh:message "GS1 range check: isShelledPeeled." ;
+  ] ;
+  sh:property [
+    sh:path gs1:isWashedReadyToEat ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:NonbinaryLogicCode ] ) ;
+    sh:message "GS1 range check: isWashedReadyToEat." ;
+  ] ;
+  sh:property [
+    sh:path gs1:maturationMethod ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:MaturationMethodCode ] ) ;
+    sh:message "GS1 range check: maturationMethod." ;
+  ] ;
+.
+
+:gs1_GeoCoordinatesShape
+  a sh:NodeShape ;
+  sh:targetClass gs1:GeoCoordinates ;
+  sh:property [
+    sh:path gs1:coordinateReferenceSystem ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#anyURI> ] ) ;
+    sh:message "GS1 range check: coordinateReferenceSystem." ;
+  ] ;
+  sh:property [
+    sh:path gs1:elevation ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ] ) ;
+    sh:message "GS1 range check: elevation." ;
+  ] ;
+  sh:property [
+    sh:path gs1:latitude ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ] ) ;
+    sh:message "GS1 range check: latitude." ;
+  ] ;
+  sh:property [
+    sh:path gs1:longitude ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ] ) ;
+    sh:message "GS1 range check: longitude." ;
+  ] ;
+.
+
+:gs1_GeoShapeShape
+  a sh:NodeShape ;
+  sh:targetClass gs1:GeoShape ;
+  sh:property [
+    sh:path gs1:circle ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ] ) ;
+    sh:message "GS1 range check: circle." ;
+  ] ;
+  sh:property [
+    sh:path gs1:line ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ] ) ;
+    sh:message "GS1 range check: line." ;
+  ] ;
+  sh:property [
+    sh:path gs1:polygon ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ] ) ;
+    sh:message "GS1 range check: polygon." ;
+  ] ;
+.
+
+:gs1_LocationID_DetailsShape
+  a sh:NodeShape ;
+  sh:targetClass gs1:LocationID_Details ;
+  sh:property [
+    sh:path gs1:locationID ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ] ) ;
+    sh:message "GS1 range check: locationID." ;
+  ] ;
+  sh:property [
+    sh:path gs1:locationID_Qualifier ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ] ) ;
+    sh:message "GS1 range check: locationID_Qualifier." ;
+  ] ;
+  sh:property [
+    sh:path gs1:locationID_Type ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:LocationID_Type ] ) ;
+    sh:message "GS1 range check: locationID_Type." ;
+  ] ;
+  sh:property [
+    sh:path gs1:locationID_URI ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#anyURI> ] ) ;
+    sh:message "GS1 range check: locationID_URI." ;
+  ] ;
+.
+
+:gs1_LocationStatusHistoryShape
+  a sh:NodeShape ;
+  sh:targetClass gs1:LocationStatusHistory ;
+  sh:property [
+    sh:path gs1:locationStatus ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:StatusType ] ) ;
+    sh:message "GS1 range check: locationStatus." ;
+  ] ;
+  sh:property [
+    sh:path gs1:statusTimestamp ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#dateTime> ] ) ;
+    sh:message "GS1 range check: statusTimestamp." ;
+  ] ;
+.
+
+:gs1_MeatPoultryShape
+  a sh:NodeShape ;
+  sh:targetClass gs1:MeatPoultry ;
+  sh:property [
+    sh:path gs1:anatomicalForm ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:AnatomicalFormCode ] ) ;
+    sh:message "GS1 range check: anatomicalForm." ;
+  ] ;
+  sh:property [
+    sh:path gs1:bonelessClaim ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:NonbinaryLogicCode ] ) ;
+    sh:message "GS1 range check: bonelessClaim." ;
+  ] ;
+  sh:property [
+    sh:path gs1:meatPoultryType ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: meatPoultryType." ;
+  ] ;
+  sh:property [
+    sh:path gs1:minimumMeatPoultryContent ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:QuantitativeValue ] ) ;
+    sh:message "GS1 range check: minimumMeatPoultryContent." ;
+  ] ;
+.
+
+:gs1_MessageShape
+  a sh:NodeShape ;
+  sh:targetClass gs1:Message ;
+  sh:property [
+    sh:path gs1:messageRecipient ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:Organization ] ) ;
+    sh:message "GS1 range check: messageRecipient." ;
+  ] ;
+  sh:property [
+    sh:path gs1:messageSender ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:Organization ] ) ;
+    sh:message "GS1 range check: messageSender." ;
+  ] ;
+.
+
+:gs1_MilkButterCreamYogurtCheeseEggsSubstitutesShape
+  a sh:NodeShape ;
+  sh:targetClass gs1:MilkButterCreamYogurtCheeseEggsSubstitutes ;
+  sh:property [
+    sh:path gs1:cheeseFirmness ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:CheeseFirmnessCode ] ) ;
+    sh:message "GS1 range check: cheeseFirmness." ;
+  ] ;
+  sh:property [
+    sh:path gs1:cheeseMaturationPeriodDescription ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: cheeseMaturationPeriodDescription." ;
+  ] ;
+  sh:property [
+    sh:path gs1:fatInMilkContent ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#float> ] ) ;
+    sh:message "GS1 range check: fatInMilkContent." ;
+  ] ;
+  sh:property [
+    sh:path gs1:fatpercentageInDryMatter ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#float> ] ) ;
+    sh:message "GS1 range check: fatpercentageInDryMatter." ;
+  ] ;
+  sh:property [
+    sh:path gs1:isHomogenised ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:NonbinaryLogicCode ] ) ;
+    sh:message "GS1 range check: isHomogenised." ;
+  ] ;
+  sh:property [
+    sh:path gs1:isRindEdible ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:NonbinaryLogicCode ] ) ;
+    sh:message "GS1 range check: isRindEdible." ;
+  ] ;
+  sh:property [
+    sh:path gs1:sharpnessOfCheese ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:SharpnessOfCheeseCode ] ) ;
+    sh:message "GS1 range check: sharpnessOfCheese." ;
+  ] ;
+.
+
+:gs1_NutritionMeasurementTypeShape
+  a sh:NodeShape ;
+  sh:targetClass gs1:NutritionMeasurementType ;
+  sh:property [
+    sh:path gs1:dailyValueIntakePercent ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#float> ] ) ;
+    sh:message "GS1 range check: dailyValueIntakePercent." ;
+  ] ;
+.
+
+:gs1_OfferShape
+  a sh:NodeShape ;
+  sh:targetClass gs1:Offer ;
+  sh:property [
+    sh:path gs1:acceptedPaymentMethod ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:PaymentMethod ] ) ;
+    sh:message "GS1 range check: acceptedPaymentMethod." ;
+  ] ;
+  sh:property [
+    sh:path gs1:availabilityEnds ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#dateTime> ] ) ;
+    sh:message "GS1 range check: availabilityEnds." ;
+  ] ;
+  sh:property [
+    sh:path gs1:availabilityStarts ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#dateTime> ] ) ;
+    sh:message "GS1 range check: availabilityStarts." ;
+  ] ;
+  sh:property [
+    sh:path gs1:availableAtOrFrom ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:Place ] ) ;
+    sh:message "GS1 range check: availableAtOrFrom." ;
+  ] ;
+  sh:property [
+    sh:path gs1:eligibleQuantity ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:QuantitativeValue ] ) ;
+    sh:message "GS1 range check: eligibleQuantity." ;
+  ] ;
+  sh:property [
+    sh:path gs1:eligibleQuantityMaximum ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:QuantitativeValue ] ) ;
+    sh:message "GS1 range check: eligibleQuantityMaximum." ;
+  ] ;
+  sh:property [
+    sh:path gs1:eligibleQuantityMinimum ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:QuantitativeValue ] ) ;
+    sh:message "GS1 range check: eligibleQuantityMinimum." ;
+  ] ;
+  sh:property [
+    sh:path gs1:itemOffered ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:Product ] ) ;
+    sh:message "GS1 range check: itemOffered." ;
+  ] ;
+  sh:property [
+    sh:path gs1:offerDescription ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: offerDescription." ;
+  ] ;
+  sh:property [
+    sh:path gs1:offerDiscount ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:Discount ] ) ;
+    sh:message "GS1 range check: offerDiscount." ;
+  ] ;
+  sh:property [
+    sh:path gs1:offerRedemptionURL ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:ReferencedFileDetails ] ) ;
+    sh:message "GS1 range check: offerRedemptionURL." ;
+  ] ;
+  sh:property [
+    sh:path gs1:paymentTerms ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ] ) ;
+    sh:message "GS1 range check: paymentTerms." ;
+  ] ;
+  sh:property [
+    sh:path gs1:priceSpecification ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:PriceSpecification ] ) ;
+    sh:message "GS1 range check: priceSpecification." ;
+  ] ;
+  sh:property [
+    sh:path gs1:seeker ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:Organization ] ) ;
+    sh:message "GS1 range check: seeker." ;
+  ] ;
+  sh:property [
+    sh:path gs1:seller ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:Organization ] ) ;
+    sh:message "GS1 range check: seller." ;
+  ] ;
+  sh:property [
+    sh:path gs1:warranty ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:WarrantyPromise ] ) ;
+    sh:message "GS1 range check: warranty." ;
+  ] ;
+.
+
+:gs1_OrganicClaimDetailsShape
+  a sh:NodeShape ;
+  sh:targetClass gs1:OrganicClaimDetails ;
+  sh:property [
+    sh:path gs1:organicClaimAgency ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:OrganicClaimAgencyCode ] ) ;
+    sh:message "GS1 range check: organicClaimAgency." ;
+  ] ;
+  sh:property [
+    sh:path gs1:organicPercentClaim ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#float> ] ) ;
+    sh:message "GS1 range check: organicPercentClaim." ;
+  ] ;
+.
+
+:gs1_OrganizationShape
+  a sh:NodeShape ;
+  sh:targetClass gs1:Organization ;
+  sh:property [
+    sh:path gs1:additionalOrganizationID ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:OrganizationID_Details ] ) ;
+    sh:message "GS1 range check: additionalOrganizationID." ;
+  ] ;
+  sh:property [
+    sh:path gs1:additionalOrganizationIdentificationTypeValue ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ] ) ;
+    sh:message "GS1 range check: additionalOrganizationIdentificationTypeValue." ;
+  ] ;
+  sh:property [
+    sh:path gs1:address ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:PostalAddress ] ) ;
+    sh:message "GS1 range check: address." ;
+  ] ;
+  sh:property [
+    sh:path gs1:affiliatedTo ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:Organization ] ) ;
+    sh:message "GS1 range check: affiliatedTo." ;
+  ] ;
+  sh:property [
+    sh:path gs1:afterHoursContact ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:ContactPoint ] ) ;
+    sh:message "GS1 range check: afterHoursContact." ;
+  ] ;
+  sh:property [
+    sh:path gs1:businessEntity ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:BusinessEntityType ] ) ;
+    sh:message "GS1 range check: businessEntity." ;
+  ] ;
+  sh:property [
+    sh:path gs1:certification ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:CertificationDetails ] ) ;
+    sh:message "GS1 range check: certification." ;
+  ] ;
+  sh:property [
+    sh:path gs1:companyFilingURL ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#anyURI> ] ) ;
+    sh:message "GS1 range check: companyFilingURL." ;
+  ] ;
+  sh:property [
+    sh:path gs1:contactPoint ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:ContactPoint ] ) ;
+    sh:message "GS1 range check: contactPoint." ;
+  ] ;
+  sh:property [
+    sh:path gs1:csrAffiliation ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#anyURI> ] ) ;
+    sh:message "GS1 range check: csrAffiliation." ;
+  ] ;
+  sh:property [
+    sh:path gs1:department ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: department." ;
+  ] ;
+  sh:property [
+    sh:path gs1:franchiseeOf ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:Organization ] ) ;
+    sh:message "GS1 range check: franchiseeOf." ;
+  ] ;
+  sh:property [
+    sh:path gs1:franchisorOf ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:Organization ] ) ;
+    sh:message "GS1 range check: franchisorOf." ;
+  ] ;
+  sh:property [
+    sh:path gs1:glnType ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:GLN_TypeCode ] ) ;
+    sh:message "GS1 range check: glnType." ;
+  ] ;
+  sh:property [
+    sh:path gs1:globalLocationNumber ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ] ) ;
+    sh:message "GS1 range check: globalLocationNumber." ;
+  ] ;
+  sh:property [
+    sh:path gs1:hasPrimaryLocation ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:Place ] ) ;
+    sh:message "GS1 range check: hasPrimaryLocation." ;
+  ] ;
+  sh:property [
+    sh:path gs1:lesseeOf ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:Place ] ) ;
+    sh:message "GS1 range check: lesseeOf." ;
+  ] ;
+  sh:property [
+    sh:path gs1:lessorFor ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:Place ] ) ;
+    sh:message "GS1 range check: lessorFor." ;
+  ] ;
+  sh:property [
+    sh:path gs1:location ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:Place ] ) ;
+    sh:message "GS1 range check: location." ;
+  ] ;
+  sh:property [
+    sh:path gs1:makesOffer ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:Offer ] ) ;
+    sh:message "GS1 range check: makesOffer." ;
+  ] ;
+  sh:property [
+    sh:path gs1:managedBy ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:Organization ] ) ;
+    sh:message "GS1 range check: managedBy." ;
+  ] ;
+  sh:property [
+    sh:path gs1:manages ;
+    sh:severity sh:Warning ;
+    sh:message "GS1 range check: manages." ;
+  ] ;
+  sh:property [
+    sh:path gs1:occupies ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:Place ] ) ;
+    sh:message "GS1 range check: occupies." ;
+  ] ;
+  sh:property [
+    sh:path gs1:organizationFormationDate ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#date> ] ) ;
+    sh:message "GS1 range check: organizationFormationDate." ;
+  ] ;
+  sh:property [
+    sh:path gs1:organizationHistory ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:OrganizationStatusHistory ] ) ;
+    sh:message "GS1 range check: organizationHistory." ;
+  ] ;
+  sh:property [
+    sh:path gs1:organizationLegalName ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: organizationLegalName." ;
+  ] ;
+  sh:property [
+    sh:path gs1:organizationName ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: organizationName." ;
+  ] ;
+  sh:property [
+    sh:path gs1:organizationRole ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:OrganizationRoleType ] ) ;
+    sh:message "GS1 range check: organizationRole." ;
+  ] ;
+  sh:property [
+    sh:path gs1:organizationTerminationDate ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#date> ] ) ;
+    sh:message "GS1 range check: organizationTerminationDate." ;
+  ] ;
+  sh:property [
+    sh:path gs1:organizationTradingName ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: organizationTradingName." ;
+  ] ;
+  sh:property [
+    sh:path gs1:ownedBy ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:Organization ] ) ;
+    sh:message "GS1 range check: ownedBy." ;
+  ] ;
+  sh:property [
+    sh:path gs1:owns ;
+    sh:severity sh:Warning ;
+    sh:message "GS1 range check: owns." ;
+  ] ;
+  sh:property [
+    sh:path gs1:parentOrganization ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:Organization ] ) ;
+    sh:message "GS1 range check: parentOrganization." ;
+  ] ;
+  sh:property [
+    sh:path gs1:partyGLN ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ] ) ;
+    sh:message "GS1 range check: partyGLN." ;
+  ] ;
+  sh:property [
+    sh:path gs1:replacedByOrganization ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:Organization ] ) ;
+    sh:message "GS1 range check: replacedByOrganization." ;
+  ] ;
+  sh:property [
+    sh:path gs1:replacedOrganization ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:Organization ] ) ;
+    sh:message "GS1 range check: replacedOrganization." ;
+  ] ;
+  sh:property [
+    sh:path gs1:responsibleForLocation ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:Place ] ) ;
+    sh:message "GS1 range check: responsibleForLocation." ;
+  ] ;
+  sh:property [
+    sh:path gs1:subOrganization ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:Organization ] ) ;
+    sh:message "GS1 range check: subOrganization." ;
+  ] ;
+  sh:property [
+    sh:path gs1:usesManagedLocation ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:Place ] ) ;
+    sh:message "GS1 range check: usesManagedLocation." ;
+  ] ;
+.
+
+:gs1_OrganizationID_DetailsShape
+  a sh:NodeShape ;
+  sh:targetClass gs1:OrganizationID_Details ;
+  sh:property [
+    sh:path gs1:organizationID ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ] ) ;
+    sh:message "GS1 range check: organizationID." ;
+  ] ;
+  sh:property [
+    sh:path gs1:organizationID_Qualifier ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ] ) ;
+    sh:message "GS1 range check: organizationID_Qualifier." ;
+  ] ;
+  sh:property [
+    sh:path gs1:organizationID_Type ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:OrganizationID_Type ] ) ;
+    sh:message "GS1 range check: organizationID_Type." ;
+  ] ;
+  sh:property [
+    sh:path gs1:organizationID_URI ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#anyURI> ] ) ;
+    sh:message "GS1 range check: organizationID_URI." ;
+  ] ;
+.
+
+:gs1_OrganizationStatusHistoryShape
+  a sh:NodeShape ;
+  sh:targetClass gs1:OrganizationStatusHistory ;
+  sh:property [
+    sh:path gs1:organizationStatus ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:StatusType ] ) ;
+    sh:message "GS1 range check: organizationStatus." ;
+  ] ;
+  sh:property [
+    sh:path gs1:statusTimestamp ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#dateTime> ] ) ;
+    sh:message "GS1 range check: statusTimestamp." ;
+  ] ;
+.
+
+:gs1_PackagingDetailsShape
+  a sh:NodeShape ;
+  sh:targetClass gs1:PackagingDetails ;
+  sh:property [
+    sh:path gs1:hasReturnablePackageDeposit ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:ReturnablePackageDepositDetails ] ) ;
+    sh:message "GS1 range check: hasReturnablePackageDeposit." ;
+  ] ;
+  sh:property [
+    sh:path gs1:packagingFeature ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:PackagingFeatureCode ] ) ;
+    sh:message "GS1 range check: packagingFeature." ;
+  ] ;
+  sh:property [
+    sh:path gs1:packagingFunction ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:PackagingFunctionCode ] ) ;
+    sh:message "GS1 range check: packagingFunction." ;
+  ] ;
+  sh:property [
+    sh:path gs1:packagingMaterial ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:PackagingMaterialDetails ] ) ;
+    sh:message "GS1 range check: packagingMaterial." ;
+  ] ;
+  sh:property [
+    sh:path gs1:packagingRecyclingProcessType ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:PackagingRecyclingProcessTypeCode ] ) ;
+    sh:message "GS1 range check: packagingRecyclingProcessType." ;
+  ] ;
+  sh:property [
+    sh:path gs1:packagingRecyclingScheme ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:PackagingRecyclingSchemeCode ] ) ;
+    sh:message "GS1 range check: packagingRecyclingScheme." ;
+  ] ;
+  sh:property [
+    sh:path gs1:packagingShape ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:PackagingShapeCode ] ) ;
+    sh:message "GS1 range check: packagingShape." ;
+  ] ;
+  sh:property [
+    sh:path gs1:packagingType ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ] ) ;
+    sh:message "GS1 range check: packagingType." ;
+  ] ;
+.
+
+:gs1_PackagingMaterialDetailsShape
+  a sh:NodeShape ;
+  sh:targetClass gs1:PackagingMaterialDetails ;
+  sh:property [
+    sh:path gs1:packagingMaterialCompositionQuantity ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:QuantitativeValue ] ) ;
+    sh:message "GS1 range check: packagingMaterialCompositionQuantity." ;
+  ] ;
+  sh:property [
+    sh:path gs1:packagingMaterialThickness ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:QuantitativeValue ] ) ;
+    sh:message "GS1 range check: packagingMaterialThickness." ;
+  ] ;
+  sh:property [
+    sh:path gs1:packagingMaterialType ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:PackagingMaterialTypeCode ] ) ;
+    sh:message "GS1 range check: packagingMaterialType." ;
+  ] ;
+.
+
+:gs1_PlaceShape
+  a sh:NodeShape ;
+  sh:targetClass gs1:Place ;
+  sh:property [
+    sh:path gs1:additionalLocationID ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:LocationID_Details ] ) ;
+    sh:message "GS1 range check: additionalLocationID." ;
+  ] ;
+  sh:property [
+    sh:path gs1:address ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:PostalAddress ] ) ;
+    sh:message "GS1 range check: address." ;
+  ] ;
+  sh:property [
+    sh:path gs1:afterHoursContact ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:ContactPoint ] ) ;
+    sh:message "GS1 range check: afterHoursContact." ;
+  ] ;
+  sh:property [
+    sh:path gs1:baseLocation ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:Place ] ) ;
+    sh:message "GS1 range check: baseLocation." ;
+  ] ;
+  sh:property [
+    sh:path gs1:certification ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:CertificationDetails ] ) ;
+    sh:message "GS1 range check: certification." ;
+  ] ;
+  sh:property [
+    sh:path gs1:contactPoint ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:ContactPoint ] ) ;
+    sh:message "GS1 range check: contactPoint." ;
+  ] ;
+  sh:property [
+    sh:path gs1:containedInPlace ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:Place ] ) ;
+    sh:message "GS1 range check: containedInPlace." ;
+  ] ;
+  sh:property [
+    sh:path gs1:containsPlace ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:Place ] ) ;
+    sh:message "GS1 range check: containsPlace." ;
+  ] ;
+  sh:property [
+    sh:path gs1:digitalAddress ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ] ) ;
+    sh:message "GS1 range check: digitalAddress." ;
+  ] ;
+  sh:property [
+    sh:path gs1:digitalLocationName ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: digitalLocationName." ;
+  ] ;
+  sh:property [
+    sh:path gs1:geo ;
+    sh:severity sh:Warning ;
+    sh:message "GS1 range check: geo." ;
+  ] ;
+  sh:property [
+    sh:path gs1:glnType ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:GLN_TypeCode ] ) ;
+    sh:message "GS1 range check: glnType." ;
+  ] ;
+  sh:property [
+    sh:path gs1:globalLocationNumber ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ] ) ;
+    sh:message "GS1 range check: globalLocationNumber." ;
+  ] ;
+  sh:property [
+    sh:path gs1:leasedFrom ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:Organization ] ) ;
+    sh:message "GS1 range check: leasedFrom." ;
+  ] ;
+  sh:property [
+    sh:path gs1:leasedTo ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:Organization ] ) ;
+    sh:message "GS1 range check: leasedTo." ;
+  ] ;
+  sh:property [
+    sh:path gs1:locationDescription ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: locationDescription." ;
+  ] ;
+  sh:property [
+    sh:path gs1:locationFinalClosureDate ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#date> ] ) ;
+    sh:message "GS1 range check: locationFinalClosureDate." ;
+  ] ;
+  sh:property [
+    sh:path gs1:locationGLN ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ] ) ;
+    sh:message "GS1 range check: locationGLN." ;
+  ] ;
+  sh:property [
+    sh:path gs1:locationHistory ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:LocationStatusHistory ] ) ;
+    sh:message "GS1 range check: locationHistory." ;
+  ] ;
+  sh:property [
+    sh:path gs1:locationOpeningDate ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#date> ] ) ;
+    sh:message "GS1 range check: locationOpeningDate." ;
+  ] ;
+  sh:property [
+    sh:path gs1:locationRole ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:LocationRoleType ] ) ;
+    sh:message "GS1 range check: locationRole." ;
+  ] ;
+  sh:property [
+    sh:path gs1:managedBy ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:Organization ] ) ;
+    sh:message "GS1 range check: managedBy." ;
+  ] ;
+  sh:property [
+    sh:path gs1:managedFor ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:Organization ] ) ;
+    sh:message "GS1 range check: managedFor." ;
+  ] ;
+  sh:property [
+    sh:path gs1:occupiedBy ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:Organization ] ) ;
+    sh:message "GS1 range check: occupiedBy." ;
+  ] ;
+  sh:property [
+    sh:path gs1:ownedBy ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:Organization ] ) ;
+    sh:message "GS1 range check: ownedBy." ;
+  ] ;
+  sh:property [
+    sh:path gs1:physicalLocationName ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: physicalLocationName." ;
+  ] ;
+  sh:property [
+    sh:path gs1:primaryLocationOf ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:Organization ] ) ;
+    sh:message "GS1 range check: primaryLocationOf." ;
+  ] ;
+  sh:property [
+    sh:path gs1:relatedOrganization ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:Organization ] ) ;
+    sh:message "GS1 range check: relatedOrganization." ;
+  ] ;
+  sh:property [
+    sh:path gs1:replacedByPlace ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:Place ] ) ;
+    sh:message "GS1 range check: replacedByPlace." ;
+  ] ;
+  sh:property [
+    sh:path gs1:replacedPlace ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:Place ] ) ;
+    sh:message "GS1 range check: replacedPlace." ;
+  ] ;
+  sh:property [
+    sh:path gs1:responsibleOrganization ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:Organization ] ) ;
+    sh:message "GS1 range check: responsibleOrganization." ;
+  ] ;
+  sh:property [
+    sh:path gs1:siteAccessRequirements ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#anyURI> ] ) ;
+    sh:message "GS1 range check: siteAccessRequirements." ;
+  ] ;
+.
+
+:gs1_PostalAddressShape
+  a sh:NodeShape ;
+  sh:targetClass gs1:PostalAddress ;
+  sh:property [
+    sh:path gs1:addressCountry ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:Country ] ) ;
+    sh:message "GS1 range check: addressCountry." ;
+  ] ;
+  sh:property [
+    sh:path gs1:addressLocality ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: addressLocality." ;
+  ] ;
+  sh:property [
+    sh:path gs1:addressRegion ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: addressRegion." ;
+  ] ;
+  sh:property [
+    sh:path gs1:addressSuburb ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: addressSuburb." ;
+  ] ;
+  sh:property [
+    sh:path gs1:countyCode ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ] ) ;
+    sh:message "GS1 range check: countyCode." ;
+  ] ;
+  sh:property [
+    sh:path gs1:crossStreet ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: crossStreet." ;
+  ] ;
+  sh:property [
+    sh:path gs1:organizationName ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: organizationName." ;
+  ] ;
+  sh:property [
+    sh:path gs1:postOfficeBoxNumber ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ] ) ;
+    sh:message "GS1 range check: postOfficeBoxNumber." ;
+  ] ;
+  sh:property [
+    sh:path gs1:postalCode ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ] ) ;
+    sh:message "GS1 range check: postalCode." ;
+  ] ;
+  sh:property [
+    sh:path gs1:postalName ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: postalName." ;
+  ] ;
+  sh:property [
+    sh:path gs1:streetAddress ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: streetAddress." ;
+  ] ;
+  sh:property [
+    sh:path gs1:streetAddressLine2 ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: streetAddressLine2." ;
+  ] ;
+  sh:property [
+    sh:path gs1:streetAddressLine3 ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: streetAddressLine3." ;
+  ] ;
+  sh:property [
+    sh:path gs1:streetAddressLine4 ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: streetAddressLine4." ;
+  ] ;
+.
+
+:gs1_PriceSpecificationShape
+  a sh:NodeShape ;
+  sh:targetClass gs1:PriceSpecification ;
+  sh:property [
+    sh:path gs1:dutyFeeTaxAmount ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#float> ] ) ;
+    sh:message "GS1 range check: dutyFeeTaxAmount." ;
+  ] ;
+  sh:property [
+    sh:path gs1:dutyFeeTaxDescription ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: dutyFeeTaxDescription." ;
+  ] ;
+  sh:property [
+    sh:path gs1:dutyFeeTaxRate ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#float> ] ) ;
+    sh:message "GS1 range check: dutyFeeTaxRate." ;
+  ] ;
+  sh:property [
+    sh:path gs1:eligibleQuantity ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:QuantitativeValue ] ) ;
+    sh:message "GS1 range check: eligibleQuantity." ;
+  ] ;
+  sh:property [
+    sh:path gs1:eligibleQuantityMaximum ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:QuantitativeValue ] ) ;
+    sh:message "GS1 range check: eligibleQuantityMaximum." ;
+  ] ;
+  sh:property [
+    sh:path gs1:eligibleQuantityMinimum ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:QuantitativeValue ] ) ;
+    sh:message "GS1 range check: eligibleQuantityMinimum." ;
+  ] ;
+  sh:property [
+    sh:path gs1:maxPrice ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#float> ] ) ;
+    sh:message "GS1 range check: maxPrice." ;
+  ] ;
+  sh:property [
+    sh:path gs1:minPrice ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#float> ] ) ;
+    sh:message "GS1 range check: minPrice." ;
+  ] ;
+  sh:property [
+    sh:path gs1:price ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#float> ] ) ;
+    sh:message "GS1 range check: price." ;
+  ] ;
+  sh:property [
+    sh:path gs1:priceCurrency ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ] ) ;
+    sh:message "GS1 range check: priceCurrency." ;
+  ] ;
+  sh:property [
+    sh:path gs1:validFrom ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#dateTime> ] ) ;
+    sh:message "GS1 range check: validFrom." ;
+  ] ;
+  sh:property [
+    sh:path gs1:validThrough ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#dateTime> ] ) ;
+    sh:message "GS1 range check: validThrough." ;
+  ] ;
+.
+
+:gs1_ProductShape
+  a sh:NodeShape ;
+  sh:targetClass gs1:Product ;
+  sh:property [
+    sh:path gs1:additionalProductClassification ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:AdditionalProductClassificationDetails ] ) ;
+    sh:message "GS1 range check: additionalProductClassification." ;
+  ] ;
+  sh:property [
+    sh:path gs1:additionalProductDescription ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: additionalProductDescription." ;
+  ] ;
+  sh:property [
+    sh:path gs1:additive ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:AdditiveDetails ] ) ;
+    sh:message "GS1 range check: additive." ;
+  ] ;
+  sh:property [
+    sh:path gs1:audioFile ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:ReferencedFileDetails ] ) ;
+    sh:message "GS1 range check: audioFile." ;
+  ] ;
+  sh:property [
+    sh:path gs1:authenticity ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:AuthenticityDetails ] ) ;
+    sh:message "GS1 range check: authenticity." ;
+  ] ;
+  sh:property [
+    sh:path gs1:awardPrize ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:AwardPrizeDetails ] ) ;
+    sh:message "GS1 range check: awardPrize." ;
+  ] ;
+  sh:property [
+    sh:path gs1:bestBeforeDate ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#date> ] ) ;
+    sh:message "GS1 range check: bestBeforeDate." ;
+  ] ;
+  sh:property [
+    sh:path gs1:brand ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:Brand ] ) ;
+    sh:message "GS1 range check: brand." ;
+  ] ;
+  sh:property [
+    sh:path gs1:brandOwner ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:Organization ] ) ;
+    sh:message "GS1 range check: brandOwner." ;
+  ] ;
+  sh:property [
+    sh:path gs1:certification ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:CertificationDetails ] ) ;
+    sh:message "GS1 range check: certification." ;
+  ] ;
+  sh:property [
+    sh:path gs1:colourCode ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:ColourCodeDetails ] ) ;
+    sh:message "GS1 range check: colourCode." ;
+  ] ;
+  sh:property [
+    sh:path gs1:colourDescription ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: colourDescription." ;
+  ] ;
+  sh:property [
+    sh:path gs1:compulsoryAdditionalInformation ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:CompulsoryAdditionalInformation ] ) ;
+    sh:message "GS1 range check: compulsoryAdditionalInformation." ;
+  ] ;
+  sh:property [
+    sh:path gs1:consumerHandlingStorage ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:ReferencedFileDetails ] ) ;
+    sh:message "GS1 range check: consumerHandlingStorage." ;
+  ] ;
+  sh:property [
+    sh:path gs1:consumerPackageDisclaimer ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: consumerPackageDisclaimer." ;
+  ] ;
+  sh:property [
+    sh:path gs1:consumerProductVariant ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ] ) ;
+    sh:message "GS1 range check: consumerProductVariant." ;
+  ] ;
+  sh:property [
+    sh:path gs1:consumerRecyclingInstructions ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: consumerRecyclingInstructions." ;
+  ] ;
+  sh:property [
+    sh:path gs1:consumerSafetyInformation ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: consumerSafetyInformation." ;
+  ] ;
+  sh:property [
+    sh:path gs1:consumerSalesCondition ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:ConsumerSalesConditionsCode ] ) ;
+    sh:message "GS1 range check: consumerSalesCondition." ;
+  ] ;
+  sh:property [
+    sh:path gs1:consumerStorageInstructions ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: consumerStorageInstructions." ;
+  ] ;
+  sh:property [
+    sh:path gs1:consumerUsageInstructions ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: consumerUsageInstructions." ;
+  ] ;
+  sh:property [
+    sh:path gs1:countryOfAssembly ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:Country ] ) ;
+    sh:message "GS1 range check: countryOfAssembly." ;
+  ] ;
+  sh:property [
+    sh:path gs1:countryOfLastProcessing ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:Country ] ) ;
+    sh:message "GS1 range check: countryOfLastProcessing." ;
+  ] ;
+  sh:property [
+    sh:path gs1:countryOfOrigin ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:Country ] ) ;
+    sh:message "GS1 range check: countryOfOrigin." ;
+  ] ;
+  sh:property [
+    sh:path gs1:countryOfOriginStatement ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: countryOfOriginStatement." ;
+  ] ;
+  sh:property [
+    sh:path gs1:customerSupportCentre ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:Organization ] ) ;
+    sh:message "GS1 range check: customerSupportCentre." ;
+  ] ;
+  sh:property [
+    sh:path gs1:dependentProprietaryProduct ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:Product ] ) ;
+    sh:message "GS1 range check: dependentProprietaryProduct." ;
+  ] ;
+  sh:property [
+    sh:path gs1:descriptiveSize ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: descriptiveSize." ;
+  ] ;
+  sh:property [
+    sh:path gs1:dueDate ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#date> ] ) ;
+    sh:message "GS1 range check: dueDate." ;
+  ] ;
+  sh:property [
+    sh:path gs1:equivalentProduct ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:Product ] ) ;
+    sh:message "GS1 range check: equivalentProduct." ;
+  ] ;
+  sh:property [
+    sh:path gs1:expirationDate ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#date> ] ) ;
+    sh:message "GS1 range check: expirationDate." ;
+  ] ;
+  sh:property [
+    sh:path gs1:expirationDateTime ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#dateTime> ] ) ;
+    sh:message "GS1 range check: expirationDateTime." ;
+  ] ;
+  sh:property [
+    sh:path gs1:firstFreezeDate ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#date> ] ) ;
+    sh:message "GS1 range check: firstFreezeDate." ;
+  ] ;
+  sh:property [
+    sh:path gs1:functionalName ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: functionalName." ;
+  ] ;
+  sh:property [
+    sh:path gs1:gpcCategoryCode ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ] ) ;
+    sh:message "GS1 range check: gpcCategoryCode." ;
+  ] ;
+  sh:property [
+    sh:path gs1:gpcCategoryDescription ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: gpcCategoryDescription." ;
+  ] ;
+  sh:property [
+    sh:path gs1:grossArea ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:QuantitativeValue ] ) ;
+    sh:message "GS1 range check: grossArea." ;
+  ] ;
+  sh:property [
+    sh:path gs1:grossVolume ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:QuantitativeValue ] ) ;
+    sh:message "GS1 range check: grossVolume." ;
+  ] ;
+  sh:property [
+    sh:path gs1:grossWeight ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:QuantitativeValue ] ) ;
+    sh:message "GS1 range check: grossWeight." ;
+  ] ;
+  sh:property [
+    sh:path gs1:growingMethod ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:GrowingMethodCode ] ) ;
+    sh:message "GS1 range check: growingMethod." ;
+  ] ;
+  sh:property [
+    sh:path gs1:gtin ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ] ) ;
+    sh:message "GS1 range check: gtin." ;
+  ] ;
+  sh:property [
+    sh:path gs1:harvestDate ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#date> ] ) ;
+    sh:message "GS1 range check: harvestDate." ;
+  ] ;
+  sh:property [
+    sh:path gs1:harvestDateEnd ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#date> ] ) ;
+    sh:message "GS1 range check: harvestDateEnd." ;
+  ] ;
+  sh:property [
+    sh:path gs1:harvestDateStart ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#date> ] ) ;
+    sh:message "GS1 range check: harvestDateStart." ;
+  ] ;
+  sh:property [
+    sh:path gs1:hasBatchLotNumber ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ] ) ;
+    sh:message "GS1 range check: hasBatchLotNumber." ;
+  ] ;
+  sh:property [
+    sh:path gs1:hasSerialNumber ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ] ) ;
+    sh:message "GS1 range check: hasSerialNumber." ;
+  ] ;
+  sh:property [
+    sh:path gs1:hasThirdPartyControlledSerialNumber ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ] ) ;
+    sh:message "GS1 range check: hasThirdPartyControlledSerialNumber." ;
+  ] ;
+  sh:property [
+    sh:path gs1:healthClaimDescription ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: healthClaimDescription." ;
+  ] ;
+  sh:property [
+    sh:path gs1:image ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:ReferencedFileDetails ] ) ;
+    sh:message "GS1 range check: image." ;
+  ] ;
+  sh:property [
+    sh:path gs1:inPackageDepth ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:QuantitativeValue ] ) ;
+    sh:message "GS1 range check: inPackageDepth." ;
+  ] ;
+  sh:property [
+    sh:path gs1:inPackageDiameter ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:QuantitativeValue ] ) ;
+    sh:message "GS1 range check: inPackageDiameter." ;
+  ] ;
+  sh:property [
+    sh:path gs1:inPackageHeight ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:QuantitativeValue ] ) ;
+    sh:message "GS1 range check: inPackageHeight." ;
+  ] ;
+  sh:property [
+    sh:path gs1:inPackageWidth ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:QuantitativeValue ] ) ;
+    sh:message "GS1 range check: inPackageWidth." ;
+  ] ;
+  sh:property [
+    sh:path gs1:includedAccessories ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: includedAccessories." ;
+  ] ;
+  sh:property [
+    sh:path gs1:instructionsForUse ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:ReferencedFileDetails ] ) ;
+    sh:message "GS1 range check: instructionsForUse." ;
+  ] ;
+  sh:property [
+    sh:path gs1:isProductRecalled ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#boolean> ] ) ;
+    sh:message "GS1 range check: isProductRecalled." ;
+  ] ;
+  sh:property [
+    sh:path gs1:jws ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#anyURI> ] ) ;
+    sh:message "GS1 range check: jws." ;
+  ] ;
+  sh:property [
+    sh:path gs1:manufacturer ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:Organization ] ) ;
+    sh:message "GS1 range check: manufacturer." ;
+  ] ;
+  sh:property [
+    sh:path gs1:manufacturersWarranty ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:WarrantyPromise ] ) ;
+    sh:message "GS1 range check: manufacturersWarranty." ;
+  ] ;
+  sh:property [
+    sh:path gs1:manufacturingPlant ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:Organization ] ) ;
+    sh:message "GS1 range check: manufacturingPlant." ;
+  ] ;
+  sh:property [
+    sh:path gs1:massPerUnitArea ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:QuantitativeValue ] ) ;
+    sh:message "GS1 range check: massPerUnitArea." ;
+  ] ;
+  sh:property [
+    sh:path gs1:netArea ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:QuantitativeValue ] ) ;
+    sh:message "GS1 range check: netArea." ;
+  ] ;
+  sh:property [
+    sh:path gs1:netContent ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:QuantitativeValue ] ) ;
+    sh:message "GS1 range check: netContent." ;
+  ] ;
+  sh:property [
+    sh:path gs1:netWeight ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:QuantitativeValue ] ) ;
+    sh:message "GS1 range check: netWeight." ;
+  ] ;
+  sh:property [
+    sh:path gs1:organicClaim ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:OrganicClaimDetails ] ) ;
+    sh:message "GS1 range check: organicClaim." ;
+  ] ;
+  sh:property [
+    sh:path gs1:outOfPackageDepth ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:QuantitativeValue ] ) ;
+    sh:message "GS1 range check: outOfPackageDepth." ;
+  ] ;
+  sh:property [
+    sh:path gs1:outOfPackageDiameter ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:QuantitativeValue ] ) ;
+    sh:message "GS1 range check: outOfPackageDiameter." ;
+  ] ;
+  sh:property [
+    sh:path gs1:outOfPackageHeight ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:QuantitativeValue ] ) ;
+    sh:message "GS1 range check: outOfPackageHeight." ;
+  ] ;
+  sh:property [
+    sh:path gs1:outOfPackageWidth ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:QuantitativeValue ] ) ;
+    sh:message "GS1 range check: outOfPackageWidth." ;
+  ] ;
+  sh:property [
+    sh:path gs1:packaging ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:PackagingDetails ] ) ;
+    sh:message "GS1 range check: packaging." ;
+  ] ;
+  sh:property [
+    sh:path gs1:packagingDate ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#date> ] ) ;
+    sh:message "GS1 range check: packagingDate." ;
+  ] ;
+  sh:property [
+    sh:path gs1:packagingMarkedLabelAccreditation ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:PackagingMarkedLabelAccreditationCode ] ) ;
+    sh:message "GS1 range check: packagingMarkedLabelAccreditation." ;
+  ] ;
+  sh:property [
+    sh:path gs1:primaryAlternateProduct ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:Product ] ) ;
+    sh:message "GS1 range check: primaryAlternateProduct." ;
+  ] ;
+  sh:property [
+    sh:path gs1:productDescription ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: productDescription." ;
+  ] ;
+  sh:property [
+    sh:path gs1:productFeatureBenefit ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: productFeatureBenefit." ;
+  ] ;
+  sh:property [
+    sh:path gs1:productFormDescription ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: productFormDescription." ;
+  ] ;
+  sh:property [
+    sh:path gs1:productID ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ] ) ;
+    sh:message "GS1 range check: productID." ;
+  ] ;
+  sh:property [
+    sh:path gs1:productMarketingMessage ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: productMarketingMessage." ;
+  ] ;
+  sh:property [
+    sh:path gs1:productName ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: productName." ;
+  ] ;
+  sh:property [
+    sh:path gs1:productRange ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: productRange." ;
+  ] ;
+  sh:property [
+    sh:path gs1:productSustainabilityInfo ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#anyURI> ] ) ;
+    sh:message "GS1 range check: productSustainabilityInfo." ;
+  ] ;
+  sh:property [
+    sh:path gs1:productionDate ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#date> ] ) ;
+    sh:message "GS1 range check: productionDate." ;
+  ] ;
+  sh:property [
+    sh:path gs1:productionDateTime ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#dateTime> ] ) ;
+    sh:message "GS1 range check: productionDateTime." ;
+  ] ;
+  sh:property [
+    sh:path gs1:productionVariantDescription ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: productionVariantDescription." ;
+  ] ;
+  sh:property [
+    sh:path gs1:productionVariantEffectiveDateTime ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#dateTime> ] ) ;
+    sh:message "GS1 range check: productionVariantEffectiveDateTime." ;
+  ] ;
+  sh:property [
+    sh:path gs1:provenanceStatement ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: provenanceStatement." ;
+  ] ;
+  sh:property [
+    sh:path gs1:referencedFile ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:ReferencedFileDetails ] ) ;
+    sh:message "GS1 range check: referencedFile." ;
+  ] ;
+  sh:property [
+    sh:path gs1:regulatedProductName ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: regulatedProductName." ;
+  ] ;
+  sh:property [
+    sh:path gs1:regulatoryInformation ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:RegulatoryInformation ] ) ;
+    sh:message "GS1 range check: regulatoryInformation." ;
+  ] ;
+  sh:property [
+    sh:path gs1:replacedByProduct ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:Product ] ) ;
+    sh:message "GS1 range check: replacedByProduct." ;
+  ] ;
+  sh:property [
+    sh:path gs1:replacedProduct ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:Product ] ) ;
+    sh:message "GS1 range check: replacedProduct." ;
+  ] ;
+  sh:property [
+    sh:path gs1:sellByDate ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#date> ] ) ;
+    sh:message "GS1 range check: sellByDate." ;
+  ] ;
+  sh:property [
+    sh:path gs1:sizeCode ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:SizeCodeDetails ] ) ;
+    sh:message "GS1 range check: sizeCode." ;
+  ] ;
+  sh:property [
+    sh:path gs1:supplierSpecifiedMinimumConsumerStorageDays ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#integer> ] ) ;
+    sh:message "GS1 range check: supplierSpecifiedMinimumConsumerStorageDays." ;
+  ] ;
+  sh:property [
+    sh:path gs1:targetMarket ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:TargetMarketDetails ] ) ;
+    sh:message "GS1 range check: targetMarket." ;
+  ] ;
+  sh:property [
+    sh:path gs1:variantDescription ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: variantDescription." ;
+  ] ;
+  sh:property [
+    sh:path gs1:warningCopyDescription ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: warningCopyDescription." ;
+  ] ;
+.
+
+:gs1_ProductYieldDetailsShape
+  a sh:NodeShape ;
+  sh:targetClass gs1:ProductYieldDetails ;
+  sh:property [
+    sh:path gs1:productYield ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:QuantitativeValue ] ) ;
+    sh:message "GS1 range check: productYield." ;
+  ] ;
+  sh:property [
+    sh:path gs1:productYieldType ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:ProductYieldTypeCode ] ) ;
+    sh:message "GS1 range check: productYieldType." ;
+  ] ;
+  sh:property [
+    sh:path gs1:productYieldVariationPercentage ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#float> ] ) ;
+    sh:message "GS1 range check: productYieldVariationPercentage." ;
+  ] ;
+.
+
+:gs1_QuantitativeValueShape
+  a sh:NodeShape ;
+  sh:targetClass gs1:QuantitativeValue ;
+  sh:property [
+    sh:path gs1:unitCode ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ] ) ;
+    sh:message "GS1 range check: unitCode." ;
+  ] ;
+  sh:property [
+    sh:path gs1:value ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#float> ] ) ;
+    sh:message "GS1 range check: value." ;
+  ] ;
+.
+
+:gs1_ReferencedFileDetailsShape
+  a sh:NodeShape ;
+  sh:targetClass gs1:ReferencedFileDetails ;
+  sh:property [
+    sh:path gs1:fileLanguageCode ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ] ) ;
+    sh:message "GS1 range check: fileLanguageCode." ;
+  ] ;
+  sh:property [
+    sh:path gs1:filePixelHeight ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#integer> ] ) ;
+    sh:message "GS1 range check: filePixelHeight." ;
+  ] ;
+  sh:property [
+    sh:path gs1:filePixelWidth ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#integer> ] ) ;
+    sh:message "GS1 range check: filePixelWidth." ;
+  ] ;
+  sh:property [
+    sh:path gs1:referencedFileEffectiveEndDateTime ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#dateTime> ] ) ;
+    sh:message "GS1 range check: referencedFileEffectiveEndDateTime." ;
+  ] ;
+  sh:property [
+    sh:path gs1:referencedFileEffectiveStartDateTime ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#dateTime> ] ) ;
+    sh:message "GS1 range check: referencedFileEffectiveStartDateTime." ;
+  ] ;
+  sh:property [
+    sh:path gs1:referencedFileSize ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:QuantitativeValue ] ) ;
+    sh:message "GS1 range check: referencedFileSize." ;
+  ] ;
+  sh:property [
+    sh:path gs1:referencedFileType ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:ReferencedFileTypeCode ] ) ;
+    sh:message "GS1 range check: referencedFileType." ;
+  ] ;
+  sh:property [
+    sh:path gs1:referencedFileURL ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#anyURI> ] ) ;
+    sh:message "GS1 range check: referencedFileURL." ;
+  ] ;
+.
+
+:gs1_RegulatoryIdentifierShape
+  a sh:NodeShape ;
+  sh:targetClass gs1:RegulatoryIdentifier ;
+  sh:property [
+    sh:path gs1:applicableProducts ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:Product ] ) ;
+    sh:message "GS1 range check: applicableProducts." ;
+  ] ;
+  sh:property [
+    sh:path gs1:regulatoryIdentifierType ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:RegulatoryIdentifierType ] ) ;
+    sh:message "GS1 range check: regulatoryIdentifierType." ;
+  ] ;
+  sh:property [
+    sh:path gs1:regulatoryInformationProvider ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:Organization ] ) ;
+    sh:message "GS1 range check: regulatoryInformationProvider." ;
+  ] ;
+  sh:property [
+    sh:path gs1:regulatoryReferenceApplicabilityEndDate ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#date> ] ) ;
+    sh:message "GS1 range check: regulatoryReferenceApplicabilityEndDate." ;
+  ] ;
+  sh:property [
+    sh:path gs1:regulatoryReferenceApplicabilityStartDate ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#date> ] ) ;
+    sh:message "GS1 range check: regulatoryReferenceApplicabilityStartDate." ;
+  ] ;
+  sh:property [
+    sh:path gs1:regulatoryReferenceNumber ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ] ) ;
+    sh:message "GS1 range check: regulatoryReferenceNumber." ;
+  ] ;
+  sh:property [
+    sh:path gs1:regulatoryVerificationNumber ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ] ) ;
+    sh:message "GS1 range check: regulatoryVerificationNumber." ;
+  ] ;
+.
+
+:gs1_RegulatoryInformationShape
+  a sh:NodeShape ;
+  sh:targetClass gs1:RegulatoryInformation ;
+  sh:property [
+    sh:path gs1:applicableTransactions ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:Transaction ] ) ;
+    sh:message "GS1 range check: applicableTransactions." ;
+  ] ;
+  sh:property [
+    sh:path gs1:regulationType ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:RegulationTypeCode ] ) ;
+    sh:message "GS1 range check: regulationType." ;
+  ] ;
+  sh:property [
+    sh:path gs1:regulatoryAct ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ] ) ;
+    sh:message "GS1 range check: regulatoryAct." ;
+  ] ;
+  sh:property [
+    sh:path gs1:regulatoryIdentifier ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:RegulatoryIdentifier ] ) ;
+    sh:message "GS1 range check: regulatoryIdentifier." ;
+  ] ;
+.
+
+:gs1_RegulatoryNotificationShape
+  a sh:NodeShape ;
+  sh:targetClass gs1:RegulatoryNotification ;
+  sh:property [
+    sh:path gs1:regulatoryInformation ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:RegulatoryInformation ] ) ;
+    sh:message "GS1 range check: regulatoryInformation." ;
+  ] ;
+.
+
+:gs1_ReturnablePackageDepositDetailsShape
+  a sh:NodeShape ;
+  sh:targetClass gs1:ReturnablePackageDepositDetails ;
+  sh:property [
+    sh:path gs1:returnablePackageDepositAmount ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:PriceSpecification ] ) ;
+    sh:message "GS1 range check: returnablePackageDepositAmount." ;
+  ] ;
+  sh:property [
+    sh:path gs1:returnablePackageDepositRegion ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:Country ] ) ;
+    sh:message "GS1 range check: returnablePackageDepositRegion." ;
+  ] ;
+.
+
+:gs1_SeafoodShape
+  a sh:NodeShape ;
+  sh:targetClass gs1:Seafood ;
+  sh:property [
+    sh:path gs1:catchZone ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: catchZone." ;
+  ] ;
+  sh:property [
+    sh:path gs1:fishType ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: fishType." ;
+  ] ;
+  sh:property [
+    sh:path gs1:freshOrSeawaterFarmed ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:FreshOrSeawaterFarmedCode ] ) ;
+    sh:message "GS1 range check: freshOrSeawaterFarmed." ;
+  ] ;
+  sh:property [
+    sh:path gs1:minimumFishContent ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:QuantitativeValue ] ) ;
+    sh:message "GS1 range check: minimumFishContent." ;
+  ] ;
+.
+
+:gs1_SizeCodeDetailsShape
+  a sh:NodeShape ;
+  sh:targetClass gs1:SizeCodeDetails ;
+  sh:property [
+    sh:path gs1:sizeCodeListCode ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ] ) ;
+    sh:message "GS1 range check: sizeCodeListCode." ;
+  ] ;
+  sh:property [
+    sh:path gs1:sizeCodeValue ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ] ) ;
+    sh:message "GS1 range check: sizeCodeValue." ;
+  ] ;
+.
+
+:gs1_SizeDetailsShape
+  a sh:NodeShape ;
+  sh:targetClass gs1:SizeDetails ;
+  sh:property [
+    sh:path gs1:sizeDimension ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:QuantitativeValue ] ) ;
+    sh:message "GS1 range check: sizeDimension." ;
+  ] ;
+  sh:property [
+    sh:path gs1:sizeGroup ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:SizeGroupCode ] ) ;
+    sh:message "GS1 range check: sizeGroup." ;
+  ] ;
+  sh:property [
+    sh:path gs1:sizeSystem ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:SizeSystemCode ] ) ;
+    sh:message "GS1 range check: sizeSystem." ;
+  ] ;
+  sh:property [
+    sh:path gs1:sizeType ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:SizeTypeCode ] ) ;
+    sh:message "GS1 range check: sizeType." ;
+  ] ;
+.
+
+:gs1_TargetMarketDetailsShape
+  a sh:NodeShape ;
+  sh:targetClass gs1:TargetMarketDetails ;
+  sh:property [
+    sh:path gs1:consumerFirstAvailabilityDateTime ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#dateTime> ] ) ;
+    sh:message "GS1 range check: consumerFirstAvailabilityDateTime." ;
+  ] ;
+  sh:property [
+    sh:path gs1:targetMarketCountries ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:Country ] ) ;
+    sh:message "GS1 range check: targetMarketCountries." ;
+  ] ;
+.
+
+:gs1_TextileMaterialDetailsShape
+  a sh:NodeShape ;
+  sh:targetClass gs1:TextileMaterialDetails ;
+  sh:property [
+    sh:path gs1:textileMaterialDescription ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: textileMaterialDescription." ;
+  ] ;
+  sh:property [
+    sh:path gs1:textileMaterialPercentage ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#float> ] ) ;
+    sh:message "GS1 range check: textileMaterialPercentage." ;
+  ] ;
+  sh:property [
+    sh:path gs1:textileMaterialThreadCount ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: textileMaterialThreadCount." ;
+  ] ;
+  sh:property [
+    sh:path gs1:textileMaterialWeight ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:QuantitativeValue ] ) ;
+    sh:message "GS1 range check: textileMaterialWeight." ;
+  ] ;
+.
+
+:gs1_TransactionShape
+  a sh:NodeShape ;
+  sh:targetClass gs1:Transaction ;
+  sh:property [
+    sh:path gs1:transactionDate ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#date> ] ) ;
+    sh:message "GS1 range check: transactionDate." ;
+  ] ;
+  sh:property [
+    sh:path gs1:transactionID ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ] ) ;
+    sh:message "GS1 range check: transactionID." ;
+  ] ;
+  sh:property [
+    sh:path gs1:transactionType ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:TransactionType ] ) ;
+    sh:message "GS1 range check: transactionType." ;
+  ] ;
+.
+
+:gs1_TypeCodeShape
+  a sh:NodeShape ;
+  sh:targetClass gs1:TypeCode ;
+  sh:property [
+    sh:path gs1:originalCodeValue ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ] ) ;
+    sh:message "GS1 range check: originalCodeValue." ;
+  ] ;
+.
+
+:gs1_WarrantyPromiseShape
+  a sh:NodeShape ;
+  sh:targetClass gs1:WarrantyPromise ;
+  sh:property [
+    sh:path gs1:durationOfWarranty ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:QuantitativeValue ] ) ;
+    sh:message "GS1 range check: durationOfWarranty." ;
+  ] ;
+  sh:property [
+    sh:path gs1:warrantyScopeDescription ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: warrantyScopeDescription." ;
+  ] ;
+.
+
+:gs1_WearableProductShape
+  a sh:NodeShape ;
+  sh:targetClass gs1:WearableProduct ;
+  sh:property [
+    sh:path gs1:consumerLifestage ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:ConsumerLifestageCode ] ) ;
+    sh:message "GS1 range check: consumerLifestage." ;
+  ] ;
+  sh:property [
+    sh:path gs1:isPatterned ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:NonbinaryLogicCode ] ) ;
+    sh:message "GS1 range check: isPatterned." ;
+  ] ;
+  sh:property [
+    sh:path gs1:isThermal ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:NonbinaryLogicCode ] ) ;
+    sh:message "GS1 range check: isThermal." ;
+  ] ;
+  sh:property [
+    sh:path gs1:isWaterproof ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:NonbinaryLogicCode ] ) ;
+    sh:message "GS1 range check: isWaterproof." ;
+  ] ;
+  sh:property [
+    sh:path gs1:isWearableItemDisposable ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:NonbinaryLogicCode ] ) ;
+    sh:message "GS1 range check: isWearableItemDisposable." ;
+  ] ;
+  sh:property [
+    sh:path gs1:seasonCalendarYear ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#gYear> ] ) ;
+    sh:message "GS1 range check: seasonCalendarYear." ;
+  ] ;
+  sh:property [
+    sh:path gs1:seasonName ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: seasonName." ;
+  ] ;
+  sh:property [
+    sh:path gs1:seasonParameter ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:SeasonParameterCode ] ) ;
+    sh:message "GS1 range check: seasonParameter." ;
+  ] ;
+  sh:property [
+    sh:path gs1:size ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:SizeDetails ] ) ;
+    sh:message "GS1 range check: size." ;
+  ] ;
+  sh:property [
+    sh:path gs1:sportingActivityType ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:SportingActivityTypeCode ] ) ;
+    sh:message "GS1 range check: sportingActivityType." ;
+  ] ;
+  sh:property [
+    sh:path gs1:styleDescription ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: styleDescription." ;
+  ] ;
+  sh:property [
+    sh:path gs1:targetConsumerAge ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ] ) ;
+    sh:message "GS1 range check: targetConsumerAge." ;
+  ] ;
+  sh:property [
+    sh:path gs1:targetConsumerGender ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:class gs1:TargetConsumerGenderCode ] ) ;
+    sh:message "GS1 range check: targetConsumerGender." ;
+  ] ;
+  sh:property [
+    sh:path gs1:textileMaterialContent ;
+    sh:severity sh:Warning ;
+    sh:or ( [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ] ) ;
+    sh:message "GS1 range check: textileMaterialContent." ;
+  ] ;
+.
