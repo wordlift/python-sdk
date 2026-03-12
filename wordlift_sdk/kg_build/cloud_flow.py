@@ -27,6 +27,7 @@ logger = logging.getLogger(__name__)
 @dataclass(frozen=True)
 class CloudWorkflowConfig:
     wordlift_key: str
+    graph_write_strategy: str = "patch"
     sheets_service_account_json: str | None = None
     overwrite: bool = False
     concurrency: int = 4
@@ -239,6 +240,7 @@ async def run_cloud_workflow(
                 debug_dir=debug_dir,
                 workflow_config=config,
                 on_progress=on_progress,
+                graph_write_strategy=config.graph_write_strategy,
             )
         except TypeError:
             protocol = protocol_factory(context)

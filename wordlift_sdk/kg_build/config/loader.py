@@ -105,6 +105,17 @@ ENV_PARSERS: dict[str, Callable[[str], Any]] = {
     "canonical_id_strategy": str,
 }
 
+STRUCTURAL_PROFILE_KEYS = {
+    "inherit",
+    "api_key",
+    "mapping_mode",
+    "strict_mapping",
+    "mapping",
+    "templates_dir",
+    "mappings_dir",
+    "mappings",
+}
+
 
 INTERPOLATION_PATTERN = re.compile(r"\$\{([A-Z0-9_]+)\}")
 
@@ -172,6 +183,16 @@ def _normalize_runtime_setting_types(raw: dict[str, Any], profile_name: str) -> 
                 raise ProfileConfigError(
                     f"Profile '{profile_name}': invalid value for '{key}': {value}"
                 ) from exc
+
+
+def _build_runtime_settings(merged: dict[str, Any]) -> dict[str, Any]:
+    settings = {
+        key: deepcopy(value)
+        for key, value in merged.items()
+        if key not in STRUCTURAL_PROFILE_KEYS
+    }
+    settings["api_url"] = merged.get("api_url", "https://api.wordlift.io")
+    return settings
 
 
 def _build_routes(
@@ -330,8 +351,7 @@ def load_profile_config(
 
         routes = _build_routes(merged, name)
 
-        settings = {key: merged[key] for key in ENV_PARSERS if key in merged}
-        settings["api_url"] = merged.get("api_url", "https://api.wordlift.io")
+        settings = _build_runtime_settings(merged)
         origins = {
             "mapping": _key_origin(
                 name=name,

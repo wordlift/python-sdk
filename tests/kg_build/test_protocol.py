@@ -60,6 +60,7 @@ def _make_context() -> SimpleNamespace:
     return SimpleNamespace(
         account=SimpleNamespace(dataset_uri="https://data.example.com/dataset"),
         client_configuration=SimpleNamespace(api_key={}),
+        graph_queue=SimpleNamespace(put=AsyncMock()),
         configuration_provider=SimpleNamespace(
             get_value=lambda *_args, **_kwargs: None
         ),
@@ -70,6 +71,7 @@ def _make_context_without_dataset() -> SimpleNamespace:
     return SimpleNamespace(
         account=SimpleNamespace(dataset_uri=None),
         client_configuration=SimpleNamespace(api_key={}),
+        graph_queue=SimpleNamespace(put=AsyncMock()),
         configuration_provider=SimpleNamespace(
             get_value=lambda *_args, **_kwargs: None
         ),
@@ -153,6 +155,174 @@ async def test_profile_protocol_reconciles_to_existing_id_and_sets_source():
         RDF.type,
         URIRef("http://schema.org/WebPage"),
     ) in patched_graph
+
+
+@pytest.mark.asyncio
+async def test_profile_protocol_put_strategy_writes_to_graph_queue() -> None:
+    context = _make_context()
+    protocol = ProfileImportProtocol(
+        context=context,
+        profile=_make_profile(),
+        root_dir=Path.cwd(),
+        graph_write_strategy="put",
+    )
+    protocol._patch_static_templates_once = AsyncMock()
+    protocol._resolve_mapping_path = MagicMock(return_value=Path("mapping.yarrrml"))
+    protocol._get_mapping_content = MagicMock(return_value="mapping")
+    protocol._core_ids.process_graph = MagicMock(side_effect=lambda g, _: g)
+    protocol._apply_postprocessors = MagicMock(side_effect=lambda g, *_: g)
+    protocol.patcher.patch_all = AsyncMock()
+    protocol.rml_service.apply_mapping = AsyncMock(
+        return_value=_make_dataset_scoped_graph()
+    )
+
+    response = WebPageScrapeResponse(
+        web_page=WebPage(url="https://example.com/page", html="<html></html>")
+    )
+
+    await protocol.callback(response)
+
+    context.graph_queue.put.assert_awaited_once()
+    protocol.patcher.patch_all.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_static_templates_use_graph_queue_when_put_strategy_enabled() -> None:
+    context = _make_context()
+    protocol = ProfileImportProtocol(
+        context=context,
+        profile=_make_profile(),
+        root_dir=Path.cwd(),
+        graph_write_strategy="put",
+    )
+    protocol._template_graph = _make_dataset_scoped_graph()
+    protocol._template_exports = {}
+    protocol._validate_graph_if_enabled = MagicMock(return_value=None)
+    protocol._emit_progress = MagicMock()
+    protocol._kpi.record_graph = MagicMock()
+    protocol.patcher.patch_all = AsyncMock()
+
+    await protocol._patch_static_templates_once()
+
+    context.graph_queue.put.assert_awaited_once_with(protocol._template_graph)
+    protocol.patcher.patch_all.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_profile_protocol_put_strategy_honors_import_hash_write_mode() -> None:
+    context = _make_context()
+    protocol = ProfileImportProtocol(
+        context=context,
+        profile=_make_profile_with_overrides(settings={"import_hash_mode": "write"}),
+        root_dir=Path.cwd(),
+        graph_write_strategy="put",
+    )
+    protocol._patch_static_templates_once = AsyncMock()
+    protocol._resolve_mapping_path = MagicMock(return_value=Path("mapping.yarrrml"))
+    protocol._get_mapping_content = MagicMock(return_value="mapping")
+    protocol._core_ids.process_graph = MagicMock(side_effect=lambda g, _: g)
+    protocol._apply_postprocessors = MagicMock(side_effect=lambda g, *_: g)
+    protocol.patcher.patch_all = AsyncMock()
+    graph = _make_dataset_scoped_graph()
+    child = URIRef("https://data.example.com/dataset/entities/article-1/faq/1")
+    graph.add(
+        (
+            URIRef("https://data.example.com/dataset/entities/article-1"),
+            URIRef("https://schema.org/hasPart"),
+            child,
+        )
+    )
+    graph.add((child, RDF.type, URIRef("https://schema.org/Question")))
+    protocol.rml_service.apply_mapping = AsyncMock(return_value=graph)
+
+    response = WebPageScrapeResponse(
+        web_page=WebPage(url="https://example.com/page", html="<html></html>")
+    )
+    await protocol.callback(response)
+
+    queued_graph = context.graph_queue.put.await_args.args[0]
+    for subject in (URIRef("https://data.example.com/dataset/web-pages/1"),):
+        values = list(
+            queued_graph.objects(subject, URIRef("https://w3id.org/seovoc/importHash"))
+        )
+        assert len(values) == 1
+        assert str(values[0]).strip()
+    assert not list(
+        queued_graph.objects(child, URIRef("https://w3id.org/seovoc/importHash"))
+    )
+
+
+@pytest.mark.asyncio
+async def test_profile_protocol_put_strategy_skips_when_import_hash_matches() -> None:
+    context = _make_context()
+    protocol = ProfileImportProtocol(
+        context=context,
+        profile=_make_profile(),
+        root_dir=Path.cwd(),
+        graph_write_strategy="put",
+    )
+    protocol._patch_static_templates_once = AsyncMock()
+    protocol._resolve_mapping_path = MagicMock(return_value=Path("mapping.yarrrml"))
+    protocol._get_mapping_content = MagicMock(return_value="mapping")
+    protocol._core_ids.process_graph = MagicMock(side_effect=lambda g, _: g)
+    protocol._apply_postprocessors = MagicMock(side_effect=lambda g, *_: g)
+    protocol.patcher.patch_all = AsyncMock()
+    graph = _make_dataset_scoped_graph()
+    protocol._set_source(graph, existing_web_page_id=None)
+    expected_hash = protocol.patcher._compute_import_hash(
+        URIRef("https://data.example.com/dataset/web-pages/1"),
+        graph,
+        "https://data.example.com/dataset",
+    )
+    protocol.rml_service.apply_mapping = AsyncMock(return_value=graph)
+
+    response = WebPageScrapeResponse(
+        web_page=WebPage(url="https://example.com/page", html="<html></html>")
+    )
+    await protocol.callback(response, existing_import_hash=expected_hash)
+
+    context.graph_queue.put.assert_not_awaited()
+    protocol.patcher.patch_all.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_profile_protocol_put_strategy_honors_import_hash_off_mode() -> None:
+    context = _make_context()
+    protocol = ProfileImportProtocol(
+        context=context,
+        profile=_make_profile_with_overrides(settings={"import_hash_mode": "off"}),
+        root_dir=Path.cwd(),
+        graph_write_strategy="put",
+    )
+    protocol._patch_static_templates_once = AsyncMock()
+    protocol._resolve_mapping_path = MagicMock(return_value=Path("mapping.yarrrml"))
+    protocol._get_mapping_content = MagicMock(return_value="mapping")
+    protocol._core_ids.process_graph = MagicMock(side_effect=lambda g, _: g)
+    protocol._apply_postprocessors = MagicMock(side_effect=lambda g, *_: g)
+    protocol.patcher.patch_all = AsyncMock()
+    protocol.rml_service.apply_mapping = AsyncMock(
+        return_value=_make_dataset_scoped_graph()
+    )
+
+    response = WebPageScrapeResponse(
+        web_page=WebPage(url="https://example.com/page", html="<html></html>")
+    )
+    await protocol.callback(response)
+
+    queued_graph = context.graph_queue.put.await_args.args[0]
+    assert not list(
+        queued_graph.triples((None, URIRef("https://w3id.org/seovoc/importHash"), None))
+    )
+
+
+def test_protocol_rejects_unknown_graph_write_strategy() -> None:
+    with pytest.raises(ValueError, match="Unsupported graph_write_strategy: invalid"):
+        ProfileImportProtocol(
+            context=_make_context(),
+            profile=_make_profile(),
+            root_dir=Path.cwd(),
+            graph_write_strategy="invalid",
+        )
 
 
 @pytest.mark.asyncio
@@ -511,6 +681,28 @@ def test_build_pp_context_exposes_resolved_profile_and_account_key() -> None:
     assert context.account_key == "profile-secret"
     assert context.profile["name"] == "test-profile"
     assert context.profile["settings"]["api_url"] == "https://profile-api.example.com"
+
+
+def test_build_pp_context_preserves_custom_profile_settings() -> None:
+    protocol = ProfileImportProtocol(
+        context=_make_context(),
+        profile=_make_profile_with_settings(
+            {
+                "api_url": "https://profile-api.example.com",
+                "disable_article_markup": True,
+            }
+        ),
+        root_dir=Path.cwd(),
+    )
+    response = WebPageScrapeResponse(
+        web_page=WebPage(url="https://example.com/page", html="<html></html>")
+    )
+
+    context = protocol._build_pp_context(
+        "https://example.com/page", response, existing_web_page_id=None
+    )
+
+    assert context.profile["settings"]["disable_article_markup"] is True
 
 
 def test_apply_postprocessors_fails_fast_when_account_key_missing() -> None:

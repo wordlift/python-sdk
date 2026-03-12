@@ -144,12 +144,36 @@ class EntityPatcher:
         if not subjects:
             return
 
+        subject_modes = {iri: import_hash_mode for iri in subjects}
+
+        if import_hash_mode != "off":
+            first_level_subjects = self._first_level_subjects(graph, dataset_uri)
+            if first_level_subjects:
+                representative = next(iter(first_level_subjects))
+                existing_hash = self._existing_import_hash(representative, graph)
+                import_hash = self._compute_import_hash(
+                    representative, graph, str(dataset_uri).rstrip("/")
+                )
+                for iri in first_level_subjects:
+                    self._set_import_hash(iri, graph, import_hash)
+                if (
+                    import_hash_mode == "on"
+                    and existing_hash
+                    and existing_hash == import_hash
+                ):
+                    return
+                for iri in subjects - first_level_subjects:
+                    graph.remove((iri, SEOVOC_IMPORT_HASH, None))
+                    subject_modes[iri] = "off"
+                for iri in first_level_subjects:
+                    subject_modes[iri] = "write"
+
         semaphore = self._semaphore
 
         if semaphore.limit == 1:
             # Preserve exact sequential behaviour when concurrency=1.
             for iri in subjects:
-                await self.patch(iri, graph, import_hash_mode=import_hash_mode)
+                await self.patch(iri, graph, import_hash_mode=subject_modes[iri])
             return
 
         batch_error: list[BaseException] = []
@@ -157,7 +181,7 @@ class EntityPatcher:
         async def _patch_one(iri: URIRef) -> None:
             async with semaphore:
                 try:
-                    await self.patch(iri, graph, import_hash_mode=import_hash_mode)
+                    await self.patch(iri, graph, import_hash_mode=subject_modes[iri])
                 except BaseException as exc:
                     if _is_rate_limit_or_server_error(exc):
                         await semaphore.step_down()
@@ -165,7 +189,7 @@ class EntityPatcher:
                         # One retry after backoff with the reduced semaphore.
                         async with semaphore:
                             await self.patch(
-                                iri, graph, import_hash_mode=import_hash_mode
+                                iri, graph, import_hash_mode=subject_modes[iri]
                             )
                     else:
                         batch_error.append(exc)
@@ -175,6 +199,34 @@ class EntityPatcher:
 
         if not batch_error:
             await semaphore.record_batch_success()
+
+    @staticmethod
+    def _first_level_subjects(graph: Graph, dataset_uri: str) -> set[URIRef]:
+        base = str(dataset_uri or "").rstrip("/")
+        subjects = {
+            subject
+            for subject in graph.subjects()
+            if isinstance(subject, URIRef) and str(subject).startswith(f"{base}/")
+        }
+        if not subjects:
+            return set()
+
+        first_level_by_id = {
+            subject
+            for subject in subjects
+            if len([part for part in str(subject)[len(base) + 1 :].split("/") if part])
+            == 2
+        }
+        if first_level_by_id:
+            return first_level_by_id
+
+        referenced = {
+            obj
+            for _, _, obj in graph.triples((None, None, None))
+            if isinstance(obj, URIRef) and obj in subjects
+        }
+        first_level = subjects - referenced
+        return first_level or subjects
 
     @staticmethod
     def _existing_import_hash(iri: URIRef, graph: Graph) -> str | None:

@@ -164,6 +164,84 @@ async def test_patch_all_skips_all_nodes_when_provided_hash_matches_graph_snapsh
 
 
 @pytest.mark.asyncio
+async def test_patch_all_skips_child_nodes_when_first_level_hash_matches() -> None:
+    context = _ctx("https://data.example.com/dataset")
+    patcher = EntityPatcher(context)
+    page = URIRef("https://data.example.com/dataset/web-pages/1")
+    article = URIRef("https://data.example.com/dataset/entities/article-1")
+    child = URIRef("https://data.example.com/dataset/entities/article-1/faq/1")
+    g = Graph()
+    g.add((page, URIRef("https://schema.org/mainEntity"), article))
+    g.add((page, URIRef("https://schema.org/name"), Literal("Page 1")))
+    g.add((article, URIRef("https://schema.org/headline"), Literal("Hello")))
+    g.add((article, URIRef("https://schema.org/hasPart"), child))
+    g.add((child, URIRef("https://schema.org/name"), Literal("Child FAQ")))
+
+    expected = patcher._compute_import_hash(page, g, "https://data.example.com/dataset")
+    g.add((page, SEOVOC_IMPORT_HASH, Literal(expected)))
+    g.add((article, SEOVOC_IMPORT_HASH, Literal(expected)))
+
+    await patcher.patch_all(g)
+
+    context.entity_patch_queue.put.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_patch_all_sends_deep_child_entity_when_graph_changes() -> None:
+    context = _ctx("https://data.example.com/dataset")
+    patcher = EntityPatcher(context)
+    page = URIRef("https://data.example.com/dataset/web-pages/1")
+    article = URIRef("https://data.example.com/dataset/entities/article-1")
+    child = URIRef("https://data.example.com/dataset/entities/article-1/children/1")
+    g = Graph()
+    g.add((page, URIRef("https://schema.org/mainEntity"), article))
+    g.add((page, URIRef("https://schema.org/name"), Literal("Page 1")))
+    g.add((article, URIRef("https://schema.org/headline"), Literal("Hello")))
+    g.add((article, URIRef("https://schema.org/hasPart"), child))
+    g.add((child, URIRef("https://schema.org/name"), Literal("Child Node")))
+
+    await patcher.patch_all(g)
+
+    patched_iris = {
+        str(call.args[0].iri) for call in context.entity_patch_queue.put.await_args_list
+    }
+    assert str(child) in patched_iris
+
+
+@pytest.mark.asyncio
+async def test_patch_all_treats_child_only_graph_as_first_level_fallback() -> None:
+    context = _ctx("https://data.example.com/dataset")
+    patcher = EntityPatcher(context)
+    child = URIRef("https://data.example.com/dataset/entities/article-1/children/1")
+    g = Graph()
+    g.add((child, URIRef("https://schema.org/name"), Literal("Child Node")))
+
+    await patcher.patch_all(g)
+
+    patched_iris = {
+        str(call.args[0].iri) for call in context.entity_patch_queue.put.await_args_list
+    }
+    assert patched_iris == {str(child)}
+
+
+@pytest.mark.asyncio
+async def test_patch_all_skips_child_only_graph_when_fallback_hash_matches() -> None:
+    context = _ctx("https://data.example.com/dataset")
+    patcher = EntityPatcher(context)
+    child = URIRef("https://data.example.com/dataset/entities/article-1/children/1")
+    g = Graph()
+    g.add((child, URIRef("https://schema.org/name"), Literal("Child Node")))
+    expected = patcher._compute_import_hash(
+        child, g, "https://data.example.com/dataset"
+    )
+    g.add((child, SEOVOC_IMPORT_HASH, Literal(expected)))
+
+    await patcher.patch_all(g)
+
+    context.entity_patch_queue.put.assert_not_called()
+
+
+@pytest.mark.asyncio
 async def test_patch_all_filters_to_dataset_subjects() -> None:
     context = _ctx("https://data.example.com")
     patcher = EntityPatcher(context)

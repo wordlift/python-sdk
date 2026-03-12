@@ -62,12 +62,18 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         root_dir: Path | None = None,
         debug_dir: Path | None = None,
         on_progress: Any | None = None,
+        graph_write_strategy: str = "patch",
     ) -> None:
         super().__init__(context)
+        if graph_write_strategy not in {"patch", "put"}:
+            raise ValueError(
+                f"Unsupported graph_write_strategy: {graph_write_strategy}"
+            )
         self.profile = profile
         self.root_dir = root_dir or Path.cwd()
         self.debug_dir = debug_dir
         self._on_progress = on_progress
+        self._graph_write_strategy = graph_write_strategy
 
         self.profile_dir = self.root_dir / "profiles" / self.profile.name
         self.templates_dir = self._resolve_path(self.profile.templates_dir)
@@ -237,8 +243,8 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             and not validation_payload["pass"]
         ):
             raise RuntimeError(f"SHACL validation failed for {url} in fail mode.")
-        await self.patcher.patch_all(graph, import_hash_mode=self._import_hash_mode)
-        logger.info("Patched %s triples for %s", len(graph), url)
+        await self._write_graph(graph)
+        logger.info("Wrote %s triples for %s", len(graph), url)
 
     def close(self) -> None:
         close_loaded_postprocessors(self._postprocessors)
@@ -298,9 +304,7 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
                     raise RuntimeError(
                         "SHACL validation failed for static templates in fail mode."
                     )
-                await self.patcher.patch_all(
-                    self._template_graph, import_hash_mode=self._import_hash_mode
-                )
+                await self._write_graph(self._template_graph)
                 if self.debug_dir:
                     static_debug = self.debug_dir / "static_templates.ttl"
                     static_debug.parent.mkdir(parents=True, exist_ok=True)
@@ -308,7 +312,7 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
                         destination=static_debug, format="turtle"
                     )
                 logger.info(
-                    "Patched %s static template triples", len(self._template_graph)
+                    "Wrote %s static template triples", len(self._template_graph)
                 )
 
             self._static_templates_patched = True
@@ -404,6 +408,54 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         rendered = self.text_renderer.render_file(template_path, context)
         self._mapping_cache[mapping_path] = rendered
         return rendered
+
+    async def _write_graph(self, graph: Graph) -> None:
+        if self._graph_write_strategy == "put":
+            if not self._prepare_graph_for_put(graph):
+                return
+            await self.context.graph_queue.put(graph)
+            return
+        await self.patcher.patch_all(graph, import_hash_mode=self._import_hash_mode)
+
+    def _prepare_graph_for_put(self, graph: Graph) -> bool:
+        dataset_uri = str(
+            getattr(self.context.account, "dataset_uri", "") or ""
+        ).rstrip("/")
+        if not dataset_uri:
+            return False
+
+        subjects = {
+            subject
+            for subject in graph.subjects()
+            if isinstance(subject, URIRef) and str(subject).startswith(dataset_uri)
+        }
+        if not subjects:
+            return False
+
+        first_level_subjects = {
+            subject
+            for subject in self._first_level_subjects(graph)
+            if subject in subjects
+        }
+        if not first_level_subjects:
+            return False
+
+        if self._import_hash_mode == "off":
+            return True
+
+        representative = next(iter(first_level_subjects))
+        existing_hash = self.patcher._existing_import_hash(representative, graph)
+        import_hash = self.patcher._compute_import_hash(
+            representative, graph, dataset_uri
+        )
+        for subject in first_level_subjects:
+            self.patcher._set_import_hash(subject, graph, import_hash)
+
+        return not (
+            self._import_hash_mode == "on"
+            and existing_hash
+            and existing_hash == import_hash
+        )
 
     def _apply_postprocessors(
         self,

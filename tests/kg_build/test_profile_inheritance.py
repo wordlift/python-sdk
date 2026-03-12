@@ -73,6 +73,29 @@ def test_validation_settings_parse_into_profile_settings(tmp_path: Path) -> None
     assert profile.settings["import_hash_mode"] == "write"
 
 
+def test_custom_profile_settings_are_preserved_in_runtime_settings(
+    tmp_path: Path,
+) -> None:
+    _write(
+        tmp_path / "worai.toml",
+        """
+        [profiles.alpha]
+        mapping = "default.yarrrml"
+        disable_article_markup = true
+        custom_nested = { enabled = true, label = "article-kill-switch" }
+        """,
+    )
+
+    profile = load_profile_config(tmp_path / "worai.toml").get("alpha")
+
+    assert profile.settings["disable_article_markup"] is True
+    assert profile.settings["custom_nested"] == {
+        "enabled": True,
+        "label": "article-kill-switch",
+    }
+    assert "mapping" not in profile.settings
+
+
 def test_profile_with_only_api_key_uses_default_mapping_and_routes(
     tmp_path: Path,
 ) -> None:

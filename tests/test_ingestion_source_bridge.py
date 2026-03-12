@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import asdict
-from unittest.mock import MagicMock
+from types import SimpleNamespace
+from unittest.mock import AsyncMock, MagicMock
 
 import pandas as pd
 import pytest
@@ -10,6 +11,7 @@ import pytest
 from wordlift_sdk.configuration import ConfigurationProvider
 from wordlift_sdk.container.application_container import ApplicationContainer
 from wordlift_sdk.ingestion.errors import IngestionConfigError
+from wordlift_sdk.protocol.graph import GraphQueue
 
 
 def _provider(data: dict[str, object]) -> ConfigurationProvider:
@@ -43,6 +45,29 @@ def test_application_container_source_bridge_uses_ingest_source_local() -> None:
     urls = asyncio.run(_collect())
     assert len(urls) == 1
     assert urls[0].value == "https://example.com/local"
+
+
+@pytest.mark.asyncio
+async def test_application_container_context_includes_graph_queue(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    container = ApplicationContainer(
+        configuration_provider=_provider(
+            {
+                "WORDLIFT_KEY": "key",
+                "API_URL": "https://api.wordlift.io",
+            }
+        )
+    )
+    monkeypatch.setattr(
+        container,
+        "get_account",
+        AsyncMock(return_value=SimpleNamespace(dataset_uri="https://data.example.com")),
+    )
+
+    context = await container.get_context()
+
+    assert isinstance(context.graph_queue, GraphQueue)
 
 
 def test_application_container_source_bridge_requires_explicit_ingest_source() -> None:

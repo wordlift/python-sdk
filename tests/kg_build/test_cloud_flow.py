@@ -388,6 +388,31 @@ async def test_cloud_flow_passes_on_progress_to_protocol_factory() -> None:
 
 
 @pytest.mark.asyncio
+async def test_cloud_flow_passes_graph_write_strategy_to_protocol_factory() -> None:
+    protocol = _Protocol()
+    captured_kwargs: dict[str, object] = {}
+
+    def protocol_factory(*args, **kwargs):
+        del args
+        captured_kwargs.update(kwargs)
+        return protocol
+
+    await run_cloud_workflow(
+        config=CloudWorkflowConfig(
+            wordlift_key="key",
+            sheets_service_account_json="{}",
+            urls=["https://example.com"],
+            graph_write_strategy="put",
+        ),
+        configuration_provider_create=lambda _: object(),
+        container_factory=lambda _: _Container(_Workflow()),
+        protocol_factory=protocol_factory,
+    )
+
+    assert captured_kwargs["graph_write_strategy"] == "put"
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     ("config", "expected_source_lines"),
     [
