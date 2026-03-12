@@ -21,3 +21,7 @@ class Context:
     graph_queue: GraphQueue
     entity_patch_queue: EntityPatchQueue
     extensions: dict[str, Any] = field(default_factory=dict)
+
+    # Adaptive concurrency settings for entity patching.
+    patch_concurrency: int = 10
+    patch_concurrency_max: int = 20

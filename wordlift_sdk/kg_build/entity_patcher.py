@@ -1,13 +1,79 @@
 from __future__ import annotations
 
+import asyncio
 import hashlib
+import logging
 
 from rdflib import Graph, Literal, URIRef
 from wordlift_client.models.entity_patch_request import EntityPatchRequest
 from wordlift_sdk.protocol import Context
 from wordlift_sdk.protocol.entity_patch import EntityPatch
 
+logger = logging.getLogger(__name__)
+
 SEOVOC_IMPORT_HASH = URIRef("https://w3id.org/seovoc/importHash")
+
+_STEP_DOWN_BACKOFF = 1.0  # seconds to wait after a rate-limit step-down
+_STEP_UP_AFTER = 20  # consecutive successful patch_all calls before step-up
+
+
+def _is_rate_limit_or_server_error(exc: BaseException) -> bool:
+    """Return True for HTTP 429 and 5xx errors."""
+    status = getattr(exc, "status", None)
+    return isinstance(status, int) and (status == 429 or status >= 500)
+
+
+class _AdaptiveSemaphore:
+    """asyncio.Semaphore wrapper with adaptive concurrency.
+
+    - Steps down (halves) on rate-limit / server errors, minimum 1.
+    - Steps up (increments by 1) after ``step_up_after`` consecutive
+      successful patch_all batches, up to ``maximum``.
+    """
+
+    def __init__(
+        self, initial: int, maximum: int, step_up_after: int = _STEP_UP_AFTER
+    ) -> None:
+        self._limit = max(1, initial)
+        self._maximum = max(self._limit, maximum)
+        self._step_up_after = step_up_after
+        self._consecutive_successes = 0
+        self._semaphore = asyncio.Semaphore(self._limit)
+        self._lock = asyncio.Lock()
+
+    @property
+    def limit(self) -> int:
+        return self._limit
+
+    async def __aenter__(self) -> _AdaptiveSemaphore:
+        await self._semaphore.acquire()
+        return self
+
+    async def __aexit__(self, *args: object) -> None:
+        self._semaphore.release()
+
+    async def step_down(self) -> None:
+        async with self._lock:
+            new_limit = max(1, self._limit // 2)
+            if new_limit < self._limit:
+                self._limit = new_limit
+                self._semaphore = asyncio.Semaphore(new_limit)
+                logger.warning(
+                    "Adaptive patch concurrency stepped down to %d", new_limit
+                )
+            self._consecutive_successes = 0
+
+    async def record_batch_success(self) -> None:
+        async with self._lock:
+            self._consecutive_successes += 1
+            if (
+                self._consecutive_successes >= self._step_up_after
+                and self._limit < self._maximum
+            ):
+                self._limit = min(self._limit + 1, self._maximum)
+                self._semaphore = asyncio.Semaphore(self._limit)
+                self._consecutive_successes = 0
+                logger.info("Adaptive patch concurrency stepped up to %d", self._limit)
 
 
 class EntityPatcher:
@@ -15,6 +81,11 @@ class EntityPatcher:
 
     def __init__(self, context: Context) -> None:
         self._context = context
+        concurrency = getattr(context, "patch_concurrency", 10)
+        max_concurrency = getattr(context, "patch_concurrency_max", 20)
+        self._semaphore = _AdaptiveSemaphore(
+            initial=concurrency, maximum=max_concurrency
+        )
 
     async def patch(
         self, iri: URIRef, graph: Graph, import_hash_mode: str = "on"
@@ -70,8 +141,40 @@ class EntityPatcher:
             if isinstance(subject, URIRef) and str(subject).startswith(dataset_uri)
         }
 
-        for iri in subjects:
-            await self.patch(iri, graph, import_hash_mode=import_hash_mode)
+        if not subjects:
+            return
+
+        semaphore = self._semaphore
+
+        if semaphore.limit == 1:
+            # Preserve exact sequential behaviour when concurrency=1.
+            for iri in subjects:
+                await self.patch(iri, graph, import_hash_mode=import_hash_mode)
+            return
+
+        batch_error: list[BaseException] = []
+
+        async def _patch_one(iri: URIRef) -> None:
+            async with semaphore:
+                try:
+                    await self.patch(iri, graph, import_hash_mode=import_hash_mode)
+                except BaseException as exc:
+                    if _is_rate_limit_or_server_error(exc):
+                        await semaphore.step_down()
+                        await asyncio.sleep(_STEP_DOWN_BACKOFF)
+                        # One retry after backoff with the reduced semaphore.
+                        async with semaphore:
+                            await self.patch(
+                                iri, graph, import_hash_mode=import_hash_mode
+                            )
+                    else:
+                        batch_error.append(exc)
+                        raise
+
+        await asyncio.gather(*(_patch_one(iri) for iri in subjects))
+
+        if not batch_error:
+            await semaphore.record_batch_success()
 
     @staticmethod
     def _existing_import_hash(iri: URIRef, graph: Graph) -> str | None:
