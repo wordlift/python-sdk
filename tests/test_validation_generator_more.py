@@ -473,3 +473,181 @@ def test_write_feature_emits_recommended_one_of_for_scoped_types(tmp_path: Path)
     content = output_path.read_text(encoding="utf-8")
     assert ":google_OfferRecommendedOneOf1Shape" in content
     assert "choose either priceCurrency or priceSpecification.priceCurrency" in content
+
+
+# ---------------------------------------------------------------------------
+# GS1 generator tests
+# ---------------------------------------------------------------------------
+
+_GS1_MINIMAL_TTL = """\
+@prefix gs1: <https://ref.gs1.org/voc/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+gs1:Product
+    rdf:type owl:Class ;
+    rdf:type rdfs:Class ;
+    rdfs:label "Product"@en .
+
+gs1:Organization
+    rdf:type owl:Class ;
+    rdf:type rdfs:Class ;
+    rdfs:label "Organization"@en .
+
+gs1:productName
+    rdf:type rdf:Property ;
+    rdf:type owl:DatatypeProperty ;
+    rdfs:domain gs1:Product ;
+    rdfs:range xsd:string .
+
+gs1:description
+    rdf:type rdf:Property ;
+    rdf:type owl:DatatypeProperty ;
+    rdfs:domain gs1:Product ;
+    rdfs:range rdf:langString .
+
+gs1:relatedOrganization
+    rdf:type rdf:Property ;
+    rdf:type owl:ObjectProperty ;
+    rdfs:domain gs1:Product ;
+    rdfs:range gs1:Organization .
+"""
+
+_GS1_UNION_DOMAIN_TTL = """\
+@prefix gs1: <https://ref.gs1.org/voc/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+gs1:Product  rdf:type owl:Class ; rdf:type rdfs:Class .
+gs1:Organization  rdf:type owl:Class ; rdf:type rdfs:Class .
+
+gs1:address
+    rdf:type rdf:Property ;
+    rdf:type owl:ObjectProperty ;
+    rdfs:domain [
+        rdf:type owl:Class ;
+        owl:unionOf ( gs1:Product gs1:Organization )
+    ] ;
+    rdfs:range gs1:Organization .
+"""
+
+
+def _build_gs1_graph(ttl: str) -> Graph:
+    g = Graph()
+    g.parse(data=ttl, format="turtle")
+    return g
+
+
+def test_gs1_short_name():
+    uri = URIRef("https://ref.gs1.org/voc/Product")
+    assert generator._gs1_short_name(uri) == "Product"
+
+    uri_other = URIRef("http://example.org/Foo")
+    assert generator._gs1_short_name(uri_other) == "Foo"
+
+
+def test_collect_gs1_classes():
+    g = _build_gs1_graph(_GS1_MINIMAL_TTL)
+    classes = generator._collect_gs1_classes(g)
+    uris = [str(c) for c in classes]
+    assert "https://ref.gs1.org/voc/Product" in uris
+    assert "https://ref.gs1.org/voc/Organization" in uris
+
+
+def test_collect_gs1_properties():
+    g = _build_gs1_graph(_GS1_MINIMAL_TTL)
+    props = generator._collect_gs1_properties(g)
+    uris = [str(p) for p in props]
+    assert "https://ref.gs1.org/voc/productName" in uris
+    assert "https://ref.gs1.org/voc/description" in uris
+    assert "https://ref.gs1.org/voc/relatedOrganization" in uris
+
+
+def test_collect_gs1_domain_ranges_datatype():
+    g = _build_gs1_graph(_GS1_MINIMAL_TTL)
+    prop = URIRef("https://ref.gs1.org/voc/productName")
+    result = generator._collect_gs1_domain_ranges(g, prop)
+    assert len(result) == 1
+    domain, ranges = result[0]
+    assert str(domain) == "https://ref.gs1.org/voc/Product"
+    assert any("string" in str(r) for r in ranges)
+
+
+def test_collect_gs1_domain_ranges_object():
+    g = _build_gs1_graph(_GS1_MINIMAL_TTL)
+    prop = URIRef("https://ref.gs1.org/voc/relatedOrganization")
+    result = generator._collect_gs1_domain_ranges(g, prop)
+    assert len(result) == 1
+    domain, ranges = result[0]
+    assert str(domain) == "https://ref.gs1.org/voc/Product"
+    assert any(str(r) == "https://ref.gs1.org/voc/Organization" for r in ranges)
+
+
+def test_collect_gs1_domain_ranges_union():
+    g = _build_gs1_graph(_GS1_UNION_DOMAIN_TTL)
+    prop = URIRef("https://ref.gs1.org/voc/address")
+    result = generator._collect_gs1_domain_ranges(g, prop)
+    domains = {str(d) for d, _ in result}
+    assert "https://ref.gs1.org/voc/Product" in domains
+    assert "https://ref.gs1.org/voc/Organization" in domains
+
+
+def test_collect_gs1_domain_ranges_no_domain():
+    g = Graph()
+    prop = URIRef("https://ref.gs1.org/voc/orphan")
+    assert generator._collect_gs1_domain_ranges(g, prop) == []
+
+
+def test_generate_gs1_shacls_output(monkeypatch, tmp_path: Path):
+    out = tmp_path / "gs1-grammar.ttl"
+
+    monkeypatch.setattr(
+        generator.requests,
+        "get",
+        lambda url, timeout=60: _Resp(_GS1_MINIMAL_TTL),
+    )
+    monkeypatch.setattr(generator, "tqdm", lambda seq, **kwargs: seq)
+
+    rc = generator.generate_gs1_shacls(out, overwrite=True)
+    assert rc == 0
+
+    content = out.read_text(encoding="utf-8")
+    assert "sh:targetClass gs1:Product" in content
+    assert "sh:path gs1:productName" in content
+    assert "sh:path gs1:description" in content
+    assert "sh:path gs1:relatedOrganization" in content
+    assert "sh:class gs1:Organization" in content
+    assert "sh:severity sh:Warning" in content
+
+    # Verify valid Turtle
+    parsed = Graph()
+    parsed.parse(data=content, format="turtle")
+    assert len(parsed) > 0
+
+
+def test_generate_gs1_shacls_no_overwrite(monkeypatch, tmp_path: Path):
+    out = tmp_path / "gs1-grammar.ttl"
+    out.write_text("existing", encoding="utf-8")
+
+    rc = generator.generate_gs1_shacls(out, overwrite=False)
+    assert rc == 1
+    assert out.read_text(encoding="utf-8") == "existing"
+
+
+def test_gs1_main_entrypoint(monkeypatch, tmp_path: Path):
+    out = tmp_path / "gs1-grammar.ttl"
+
+    monkeypatch.setattr(
+        generator.requests,
+        "get",
+        lambda url, timeout=60: _Resp(_GS1_MINIMAL_TTL),
+    )
+    monkeypatch.setattr(generator, "tqdm", lambda seq, **kwargs: seq)
+
+    rc = generator.gs1_main(["--output-file", str(out), "--overwrite"])
+    assert rc == 0
+    assert out.exists()

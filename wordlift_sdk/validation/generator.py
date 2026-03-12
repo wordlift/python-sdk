@@ -12,6 +12,7 @@ from typing import Iterable
 
 import requests
 from rdflib import Graph, Namespace, RDF, RDFS, URIRef
+from rdflib.collection import Collection
 from tqdm import tqdm
 
 SEARCH_GALLERY_URL = "https://developers.google.com/search/docs/appearance/structured-data/search-gallery"
@@ -50,6 +51,10 @@ SCHEMA_DATA = Namespace("http://schema.org/")
 SH = Namespace("http://www.w3.org/ns/shacl#")
 XSD = Namespace("http://www.w3.org/2001/XMLSchema#")
 RDF_NS = Namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#")
+
+GS1_VOC_URL = "https://ref.gs1.org/voc/data/gs1Voc.ttl"
+GS1_NS = Namespace("https://ref.gs1.org/voc/")
+OWL_NS = Namespace("http://www.w3.org/2002/07/owl#")
 
 
 @dataclass
@@ -1145,6 +1150,164 @@ def schema_main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
     return generate_schema_shacls(Path(args.output_file), args.overwrite)
+
+
+def _gs1_short_name(uri: URIRef) -> str:
+    value = str(uri)
+    if value.startswith(str(GS1_NS)):
+        return value[len(str(GS1_NS)) :]
+    return value.rsplit("/", 1)[-1]
+
+
+def _collect_gs1_classes(graph: Graph) -> list[URIRef]:
+    classes: set[URIRef] = set()
+    for cls in graph.subjects(RDF.type, OWL_NS.Class):
+        if isinstance(cls, URIRef) and str(cls).startswith(str(GS1_NS)):
+            classes.add(cls)
+    for cls in graph.subjects(RDF.type, RDFS.Class):
+        if isinstance(cls, URIRef) and str(cls).startswith(str(GS1_NS)):
+            classes.add(cls)
+    return sorted(classes, key=str)
+
+
+def _collect_gs1_properties(graph: Graph) -> list[URIRef]:
+    props: set[URIRef] = set()
+    for prop in graph.subjects(RDF.type, RDF.Property):
+        if isinstance(prop, URIRef) and str(prop).startswith(str(GS1_NS)):
+            props.add(prop)
+    return sorted(props, key=str)
+
+
+def _collect_gs1_domain_ranges(
+    graph: Graph, prop: URIRef
+) -> list[tuple[URIRef, list[URIRef]]]:
+    domain_nodes = list(graph.objects(prop, RDFS.domain))
+    ranges = [r for r in graph.objects(prop, RDFS.range) if isinstance(r, URIRef)]
+
+    domains: list[URIRef] = []
+    for d in domain_nodes:
+        if isinstance(d, URIRef):
+            domains.append(d)
+        else:
+            # Blank node: check for owl:unionOf (union class)
+            union_list = list(graph.objects(d, OWL_NS.unionOf))
+            if union_list:
+                for member in Collection(graph, union_list[0]):
+                    if isinstance(member, URIRef):
+                        domains.append(member)
+
+    if not domains:
+        return []
+    return [(domain, ranges) for domain in domains]
+
+
+def _render_gs1_property_shape(prop: URIRef, ranges: list[URIRef]) -> list[str]:
+    lines: list[str] = []
+    lines.append("  sh:property [")
+    short = _gs1_short_name(prop)
+    lines.append(f"    sh:path gs1:{short} ;")
+    lines.append("    sh:severity sh:Warning ;")
+
+    range_constraints: list[str] = []
+    for r in ranges:
+        r_str = str(r)
+        if r_str.startswith(str(XSD)) or r_str == str(RDF_NS.langString):
+            range_constraints.append(f"[ sh:datatype <{r_str}> ]")
+        elif r_str.startswith(str(GS1_NS)):
+            range_constraints.append(f"[ sh:class gs1:{_gs1_short_name(r)} ]")
+        else:
+            range_constraints.append(f"[ sh:datatype <{r_str}> ]")
+
+    if range_constraints:
+        range_constraints = _unique(range_constraints)
+        if len(range_constraints) == 1:
+            lines.append(f"    sh:or ( {range_constraints[0]} ) ;")
+        else:
+            lines.append("    sh:or (")
+            for rc in range_constraints:
+                lines.append(f"      {rc}")
+            lines.append("    ) ;")
+
+    lines.append(f'    sh:message "GS1 range check: {short}." ;')
+    lines.append("  ] ;")
+    return lines
+
+
+def generate_gs1_shacls(output_file: Path, overwrite: bool) -> int:
+    output_path = output_file
+    if output_path.exists() and not overwrite:
+        print(f"Output exists: {output_path}")
+        return 1
+
+    response = requests.get(GS1_VOC_URL, timeout=60)
+    response.raise_for_status()
+
+    graph = Graph()
+    graph.parse(data=response.text, format="turtle")
+
+    classes = _collect_gs1_classes(graph)
+    all_props = _collect_gs1_properties(graph)
+
+    class_props: dict[URIRef, list[PropertyRange]] = {cls: [] for cls in classes}
+
+    for prop in tqdm(all_props, desc="Collecting GS1 properties", unit="prop"):
+        for domain, ranges in _collect_gs1_domain_ranges(graph, prop):
+            if domain not in class_props:
+                class_props[domain] = []
+            class_props[domain].append(PropertyRange(prop=prop, ranges=ranges))
+
+    lines: list[str] = []
+    lines.append("@prefix : <https://wordlift.io/shacl/gs1-grammar/> .")
+    lines.append(f"@prefix sh: <{SH}> .")
+    lines.append(f"@prefix gs1: <{GS1_NS}> .")
+    lines.append(f"@prefix xsd: <{XSD}> .")
+    lines.append("")
+    lines.append(f"# Source: {GS1_VOC_URL}")
+    lines.append(
+        "# Generated: "
+        f"{datetime.now(timezone.utc).isoformat(timespec='seconds').replace('+00:00', 'Z')}"
+    )
+    lines.append(
+        "# Notes: GS1 vocabulary grammar checks only; all constraints are warnings."
+    )
+    lines.append("")
+
+    for cls in tqdm(classes, desc="Writing GS1 shapes", unit="class"):
+        props_for_class = class_props.get(cls, [])
+        if not props_for_class:
+            continue
+        short = _gs1_short_name(cls)
+        shape_name = f":gs1_{short}Shape"
+        lines.append(shape_name)
+        lines.append("  a sh:NodeShape ;")
+        lines.append(f"  sh:targetClass gs1:{short} ;")
+
+        for prop_range in props_for_class:
+            lines.extend(_render_gs1_property_shape(prop_range.prop, prop_range.ranges))
+
+        lines.append(".")
+        lines.append("")
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+    print(f"Wrote {output_path}")
+    return 0
+
+
+def gs1_main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(
+        description="Generate GS1 vocabulary grammar SHACLs."
+    )
+    parser.add_argument(
+        "--output-file",
+        default="wordlift_sdk/validation/shacls/gs1-grammar.ttl",
+        help="Output SHACL file.",
+    )
+    parser.add_argument(
+        "--overwrite", action="store_true", help="Overwrite existing file."
+    )
+    args = parser.parse_args(argv)
+    return generate_gs1_shacls(Path(args.output_file), args.overwrite)
 
 
 JSONLD_META_TOKEN_BLACKLIST = {"context", "type", "id", "graph"}
