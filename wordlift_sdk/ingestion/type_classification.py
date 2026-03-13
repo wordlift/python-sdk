@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+from functools import lru_cache
 import json
 from datetime import datetime, timezone
 from pathlib import Path
+import re
 from typing import Any, Callable, Mapping
 
 import pandas as pd
@@ -10,6 +12,92 @@ import pandas as pd
 from wordlift_sdk.agent_cli import AgentCliError, LocalAgentCliRunner
 
 from .api import run_ingestion
+
+
+_GOOGLE_SHACL_TARGET_CLASS_RE = re.compile(
+    r"sh:targetClass\s+schema:([A-Za-z][A-Za-z0-9]+)"
+)
+_GOOGLE_SUPPORTING_TYPES = frozenset(
+    {
+        "BroadcastEvent",
+        "Certification",
+        "Claim",
+        "Clip",
+        "Comment",
+        "Conditions",
+        "DataCatalog",
+        "DataDownload",
+        "DataFeed",
+        "DefinedRegion",
+        "Edition",
+        "HowToDirection",
+        "HowToSection",
+        "HowToTip",
+        "ImageObject",
+        "InteractionCounter",
+        "ItemList",
+        "Library",
+        "LibrarySystem",
+        "MemberProgram",
+        "MemberProgramTier",
+        "MerchantReturnPolicy",
+        "MonetaryAmount",
+        "Offer",
+        "OfferShippingDetails",
+        "OpeningHoursSpecification",
+        "PeopleAudience",
+        "QuantitativeValue",
+        "Rating",
+        "SeekToAction",
+        "ServicePeriod",
+        "ShippingConditions",
+        "ShippingDeliveryTime",
+        "ShippingRateSettings",
+        "ShippingService",
+        "SizeSpecification",
+        "UnitPriceSpecification",
+        "Work",
+        "speakable",
+    }
+)
+_SCHEMA_FALLBACK_TYPES = (
+    "WebPage",
+    "AboutPage",
+    "CollectionPage",
+    "ItemPage",
+    "SearchResultsPage",
+    "ProfilePage",
+    "Article",
+    "BlogPosting",
+    "NewsArticle",
+    "TechArticle",
+    "Report",
+    "AnalysisNewsArticle",
+    "OpinionNewsArticle",
+    "ReviewNewsArticle",
+    "LiveBlogPosting",
+    "Product",
+    "ProductGroup",
+    "Service",
+    "SoftwareApplication",
+    "WebSite",
+    "Organization",
+    "LocalBusiness",
+    "Person",
+    "CreativeWork",
+    "Course",
+    "Event",
+    "JobPosting",
+    "Recipe",
+    "VideoObject",
+    "FAQPage",
+    "QAPage",
+    "DiscussionForumPosting",
+    "Dataset",
+    "Book",
+    "Movie",
+    "Review",
+)
 
 
 def create_type_classification_csv_from_ingestion(
@@ -126,16 +214,47 @@ def _extract_markdown_body(html: str, *, max_markdown_chars: int) -> str:
     return normalized
 
 
+@lru_cache(maxsize=1)
+def _google_search_gallery_type_groups() -> tuple[tuple[str, ...], tuple[str, ...]]:
+    shacls_dir = Path(__file__).resolve().parent.parent / "validation" / "shacls"
+    primary_types: set[str] = set()
+    supporting_types: set[str] = set()
+    for path in sorted(shacls_dir.glob("google-*.ttl")):
+        for type_name in _GOOGLE_SHACL_TARGET_CLASS_RE.findall(path.read_text()):
+            if type_name in _GOOGLE_SUPPORTING_TYPES:
+                supporting_types.add(type_name)
+            else:
+                primary_types.add(type_name)
+    return tuple(sorted(primary_types)), tuple(sorted(supporting_types))
+
+
 def _classification_prompt(*, url: str, markdown: str) -> str:
+    google_primary_types, google_supporting_types = _google_search_gallery_type_groups()
+    schema_fallback_types = ", ".join(_SCHEMA_FALLBACK_TYPES)
+    google_primary_types_text = ", ".join(google_primary_types)
+    google_supporting_types_text = ", ".join(google_supporting_types)
     return (
         "You are an expert in schema.org typing for web pages.\n"
         "Given a URL and its meaningful markdown body, infer the best entity types.\n"
+        "Reduce hallucinations by choosing from the allowed type lists below.\n"
+        "Prefer a Google Search Gallery primary type when the page clearly matches one.\n"
+        "Only fall back to the broader schema.org types when no Google Search Gallery primary type fits.\n"
+        "Use Google supporting/nested types only when they are clearly secondary, not as the page's main type.\n"
+        "Do not invent types outside these lists unless the page unambiguously requires a standard schema.org subtype.\n"
+        "Choose a single best `main_type` for the page/root entity.\n"
+        "Use `additional_types` only for close, defensible companion types; keep the list short and avoid duplicates.\n"
         "Return JSON only with exactly these keys:\n"
         "- main_type: string\n"
         "- additional_types: array of strings\n"
         "- explanation: string\n"
         "Use schema.org type names without full URLs.\n"
         "Do not include markdown, code fences, or extra keys.\n\n"
+        "Google Search Gallery primary types:\n"
+        f"{google_primary_types_text}\n\n"
+        "Google Search Gallery supporting or nested types (usually additional_types only):\n"
+        f"{google_supporting_types_text}\n\n"
+        "Broader schema.org fallback types:\n"
+        f"{schema_fallback_types}\n\n"
         f"URL: {url}\n"
         "MARKDOWN_BODY:\n"
         f"{markdown}\n"

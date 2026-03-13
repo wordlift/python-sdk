@@ -10,6 +10,8 @@ import pytest
 from wordlift_sdk.agent_cli import AgentCliError
 from wordlift_sdk.ingestion.type_classification import (
     _extract_markdown_body,
+    _classification_prompt,
+    _google_search_gallery_type_groups,
     _normalize_source_bundle,
     _row_from_payload,
     create_type_classification_csv_from_ingestion,
@@ -297,6 +299,36 @@ def test_extract_markdown_body_raises_when_empty(monkeypatch) -> None:
     )
     with pytest.raises(RuntimeError, match="Failed to extract markdown body"):
         _extract_markdown_body("<html/>", max_markdown_chars=10)
+
+
+def test_google_search_gallery_type_groups_split_primary_and_supporting() -> None:
+    primary_types, supporting_types = _google_search_gallery_type_groups()
+
+    assert "Article" in primary_types
+    assert "Product" in primary_types
+    assert "FAQPage" in primary_types
+    assert "Offer" not in primary_types
+    assert "Offer" in supporting_types
+    assert "Rating" in supporting_types
+
+
+def test_classification_prompt_constrains_output_to_project_vocabularies() -> None:
+    prompt = _classification_prompt(
+        url="https://example.com/article",
+        markdown="# Title\n\nBody text",
+    )
+
+    assert "Prefer a Google Search Gallery primary type" in prompt
+    assert "Do not invent types outside these lists" in prompt
+    assert "Google Search Gallery primary types:" in prompt
+    assert "Google Search Gallery supporting or nested types" in prompt
+    assert "Broader schema.org fallback types:" in prompt
+    assert "Article" in prompt
+    assert "Product" in prompt
+    assert "FAQPage" in prompt
+    assert "Offer" in prompt
+    assert "WebPage" in prompt
+    assert "CollectionPage" in prompt
 
 
 def test_row_from_payload_supports_string_and_default_additional_types() -> None:
