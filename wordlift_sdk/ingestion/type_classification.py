@@ -130,10 +130,6 @@ def create_type_classification_csv_from_ingestion(
         source_bundle=ingest_config,
         agent_timeout_sec=agent_timeout_sec,
         max_markdown_chars=max_markdown_chars,
-        concurrency=concurrency,
-        auto_min_concurrency=auto_min_concurrency,
-        auto_max_concurrency=auto_max_concurrency,
-        auto_initial_concurrency=auto_initial_concurrency,
     )
     resume_rows = {} if no_resume else _load_resume_rows(state_path)
     concurrency_controller = AutoConcurrencyController.from_value(
@@ -268,10 +264,6 @@ def _resume_state_path(
     source_bundle: Mapping[str, Any],
     agent_timeout_sec: float,
     max_markdown_chars: int,
-    concurrency: str,
-    auto_min_concurrency: int,
-    auto_max_concurrency: int,
-    auto_initial_concurrency: int,
 ) -> Path:
     output_path = Path(output_csv)
     call_state = {
@@ -279,10 +271,6 @@ def _resume_state_path(
         "output_csv": str(output_path.resolve()),
         "agent_timeout_sec": agent_timeout_sec,
         "max_markdown_chars": max_markdown_chars,
-        "concurrency": concurrency,
-        "auto_min_concurrency": auto_min_concurrency,
-        "auto_max_concurrency": auto_max_concurrency,
-        "auto_initial_concurrency": auto_initial_concurrency,
     }
     serialized = json.dumps(call_state, sort_keys=True, separators=(",", ":"))
     digest = hashlib.sha256(serialized.encode("utf-8")).hexdigest()[:12]
