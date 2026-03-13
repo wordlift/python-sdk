@@ -423,15 +423,34 @@ def test_resume_state_path_excludes_agent_cli_from_call_state(tmp_path: Path) ->
         source_bundle=source_bundle,
         agent_timeout_sec=120.0,
         max_markdown_chars=24000,
+        concurrency="auto",
+        auto_min_concurrency=2,
+        auto_max_concurrency=12,
+        auto_initial_concurrency=4,
     )
     second = _resume_state_path(
         output_csv=tmp_path / "types.csv",
         source_bundle=source_bundle,
         agent_timeout_sec=120.0,
         max_markdown_chars=24000,
+        concurrency="auto",
+        auto_min_concurrency=2,
+        auto_max_concurrency=12,
+        auto_initial_concurrency=4,
+    )
+    third = _resume_state_path(
+        output_csv=tmp_path / "types.csv",
+        source_bundle=source_bundle,
+        agent_timeout_sec=120.0,
+        max_markdown_chars=24000,
+        concurrency="2",
+        auto_min_concurrency=2,
+        auto_max_concurrency=12,
+        auto_initial_concurrency=4,
     )
 
     assert first == second
+    assert first != third
 
 
 def test_create_type_classification_no_resume_reprocesses_pages(

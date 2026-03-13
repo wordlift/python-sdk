@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from functools import lru_cache
 import hashlib
 import json
@@ -12,6 +13,7 @@ from typing import Any, Callable, Mapping
 import pandas as pd
 
 from wordlift_sdk.agent_cli import AgentCliError, LocalAgentCliRunner
+from wordlift_sdk.utils.auto_concurrency import AutoConcurrencyController
 
 from .api import run_ingestion
 
@@ -111,6 +113,10 @@ def create_type_classification_csv_from_ingestion(
     agent_cli: str | None = None,
     agent_timeout_sec: float = 120.0,
     max_markdown_chars: int = 24000,
+    concurrency: str = "auto",
+    auto_min_concurrency: int = 2,
+    auto_max_concurrency: int = 12,
+    auto_initial_concurrency: int = 4,
     no_resume: bool = False,
     on_progress: Callable[[dict[str, Any]], None] | None = None,
 ) -> pd.DataFrame:
@@ -124,12 +130,22 @@ def create_type_classification_csv_from_ingestion(
         source_bundle=ingest_config,
         agent_timeout_sec=agent_timeout_sec,
         max_markdown_chars=max_markdown_chars,
+        concurrency=concurrency,
+        auto_min_concurrency=auto_min_concurrency,
+        auto_max_concurrency=auto_max_concurrency,
+        auto_initial_concurrency=auto_initial_concurrency,
     )
     resume_rows = {} if no_resume else _load_resume_rows(state_path)
-    runner = LocalAgentCliRunner(cli=agent_cli, timeout_sec=agent_timeout_sec)
+    concurrency_controller = AutoConcurrencyController.from_value(
+        concurrency,
+        min_auto_workers=auto_min_concurrency,
+        max_auto_workers=auto_max_concurrency,
+        initial_auto_workers=auto_initial_concurrency,
+    )
 
-    rows: list[dict[str, str]] = []
     total = len(ingestion_result.pages)
+    rows_by_index: dict[int, dict[str, str]] = {}
+    pending: list[tuple[int, Any, str]] = []
     if on_progress is not None:
         on_progress(
             {
@@ -144,7 +160,7 @@ def create_type_classification_csv_from_ingestion(
         resumed_row = resume_rows.get(index)
         if resumed_row is not None and resumed_row.get("url") == url:
             row = _coerce_resume_row(resumed_row)
-            rows.append(row)
+            rows_by_index[index] = row
             if on_progress is not None:
                 on_progress(
                     {
@@ -160,50 +176,64 @@ def create_type_classification_csv_from_ingestion(
                     }
                 )
             continue
-        try:
-            row = _classify_page_with_retries(
-                page_html=page.html,
-                url=url,
-                runner=runner,
-                max_markdown_chars=max_markdown_chars,
-            )
-            rows.append(row)
-            _write_resume_row(state_path, index=index, row=row)
-            if on_progress is not None:
-                on_progress(
-                    {
-                        "event": "type_classification.progress.updated",
-                        "timestamp": _utc_now_iso(),
-                        "meta": {
-                            "total": total,
-                            "completed": index,
-                            "remaining": total - index,
-                            "url": url,
-                            "status": "ok",
-                        },
-                    }
-                )
-        except Exception as exc:
-            row = _error_row(url=url, exc=exc)
-            rows.append(row)
-            _write_resume_row(state_path, index=index, row=row)
-            if on_progress is not None:
-                on_progress(
-                    {
-                        "event": "type_classification.progress.updated",
-                        "timestamp": _utc_now_iso(),
-                        "meta": {
-                            "total": total,
-                            "completed": index,
-                            "remaining": total - index,
-                            "url": url,
-                            "status": "skipped",
-                            "error_type": type(exc).__name__,
-                            "error_message": str(exc),
-                        },
-                    }
-                )
+        pending.append((index, page, url))
 
+    processed = len(rows_by_index)
+    while pending:
+        batch = pending[: concurrency_controller.current_workers]
+        pending = pending[concurrency_controller.current_workers :]
+        batch_results: list[tuple[int, str, dict[str, str], Exception | None]] = []
+        with ThreadPoolExecutor(
+            max_workers=concurrency_controller.current_workers
+        ) as executor:
+            futures = {
+                executor.submit(
+                    _classify_page_task,
+                    page_html=page.html,
+                    url=url,
+                    agent_cli=agent_cli,
+                    agent_timeout_sec=agent_timeout_sec,
+                    max_markdown_chars=max_markdown_chars,
+                ): (index, url)
+                for index, page, url in batch
+            }
+            for future in as_completed(futures):
+                index, url = futures[future]
+                row, error = future.result()
+                batch_results.append((index, url, row, error))
+
+        status_codes: list[int | None] = []
+        for index, url, row, error in sorted(batch_results, key=lambda item: item[0]):
+            rows_by_index[index] = row
+            _write_resume_row(state_path, index=index, row=row)
+            processed += 1
+            if error is None:
+                status = "ok"
+                status_codes.append(200)
+            else:
+                status = "skipped"
+                status_codes.append(None)
+            if on_progress is not None:
+                meta = {
+                    "total": total,
+                    "completed": processed,
+                    "remaining": total - processed,
+                    "url": url,
+                    "status": status,
+                }
+                if error is not None:
+                    meta["error_type"] = type(error).__name__
+                    meta["error_message"] = str(error)
+                on_progress(
+                    {
+                        "event": "type_classification.progress.updated",
+                        "timestamp": _utc_now_iso(),
+                        "meta": meta,
+                    }
+                )
+        concurrency_controller.update_from_status_codes(status_codes)
+
+    rows = [rows_by_index[index] for index in range(1, total + 1)]
     result = pd.DataFrame(
         rows,
         columns=["url", "main_type", "additional_types", "explanation"],
@@ -238,6 +268,10 @@ def _resume_state_path(
     source_bundle: Mapping[str, Any],
     agent_timeout_sec: float,
     max_markdown_chars: int,
+    concurrency: str,
+    auto_min_concurrency: int,
+    auto_max_concurrency: int,
+    auto_initial_concurrency: int,
 ) -> Path:
     output_path = Path(output_csv)
     call_state = {
@@ -245,6 +279,10 @@ def _resume_state_path(
         "output_csv": str(output_path.resolve()),
         "agent_timeout_sec": agent_timeout_sec,
         "max_markdown_chars": max_markdown_chars,
+        "concurrency": concurrency,
+        "auto_min_concurrency": auto_min_concurrency,
+        "auto_max_concurrency": auto_max_concurrency,
+        "auto_initial_concurrency": auto_initial_concurrency,
     }
     serialized = json.dumps(call_state, sort_keys=True, separators=(",", ":"))
     digest = hashlib.sha256(serialized.encode("utf-8")).hexdigest()[:12]
@@ -320,6 +358,27 @@ def _classify_page_with_retries(
             time.sleep(_CLASSIFICATION_RETRY_WAIT_SEC)
     assert last_exc is not None
     raise last_exc
+
+
+def _classify_page_task(
+    *,
+    page_html: str,
+    url: str,
+    agent_cli: str | None,
+    agent_timeout_sec: float,
+    max_markdown_chars: int,
+) -> tuple[dict[str, str], Exception | None]:
+    runner = LocalAgentCliRunner(cli=agent_cli, timeout_sec=agent_timeout_sec)
+    try:
+        row = _classify_page_with_retries(
+            page_html=page_html,
+            url=url,
+            runner=runner,
+            max_markdown_chars=max_markdown_chars,
+        )
+        return row, None
+    except Exception as exc:
+        return _error_row(url=url, exc=exc), exc
 
 
 def _extract_markdown_body(html: str, *, max_markdown_chars: int) -> str:

@@ -22,6 +22,7 @@ df = create_type_classification_csv_from_ingestion(
     },
     output_csv="url-types.csv",
     agent_cli=None,  # auto-pick: claude -> codex -> gemini
+    concurrency="auto",  # adaptive worker count by default
     no_resume=False,  # default: resume from local sidecar state when available
 )
 ```
@@ -44,9 +45,13 @@ create_type_classification_csv_from_ingestion(
 - `SITEMAP_URL_PATTERN` remains accepted for sitemap only, but is deprecated.
 - `agent_cli=None` auto-selects the first installed CLI in order:
   `claude`, then `codex`, then `gemini`.
+- Classification uses adaptive concurrency by default (`concurrency="auto"`)
+  via the shared `AutoConcurrencyController`. Fixed worker counts are also
+  supported by passing an integer string such as `"4"`.
 - Runs are resumable by default via a local sidecar state file next to the CSV.
   The resume key is based on the call state, excluding the selected CLI, so a
   resumed run can continue even if `agent_cli` changes between executions.
+  Concurrency-related inputs remain part of the resume-state identity.
 - Pass `no_resume=True` to ignore any existing local resume state and reprocess
   all pages from scratch.
 - `additional_types` is serialized as JSON array text in the CSV cell.
