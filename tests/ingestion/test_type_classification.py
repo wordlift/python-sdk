@@ -13,6 +13,7 @@ from wordlift_sdk.ingestion.type_classification import (
     _classification_prompt,
     _google_search_gallery_type_groups,
     _normalize_source_bundle,
+    _resume_state_path,
     _row_from_payload,
     create_type_classification_csv_from_ingestion,
 )
@@ -87,7 +88,7 @@ def test_create_type_classification_csv_from_ingestion(
     assert written.equals(result)
 
 
-def test_create_type_classification_requires_extraction(
+def test_create_type_classification_skips_failed_pages_after_retries(
     tmp_path: Path, monkeypatch
 ) -> None:
     output_csv = tmp_path / "types.csv"
@@ -102,6 +103,10 @@ def test_create_type_classification_requires_extraction(
                 ),
             ]
         ),
+    )
+    sleeps: list[float] = []
+    monkeypatch.setattr(
+        "wordlift_sdk.ingestion.type_classification.time.sleep", sleeps.append
     )
 
     class _Runner:
@@ -126,15 +131,21 @@ def test_create_type_classification_requires_extraction(
         ),
     )
 
-    with pytest.raises(RuntimeError, match="Failed to extract"):
-        create_type_classification_csv_from_ingestion(
-            source_bundle={
-                "INGEST_SOURCE": "urls",
-                "INGEST_LOADER": "web_scrape_api",
-                "URLS": ["https://example.com/a"],
-            },
-            output_csv=output_csv,
-        )
+    result = create_type_classification_csv_from_ingestion(
+        source_bundle={
+            "INGEST_SOURCE": "urls",
+            "INGEST_LOADER": "web_scrape_api",
+            "URLS": ["https://example.com/a"],
+        },
+        output_csv=output_csv,
+    )
+
+    assert sleeps == [3.0, 3.0]
+    assert result.iloc[0]["url"] == "https://example.com/a"
+    assert result.iloc[0]["main_type"] == ""
+    assert result.iloc[0]["additional_types"] == "[]"
+    assert "Classification failed after 3 attempts" in result.iloc[0]["explanation"]
+    assert "RuntimeError: Failed to extract" in result.iloc[0]["explanation"]
 
 
 def test_create_type_classification_emits_progress_on_success(
@@ -214,7 +225,7 @@ def test_create_type_classification_emits_progress_on_success(
     assert events[3]["meta"] == {"total": 2, "completed": 2}
 
 
-def test_create_type_classification_emits_progress_before_raising(
+def test_create_type_classification_emits_progress_for_skipped_page(
     tmp_path: Path, monkeypatch
 ) -> None:
     output_csv = tmp_path / "types.csv"
@@ -236,6 +247,9 @@ def test_create_type_classification_emits_progress_before_raising(
             RuntimeError("Failed to extract")
         ),
     )
+    monkeypatch.setattr(
+        "wordlift_sdk.ingestion.type_classification.time.sleep", lambda seconds: None
+    )
 
     class _Runner:
         def __init__(self, cli, timeout_sec):
@@ -254,25 +268,230 @@ def test_create_type_classification_emits_progress_before_raising(
     )
 
     events: list[dict[str, object]] = []
-    with pytest.raises(RuntimeError, match="Failed to extract"):
-        create_type_classification_csv_from_ingestion(
-            source_bundle={
-                "INGEST_SOURCE": "urls",
-                "INGEST_LOADER": "web_scrape_api",
-                "URLS": ["https://example.com/a"],
-            },
-            output_csv=output_csv,
-            on_progress=events.append,
-        )
+    result = create_type_classification_csv_from_ingestion(
+        source_bundle={
+            "INGEST_SOURCE": "urls",
+            "INGEST_LOADER": "web_scrape_api",
+            "URLS": ["https://example.com/a"],
+        },
+        output_csv=output_csv,
+        on_progress=events.append,
+    )
 
     assert [event["event"] for event in events] == [
         "type_classification.progress.started",
         "type_classification.progress.updated",
+        "type_classification.progress.completed",
     ]
     assert events[0]["meta"] == {"total": 1}
-    assert events[1]["meta"]["status"] == "error"
+    assert events[1]["meta"]["status"] == "skipped"
     assert events[1]["meta"]["error_type"] == "RuntimeError"
     assert events[1]["meta"]["error_message"] == "Failed to extract"
+    assert events[2]["meta"] == {"total": 1, "completed": 1}
+    assert "Classification failed after 3 attempts" in result.iloc[0]["explanation"]
+
+
+def test_create_type_classification_retries_agent_cli_errors_then_recovers(
+    tmp_path: Path, monkeypatch
+) -> None:
+    output_csv = tmp_path / "types.csv"
+    monkeypatch.setattr(
+        "wordlift_sdk.ingestion.type_classification.run_ingestion",
+        lambda cfg: SimpleNamespace(
+            pages=[
+                SimpleNamespace(
+                    url="https://example.com/a",
+                    final_url=None,
+                    html="<html>a</html>",
+                ),
+            ]
+        ),
+    )
+    monkeypatch.setattr(
+        "wordlift_sdk.ingestion.type_classification._extract_markdown_body",
+        lambda html, max_markdown_chars: "md",
+    )
+    sleeps: list[float] = []
+    monkeypatch.setattr(
+        "wordlift_sdk.ingestion.type_classification.time.sleep", sleeps.append
+    )
+
+    class _Runner:
+        calls = 0
+
+        def __init__(self, cli, timeout_sec):
+            del cli, timeout_sec
+
+        def run_json(self, prompt: str):
+            del prompt
+            type(self).calls += 1
+            if type(self).calls < 3:
+                raise AgentCliError("codex failed")
+            return {
+                "main_type": "Article",
+                "additional_types": [],
+                "explanation": "ok",
+            }
+
+    monkeypatch.setattr(
+        "wordlift_sdk.ingestion.type_classification.LocalAgentCliRunner", _Runner
+    )
+
+    result = create_type_classification_csv_from_ingestion(
+        source_bundle={
+            "INGEST_SOURCE": "urls",
+            "INGEST_LOADER": "web_scrape_api",
+            "URLS": ["https://example.com/a"],
+        },
+        output_csv=output_csv,
+    )
+
+    assert _Runner.calls == 3
+    assert sleeps == [3.0, 3.0]
+    assert result.iloc[0]["main_type"] == "Article"
+
+
+def test_create_type_classification_resumes_by_default_across_cli_choice(
+    tmp_path: Path, monkeypatch
+) -> None:
+    output_csv = tmp_path / "types.csv"
+    source_bundle = {
+        "INGEST_SOURCE": "urls",
+        "INGEST_LOADER": "web_scrape_api",
+        "URLS": ["https://example.com/a"],
+    }
+    monkeypatch.setattr(
+        "wordlift_sdk.ingestion.type_classification.run_ingestion",
+        lambda cfg: SimpleNamespace(
+            pages=[
+                SimpleNamespace(
+                    url="https://example.com/a",
+                    final_url=None,
+                    html="<html>a</html>",
+                ),
+            ]
+        ),
+    )
+    monkeypatch.setattr(
+        "wordlift_sdk.ingestion.type_classification._extract_markdown_body",
+        lambda html, max_markdown_chars: "md",
+    )
+
+    class _Runner:
+        calls = 0
+
+        def __init__(self, cli, timeout_sec):
+            del cli, timeout_sec
+
+        def run_json(self, prompt: str):
+            del prompt
+            type(self).calls += 1
+            return {
+                "main_type": "Article",
+                "additional_types": [],
+                "explanation": "ok",
+            }
+
+    monkeypatch.setattr(
+        "wordlift_sdk.ingestion.type_classification.LocalAgentCliRunner", _Runner
+    )
+
+    first = create_type_classification_csv_from_ingestion(
+        source_bundle=source_bundle,
+        output_csv=output_csv,
+        agent_cli="codex",
+    )
+    second = create_type_classification_csv_from_ingestion(
+        source_bundle=source_bundle,
+        output_csv=output_csv,
+        agent_cli="claude",
+    )
+
+    assert _Runner.calls == 1
+    assert first.equals(second)
+
+
+def test_resume_state_path_excludes_agent_cli_from_call_state(tmp_path: Path) -> None:
+    source_bundle = {
+        "INGEST_SOURCE": "urls",
+        "INGEST_LOADER": "web_scrape_api",
+        "URLS": ["https://example.com/a"],
+    }
+
+    first = _resume_state_path(
+        output_csv=tmp_path / "types.csv",
+        source_bundle=source_bundle,
+        agent_timeout_sec=120.0,
+        max_markdown_chars=24000,
+    )
+    second = _resume_state_path(
+        output_csv=tmp_path / "types.csv",
+        source_bundle=source_bundle,
+        agent_timeout_sec=120.0,
+        max_markdown_chars=24000,
+    )
+
+    assert first == second
+
+
+def test_create_type_classification_no_resume_reprocesses_pages(
+    tmp_path: Path, monkeypatch
+) -> None:
+    output_csv = tmp_path / "types.csv"
+    source_bundle = {
+        "INGEST_SOURCE": "urls",
+        "INGEST_LOADER": "web_scrape_api",
+        "URLS": ["https://example.com/a"],
+    }
+    monkeypatch.setattr(
+        "wordlift_sdk.ingestion.type_classification.run_ingestion",
+        lambda cfg: SimpleNamespace(
+            pages=[
+                SimpleNamespace(
+                    url="https://example.com/a",
+                    final_url=None,
+                    html="<html>a</html>",
+                ),
+            ]
+        ),
+    )
+    monkeypatch.setattr(
+        "wordlift_sdk.ingestion.type_classification._extract_markdown_body",
+        lambda html, max_markdown_chars: "md",
+    )
+
+    class _Runner:
+        calls = 0
+
+        def __init__(self, cli, timeout_sec):
+            del cli, timeout_sec
+
+        def run_json(self, prompt: str):
+            del prompt
+            type(self).calls += 1
+            return {
+                "main_type": "Article",
+                "additional_types": [],
+                "explanation": f"ok-{type(self).calls}",
+            }
+
+    monkeypatch.setattr(
+        "wordlift_sdk.ingestion.type_classification.LocalAgentCliRunner", _Runner
+    )
+
+    first = create_type_classification_csv_from_ingestion(
+        source_bundle=source_bundle,
+        output_csv=output_csv,
+    )
+    second = create_type_classification_csv_from_ingestion(
+        source_bundle=source_bundle,
+        output_csv=output_csv,
+        no_resume=True,
+    )
+
+    assert _Runner.calls == 2
+    assert first.iloc[0]["explanation"] == "ok-1"
+    assert second.iloc[0]["explanation"] == "ok-2"
 
 
 def test_normalize_source_bundle_normalizes_keys() -> None:

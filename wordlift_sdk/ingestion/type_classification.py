@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 from functools import lru_cache
+import hashlib
 import json
 from datetime import datetime, timezone
 from pathlib import Path
 import re
+import time
 from typing import Any, Callable, Mapping
 
 import pandas as pd
@@ -98,6 +100,8 @@ _SCHEMA_FALLBACK_TYPES = (
     "Movie",
     "Review",
 )
+_CLASSIFICATION_MAX_ATTEMPTS = 3
+_CLASSIFICATION_RETRY_WAIT_SEC = 3.0
 
 
 def create_type_classification_csv_from_ingestion(
@@ -107,12 +111,21 @@ def create_type_classification_csv_from_ingestion(
     agent_cli: str | None = None,
     agent_timeout_sec: float = 120.0,
     max_markdown_chars: int = 24000,
+    no_resume: bool = False,
     on_progress: Callable[[dict[str, Any]], None] | None = None,
 ) -> pd.DataFrame:
     """Classify ingested URLs and write `url,main_type,additional_types,explanation`."""
 
     ingest_config = _normalize_source_bundle(source_bundle)
     ingestion_result = run_ingestion(ingest_config)
+    resolved_output_csv = Path(output_csv)
+    state_path = _resume_state_path(
+        output_csv=resolved_output_csv,
+        source_bundle=ingest_config,
+        agent_timeout_sec=agent_timeout_sec,
+        max_markdown_chars=max_markdown_chars,
+    )
+    resume_rows = {} if no_resume else _load_resume_rows(state_path)
     runner = LocalAgentCliRunner(cli=agent_cli, timeout_sec=agent_timeout_sec)
 
     rows: list[dict[str, str]] = []
@@ -128,14 +141,34 @@ def create_type_classification_csv_from_ingestion(
 
     for index, page in enumerate(ingestion_result.pages, start=1):
         url = page.final_url or page.url
+        resumed_row = resume_rows.get(index)
+        if resumed_row is not None and resumed_row.get("url") == url:
+            row = _coerce_resume_row(resumed_row)
+            rows.append(row)
+            if on_progress is not None:
+                on_progress(
+                    {
+                        "event": "type_classification.progress.updated",
+                        "timestamp": _utc_now_iso(),
+                        "meta": {
+                            "total": total,
+                            "completed": index,
+                            "remaining": total - index,
+                            "url": url,
+                            "status": "resumed",
+                        },
+                    }
+                )
+            continue
         try:
-            markdown = _extract_markdown_body(
-                page.html, max_markdown_chars=max_markdown_chars
+            row = _classify_page_with_retries(
+                page_html=page.html,
+                url=url,
+                runner=runner,
+                max_markdown_chars=max_markdown_chars,
             )
-            payload = runner.run_json(
-                _classification_prompt(url=url, markdown=markdown)
-            )
-            rows.append(_row_from_payload(url=url, payload=payload))
+            rows.append(row)
+            _write_resume_row(state_path, index=index, row=row)
             if on_progress is not None:
                 on_progress(
                     {
@@ -151,6 +184,9 @@ def create_type_classification_csv_from_ingestion(
                     }
                 )
         except Exception as exc:
+            row = _error_row(url=url, exc=exc)
+            rows.append(row)
+            _write_resume_row(state_path, index=index, row=row)
             if on_progress is not None:
                 on_progress(
                     {
@@ -161,19 +197,18 @@ def create_type_classification_csv_from_ingestion(
                             "completed": index,
                             "remaining": total - index,
                             "url": url,
-                            "status": "error",
+                            "status": "skipped",
                             "error_type": type(exc).__name__,
                             "error_message": str(exc),
                         },
                     }
                 )
-            raise
 
     result = pd.DataFrame(
         rows,
         columns=["url", "main_type", "additional_types", "explanation"],
     )
-    result.to_csv(output_csv, index=False)
+    result.to_csv(resolved_output_csv, index=False)
     if on_progress is not None:
         on_progress(
             {
@@ -197,6 +232,96 @@ def _normalize_source_bundle(source_bundle: Mapping[str, Any]) -> dict[str, Any]
     return out
 
 
+def _resume_state_path(
+    *,
+    output_csv: str | Path,
+    source_bundle: Mapping[str, Any],
+    agent_timeout_sec: float,
+    max_markdown_chars: int,
+) -> Path:
+    output_path = Path(output_csv)
+    call_state = {
+        "source_bundle": dict(source_bundle),
+        "output_csv": str(output_path.resolve()),
+        "agent_timeout_sec": agent_timeout_sec,
+        "max_markdown_chars": max_markdown_chars,
+    }
+    serialized = json.dumps(call_state, sort_keys=True, separators=(",", ":"))
+    digest = hashlib.sha256(serialized.encode("utf-8")).hexdigest()[:12]
+    return output_path.parent / f".{output_path.name}.{digest}.resume.json"
+
+
+def _load_resume_rows(state_path: Path) -> dict[int, dict[str, str]]:
+    try:
+        payload = json.loads(state_path.read_text())
+    except FileNotFoundError:
+        return {}
+    except (OSError, json.JSONDecodeError):
+        return {}
+    items = payload.get("rows")
+    if not isinstance(items, list):
+        return {}
+    rows: dict[int, dict[str, str]] = {}
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        index = item.get("index")
+        row = item.get("row")
+        if isinstance(index, int) and isinstance(row, dict):
+            rows[index] = {
+                "url": str(row.get("url") or ""),
+                "main_type": str(row.get("main_type") or ""),
+                "additional_types": str(row.get("additional_types") or "[]"),
+                "explanation": str(row.get("explanation") or ""),
+            }
+    return rows
+
+
+def _write_resume_row(state_path: Path, *, index: int, row: dict[str, str]) -> None:
+    rows = _load_resume_rows(state_path)
+    rows[index] = dict(row)
+    payload = {"rows": [{"index": idx, "row": rows[idx]} for idx in sorted(rows)]}
+    state_path.parent.mkdir(parents=True, exist_ok=True)
+    temp_path = state_path.with_suffix(f"{state_path.suffix}.tmp")
+    temp_path.write_text(json.dumps(payload, ensure_ascii=True, indent=2))
+    temp_path.replace(state_path)
+
+
+def _coerce_resume_row(row: Mapping[str, object]) -> dict[str, str]:
+    return {
+        "url": str(row.get("url") or ""),
+        "main_type": str(row.get("main_type") or ""),
+        "additional_types": str(row.get("additional_types") or "[]"),
+        "explanation": str(row.get("explanation") or ""),
+    }
+
+
+def _classify_page_with_retries(
+    *,
+    page_html: str,
+    url: str,
+    runner: LocalAgentCliRunner,
+    max_markdown_chars: int,
+) -> dict[str, str]:
+    last_exc: Exception | None = None
+    for attempt in range(1, _CLASSIFICATION_MAX_ATTEMPTS + 1):
+        try:
+            markdown = _extract_markdown_body(
+                page_html, max_markdown_chars=max_markdown_chars
+            )
+            payload = runner.run_json(
+                _classification_prompt(url=url, markdown=markdown)
+            )
+            return _row_from_payload(url=url, payload=payload)
+        except Exception as exc:
+            last_exc = exc
+            if attempt >= _CLASSIFICATION_MAX_ATTEMPTS:
+                break
+            time.sleep(_CLASSIFICATION_RETRY_WAIT_SEC)
+    assert last_exc is not None
+    raise last_exc
+
+
 def _extract_markdown_body(html: str, *, max_markdown_chars: int) -> str:
     import trafilatura
 
@@ -212,6 +337,19 @@ def _extract_markdown_body(html: str, *, max_markdown_chars: int) -> str:
     if len(normalized) > max_markdown_chars:
         return normalized[:max_markdown_chars]
     return normalized
+
+
+def _error_row(*, url: str, exc: Exception) -> dict[str, str]:
+    return {
+        "url": url,
+        "main_type": "",
+        "additional_types": "[]",
+        "explanation": (
+            "Classification failed after "
+            f"{_CLASSIFICATION_MAX_ATTEMPTS} attempts: "
+            f"{type(exc).__name__}: {exc}"
+        ),
+    }
 
 
 @lru_cache(maxsize=1)
