@@ -1,6 +1,7 @@
 # Specs Index
 
 - `specs/GSC_CANONICAL_SELECTION.md`: Client integration spec for canonical URL election from GSC impressions (`url,title` CSV input, OAuth/service-account credential handoff, interval/concurrency contract).
+- `specs/GRAPH_SYNC_API.md`: Graph-scoped REST API and persistence model for recording sync runs, live progress, aggregate KPIs, and per-URL SHACL reporting.
 - `specs/PIPELINE_ARCHITECTURE.md`: `kg_build` runtime flow and callback architecture.
 - `specs/PROFILE_CONFIG.md`: Profile inheritance, environment interpolation, and postprocessor manifest contract.
 - `specs/INGESTION_PIPELINE.md`: Source/loader ingestion contract, resolver precedence rules, and `kg_build` bridge callback suppression contract for HTTP error pages.
