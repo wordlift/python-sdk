@@ -36,8 +36,8 @@ class RichSnippetsKpi:
     """
     Classify entities by rich-snippet eligibility.
 
-    eligible_valid  – entity type is targeted by a Google SHACL shape AND passes.
-    eligible_invalid – entity type is targeted by a Google SHACL shape AND fails.
+    eligible_valid  – entity type is a root Google rich-result target AND passes.
+    eligible_invalid – entity type is a root Google rich-result target AND fails.
 
     granularity='counts' (default): returns {type_iri: count}
     granularity='entities': returns {type_iri: [iri, ...]}
@@ -61,10 +61,15 @@ class RichSnippetsKpi:
 
         shapes_graph, _ = _load_shapes_graph(all_google_specs)
 
-        # Determine which rdf:type values are targeted by at least one shape
+        # Determine which rdf:type values are targeted by root rich-result shapes.
+        # Some bundled Google SHACLs target helper/value types used inside a
+        # larger rich result (for example QuantitativeValue, Offer, Rating).
+        # Those are useful for validation but should not appear as standalone
+        # rich-snippet KPI rows.
         targeted_types: set[str] = {
             str(o) for _, _, o in shapes_graph.triples((None, SH.targetClass, None))
         }
+        targeted_types -= _helper_only_target_types()
         if not targeted_types:
             return RichSnippetsResult(eligible_valid={}, eligible_invalid={})
 
@@ -127,6 +132,40 @@ def _google_shape_specs() -> list[str]:
         and entry.name.endswith(".ttl")
         and entry.name.startswith("google-")
     ]
+
+
+def _helper_only_target_types() -> set[str]:
+    """Return bundled Google target classes that are helper-only, not root results."""
+
+    helper_names = {
+        "3DModel",
+        "BroadcastEvent",
+        "Certification",
+        "Clip",
+        "Conditions",
+        "DataDownload",
+        "DefinedRegion",
+        "HowToDirection",
+        "HowToSection",
+        "HowToTip",
+        "InteractionCounter",
+        "MonetaryAmount",
+        "Offer",
+        "OfferShippingDetails",
+        "OpeningHoursSpecification",
+        "PeopleAudience",
+        "QuantitativeValue",
+        "Rating",
+        "SeekToAction",
+        "ServicePeriod",
+        "ShippingConditions",
+        "ShippingDeliveryTime",
+        "ShippingRateSettings",
+        "ShippingService",
+        "SizeSpecification",
+        "UnitPriceSpecification",
+    }
+    return {f"http://schema.org/{name}" for name in helper_names}
 
 
 __all__ = ["RichSnippetsKpi", "RichSnippetsResult"]

@@ -23,6 +23,7 @@ from wordlift_sdk.graph.audit.kpis import (
     IsolatedGraphsKpi,
     OrphansKpi,
     PropertiesKpi,
+    RichSnippetsKpi,
     TotalsKpi,
     UniqueUrlsKpi,
 )
@@ -292,6 +293,31 @@ def test_duplicates(graph_with_duplicates: Graph) -> None:
 def test_no_duplicates(simple_graph: Graph) -> None:
     result = DuplicatesKpi().collect(simple_graph)
     assert result.count == 0
+
+
+# ---------------------------------------------------------------------------
+# RichSnippetsKpi
+# ---------------------------------------------------------------------------
+
+
+def test_rich_snippets_excludes_helper_only_google_types() -> None:
+    recipe = _uri("recipe/1")
+    quantity = _uri("quantity/1")
+    g = _g(
+        (recipe, RDF.type, _schema("Recipe")),
+        (recipe, _schema("name"), Literal("Pasta")),
+        (recipe, _schema("image"), Literal("https://example.org/pasta.jpg")),
+        (quantity, RDF.type, _schema("QuantitativeValue")),
+        (quantity, _schema("minValue"), Literal(1)),
+        (quantity, _schema("maxValue"), Literal(3)),
+        (quantity, _schema("unitCode"), Literal("DAY")),
+        (quantity, _schema("value"), Literal(2)),
+    )
+
+    result = RichSnippetsKpi().collect(g)
+
+    assert result.eligible_valid == {f"{_SCHEMA}Recipe": 1}
+    assert result.eligible_invalid == {}
 
 
 # ---------------------------------------------------------------------------
