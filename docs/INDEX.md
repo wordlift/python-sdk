@@ -2,6 +2,7 @@
 
 - `docs/public_entry_points.md`: Task-oriented public API inventory for clients/agents.
 - `docs/packaging_slices_v7.md`: v7 packaging model for lean base installs plus optional feature extras under the same `wordlift_sdk` namespace.
+- `README.md`: high-level install guide, slice summary, and common verification commands.
 - `docs/ingestion_pipeline.md`: Two-axis ingestion architecture, config precedence, compatibility mapping, async-safe Playwright loader behavior, Playwright failure diagnostics in `ingest.item_failed.meta`, bridge-handler diagnostics surfacing (`diagnostics=<json>`), and `kg_build` callback suppression for HTTP error pages (`status_code >= 400`).
 - `docs/local_agent_type_classification.md`: Ingestion-backed local CLI (`claude|codex|gemini`) type classification CSV export (`url,main_type,additional_types,explanation`) with `trafilatura` markdown extraction.
 - `docs/structured_data.md`: Structured data architecture and workflows.

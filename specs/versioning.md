@@ -6,8 +6,9 @@ The project follows [Semantic Versioning 2.0.0](https://semver.org/).
 
 ## Tag Format
 
-Tags MUST use the `x.y.z` format (e.g., `2.20.0`).
-Tags MUST NOT use a `v` prefix (e.g., `v2.20.0` is invalid).
+Canonical release tags use the `v<x.y.z>` format (for example `v7.0.0`).
+Bare semver tags (`x.y.z`) are tolerated by publish automation for backward
+compatibility, but new manual release tags should use the `v` prefix.
 
 ## Management
 
@@ -31,6 +32,7 @@ poetry version <major|minor|patch>
     *   Stage `pyproject.toml` and `poetry.lock`.
     *   Commit message format: `chore: Bump version to <version>`.
 6.  **Tag:**
-    *   Create a git tag using the version number: `git tag <version>`.
+    *   Create an annotated git tag using the `v`-prefixed version:
+        `git tag -a v<version> -m "v<version>"`.
 7.  **Push:**
     *   Push the commit and the tag to the remote repository.

@@ -11,6 +11,8 @@ lean base install plus optional extras.
 - Explicit core alias: `pip install "wordlift-sdk[core]"`
 - Feature installs: `pip install "wordlift-sdk[validation]"`, etc.
 - Full install: `pip install "wordlift-sdk[all]"`
+- The README must publish the full slice list, one-line purpose per slice, and
+  at least one example verification command sequence for slice tooling.
 
 ## Slice Names
 
@@ -55,3 +57,11 @@ CI must run:
 3. for `core`, run missing-extra hint checks
 4. run the slice pytest scope
 5. separately, run `all` with the full regression suite and coverage gate
+
+## Documentation Contract
+
+- `README.md` is the consumer-facing summary for packaging slices.
+- `docs/packaging_slices_v7.md` is the detailed human-readable reference.
+- `specs/PACKAGING_SLICES_V7.md` is the normative packaging contract.
+- Changes to extras, slice names, lazy-export behavior, or slice verification
+  tooling must update all three in the same change.

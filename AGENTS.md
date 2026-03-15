@@ -2,6 +2,16 @@
 
 ## Project Notes
 
+- Packaging is slice-based as of v7: `wordlift-sdk` installs a lean base by
+  default and exposes optional extras (`core`, `render`, `validation`,
+  `google-sheets`, `google-search-console`, `ingestion`, `structured-data`,
+  `workflow`, `graph`, `kg-build`, `legacy`, `all`) while preserving the
+  `wordlift_sdk.*` import namespace through lazy package exports.
+- Slice verification is part of the repository contract: keep
+  `tests/tools/run_slice_smoke_imports.py`,
+  `tests/tools/run_slice_tests.py`, and
+  `tests/tools/check_missing_extra_hints.py` aligned with any public packaging
+  or dependency-boundary change.
 - Ingestion now exposes source-only URL discovery via
   `wordlift_sdk.ingestion.resolve_ingestion_source_items`, reusing resolver,
   source adapters, URL filtering, and warning event semantics from the shared

@@ -32,10 +32,43 @@ Requires Python 3.10–3.14.
 namespace remains `wordlift_sdk.*`; feature packages load lazily and raise an
 install hint if you access an export without the matching extra installed.
 
+Available slices:
+- `core`: lightweight client/configuration primitives and lazy package entry points.
+- `render`: Playwright rendering and XHTML cleanup.
+- `validation`: SHACL validation, bundled shapes, and validation helpers.
+- `google-sheets`: Google Sheets lookup and dataframe helpers.
+- `google-search-console`: Search Console data import and canonical clustering helpers.
+- `ingestion`: source resolution, loaders, inventory, and type classification.
+- `structured-data`: structured-data generation, materialization, and batch workflows.
+- `workflow`: legacy import workflow/container/protocol entry points.
+- `graph`: graph audit and liquid-template graph helpers.
+- `kg-build`: profile-driven cloud workflow, postprocessors, and graph sync.
+- `legacy`: compatibility umbrella for older entity/internal-link/KG utilities.
+- `all`: every optional dependency above.
+
+Recommended install patterns:
+- `pip install wordlift-sdk` for the lean default.
+- `pip install "wordlift-sdk[validation]"` for validation-only clients.
+- `pip install "wordlift-sdk[structured-data]"` for structured-data generation.
+- `pip install "wordlift-sdk[kg-build]"` for profile/cloud orchestration.
+- `pip install "wordlift-sdk[all]"` for full SDK coverage.
+
+Detailed slice boundaries, dependency lists, and CI verification rules are in
+`docs/packaging_slices_v7.md`.
+
 For repository verification, slice-specific pytest scopes are defined in
 `tests/tools/run_slice_tests.py`, and fast import smoke checks are defined in
 `tests/tools/run_slice_smoke_imports.py`. Lean-install install-hint checks are
 defined in `tests/tools/check_missing_extra_hints.py`.
+
+Typical slice verification commands:
+
+```bash
+python tests/tools/run_slice_smoke_imports.py validation
+python tests/tools/run_slice_tests.py validation -- -q
+python tests/tools/run_slice_tests.py structured-data -- -q
+python tests/tools/run_slice_tests.py all -- -q
+```
 
 ## Configuration
 

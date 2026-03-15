@@ -11,3 +11,4 @@
 - `specs/validation.md`: Validation architecture and shape composition contract.
 - `specs/tls.md`: TLS/SSL CA bundle resolution behavior.
 - `specs/versioning.md`: Versioning and release process rules.
+- `README.md`: high-level install and slice-consumer guide that should stay consistent with the packaging/versioning specs.

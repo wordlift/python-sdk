@@ -1,5 +1,6 @@
 # TODO
 
+- [x] 2026-03-15 Expand v7 packaging docs/specs/README coverage for the full slice matrix, install guidance, and verification commands; align release/versioning notes with current `v`-prefixed tags.
 - [x] 2026-03-06 Update PyPI publish GitHub Action tag triggers to support both bare semver (`1.2.3`) and `v`-prefixed tags (`v1.2.3`) with explicit tag-ref job guard.
 - [x] 2026-03-06 Refactor structured-data inventory ingestion to avoid duplicate source traversal (single source pass reused for ingestion) and emit ingest-time `inventory.progress.updated` events so host CLIs no longer remain at `0/N` until post-ingestion row building.
 - [x] 2026-03-06 Add optional `kg_build` canonical-ID lookup hook (`IriLookup.iri_for_subject`) with dataframe-backed URL→IRI resolver, root-only lookup application, deterministic duplicate URL policy (shortest-path parent IRI), `Context.extensions["kg_build.iri_lookup"]` injection, and regression coverage.

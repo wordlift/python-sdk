@@ -7,6 +7,12 @@ Conventions:
 - `log` means `Callable[[str], None]` (for example `print`).
 - `| None` means nullable.
 
+Packaging note:
+- Public entry points live behind v7 slice extras. Import paths remain
+  `wordlift_sdk.*`, but clients must install the matching `wordlift-sdk[...]`
+  extra for heavy features such as `validation`, `structured-data`, `workflow`,
+  `graph`, or `kg-build`.
+
 ## Run YARRRML mappings on URLs
 
 File: `wordlift_sdk/kg_build/rml_mapping.py`
