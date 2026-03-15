@@ -2,114 +2,24 @@
 
 from __future__ import annotations
 
-from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass
 from typing import Literal as TypingLiteral
 
 from rdflib import BNode, Graph, Literal, URIRef
 from rdflib.namespace import SH
 
+from .rich_snippets import (
+    RichSnippetsValidationSummary,
+    build_rich_snippets_validation_summary,
+)
 from wordlift_sdk.validation.shacl import (
-    _load_shapes_graph,  # type: ignore[attr-defined]
     _normalize_schema_org_uris,  # type: ignore[attr-defined]
+    PreparedShaclValidator,
 )
 
 _SCHEMA_URL_HTTP = URIRef("http://schema.org/url")
 _SCHEMA_URL_HTTPS = URIRef("https://schema.org/url")
 _MERCHANT_SHAPE = "google-merchant-listing.ttl"
-
-# Options passed to every Validator instance.
-_VALIDATOR_OPTIONS: dict = {
-    "inference": "rdfs",
-    "abort_on_first": False,
-    "allow_infos": True,
-    "allow_warnings": True,
-}
-
-# ---------------------------------------------------------------------------
-# Per-process state (populated by _init_worker in each worker process)
-# ---------------------------------------------------------------------------
-
-_main_validator = None
-_merchant_validator = None
-_main_source_map: dict[str, str] = {}
-_merchant_source_map: dict[str, str] = {}
-
-
-def _init_worker(
-    main_shapes_nt: str,
-    merchant_shapes_nt: str,
-    main_source_map: dict[str, str],
-    merchant_source_map: dict[str, str],
-) -> None:
-    """Initialise one worker process: deserialise shapes and pre-warm validators."""
-    global _main_validator, _merchant_validator
-    global _main_source_map, _merchant_source_map
-
-    from pyshacl import Validator  # local import — each worker process loads it
-
-    main_shapes = Graph()
-    main_shapes.parse(data=main_shapes_nt, format="nt")
-
-    merchant_shapes = Graph()
-    merchant_shapes.parse(data=merchant_shapes_nt, format="nt")
-
-    dummy = Graph()
-
-    _main_validator = Validator(
-        dummy, shacl_graph=main_shapes, options=dict(_VALIDATOR_OPTIONS)
-    )
-    # Trigger the shapes-cache build once so every subsequent run() skips it.
-    _ = _main_validator.shacl_graph.shapes
-
-    _merchant_validator = Validator(
-        dummy, shacl_graph=merchant_shapes, options=dict(_VALIDATOR_OPTIONS)
-    )
-    _ = _merchant_validator.shacl_graph.shapes
-
-    _main_source_map = main_source_map
-    _merchant_source_map = merchant_source_map
-
-
-def _validate_url_worker(
-    args: tuple[str, str, str],
-) -> UrlComplianceResult:
-    """
-    Worker entry-point: validate one subgraph (serialised as N-Triples).
-
-    Uses the pre-warmed per-process Validator instances so shape harvest runs
-    only once per worker process, not once per URL.
-    """
-    url, subgraph_nt, issue_level = args
-
-    subgraph = Graph()
-    if subgraph_nt:
-        subgraph.parse(data=subgraph_nt, format="nt")
-
-    errors, warnings = _run_with_validator(
-        _main_validator, subgraph, _main_source_map, issue_level
-    )
-    m_errors, m_warnings = _run_with_validator(
-        _merchant_validator, subgraph, _merchant_source_map, issue_level
-    )
-
-    return UrlComplianceResult(
-        url=url,
-        errors=errors,
-        warnings=warnings,
-        error_count=len(errors),
-        warning_count=len(warnings),
-        google_merchant=MerchantResult(
-            errors=m_errors,
-            warnings=m_warnings,
-            eligible=len(m_errors) == 0,
-        ),
-    )
-
-
-# ---------------------------------------------------------------------------
-# Public data classes
-# ---------------------------------------------------------------------------
 
 
 @dataclass
@@ -126,7 +36,7 @@ class IssueEntry:
     position: int | None = None
 
     def to_dict(self) -> dict:
-        d: dict = {"severity": self.severity, "message": self.message}
+        data: dict = {"severity": self.severity, "message": self.message}
         for attr in (
             "focus_node",
             "path",
@@ -137,10 +47,10 @@ class IssueEntry:
             "code",
             "position",
         ):
-            v = getattr(self, attr)
-            if v is not None:
-                d[attr] = v
-        return d
+            value = getattr(self, attr)
+            if value is not None:
+                data[attr] = value
+        return data
 
 
 @dataclass
@@ -151,8 +61,8 @@ class MerchantResult:
 
     def to_dict(self) -> dict:
         return {
-            "errors": [e.to_dict() for e in self.errors],
-            "warnings": [w.to_dict() for w in self.warnings],
+            "errors": [entry.to_dict() for entry in self.errors],
+            "warnings": [entry.to_dict() for entry in self.warnings],
             "eligible": self.eligible,
         }
 
@@ -169,8 +79,8 @@ class UrlComplianceResult:
     def to_dict(self) -> dict:
         return {
             "url": self.url,
-            "errors": [e.to_dict() for e in self.errors],
-            "warnings": [w.to_dict() for w in self.warnings],
+            "errors": [entry.to_dict() for entry in self.errors],
+            "warnings": [entry.to_dict() for entry in self.warnings],
             "error_count": self.error_count,
             "warning_count": self.warning_count,
             "google_merchant": self.google_merchant.to_dict(),
@@ -182,12 +92,21 @@ class SchemaComplianceResult:
     by_url: list[UrlComplianceResult]
 
     def to_dict(self) -> dict:
-        return {"schema_compliance": [r.to_dict() for r in self.by_url]}
+        return {"schema_compliance": [result.to_dict() for result in self.by_url]}
 
 
-# ---------------------------------------------------------------------------
-# KPI collector
-# ---------------------------------------------------------------------------
+@dataclass(frozen=True)
+class SchemaComplianceRun:
+    schema_compliance: SchemaComplianceResult
+    rich_snippets: RichSnippetsValidationSummary
+
+
+@dataclass(frozen=True)
+class ExtractedIssues:
+    errors: list[IssueEntry]
+    warnings: list[IssueEntry]
+    error_count: int
+    warning_count: int
 
 
 class SchemaComplianceKpi:
@@ -204,10 +123,8 @@ class SchemaComplianceKpi:
     Merchant-listing shape runs separately and is reported under
     ``google_merchant``.
 
-    Performance: subgraphs are built in the calling process, then distributed
-    to a ``ProcessPoolExecutor``.  Each worker process deserialises the shapes
-    once and pre-warms a ``pyshacl.Validator`` so the shapes-cache harvest is
-    paid only once per worker, not once per URL.
+    Prepared validators are kept on the KPI instance so shape loading and shape
+    harvest are paid once and reused across calls.
     """
 
     def __init__(
@@ -216,79 +133,126 @@ class SchemaComplianceKpi:
         depth: int = 1,
         issue_level: TypingLiteral["warning", "error"] = "warning",
         max_workers: int | None = None,
+        include_issue_details: bool = True,
     ) -> None:
         self._depth = depth
         self._issue_level = issue_level
         self._max_workers = max_workers
+        self._include_issue_details = include_issue_details
+        self._last_run: SchemaComplianceRun | None = None
 
-        merchant_specs = [s for s in shape_specs if s.endswith(_MERCHANT_SHAPE)]
-        main_specs = [s for s in shape_specs if not s.endswith(_MERCHANT_SHAPE)]
-
-        main_graph, main_source_map = _load_shapes_graph(main_specs)
-        merchant_graph, merchant_source_map = _load_shapes_graph(merchant_specs)
-
-        # Serialise to N-Triples for safe cross-process transfer.
-        self._main_shapes_nt: str = main_graph.serialize(format="nt")
-        self._merchant_shapes_nt: str = merchant_graph.serialize(format="nt")
-
-        # source_map keys are rdflib Identifiers — stringify for pickling.
-        self._main_source_map: dict[str, str] = {
-            str(k): v for k, v in main_source_map.items()
-        }
-        self._merchant_source_map: dict[str, str] = {
-            str(k): v for k, v in merchant_source_map.items()
-        }
+        merchant_specs = [
+            spec for spec in shape_specs if spec.endswith(_MERCHANT_SHAPE)
+        ]
+        main_specs = [
+            spec for spec in shape_specs if not spec.endswith(_MERCHANT_SHAPE)
+        ]
+        self._main_validator = PreparedShaclValidator.from_shape_specs(main_specs)
+        self._merchant_validator = PreparedShaclValidator.from_shape_specs(
+            merchant_specs
+        )
 
     def collect(self, graph: Graph) -> SchemaComplianceResult:
         normalized = _normalize_schema_org_uris(graph)
         webpage_urls = _find_webpage_urls(normalized)
-
         if not webpage_urls:
-            return SchemaComplianceResult(by_url=[])
+            self._last_run = SchemaComplianceRun(
+                schema_compliance=SchemaComplianceResult(by_url=[]),
+                rich_snippets=RichSnippetsValidationSummary(
+                    entity_types={},
+                    invalid_entities=frozenset(),
+                ),
+            )
+            return self._last_run.schema_compliance
 
-        all_subjects = {s for s in normalized.subjects() if isinstance(s, URIRef)}
+        all_subjects = {
+            subject for subject in normalized.subjects() if isinstance(subject, URIRef)
+        }
+        subgraphs = {
+            url: _build_subgraph(normalized, url, self._depth, all_subjects)
+            for url in webpage_urls
+        }
+        return self.collect_prebuilt(subgraphs)
 
-        # Build every subgraph in the main process (no SHACL overhead here).
-        tasks: list[tuple[str, str, str]] = []
-        for url in webpage_urls:
-            subgraph = _build_subgraph(normalized, url, self._depth, all_subjects)
-            tasks.append(
-                (
-                    url,
-                    subgraph.serialize(format="nt") if len(subgraph) else "",
-                    self._issue_level,
+    def collect_prebuilt(
+        self, subgraphs_by_url: dict[str, Graph]
+    ) -> SchemaComplianceResult:
+        run = self.run_prebuilt(subgraphs_by_url)
+        return run.schema_compliance
+
+    def run_prebuilt(self, subgraphs_by_url: dict[str, Graph]) -> SchemaComplianceRun:
+        results: list[UrlComplianceResult] = []
+        rich_entity_types: dict[str, set[str]] = {}
+        rich_invalid_entities: set[str] = set()
+
+        for url, subgraph in sorted(subgraphs_by_url.items()):
+            main_validation = self._main_validator.validate_graph(
+                subgraph, normalize_schema_org=False
+            )
+            merchant_validation = self._merchant_validator.validate_graph(
+                subgraph, normalize_schema_org=False
+            )
+
+            main_issues = _extract_issues(
+                main_validation.report_graph,
+                self._main_validator.prepared_shapes.shape_source_map,
+                issue_level=self._issue_level,
+                include_issue_details=self._include_issue_details,
+            )
+            merchant_issues = _extract_issues(
+                merchant_validation.report_graph,
+                self._merchant_validator.prepared_shapes.shape_source_map,
+                issue_level=self._issue_level,
+                include_issue_details=self._include_issue_details,
+            )
+
+            rich_summary = build_rich_snippets_validation_summary(
+                subgraph,
+                main_validation.report_graph,
+                self._main_validator.prepared_shapes.shape_source_map,
+            )
+            for iri, types in rich_summary.entity_types.items():
+                rich_entity_types.setdefault(iri, set()).update(types)
+            rich_invalid_entities.update(rich_summary.invalid_entities)
+
+            results.append(
+                UrlComplianceResult(
+                    url=url,
+                    errors=main_issues.errors,
+                    warnings=main_issues.warnings,
+                    error_count=main_issues.error_count,
+                    warning_count=main_issues.warning_count,
+                    google_merchant=MerchantResult(
+                        errors=merchant_issues.errors,
+                        warnings=merchant_issues.warnings,
+                        eligible=merchant_issues.error_count == 0,
+                    ),
                 )
             )
 
-        results: list[UrlComplianceResult] = []
-        with ProcessPoolExecutor(
-            max_workers=self._max_workers,
-            initializer=_init_worker,
-            initargs=(
-                self._main_shapes_nt,
-                self._merchant_shapes_nt,
-                self._main_source_map,
-                self._merchant_source_map,
+        self._last_run = SchemaComplianceRun(
+            schema_compliance=SchemaComplianceResult(by_url=results),
+            rich_snippets=RichSnippetsValidationSummary(
+                entity_types={
+                    iri: tuple(sorted(types))
+                    for iri, types in sorted(rich_entity_types.items())
+                },
+                invalid_entities=frozenset(rich_invalid_entities),
             ),
-        ) as executor:
-            for result in executor.map(_validate_url_worker, tasks):
-                results.append(result)
+        )
+        return self._last_run
 
-        results.sort(key=lambda r: r.url)
-        return SchemaComplianceResult(by_url=results)
-
-
-# ---------------------------------------------------------------------------
-# Internal helpers
-# ---------------------------------------------------------------------------
+    @property
+    def last_run(self) -> SchemaComplianceRun | None:
+        return self._last_run
 
 
 def _find_webpage_urls(graph: Graph) -> set[str]:
     urls: set[str] = set()
-    for pred in (_SCHEMA_URL_HTTP, _SCHEMA_URL_HTTPS):
-        for _, _, o in graph.triples((None, pred, None)):
-            if isinstance(o, (URIRef, Literal)):
-                urls.add(str(o))
+    for predicate in (_SCHEMA_URL_HTTP, _SCHEMA_URL_HTTPS):
+        for _, _, obj in graph.triples((None, predicate, None)):
+            if isinstance(obj, (URIRef, Literal)):
+                urls.add(str(obj))
     return urls
 
 
@@ -298,114 +262,118 @@ def _build_subgraph(
     depth: int,
     all_subjects: set[URIRef],
 ) -> Graph:
-    # 1. Root IRIs: subjects with schema:url = webpage_url
     root_iris: set[URIRef] = set()
-    for pred in (_SCHEMA_URL_HTTP, _SCHEMA_URL_HTTPS):
-        for s, _, o in graph.triples((None, pred, None)):
-            if isinstance(s, URIRef) and str(o) == webpage_url:
-                root_iris.add(s)
+    for predicate in (_SCHEMA_URL_HTTP, _SCHEMA_URL_HTTPS):
+        for subject, _, obj in graph.triples((None, predicate, None)):
+            if isinstance(subject, URIRef) and str(obj) == webpage_url:
+                root_iris.add(subject)
 
-    # 2. IRI-prefix children (e.g. /entity/child of /entity)
     child_iris: set[URIRef] = set()
     for root_iri in root_iris:
         prefix = str(root_iri).rstrip("/") + "/"
-        for s in all_subjects:
-            if str(s).startswith(prefix):
-                child_iris.add(s)
+        for subject in all_subjects:
+            if str(subject).startswith(prefix):
+                child_iris.add(subject)
 
-    # 3. Expand by depth hops over relationship edges
     entity_iris: set[URIRef] = root_iris | child_iris
     visited: set[URIRef] = set(entity_iris)
     frontier: set[URIRef] = set(entity_iris)
     for _ in range(depth):
         next_frontier: set[URIRef] = set()
         for iri in frontier:
-            for _, _, o in graph.triples((iri, None, None)):
-                if isinstance(o, URIRef) and o in all_subjects and o not in visited:
-                    next_frontier.add(o)
+            for _, _, obj in graph.triples((iri, None, None)):
+                if (
+                    isinstance(obj, URIRef)
+                    and obj in all_subjects
+                    and obj not in visited
+                ):
+                    next_frontier.add(obj)
         visited.update(next_frontier)
         frontier = next_frontier
         if not frontier:
             break
 
-    # 3b. IRI-prefix children of referenced entities
     for iri in set(visited) - root_iris - child_iris:
         prefix = str(iri).rstrip("/") + "/"
-        for s in all_subjects:
-            if str(s).startswith(prefix):
-                visited.add(s)
+        for subject in all_subjects:
+            if str(subject).startswith(prefix):
+                visited.add(subject)
 
-    # 4. Build subgraph — no blank nodes
     subgraph = Graph()
     for iri in visited:
-        for s, p, o in graph.triples((iri, None, None)):
-            if not isinstance(s, BNode) and not isinstance(o, BNode):
-                subgraph.add((s, p, o))
+        for subject, predicate, obj in graph.triples((iri, None, None)):
+            if not isinstance(subject, BNode) and not isinstance(obj, BNode):
+                subgraph.add((subject, predicate, obj))
     return subgraph
-
-
-def _run_with_validator(
-    validator,
-    data_graph: Graph,
-    source_map: dict[str, str],
-    issue_level: str = "warning",
-) -> tuple[list[IssueEntry], list[IssueEntry]]:
-    """Run a pre-warmed Validator on *data_graph*, reusing the shapes cache."""
-    if validator is None or len(data_graph) == 0:
-        return [], []
-
-    # Reset per-run mutable state; shapes cache on validator.shacl_graph is kept.
-    validator.data_graph = data_graph
-    validator.pre_inferenced = False
-    validator._target_graph = None  # force rebuild from data_graph
-
-    _, report_graph, _ = validator.run()
-    return _extract_issues(report_graph, source_map, issue_level)
 
 
 def _extract_issues(
     report_graph: Graph,
-    source_map: dict[str, str],
+    source_map: dict,
     issue_level: str = "warning",
-) -> tuple[list[IssueEntry], list[IssueEntry]]:
+    include_issue_details: bool = True,
+) -> ExtractedIssues:
     errors: list[IssueEntry] = []
     warnings: list[IssueEntry] = []
+    error_count = 0
+    warning_count = 0
 
     for node in report_graph.subjects(SH.resultSeverity, None):
         severity_iri = report_graph.value(node, SH.resultSeverity)
-        source_shape = report_graph.value(node, SH.sourceShape)
-        message = report_graph.value(node, SH.resultMessage)
-        focus_node = report_graph.value(node, SH.focusNode)
-        result_path = report_graph.value(node, SH.resultPath)
-        constraint = report_graph.value(node, SH.sourceConstraintComponent)
-        value = report_graph.value(node, SH.value)
-
-        severity_label = (
-            str(severity_iri).split("#")[-1] if severity_iri else "Violation"
-        )
-
-        entry = IssueEntry(
-            severity=severity_label,
-            message=str(message) if message is not None else "",
-            focus_node=str(focus_node) if focus_node is not None else None,
-            path=str(result_path) if result_path is not None else None,
-            source_shape=str(source_shape) if source_shape is not None else None,
-            shape_source=(
-                source_map.get(str(source_shape)) if source_shape is not None else None
-            ),
-            constraint_component=str(constraint) if constraint is not None else None,
-            value=str(value) if value is not None else None,
-        )
-
         if severity_iri == SH.Violation:
-            errors.append(entry)
-        else:
-            warnings.append(entry)
+            error_count += 1
+            if include_issue_details:
+                errors.append(
+                    _build_issue_entry(report_graph, node, source_map, severity_iri)
+                )
+            continue
+
+        warning_count += 1
+        if include_issue_details:
+            warnings.append(
+                _build_issue_entry(report_graph, node, source_map, severity_iri)
+            )
 
     if issue_level == "error":
         warnings = []
+        warning_count = 0
 
-    return errors, warnings
+    return ExtractedIssues(
+        errors=errors,
+        warnings=warnings,
+        error_count=error_count,
+        warning_count=warning_count,
+    )
+
+
+def _build_issue_entry(
+    report_graph: Graph,
+    node,
+    source_map: dict,
+    severity_iri,
+) -> IssueEntry:
+    source_shape = report_graph.value(node, SH.sourceShape)
+    message = report_graph.value(node, SH.resultMessage)
+    focus_node = report_graph.value(node, SH.focusNode)
+    result_path = report_graph.value(node, SH.resultPath)
+    constraint = report_graph.value(node, SH.sourceConstraintComponent)
+    value = report_graph.value(node, SH.value)
+
+    severity_label = str(severity_iri).split("#")[-1] if severity_iri else "Violation"
+    shape_source = None
+    if source_shape is not None:
+        shape_source = source_map.get(source_shape) or source_map.get(str(source_shape))
+
+    return IssueEntry(
+        severity=severity_label,
+        message=str(message) if message is not None else "",
+        focus_node=str(focus_node) if focus_node is not None else None,
+        path=str(result_path) if result_path is not None else None,
+        source_shape=str(source_shape) if source_shape is not None else None,
+        shape_source=shape_source,
+        constraint_component=str(constraint) if constraint is not None else None,
+        value=str(value) if value is not None else None,
+    )
 
 
 def build_subgraph(
@@ -419,28 +387,16 @@ def build_subgraph(
 
     This is the public equivalent of the internal ``_build_subgraph`` helper.
     See :class:`SchemaComplianceKpi` for the full subgraph-assembly rules.
-
-    Parameters
-    ----------
-    graph:
-        The full RDF graph (already normalised if required).
-    webpage_url:
-        The ``schema:url`` value identifying the page entity.
-    all_subjects:
-        Pre-computed set of all ``URIRef`` subjects in *graph*; pass
-        ``{s for s in graph.subjects() if isinstance(s, URIRef)}`` when
-        building outside a hot loop.
-    depth:
-        Number of relationship hops to follow when expanding referenced
-        entities (default ``1``).
     """
     return _build_subgraph(graph, webpage_url, depth, all_subjects)
 
 
 __all__ = [
+    "ExtractedIssues",
     "IssueEntry",
     "MerchantResult",
     "SchemaComplianceKpi",
+    "SchemaComplianceRun",
     "SchemaComplianceResult",
     "UrlComplianceResult",
     "build_subgraph",

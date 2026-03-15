@@ -7,6 +7,10 @@ from pathlib import Path
 
 import pytest
 
+import wordlift_sdk.structured_data.orchestrator as orchestrator_module
+import wordlift_sdk.structured_data.structured_data_engine as structured_data_engine_module
+import wordlift_sdk.structured_data.yarrrml_pipeline as yarrrml_pipeline_module
+
 if "wordlift_client" not in sys.modules:
     try:
         import wordlift_client  # noqa: F401
@@ -127,11 +131,13 @@ def test_create_workflow_writes_outputs(
         return f"# {url}\n{yarrrml}"
 
     monkeypatch.setattr(
-        "wordlift_sdk.structured_data.structured_data_engine.StructuredDataEngine.get_dataset_uri",
+        structured_data_engine_module.StructuredDataEngine,
+        "get_dataset_uri",
         _fake_get_dataset_uri,
     )
     monkeypatch.setattr(
-        "wordlift_sdk.structured_data.yarrrml_pipeline.YarrrmlPipeline.make_reusable_yarrrml",
+        yarrrml_pipeline_module.YarrrmlPipeline,
+        "make_reusable_yarrrml",
         _fake_make_reusable_yarrrml,
     )
 
@@ -184,15 +190,14 @@ def test_generate_workflow_runs_batch(
     yarrrml_path.write_text("mappings: []")
 
     monkeypatch.setattr(
-        "wordlift_sdk.structured_data.orchestrator.resolve_input_urls",
-        lambda value: ["https://example.com"],
+        orchestrator_module, "resolve_input_urls", lambda value: ["https://example.com"]
     )
     monkeypatch.setattr(
-        "wordlift_sdk.structured_data.orchestrator.filter_urls",
-        lambda urls, regex, max_pages: urls,
+        orchestrator_module, "filter_urls", lambda urls, regex, max_pages: urls
     )
     monkeypatch.setattr(
-        "wordlift_sdk.structured_data.structured_data_engine.StructuredDataEngine.get_dataset_uri",
+        structured_data_engine_module.StructuredDataEngine,
+        "get_dataset_uri",
         lambda self, api_key, base_url=None, ssl_ca_cert=None: "urn:dataset",
     )
 
@@ -210,9 +215,7 @@ def test_generate_workflow_runs_batch(
                 "errors": [],
             }
 
-    monkeypatch.setattr(
-        "wordlift_sdk.structured_data.orchestrator.BatchGenerator", _FakeBatch
-    )
+    monkeypatch.setattr(orchestrator_module, "BatchGenerator", _FakeBatch)
 
     request = GenerateRequest(
         input_value="https://example.com/sitemap.xml",

@@ -17,11 +17,25 @@ A Python toolkit for orchestrating WordLift imports: fetch URLs from sitemaps, G
 
 ```bash
 pip install wordlift-sdk
-# or
-poetry add wordlift-sdk
+# explicit lean base install
+pip install "wordlift-sdk[core]"
+# selected features
+pip install "wordlift-sdk[validation]"
+pip install "wordlift-sdk[structured-data]"
+# everything
+pip install "wordlift-sdk[all]"
 ```
 
 Requires Python 3.10–3.14.
+
+`wordlift-sdk` v7 uses a lean base package plus optional extras. The import
+namespace remains `wordlift_sdk.*`; feature packages load lazily and raise an
+install hint if you access an export without the matching extra installed.
+
+For repository verification, slice-specific pytest scopes are defined in
+`tests/tools/run_slice_tests.py`, and fast import smoke checks are defined in
+`tests/tools/run_slice_smoke_imports.py`. Lean-install install-hint checks are
+defined in `tests/tools/check_missing_extra_hints.py`.
 
 ## Configuration
 

@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 from rdflib import Graph, Literal, URIRef
-from rdflib.namespace import RDF
+from rdflib.namespace import RDF, SH
 
 from wordlift_sdk.graph.audit import (
     AuditOptions,
@@ -24,6 +24,7 @@ from wordlift_sdk.graph.audit.kpis import (
     OrphansKpi,
     PropertiesKpi,
     RichSnippetsKpi,
+    SchemaComplianceKpi,
     TotalsKpi,
     UniqueUrlsKpi,
 )
@@ -345,7 +346,6 @@ def test_schema_compliance_child_inclusion(
 
 
 def test_schema_compliance_empty_graph() -> None:
-    from wordlift_sdk.graph.audit.kpis.schema_compliance import SchemaComplianceKpi
     from wordlift_sdk.validation.shacl import resolve_shape_specs
 
     kpi = SchemaComplianceKpi(shape_specs=resolve_shape_specs(), depth=1)
@@ -428,9 +428,9 @@ def test_issue_level_error_suppresses_warnings() -> None:
     report_graph.add((w_node, SH_NS.resultSeverity, SH_NS.Warning))
     report_graph.add((w_node, SH_NS.resultMessage, RLiteral("just a warning")))
 
-    errors, warnings = _extract_issues(report_graph, {}, issue_level="error")
-    assert errors == []
-    assert warnings == []  # suppressed by error-only level
+    issues = _extract_issues(report_graph, {}, issue_level="error")
+    assert issues.errors == []
+    assert issues.warnings == []  # suppressed by error-only level
 
 
 def test_issue_level_warning_keeps_warnings() -> None:
@@ -444,8 +444,93 @@ def test_issue_level_warning_keeps_warnings() -> None:
     report_graph.add((w_node, SH_NS.resultSeverity, SH_NS.Warning))
     report_graph.add((w_node, SH_NS.resultMessage, RLiteral("just a warning")))
 
-    errors, warnings = _extract_issues(report_graph, {}, issue_level="warning")
-    assert errors == []
+    issues = _extract_issues(report_graph, {}, issue_level="warning")
+    assert issues.errors == []
+
+
+def test_schema_compliance_collect_prebuilt_matches_collect(
+    simple_graph: Graph,
+) -> None:
+    from wordlift_sdk.graph.audit.kpis.schema_compliance import build_subgraph
+    from wordlift_sdk.validation.shacl import resolve_shape_specs
+
+    kpi = SchemaComplianceKpi(shape_specs=resolve_shape_specs(), depth=1)
+    all_subjects = {s for s in simple_graph.subjects() if isinstance(s, URIRef)}
+    prebuilt = {
+        "https://example.org/article/1": build_subgraph(
+            simple_graph, "https://example.org/article/1", all_subjects
+        )
+    }
+
+    assert (
+        kpi.collect_prebuilt(prebuilt).to_dict() == kpi.collect(simple_graph).to_dict()
+    )
+
+
+def test_schema_compliance_counts_only_omits_issue_payloads(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from types import SimpleNamespace
+
+    report_graph = Graph()
+    warning_node = URIRef("urn:warning")
+    report_graph.add((warning_node, SH.resultSeverity, SH.Warning))
+    report_graph.add((warning_node, SH.resultMessage, Literal("warning")))
+
+    def fake_validate_graph(self, graph, *, normalize_schema_org=True):
+        return SimpleNamespace(
+            conforms=False,
+            report_graph=report_graph,
+            report_text="report",
+            data_graph=graph,
+            warning_count=1,
+        )
+
+    monkeypatch.setattr(
+        "wordlift_sdk.validation.shacl.PreparedShaclValidator.validate_graph",
+        fake_validate_graph,
+    )
+
+    article = _uri("article/invalid")
+    graph = _g(
+        (article, RDF.type, _schema("Article")),
+        (article, _schema("url"), Literal("https://example.org/article/invalid")),
+    )
+
+    kpi = SchemaComplianceKpi(
+        shape_specs=["google-article"], include_issue_details=False
+    )
+    result = kpi.collect(graph)
+
+    assert result.by_url[0].warning_count == 1
+    assert result.by_url[0].errors == []
+    assert result.by_url[0].warnings == []
+
+
+def test_auditor_uses_schema_validation_for_rich_snippets(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    ttl = tmp_path / "graph.ttl"
+    ttl.write_text(
+        textwrap.dedent(
+            """\
+            @prefix schema: <http://schema.org/> .
+            <https://example.org/recipe/1>
+                a schema:Recipe ;
+                schema:url "https://example.org/recipe/1" ;
+                schema:name "Test Recipe" ;
+                schema:image "https://example.org/r.jpg" .
+            """
+        )
+    )
+
+    def fail_collect(self, graph):
+        raise AssertionError("RichSnippetsKpi.collect should not run in GraphAuditor")
+
+    monkeypatch.setattr(RichSnippetsKpi, "collect", fail_collect)
+
+    report = GraphAuditor().audit(ttl, AuditOptions())
+    assert f"{_SCHEMA}Recipe" in report.rich_snippets.eligible_valid
 
 
 # ---------------------------------------------------------------------------

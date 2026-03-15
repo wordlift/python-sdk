@@ -1,8 +1,6 @@
 import pytest
 from unittest.mock import AsyncMock, patch, MagicMock
-from wordlift_sdk.workflow.url_handler.web_page_import_url_handler import (
-    WebPageImportUrlHandler,
-)
+import wordlift_sdk.workflow.url_handler.web_page_import_url_handler as handler_module
 from wordlift_sdk.container.application_container import ApplicationContainer
 from wordlift_sdk.configuration import ConfigurationProvider
 from wordlift_sdk.url_source import Url
@@ -19,7 +17,7 @@ async def test_web_page_import_url_handler_passes_fetch_options():
         mode="premium_scraper", render_js=True, wait_for=".content"
     )
 
-    handler = WebPageImportUrlHandler(
+    handler = handler_module.WebPageImportUrlHandler(
         context=mock_context,
         embedding_properties=["prop1"],
         web_page_types=["Type1"],
@@ -29,14 +27,12 @@ async def test_web_page_import_url_handler_passes_fetch_options():
     url = Url(value="https://example.com", iri="https://example.com/iri")
 
     # Mock ApiClient and WebPagesImportsApi
-    with patch(
-        "wordlift_sdk.workflow.url_handler.web_page_import_url_handler.ApiClient"
-    ) as mock_api_client_class:
+    with patch.object(handler_module, "ApiClient") as mock_api_client_class:
         mock_api_client = AsyncMock()
         mock_api_client_class.return_value.__aenter__.return_value = mock_api_client
 
-        with patch(
-            "wordlift_sdk.workflow.url_handler.web_page_import_url_handler.WebPagesImportsApi"
+        with patch.object(
+            handler_module, "WebPagesImportsApi"
         ) as mock_api_instance_class:
             mock_api_instance = AsyncMock()
             mock_api_instance_class.return_value = mock_api_instance
@@ -85,7 +81,7 @@ async def test_application_container_initializes_fetch_options():
 
         handler = await container.create_web_page_import_url_handler()
 
-        assert isinstance(handler, WebPageImportUrlHandler)
+        assert isinstance(handler, handler_module.WebPageImportUrlHandler)
         assert handler._fetch_options is not None
         assert handler._fetch_options.mode == "proxy"
         assert handler._fetch_options.render_js is True

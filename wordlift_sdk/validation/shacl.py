@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
+from functools import lru_cache
 from importlib import resources
 from json import JSONDecodeError
 from pathlib import Path
@@ -12,7 +13,6 @@ from urllib.parse import urlparse
 from html.parser import HTMLParser
 import json
 
-from pyshacl import validate
 from rdflib import Graph, URIRef
 from rdflib.namespace import SH
 from rdflib.term import Identifier
@@ -21,6 +21,12 @@ from requests import Response, get
 from wordlift_sdk.render import RenderOptions, render_html
 
 DEFAULT_OPT_IN_EXCLUDED_SHAPES = {"google-image-license-metadata.ttl"}
+_VALIDATOR_OPTIONS = {
+    "inference": "rdfs",
+    "abort_on_first": False,
+    "allow_infos": True,
+    "allow_warnings": True,
+}
 
 
 @dataclass
@@ -42,6 +48,22 @@ class ValidationIssue:
     rule_id: str | None
     rule_set: str | None
     message: str
+
+
+@dataclass(frozen=True)
+class PreparedShapes:
+    shape_specs: tuple[str, ...]
+    shapes_graph: Graph
+    shape_source_map: dict[Identifier, str]
+
+
+@dataclass
+class PreparedValidationResult:
+    conforms: bool
+    report_graph: Graph
+    report_text: str
+    data_graph: Graph
+    warning_count: int
 
 
 class _JsonLdScriptExtractor(HTMLParser):
@@ -328,31 +350,85 @@ def _load_shapes_graph(
     return shapes_graph, source_map
 
 
+@lru_cache(maxsize=32)
+def _prepare_shapes_cached(resolved_shape_specs: tuple[str, ...]) -> PreparedShapes:
+    shapes_graph, source_map = _load_shapes_graph(resolved_shape_specs)
+    return PreparedShapes(
+        shape_specs=resolved_shape_specs,
+        shapes_graph=shapes_graph,
+        shape_source_map=source_map,
+    )
+
+
+def prepare_shapes(shape_specs: Iterable[str] | None = None) -> PreparedShapes:
+    return _prepare_shapes_cached(tuple(_resolve_shape_sources(shape_specs)))
+
+
+class PreparedShaclValidator:
+    """Reusable SHACL validator with cached shape loading and warmed shape harvest."""
+
+    def __init__(self, prepared_shapes: PreparedShapes):
+        from pyshacl import Validator
+
+        self._prepared_shapes = prepared_shapes
+        self._validator = Validator(
+            Graph(),
+            shacl_graph=prepared_shapes.shapes_graph,
+            options=dict(_VALIDATOR_OPTIONS),
+        )
+        _ = self._validator.shacl_graph.shapes
+
+    @classmethod
+    def from_shape_specs(
+        cls, shape_specs: Iterable[str] | None = None
+    ) -> "PreparedShaclValidator":
+        return cls(prepare_shapes(shape_specs))
+
+    @property
+    def prepared_shapes(self) -> PreparedShapes:
+        return self._prepared_shapes
+
+    def validate_graph(
+        self,
+        data_graph: Graph,
+        *,
+        normalize_schema_org: bool = True,
+    ) -> PreparedValidationResult:
+        if normalize_schema_org:
+            data_graph = _normalize_schema_org_uris(data_graph)
+
+        self._validator.data_graph = data_graph
+        self._validator.pre_inferenced = False
+        self._validator._target_graph = None
+
+        conforms, report_graph, report_text = self._validator.run()
+        warning_count = sum(
+            1 for _ in report_graph.subjects(SH.resultSeverity, SH.Warning)
+        )
+
+        return PreparedValidationResult(
+            conforms=conforms,
+            report_graph=report_graph,
+            report_text=report_text,
+            data_graph=data_graph,
+            warning_count=warning_count,
+        )
+
+
 def validate_file(
     input_file: str, shape_specs: Iterable[str] | None = None
 ) -> ValidationResult:
     data_graph = _load_graph(input_file)
-    data_graph = _normalize_schema_org_uris(data_graph)
-    shapes_graph, source_map = _load_shapes_graph(shape_specs)
-
-    conforms, report_graph, report_text = validate(
-        data_graph,
-        shacl_graph=shapes_graph,
-        inference="rdfs",
-        abort_on_first=False,
-        allow_infos=True,
-        allow_warnings=True,
-    )
-
-    warning_count = sum(1 for _ in report_graph.subjects(SH.resultSeverity, SH.Warning))
+    validator = PreparedShaclValidator.from_shape_specs(shape_specs)
+    result = validator.validate_graph(data_graph)
 
     return ValidationResult(
-        conforms=conforms,
-        report_text=report_text,
-        report_graph=report_graph,
-        data_graph=data_graph,
-        shape_source_map=source_map,
-        warning_count=warning_count,
+        conforms=result.conforms,
+        report_text=result.report_text,
+        report_graph=result.report_graph,
+        data_graph=result.data_graph,
+        shape_source_map=validator.prepared_shapes.shape_source_map,
+        warning_count=result.warning_count,
     )
 
 
@@ -372,27 +448,16 @@ def validate_jsonld_from_url(
     if not nodes:
         raise RuntimeError(f"No JSON-LD nodes found in rendered HTML for {url}")
     data_graph = _load_graph_from_jsonld(nodes)
-    data_graph = _normalize_schema_org_uris(data_graph)
-    shapes_graph, source_map = _load_shapes_graph(shape_specs)
-
-    conforms, report_graph, report_text = validate(
-        data_graph,
-        shacl_graph=shapes_graph,
-        inference="rdfs",
-        abort_on_first=False,
-        allow_infos=True,
-        allow_warnings=True,
-    )
-
-    warning_count = sum(1 for _ in report_graph.subjects(SH.resultSeverity, SH.Warning))
+    validator = PreparedShaclValidator.from_shape_specs(shape_specs)
+    result = validator.validate_graph(data_graph)
 
     return ValidationResult(
-        conforms=conforms,
-        report_text=report_text,
-        report_graph=report_graph,
-        data_graph=data_graph,
-        shape_source_map=source_map,
-        warning_count=warning_count,
+        conforms=result.conforms,
+        report_text=result.report_text,
+        report_graph=result.report_graph,
+        data_graph=result.data_graph,
+        shape_source_map=validator.prepared_shapes.shape_source_map,
+        warning_count=result.warning_count,
     )
 
 

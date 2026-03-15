@@ -4,6 +4,7 @@ from pathlib import Path
 import pytest
 from rdflib import Graph, URIRef
 
+import wordlift_sdk.structured_data.validation as validation_module
 from wordlift_sdk.structured_data.io import (
     default_output_paths,
     normalize_output_format,
@@ -70,8 +71,7 @@ def test_schema_guide_and_validation_service(monkeypatch, tmp_path: Path):
         report_text = "ok"
 
     monkeypatch.setattr(
-        "wordlift_sdk.structured_data.validation.validate_file",
-        lambda path, shape_specs: _Result(),
+        validation_module, "validate_file", lambda path, shape_specs: _Result()
     )
 
     service = ValidationService(schema=guide)

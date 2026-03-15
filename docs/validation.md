@@ -15,6 +15,37 @@ print(result.conforms)
 print(result.report_text)
 ```
 
+### prepare_shapes
+Load and cache merged SHACL shapes for repeated validation runs.
+
+```python
+from wordlift_sdk.validation import prepare_shapes, PreparedShaclValidator
+
+prepared = prepare_shapes(["google-article"])
+validator = PreparedShaclValidator(prepared)
+```
+
+This is the SDK-level reuse point for callers that validate many graphs against
+the same shape set.
+
+### PreparedShaclValidator
+Validate in-memory graphs repeatedly without reloading or re-harvesting shapes.
+
+```python
+from rdflib import Graph
+from wordlift_sdk.validation import PreparedShaclValidator
+
+validator = PreparedShaclValidator.from_shape_specs(["google-article"])
+result = validator.validate_graph(Graph())
+```
+
+`validate_graph(...)` returns:
+- `conforms` (bool)
+- `report_graph` (rdflib.Graph)
+- `report_text` (str)
+- `data_graph` (rdflib.Graph)
+- `warning_count` (int)
+
 ### ValidationResult
 Returned by `validate_file`:
 - `conforms` (bool)
@@ -88,6 +119,17 @@ result = validate_file("out/page.jsonld", shape_specs=shape_specs)
 issues = extract_validation_issues(result)
 errors_only = filter_validation_issues(issues, level="error")
 ```
+
+## Graph-audit reuse path
+
+Graph KPI callers that already assemble per-URL subgraphs can skip duplicate
+subgraph discovery and feed those graphs directly into
+`wordlift_sdk.graph.audit.kpis.SchemaComplianceKpi.collect_prebuilt(...)`.
+
+`SchemaComplianceKpi` also supports `include_issue_details=False` when only KPI
+counts are needed and the full issue payload is not required. This preserves
+error/warning counts while avoiding construction of large per-issue payload
+lists.
 
 ## Generator
 

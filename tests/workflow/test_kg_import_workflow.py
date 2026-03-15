@@ -33,6 +33,8 @@ def test_key() -> str:
 
 @pytest.fixture
 def test_api_url(wiremock_url: str) -> str:
+    if wiremock_url is None:
+        pytest.skip("wiremock/docker is not available in this environment")
     return wiremock_url + "/test_kg_import_workflow"
 
 

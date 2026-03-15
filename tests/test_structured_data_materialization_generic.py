@@ -7,6 +7,8 @@ from pathlib import Path
 
 import pytest
 
+import wordlift_sdk.structured_data.engine as engine_module
+
 if "wordlift_client" not in sys.modules:
     try:
         import wordlift_client  # noqa: F401
@@ -76,7 +78,8 @@ def _install_materialization_stubs(
         return {"@graph": []}
 
     monkeypatch.setattr(
-        "wordlift_sdk.structured_data.engine._materialize_jsonld",
+        engine_module,
+        "_materialize_jsonld",
         _fake_materialize,
     )
 
@@ -158,7 +161,7 @@ mappings:
       - [a, 'schema:WebPage']
 """
 
-    materialize_yarrrml_jsonld(
+    engine_module.materialize_yarrrml_jsonld(
         mapping,
         xhtml_path=tmp_path / "page.xhtml",
         workdir=tmp_path / "work",
@@ -194,7 +197,7 @@ mappings:
       - [schema:url, '__URL__']
 """
 
-    materialize_yarrrml_jsonld(
+    engine_module.materialize_yarrrml_jsonld(
         mapping,
         xhtml_path=tmp_path / "page.xhtml",
         workdir=tmp_path / "work",
@@ -229,7 +232,7 @@ mappings:
     class _Response:
         id = "https://example.com/imports/root-node"
 
-    materialize_yarrrml_jsonld(
+    engine_module.materialize_yarrrml_jsonld(
         mapping,
         xhtml_path=tmp_path / "page.xhtml",
         workdir=tmp_path / "work",
@@ -263,7 +266,7 @@ mappings:
     class _Response:
         id = "https://example.com/imports/root-node"
 
-    materialize_yarrrml_jsonld(
+    engine_module.materialize_yarrrml_jsonld(
         mapping,
         xhtml_path=tmp_path / "page.xhtml",
         workdir=tmp_path / "work",
@@ -295,7 +298,7 @@ mappings:
 """
 
     with pytest.raises(RuntimeError, match="__ID__"):
-        materialize_yarrrml_jsonld(
+        engine_module.materialize_yarrrml_jsonld(
             mapping,
             xhtml_path=tmp_path / "page.xhtml",
             workdir=tmp_path / "work",
@@ -322,7 +325,7 @@ mappings:
       - [schema:url, '__URL__']
 """
 
-    materialize_yarrrml_jsonld(
+    engine_module.materialize_yarrrml_jsonld(
         mapping,
         xhtml_path=tmp_path / "page.xhtml",
         workdir=tmp_path / "work",
@@ -355,7 +358,7 @@ mappings:
       - [schema:url, '__URL__']
 """
 
-    out = materialize_yarrrml_jsonld(
+    out = engine_module.materialize_yarrrml_jsonld(
         mapping,
         xhtml_path=tmp_path / "page.xhtml",
         workdir=tmp_path / "work",
@@ -386,7 +389,7 @@ mappings:
       - [a, 'schema:WebPage']
 """
 
-    materialize_yarrrml_jsonld(
+    engine_module.materialize_yarrrml_jsonld(
         mapping,
         xhtml_path=tmp_path / "page.xhtml",
         workdir=tmp_path / "work",
@@ -443,7 +446,7 @@ mappings:
 """
 
     with pytest.raises(RuntimeError, match="__URL__"):
-        materialize_yarrrml_jsonld(
+        engine_module.materialize_yarrrml_jsonld(
             mapping,
             xhtml_path=tmp_path / "page.xhtml",
             workdir=tmp_path / "work",
@@ -470,7 +473,8 @@ def test_runtime_url_precedence_in_materialization_pipeline_run(
         }
 
     monkeypatch.setattr(
-        "wordlift_sdk.structured_data.engine._materialize_jsonld",
+        engine_module,
+        "_materialize_jsonld",
         _fake_materialize,
     )
 
@@ -521,7 +525,8 @@ def test_runtime_id_resolution_in_materialization_pipeline_run(
         }
 
     monkeypatch.setattr(
-        "wordlift_sdk.structured_data.engine._materialize_jsonld",
+        engine_module,
+        "_materialize_jsonld",
         _fake_materialize,
     )
 

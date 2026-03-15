@@ -9,12 +9,8 @@ from wordlift_sdk.protocol.entity_patch.entity_patch import EntityPatch
 from wordlift_sdk.protocol.entity_patch.entity_patch_queue import EntityPatchQueue
 from wordlift_sdk.protocol.graph.graph_queue import GraphQueue
 from wordlift_sdk.protocol.load_override_class import load_override_class
-from wordlift_sdk.render.html_renderer import HtmlRenderer
 from wordlift_sdk.render.render_options import RenderOptions
 from wordlift_sdk.structured_data.agent import AgentGenerator as AgentWrapper
-from wordlift_sdk.structured_data.agent_generator import (
-    AgentGenerator as EngineAgentGenerator,
-)
 
 
 class _FakeApiClient:
@@ -202,7 +198,7 @@ def test_html_renderer_render_and_helpers(monkeypatch):
         lambda: SimpleNamespace(convert=lambda html: "<xhtml/>"),
     )
 
-    renderer = HtmlRenderer()
+    renderer = html_renderer_module.HtmlRenderer()
     options = RenderOptions(
         url="http://localhost:8080", timeout_ms=100, wait_until="load"
     )
@@ -234,7 +230,7 @@ def test_html_renderer_raises_when_page_missing(monkeypatch):
 
     monkeypatch.setattr(html_renderer_module, "Browser", _Browser)
 
-    renderer = HtmlRenderer()
+    renderer = html_renderer_module.HtmlRenderer()
     with pytest.raises(RuntimeError, match="Failed to open page"):
         renderer.render(
             RenderOptions(url="https://example.org", timeout_ms=50, wait_until="load")
@@ -242,6 +238,8 @@ def test_html_renderer_raises_when_page_missing(monkeypatch):
 
 
 def test_agent_wrappers_delegate(monkeypatch, tmp_path: Path):
+    import wordlift_sdk.structured_data.agent_generator as agent_generator_module
+
     called = {}
 
     def _generate_from_agent(*args, **kwargs):
@@ -254,7 +252,7 @@ def test_agent_wrappers_delegate(monkeypatch, tmp_path: Path):
         _generate_from_agent,
     )
 
-    engine = EngineAgentGenerator()
+    engine = agent_generator_module.AgentGenerator()
     y, j = engine.generate_from_agent("a", foo=1)
     assert y == "y"
     assert j == {"@id": "x"}

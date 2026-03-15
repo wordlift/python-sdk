@@ -47,12 +47,14 @@ class _FakeConverter:
 def test_html_renderer_uses_browser_and_converter(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    import wordlift_sdk.render.html_renderer as html_renderer_module
+
     monkeypatch.setattr("wordlift_sdk.render.html_renderer.Browser", _FakeBrowser)
     monkeypatch.setattr(
         "wordlift_sdk.render.html_renderer.HtmlConverter", _FakeConverter
     )
 
-    renderer = HtmlRenderer()
+    renderer = html_renderer_module.HtmlRenderer()
     result = renderer.render(
         options=type(
             "Opt",
@@ -79,6 +81,8 @@ def test_html_renderer_uses_browser_and_converter(
 def test_html_renderer_reraises_browser_operation_error(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    import wordlift_sdk.render.html_renderer as html_renderer_module
+
     class _FailBrowser:
         def __init__(self, *args, **kwargs) -> None:
             pass
@@ -94,7 +98,7 @@ def test_html_renderer_reraises_browser_operation_error(
 
     monkeypatch.setattr("wordlift_sdk.render.html_renderer.Browser", _FailBrowser)
 
-    renderer = HtmlRenderer()
+    renderer = html_renderer_module.HtmlRenderer()
     with pytest.raises(BrowserOperationError):
         renderer.render(
             options=type(
@@ -116,6 +120,8 @@ def test_html_renderer_reraises_browser_operation_error(
 
 
 def test_html_renderer_wraps_convert_errors(monkeypatch: pytest.MonkeyPatch) -> None:
+    import wordlift_sdk.render.html_renderer as html_renderer_module
+
     monkeypatch.setattr("wordlift_sdk.render.html_renderer.Browser", _FakeBrowser)
 
     class _FailConverter:
@@ -127,8 +133,8 @@ def test_html_renderer_wraps_convert_errors(monkeypatch: pytest.MonkeyPatch) -> 
         "wordlift_sdk.render.html_renderer.HtmlConverter", _FailConverter
     )
 
-    renderer = HtmlRenderer()
-    with pytest.raises(RenderOperationError) as exc:
+    renderer = html_renderer_module.HtmlRenderer()
+    with pytest.raises(html_renderer_module.RenderOperationError) as exc:
         renderer.render(
             options=type(
                 "Opt",

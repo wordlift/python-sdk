@@ -163,6 +163,25 @@ File: `wordlift_sdk/structured_data/structured_data_engine.py`
 ## Validate produced JSON-LD / RDF
 
 File: `wordlift_sdk/validation/shacl.py`
+- `prepare_shapes(shape_specs=None) -> PreparedShapes`
+- Aim: Load and cache SHACL shapes once for reuse across repeated validations.
+- Parameters:
+  - `shape_specs: Iterable[str] | None`: bundled shape names or `.ttl` paths.
+- Returns: immutable prepared-shapes bundle with merged shapes graph and source map.
+
+- `PreparedShaclValidator.from_shape_specs(shape_specs=None) -> PreparedShaclValidator`
+- Aim: Build a reusable validator instance with warmed pySHACL shape harvest.
+- Parameters:
+  - `shape_specs: Iterable[str] | None`: bundled shape names or `.ttl` paths.
+- Returns: reusable validator object for repeated `validate_graph(...)` calls.
+
+- `PreparedShaclValidator.validate_graph(data_graph, normalize_schema_org=True) -> PreparedValidationResult`
+- Aim: Validate an in-memory RDF graph without reloading/rebuilding SHACL shapes.
+- Parameters:
+  - `data_graph: Graph`: RDF graph to validate.
+  - `normalize_schema_org: bool`: normalize `https://schema.org/` to `http://schema.org/` before validation.
+- Returns: prepared validation result with report graph/text and warning count.
+
 - `validate_jsonld_from_url(url, shape_specs=None, render_options=None) -> ValidationResult`
 - Aim: Render a URL, extract JSON-LD scripts, and validate with SHACL shapes.
 - Parameters:
@@ -230,6 +249,15 @@ File: `wordlift_sdk/kg_build/cloud_flow.py`
 
 - `CloudWorkflowConfigError`
 - Aim: Typed config validation error for cloud workflow setup.
+
+## Validate prebuilt per-URL graph slices
+
+File: `wordlift_sdk/graph/audit/kpis/schema_compliance.py`
+- `SchemaComplianceKpi.collect_prebuilt(subgraphs_by_url) -> SchemaComplianceResult`
+- Aim: Validate already-assembled per-URL subgraphs directly, without rediscovering page URLs or rebuilding subgraphs from a merged graph.
+- Parameters:
+  - `subgraphs_by_url: dict[str, Graph]`: URL → prebuilt RDF subgraph.
+- Returns: per-URL schema compliance result with counts and optional issue payloads.
 
 ## Build authenticated API client configuration
 

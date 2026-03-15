@@ -5,8 +5,9 @@ import re
 from types import SimpleNamespace
 
 import pytest
+from rdflib import Graph
 
-from wordlift_sdk.validation.shacl import validate_jsonld_from_url
+import wordlift_sdk.validation.shacl as shacl_module
 
 
 def _fake_render_html(html: str):
@@ -16,12 +17,17 @@ def _fake_render_html(html: str):
     return _render_html
 
 
-def _fake_validate(*_args, **_kwargs):
-    return True, SimpleNamespace(subjects=lambda *_args, **_kwargs: []), "OK"
+class _FakePreparedValidator:
+    prepared_shapes = SimpleNamespace(shape_source_map={})
 
-
-def _fake_shapes(*_args, **_kwargs):
-    return SimpleNamespace(), {}
+    def validate_graph(self, data_graph, *, normalize_schema_org=True):
+        return SimpleNamespace(
+            conforms=True,
+            report_graph=Graph(),
+            report_text="OK",
+            data_graph=data_graph,
+            warning_count=0,
+        )
 
 
 def test_validate_jsonld_from_url_extracts_and_flattens(monkeypatch):
@@ -31,15 +37,14 @@ def test_validate_jsonld_from_url_extracts_and_flattens(monkeypatch):
     <script type="application/ld+json">{"@context":{"@vocab":"http://schema.org/"},"@graph":[{"@type":"Organization","name":"Acme"},{"@type":"WebSite","name":"Example"}]}</script>
     </head><body></body></html>
     """
+    monkeypatch.setattr(shacl_module, "render_html", _fake_render_html(html))
     monkeypatch.setattr(
-        "wordlift_sdk.validation.shacl.render_html", _fake_render_html(html)
-    )
-    monkeypatch.setattr("wordlift_sdk.validation.shacl.validate", _fake_validate)
-    monkeypatch.setattr(
-        "wordlift_sdk.validation.shacl._load_shapes_graph", _fake_shapes
+        shacl_module.PreparedShaclValidator,
+        "from_shape_specs",
+        lambda *_args, **_kwargs: _FakePreparedValidator(),
     )
 
-    result = validate_jsonld_from_url("https://example.com")
+    result = shacl_module.validate_jsonld_from_url("https://example.com")
 
     assert result.conforms is True
     assert result.report_text == "OK"
@@ -55,19 +60,15 @@ def test_validate_jsonld_from_url_invalid_fragment(monkeypatch):
         '<script type="application/ld+json">{invalid json}</script>'
         "</head></html>"
     )
-    monkeypatch.setattr(
-        "wordlift_sdk.validation.shacl.render_html", _fake_render_html(html)
-    )
+    monkeypatch.setattr(shacl_module, "render_html", _fake_render_html(html))
 
     with pytest.raises(RuntimeError, match=re.escape("Invalid JSON-LD fragment #1")):
-        validate_jsonld_from_url("https://example.com")
+        shacl_module.validate_jsonld_from_url("https://example.com")
 
 
 def test_validate_jsonld_from_url_no_fragments(monkeypatch):
     html = "<html><head></head><body>No jsonld</body></html>"
-    monkeypatch.setattr(
-        "wordlift_sdk.validation.shacl.render_html", _fake_render_html(html)
-    )
+    monkeypatch.setattr(shacl_module, "render_html", _fake_render_html(html))
 
     with pytest.raises(RuntimeError, match="No JSON-LD fragments found"):
-        validate_jsonld_from_url("https://example.com")
+        shacl_module.validate_jsonld_from_url("https://example.com")

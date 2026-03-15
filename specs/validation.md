@@ -85,3 +85,40 @@ Issue fields are:
 - `rule_id` (SHACL source shape identifier)
 - `rule_set` (shape source label, when resolvable)
 - `message`
+
+## Prepared validator contract
+
+The validation layer exposes reusable shape and validator preparation so callers
+can avoid reloading SHACL sources and rebuilding pySHACL shape harvest state on
+every validation:
+
+- `prepare_shapes(shape_specs)` returns a cached merged shape bundle.
+- `PreparedShaclValidator(prepared_shapes)` creates a reusable validator.
+- `PreparedShaclValidator.from_shape_specs(shape_specs)` is the convenience
+  constructor for the same flow.
+- `PreparedShaclValidator.validate_graph(graph, normalize_schema_org=True)`
+  validates an in-memory RDF graph and returns a result object with:
+  - `conforms`
+  - `report_graph`
+  - `report_text`
+  - `data_graph`
+  - `warning_count`
+
+Shape preparation and validator reuse are intended for repeated validation over
+many graphs with the same shape set.
+
+## Graph-audit validation performance contract
+
+Graph-audit KPI collection must avoid duplicate SHACL work where possible while
+preserving KPI semantics.
+
+Required behavior:
+
+- Rich-snippets classification and schema-compliance reporting must be derivable
+  from a shared validation execution path.
+- Schema-compliance must support direct validation of prebuilt per-URL graphs
+  via `SchemaComplianceKpi.collect_prebuilt(subgraphs_by_url)`.
+- Validator/shape initialization must be reusable across repeated calls on the
+  same KPI instance.
+- Counts-only operation via `SchemaComplianceKpi(..., include_issue_details=False)`
+  must preserve warning/error counts while skipping issue-payload construction.

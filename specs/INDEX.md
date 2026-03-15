@@ -7,6 +7,7 @@
 - `specs/INGESTION_PIPELINE.md`: Source/loader ingestion contract, resolver precedence rules, and `kg_build` bridge callback suppression contract for HTTP error pages.
 - `specs/LOCAL_AGENT_TYPE_CLASSIFICATION.md`: Ingestion-backed local CLI classification contract and CSV output schema.
 - `specs/structured_data.md`: Structured data runtime placeholder/materialization details.
+- `specs/PACKAGING_SLICES_V7.md`: v7 packaging, extras, lazy-import, and slice-verification contract.
 - `specs/validation.md`: Validation architecture and shape composition contract.
 - `specs/tls.md`: TLS/SSL CA bundle resolution behavior.
 - `specs/versioning.md`: Versioning and release process rules.

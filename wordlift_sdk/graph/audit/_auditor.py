@@ -86,9 +86,6 @@ class GraphAuditor:
             "totals": TotalsKpi(),
             "unique_urls": UniqueUrlsKpi(),
             "edges": EdgesKpi(),
-            "rich_snippets": RichSnippetsKpi(
-                granularity=opts.rich_snippets_granularity,
-            ),
             "orphans": OrphansKpi(),
             "broken_links": BrokenLinksKpi(),
             "isolated_graphs": IsolatedGraphsKpi(
@@ -117,6 +114,15 @@ class GraphAuditor:
             max_workers=opts.max_workers,
         )
         results["schema_compliance"] = schema_kpi.collect(graph)
+        rich_snippets_kpi = RichSnippetsKpi(
+            granularity=opts.rich_snippets_granularity,
+        )
+        if schema_kpi.last_run is None:
+            results["rich_snippets"] = rich_snippets_kpi.collect(graph)
+        else:
+            results["rich_snippets"] = rich_snippets_kpi.collect_from_summary(
+                schema_kpi.last_run.rich_snippets
+            )
 
         return GraphAuditReport(
             load_errors=load_result.errors,

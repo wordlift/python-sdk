@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import pytest
 
+import wordlift_sdk.structured_data.yarrrml_pipeline as yarrrml_pipeline_module
 from wordlift_sdk.structured_data.yarrrml_pipeline import YarrrmlPipeline
 
 
@@ -11,12 +12,12 @@ def test_yarrrml_pipeline_reusable_and_basename(
     pipeline = YarrrmlPipeline()
 
     monkeypatch.setattr(
-        "wordlift_sdk.structured_data.yarrrml_pipeline.make_reusable_yarrrml",
+        yarrrml_pipeline_module,
+        "make_reusable_yarrrml",
         lambda yarrrml, url: f"# {url}\n{yarrrml}",
     )
     monkeypatch.setattr(
-        "wordlift_sdk.structured_data.yarrrml_pipeline.build_output_basename",
-        lambda url: "example",
+        yarrrml_pipeline_module, "build_output_basename", lambda url: "example"
     )
 
     assert pipeline.make_reusable_yarrrml(

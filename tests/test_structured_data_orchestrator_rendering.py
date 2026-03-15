@@ -2,6 +2,8 @@ from pathlib import Path
 
 import pytest
 
+import wordlift_sdk.structured_data.orchestrator as orchestrator_module
+import wordlift_sdk.structured_data.rendering as rendering_module
 from wordlift_sdk.structured_data.engine import StructuredDataResult
 from wordlift_sdk.structured_data.models import CreateRequest, GenerateRequest
 from wordlift_sdk.structured_data.orchestrator import (
@@ -9,7 +11,6 @@ from wordlift_sdk.structured_data.orchestrator import (
     GenerateWorkflow,
     resolve_api_key_from_context,
 )
-from wordlift_sdk.structured_data.rendering import RenderPipeline
 
 
 class _Rendered:
@@ -73,8 +74,6 @@ def _create_request(tmp_path: Path, *, validate=False, verbose=False, api_key="k
 
 
 def test_render_pipeline_calls_render_and_clean(monkeypatch):
-    import wordlift_sdk.structured_data.rendering as rendering
-
     calls = {}
 
     def _render_html(options):
@@ -87,11 +86,11 @@ def test_render_pipeline_calls_render_and_clean(monkeypatch):
         calls["max_xhtml_chars"] = options.max_xhtml_chars
         return "cleaned"
 
-    monkeypatch.setattr(rendering, "render_html", _render_html)
-    monkeypatch.setattr(rendering, "clean_xhtml", _clean_xhtml)
+    monkeypatch.setattr(rendering_module, "render_html", _render_html)
+    monkeypatch.setattr(rendering_module, "clean_xhtml", _clean_xhtml)
 
     logs = []
-    pipeline = RenderPipeline(
+    pipeline = rendering_module.RenderPipeline(
         headed=True,
         timeout_ms=1200,
         wait_until="networkidle",
@@ -152,8 +151,6 @@ def test_create_workflow_requires_api_key(tmp_path: Path):
 
 
 def test_generate_workflow_success(monkeypatch, tmp_path: Path):
-    import wordlift_sdk.structured_data.orchestrator as orchestrator
-
     yarrml_path = tmp_path / "input.yarrml"
     yarrml_path.write_text("mappings: {}")
 
@@ -164,10 +161,12 @@ def test_generate_workflow_success(monkeypatch, tmp_path: Path):
         def generate(self, urls, yarrml, log):
             return {"count": len(urls), "output_format": self.kwargs["output_format"]}
 
-    monkeypatch.setattr(orchestrator, "BatchGenerator", _Batch)
-    monkeypatch.setattr(orchestrator, "resolve_input_urls", lambda value: ["u1", "u2"])
+    monkeypatch.setattr(orchestrator_module, "BatchGenerator", _Batch)
     monkeypatch.setattr(
-        orchestrator, "filter_urls", lambda urls, regex, max_pages: urls[:1]
+        orchestrator_module, "resolve_input_urls", lambda value: ["u1", "u2"]
+    )
+    monkeypatch.setattr(
+        orchestrator_module, "filter_urls", lambda urls, regex, max_pages: urls[:1]
     )
 
     request = GenerateRequest(
@@ -189,7 +188,9 @@ def test_generate_workflow_success(monkeypatch, tmp_path: Path):
         verbose=False,
     )
 
-    summary = GenerateWorkflow(engine=_Engine()).run(request, lambda *_: None)
+    summary = orchestrator_module.GenerateWorkflow(engine=_Engine()).run(
+        request, lambda *_: None
+    )
 
     assert summary["count"] == 1
     assert summary["output_format"] == "ttl"

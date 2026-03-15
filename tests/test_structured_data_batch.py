@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 
+import wordlift_sdk.structured_data.batch as batch_module
 from wordlift_sdk.structured_data.batch import BatchGenerator
 
 
@@ -49,13 +50,9 @@ def test_batch_generate_success_jsonld(monkeypatch: pytest.MonkeyPatch, tmp_path
     gen = _make_generator(tmp_path, output_format="jsonld", concurrency="1")
 
     monkeypatch.setattr(
-        "wordlift_sdk.structured_data.batch.render_html",
-        lambda options: _Rendered("<html/>", 200),
+        batch_module, "render_html", lambda options: _Rendered("<html/>", 200)
     )
-    monkeypatch.setattr(
-        "wordlift_sdk.structured_data.batch.clean_xhtml",
-        lambda xhtml, options: "<clean/>",
-    )
+    monkeypatch.setattr(batch_module, "clean_xhtml", lambda xhtml, options: "<clean/>")
 
     gen._yarrrml.build_output_basename = lambda url: "page-1"
     gen._yarrrml.ensure_no_blank_nodes = lambda graph: None
@@ -93,14 +90,10 @@ def test_batch_generate_success_ttl_and_failure(
             raise RuntimeError("render-failed")
         return _Rendered("<html/>", 429)
 
-    monkeypatch.setattr("wordlift_sdk.structured_data.batch.render_html", _render)
+    monkeypatch.setattr(batch_module, "render_html", _render)
+    monkeypatch.setattr(batch_module, "clean_xhtml", lambda xhtml, options: "<clean/>")
     monkeypatch.setattr(
-        "wordlift_sdk.structured_data.batch.clean_xhtml",
-        lambda xhtml, options: "<clean/>",
-    )
-    monkeypatch.setattr(
-        "wordlift_sdk.structured_data.batch.serialize_graph",
-        lambda graph, output_format: "<s> <p> <o> .",
+        batch_module, "serialize_graph", lambda graph, output_format: "<s> <p> <o> ."
     )
 
     gen._yarrrml.build_output_basename = lambda url: "good" if "good" in url else "bad"
@@ -139,13 +132,9 @@ def test_batch_status_bucket_and_auto_mode(
     assert gen._status_bucket(404) == "client_error"
 
     monkeypatch.setattr(
-        "wordlift_sdk.structured_data.batch.render_html",
-        lambda options: _Rendered("<html/>", 200),
+        batch_module, "render_html", lambda options: _Rendered("<html/>", 200)
     )
-    monkeypatch.setattr(
-        "wordlift_sdk.structured_data.batch.clean_xhtml",
-        lambda xhtml, options: "<clean/>",
-    )
+    monkeypatch.setattr(batch_module, "clean_xhtml", lambda xhtml, options: "<clean/>")
     gen._yarrrml.build_output_basename = lambda url: url.rsplit("/", 1)[-1]
     gen._yarrrml.ensure_no_blank_nodes = lambda graph: None
     gen._materializer.normalize = lambda yarrrml, url, xhtml_path: (yarrrml, [])

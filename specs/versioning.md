@@ -22,10 +22,15 @@ poetry version <major|minor|patch>
 
 1.  **Bump Version:** Use `poetry version` to increment the version in `pyproject.toml`.
 2.  **Update Dependencies:** If the `wordlift-client` or other core dependencies need updates, apply them.
-3.  **Commit:**
+3.  **Update release docs/specs:** For major packaging or API changes, update the
+    relevant docs/specs and changelog entries in the same change.
+4.  **Major-release note:** A major version is required when install/runtime
+    contracts change in a way that affects existing clients, including package
+    slicing and optional-dependency boundaries.
+5.  **Commit:**
     *   Stage `pyproject.toml` and `poetry.lock`.
     *   Commit message format: `chore: Bump version to <version>`.
-4.  **Tag:**
+6.  **Tag:**
     *   Create a git tag using the version number: `git tag <version>`.
-5.  **Push:**
+7.  **Push:**
     *   Push the commit and the tag to the remote repository.

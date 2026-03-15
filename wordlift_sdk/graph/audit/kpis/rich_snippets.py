@@ -6,13 +6,14 @@ from collections import defaultdict
 from dataclasses import dataclass
 from typing import Literal
 
-from pyshacl import validate
 from rdflib import Graph, RDF, URIRef
 from rdflib.namespace import SH
 
 from wordlift_sdk.validation.shacl import (
-    _load_shapes_graph,  # type: ignore[attr-defined]
     _normalize_schema_org_uris,  # type: ignore[attr-defined]
+    PreparedShapes,
+    PreparedShaclValidator,
+    prepare_shapes,
 )
 
 _MERCHANT_SHAPE = "google-merchant-listing.ttl"
@@ -32,6 +33,12 @@ class RichSnippetsResult:
         }
 
 
+@dataclass(frozen=True)
+class RichSnippetsValidationSummary:
+    entity_types: dict[str, tuple[str, ...]]
+    invalid_entities: frozenset[str]
+
+
 class RichSnippetsKpi:
     """
     Classify entities by rich-snippet eligibility.
@@ -48,76 +55,59 @@ class RichSnippetsKpi:
         granularity: Literal["counts", "entities"] = "counts",
     ) -> None:
         self._granularity = granularity
+        self._prepared_shapes = _prepare_google_shapes()
 
     def collect(self, graph: Graph) -> RichSnippetsResult:
         normalized = _normalize_schema_org_uris(graph)
-
-        # Load all Google shapes (excluding merchant — handled separately in schema_compliance)
-        all_google_specs = [
-            s for s in _google_shape_specs() if not s.endswith(_MERCHANT_SHAPE)
-        ]
-        if not all_google_specs:
+        if not self._prepared_shapes.shape_specs:
             return RichSnippetsResult(eligible_valid={}, eligible_invalid={})
 
-        shapes_graph, _ = _load_shapes_graph(all_google_specs)
-
-        # Determine which rdf:type values are targeted by root rich-result shapes.
-        # Some bundled Google SHACLs target helper/value types used inside a
-        # larger rich result (for example QuantitativeValue, Offer, Rating).
-        # Those are useful for validation but should not appear as standalone
-        # rich-snippet KPI rows.
-        targeted_types: set[str] = {
-            str(o) for _, _, o in shapes_graph.triples((None, SH.targetClass, None))
-        }
-        targeted_types -= _helper_only_target_types()
-        if not targeted_types:
-            return RichSnippetsResult(eligible_valid={}, eligible_invalid={})
-
-        # Find entities whose type is targeted
-        entity_types: dict[str, set[str]] = defaultdict(set)  # iri → types
-        for s, _, o in normalized.triples((None, RDF.type, None)):
-            if isinstance(s, URIRef) and isinstance(o, URIRef):
-                t = str(o)
-                if t in targeted_types:
-                    entity_types[str(s)].add(t)
-
-        if not entity_types:
-            return RichSnippetsResult(eligible_valid={}, eligible_invalid={})
-
-        # Run SHACL once on the whole normalized graph
-        _, report_graph, _ = validate(
+        validator = PreparedShaclValidator(self._prepared_shapes)
+        validation = validator.validate_graph(normalized, normalize_schema_org=False)
+        summary = build_rich_snippets_validation_summary(
             normalized,
-            shacl_graph=shapes_graph,
-            inference="rdfs",
-            abort_on_first=False,
-            allow_infos=True,
-            allow_warnings=True,
+            validation.report_graph,
+            validator.prepared_shapes.shape_source_map,
         )
+        return self.collect_from_summary(summary)
 
-        # Collect focus nodes that have at least one Violation
-        violated: set[str] = set()
-        for node in report_graph.subjects(SH.resultSeverity, SH.Violation):
-            focus = report_graph.value(node, SH.focusNode)
-            if focus is not None:
-                violated.add(str(focus))
-
-        # Split entities into valid / invalid per type
+    def collect_from_summary(
+        self, summary: RichSnippetsValidationSummary
+    ) -> RichSnippetsResult:
         valid: defaultdict[str, list[str]] = defaultdict(list)
         invalid: defaultdict[str, list[str]] = defaultdict(list)
-        for iri, types in sorted(entity_types.items()):
-            bucket = invalid if iri in violated else valid
-            for t in types:
-                bucket[t].append(iri)
+
+        for iri, types in sorted(summary.entity_types.items()):
+            bucket = invalid if iri in summary.invalid_entities else valid
+            for type_iri in types:
+                bucket[type_iri].append(iri)
 
         if self._granularity == "counts":
             return RichSnippetsResult(
                 eligible_valid={t: len(iris) for t, iris in sorted(valid.items())},
                 eligible_invalid={t: len(iris) for t, iris in sorted(invalid.items())},
             )
+
         return RichSnippetsResult(
             eligible_valid={t: sorted(iris) for t, iris in sorted(valid.items())},
             eligible_invalid={t: sorted(iris) for t, iris in sorted(invalid.items())},
         )
+
+
+def build_rich_snippets_validation_summary(
+    graph: Graph,
+    report_graph: Graph,
+    shape_source_map: dict,
+) -> RichSnippetsValidationSummary:
+    targeted_types = _targeted_google_types(_prepare_google_shapes())
+    entity_types = _collect_targeted_entity_types(graph, targeted_types)
+    invalid_entities = _google_invalid_focus_nodes(report_graph, shape_source_map)
+    return RichSnippetsValidationSummary(
+        entity_types={
+            iri: tuple(sorted(types)) for iri, types in sorted(entity_types.items())
+        },
+        invalid_entities=frozenset(invalid_entities),
+    )
 
 
 def _google_shape_specs() -> list[str]:
@@ -132,6 +122,65 @@ def _google_shape_specs() -> list[str]:
         and entry.name.endswith(".ttl")
         and entry.name.startswith("google-")
     ]
+
+
+def _prepare_google_shapes() -> PreparedShapes:
+    all_google_specs = [
+        spec for spec in _google_shape_specs() if not spec.endswith(_MERCHANT_SHAPE)
+    ]
+    if not all_google_specs:
+        return PreparedShapes(
+            shape_specs=tuple(), shapes_graph=Graph(), shape_source_map={}
+        )
+    return prepare_shapes(all_google_specs)
+
+
+def _targeted_google_types(prepared_shapes: PreparedShapes) -> set[str]:
+    targeted_types: set[str] = {
+        str(obj)
+        for _, _, obj in prepared_shapes.shapes_graph.triples(
+            (None, SH.targetClass, None)
+        )
+    }
+    targeted_types -= _helper_only_target_types()
+    return targeted_types
+
+
+def _collect_targeted_entity_types(
+    graph: Graph, targeted_types: set[str]
+) -> dict[str, set[str]]:
+    entity_types: dict[str, set[str]] = defaultdict(set)
+    for subject, _, obj in graph.triples((None, RDF.type, None)):
+        if isinstance(subject, URIRef) and isinstance(obj, URIRef):
+            type_iri = str(obj)
+            if type_iri in targeted_types:
+                entity_types[str(subject)].add(type_iri)
+    return entity_types
+
+
+def _google_invalid_focus_nodes(
+    report_graph: Graph,
+    shape_source_map: dict,
+) -> set[str]:
+    invalid_entities: set[str] = set()
+    for node in report_graph.subjects(SH.resultSeverity, SH.Violation):
+        source_shape = report_graph.value(node, SH.sourceShape)
+        if source_shape is None:
+            continue
+        source_label = shape_source_map.get(source_shape) or shape_source_map.get(
+            str(source_shape)
+        )
+        if not isinstance(source_label, str):
+            continue
+        if (
+            not source_label.startswith("google-")
+            or source_label == "google-merchant-listing"
+        ):
+            continue
+        focus = report_graph.value(node, SH.focusNode)
+        if focus is not None:
+            invalid_entities.add(str(focus))
+    return invalid_entities
 
 
 def _helper_only_target_types() -> set[str]:
@@ -168,4 +217,9 @@ def _helper_only_target_types() -> set[str]:
     return {f"http://schema.org/{name}" for name in helper_names}
 
 
-__all__ = ["RichSnippetsKpi", "RichSnippetsResult"]
+__all__ = [
+    "RichSnippetsKpi",
+    "RichSnippetsResult",
+    "RichSnippetsValidationSummary",
+    "build_rich_snippets_validation_summary",
+]

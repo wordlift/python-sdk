@@ -10,14 +10,16 @@ logger = logging.getLogger(__name__)
 
 @pytest.fixture
 def test_wiremock_url(wiremock_url: str) -> str:
-    return wiremock_url + '/test_sitemap_url_provider'
+    if wiremock_url is None:
+        pytest.skip("wiremock/docker is not available in this environment")
+    return wiremock_url + "/test_sitemap_url_provider"
 
 
 @pytest.fixture
 def sitemap_url_provider(test_wiremock_url: str) -> UrlSource:
     return SitemapUrlSource(
-        sitemap_url=test_wiremock_url + '/MakaleSiteMap.xml',
-        pattern=re.compile(r'^https://www.herkesicinguzellik.com/makale/.*$'),
+        sitemap_url=test_wiremock_url + "/MakaleSiteMap.xml",
+        pattern=re.compile(r"^https://www.herkesicinguzellik.com/makale/.*$"),
     )
 
 

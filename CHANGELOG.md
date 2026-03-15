@@ -1,5 +1,35 @@
 # Changelog
 
+## 7.0.0 - 2026-03-15
+
+### Breaking
+
+- `wordlift-sdk` now ships as a lean base package plus optional extras under the
+  same `wordlift_sdk` import namespace.
+
+### Added
+
+- Add reusable SHACL preparation/runtime APIs:
+  - `wordlift_sdk.validation.prepare_shapes(...)`
+  - `wordlift_sdk.validation.PreparedShaclValidator`
+- Add direct schema-compliance validation of prebuilt per-URL graphs:
+  - `wordlift_sdk.graph.audit.kpis.SchemaComplianceKpi.collect_prebuilt(...)`
+- Add counts-only schema-compliance mode:
+  - `SchemaComplianceKpi(..., include_issue_details=False)`
+- Add slice verification tooling and CI coverage:
+  - `tests/tools/run_slice_smoke_imports.py`
+  - `tests/tools/run_slice_tests.py`
+  - `tests/tools/check_missing_extra_hints.py`
+
+### Changed
+
+- Graph-audit rich-snippets and schema-compliance KPIs now share the same SHACL
+  validation path instead of running duplicate full validations.
+- Schema-compliance validator/shapes are now initialized once per KPI instance
+  and reused across calls.
+- Validation helpers `validate_file(...)` and `validate_jsonld_from_url(...)`
+  now run through the reusable prepared-validator path.
+
 ## 6.8.1 - 2026-03-06
 
 ### Added

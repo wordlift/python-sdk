@@ -104,3 +104,62 @@ def test_extract_and_filter_issues() -> None:
     assert len(error_issues) == 1
     assert error_issues[0].rule_id == "urn:shape:headline"
     assert error_issues[0].rule_set == "google-article"
+
+
+def test_prepare_shapes_caches_shape_loading(monkeypatch: pytest.MonkeyPatch) -> None:
+    calls = {"count": 0}
+
+    def fake_load(shape_specs):
+        calls["count"] += 1
+        return Graph(), {}
+
+    monkeypatch.setattr(shacl, "_load_shapes_graph", fake_load)
+    monkeypatch.setattr(
+        shacl, "_resolve_shape_sources", lambda specs: ["google-article.ttl"]
+    )
+    shacl._prepare_shapes_cached.cache_clear()
+
+    first = shacl.prepare_shapes(["google-article"])
+    second = shacl.prepare_shapes(["google-article"])
+
+    assert first is second
+    assert calls["count"] == 1
+
+
+def test_prepared_validator_reuses_warmed_validator(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    init_calls = {"count": 0}
+    run_calls = {"count": 0}
+
+    class _FakeShaclGraph:
+        def __init__(self):
+            self.shapes = object()
+
+    class _FakeValidator:
+        def __init__(self, data_graph, *, shacl_graph, options):
+            init_calls["count"] += 1
+            self.data_graph = data_graph
+            self.shacl_graph = _FakeShaclGraph()
+            self.pre_inferenced = False
+            self._target_graph = None
+
+        def run(self):
+            run_calls["count"] += 1
+            return True, Graph(), "ok"
+
+    monkeypatch.setattr("pyshacl.Validator", _FakeValidator)
+    prepared = shacl.PreparedShapes(
+        shape_specs=("google-article.ttl",),
+        shapes_graph=Graph(),
+        shape_source_map={},
+    )
+    validator = shacl.PreparedShaclValidator(prepared)
+
+    first = validator.validate_graph(Graph(), normalize_schema_org=False)
+    second = validator.validate_graph(Graph(), normalize_schema_org=False)
+
+    assert init_calls["count"] == 1
+    assert run_calls["count"] == 2
+    assert first.conforms is True
+    assert second.report_text == "ok"
