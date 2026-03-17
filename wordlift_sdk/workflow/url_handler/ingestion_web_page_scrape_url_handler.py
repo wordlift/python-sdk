@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import asyncio
+import functools
 import json
 import logging
 import re
@@ -43,7 +45,10 @@ class IngestionWebPageScrapeUrlHandler(UrlHandler):
 
     async def __call__(self, url: Url) -> None:
         settings = self._build_settings(url)
-        result = run_ingestion(settings)
+        loop = asyncio.get_event_loop()
+        result = await loop.run_in_executor(
+            None, functools.partial(run_ingestion, settings)
+        )
 
         if not result.pages:
             failed = [
