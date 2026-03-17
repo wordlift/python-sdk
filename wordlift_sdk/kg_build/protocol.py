@@ -6,6 +6,7 @@ import hashlib
 import logging
 import os
 import tempfile
+import time
 from dataclasses import asdict
 from pathlib import Path
 from types import SimpleNamespace
@@ -210,6 +211,7 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         mapping_response = self._mapping_response(response, existing_web_page_id)
         debug_output: dict[str, str] | None = {} if self.debug_dir else None
 
+        _t0 = time.perf_counter()
         graph = await self.rml_service.apply_mapping(
             html=response.web_page.html,
             url=url,
@@ -218,6 +220,7 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             response=mapping_response,
             debug_output=debug_output,
         )
+        _t_mapping = int((time.perf_counter() - _t0) * 1000)
         if not graph or len(graph) == 0:
             logger.warning("No triples produced for %s", url)
             return
@@ -225,8 +228,11 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         if existing_web_page_id:
             self._reconcile_root_id(graph, existing_web_page_id)
         loop = asyncio.get_event_loop()
+        _t1 = time.perf_counter()
         _postprocessors = await self._postprocessors_queue.get()
+        _t_queue_wait = int((time.perf_counter() - _t1) * 1000)
         try:
+            _t2 = time.perf_counter()
             graph = await loop.run_in_executor(
                 None,
                 functools.partial(
@@ -238,6 +244,7 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
                     _postprocessors,
                 ),
             )
+            _t_postprocessors = int((time.perf_counter() - _t2) * 1000)
         finally:
             self._postprocessors_queue.put_nowait(_postprocessors)
         # Canonical IDs must run after custom postprocessors so any nodes minted
@@ -255,9 +262,11 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             )
             self._write_debug_graph(graph, url)
 
+        _t3 = time.perf_counter()
         validation_payload = await loop.run_in_executor(
             None, functools.partial(self._validate_graph_if_enabled, graph, url)
         )
+        _t_validation = int((time.perf_counter() - _t3) * 1000)
         graph_metrics = self._kpi.graph_metrics(graph)
         self._emit_progress(
             {
@@ -276,7 +285,15 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         ):
             raise RuntimeError(f"SHACL validation failed for {url} in fail mode.")
         await self._write_graph(graph)
-        logger.info("Wrote %s triples for %s", len(graph), url)
+        logger.info(
+            "Wrote %s triples for %s [mapping=%dms queue_wait=%dms postprocessors=%dms validation=%dms]",
+            len(graph),
+            url,
+            _t_mapping,
+            _t_queue_wait,
+            _t_postprocessors,
+            _t_validation,
+        )
 
     def close(self) -> None:
         while not self._postprocessors_queue.empty():
@@ -533,8 +550,14 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             )
 
         for processor in postprocessors:
+            _tp = time.perf_counter()
             graph = processor.run(graph, pp_context)
-            logger.info("Applied postprocessor '%s' for %s", processor.name, url)
+            logger.info(
+                "Applied postprocessor '%s' for %s [%dms]",
+                processor.name,
+                url,
+                int((time.perf_counter() - _tp) * 1000),
+            )
         return graph
 
     def _build_pp_context(
