@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import functools
 import hashlib
 import logging
 import os
@@ -95,6 +96,7 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         self._mapping_cache: dict[Path, str] = {}
         self._static_templates_patched = False
         self._static_templates_lock = asyncio.Lock()
+        self._postprocessor_lock = asyncio.Lock()
         canonical_id_strategy = (
             str(
                 self.profile.settings.get(
@@ -209,7 +211,18 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
 
         if existing_web_page_id:
             self._reconcile_root_id(graph, existing_web_page_id)
-        graph = self._apply_postprocessors(graph, url, response, existing_web_page_id)
+        loop = asyncio.get_event_loop()
+        async with self._postprocessor_lock:
+            graph = await loop.run_in_executor(
+                None,
+                functools.partial(
+                    self._apply_postprocessors,
+                    graph,
+                    url,
+                    response,
+                    existing_web_page_id,
+                ),
+            )
         # Canonical IDs must run after custom postprocessors so any nodes minted
         # by local logic are normalized before graph sync patching.
         graph = self._core_ids.process_graph(
@@ -225,7 +238,9 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             )
             self._write_debug_graph(graph, url)
 
-        validation_payload = self._validate_graph_if_enabled(graph, url)
+        validation_payload = await loop.run_in_executor(
+            None, functools.partial(self._validate_graph_if_enabled, graph, url)
+        )
         graph_metrics = self._kpi.graph_metrics(graph)
         self._emit_progress(
             {
@@ -284,8 +299,14 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
 
             self._ensure_templates_loaded()
             if self._template_graph and len(self._template_graph) > 0:
-                validation_payload = self._validate_graph_if_enabled(
-                    self._template_graph, "static_templates"
+                _loop = asyncio.get_event_loop()
+                validation_payload = await _loop.run_in_executor(
+                    None,
+                    functools.partial(
+                        self._validate_graph_if_enabled,
+                        self._template_graph,
+                        "static_templates",
+                    ),
                 )
                 self._emit_progress(
                     {
