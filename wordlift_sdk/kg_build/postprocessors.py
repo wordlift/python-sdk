@@ -181,7 +181,7 @@ class PersistentPostprocessorClient:
 
         try:
             ready = self._read_message(
-                process, timeout_seconds=min(self._spec.timeout_seconds, 10)
+                process, timeout_seconds=min(self._spec.timeout_seconds, 60)
             )
         except Exception:
             self._terminate(process)
