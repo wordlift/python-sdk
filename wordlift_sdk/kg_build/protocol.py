@@ -96,7 +96,6 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         self._mapping_cache: dict[Path, str] = {}
         self._static_templates_patched = False
         self._static_templates_lock = asyncio.Lock()
-        self._postprocessor_lock = asyncio.Lock()
         canonical_id_strategy = (
             str(
                 self.profile.settings.get(
@@ -117,11 +116,25 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             self._postprocessor_runtime,
             self.profile.origins.get("postprocessor_runtime", "default"),
         )
-        self._postprocessors = load_postprocessors_for_profile(
-            root_dir=self.root_dir,
-            profile_name=self.profile.name,
-            runtime=self._postprocessor_runtime,
+        _pool_size = int(
+            self.profile.settings.get(
+                "concurrency", self.profile.settings.get("CONCURRENCY", 4)
+            )
         )
+        logger.info(
+            "Postprocessor pool size for profile '%s': %d",
+            self.profile.name,
+            _pool_size,
+        )
+        self._postprocessors_queue: asyncio.Queue = asyncio.Queue()
+        for _ in range(_pool_size):
+            self._postprocessors_queue.put_nowait(
+                load_postprocessors_for_profile(
+                    root_dir=self.root_dir,
+                    profile_name=self.profile.name,
+                    runtime=self._postprocessor_runtime,
+                )
+            )
         self._shacl_mode = self._resolve_validation_mode(
             self.profile.settings.get(
                 "shacl_validate_mode",
@@ -212,17 +225,21 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         if existing_web_page_id:
             self._reconcile_root_id(graph, existing_web_page_id)
         loop = asyncio.get_event_loop()
-        async with self._postprocessor_lock:
+        _postprocessors = await self._postprocessors_queue.get()
+        try:
             graph = await loop.run_in_executor(
                 None,
                 functools.partial(
-                    self._apply_postprocessors,
+                    self._apply_postprocessors_with,
                     graph,
                     url,
                     response,
                     existing_web_page_id,
+                    _postprocessors,
                 ),
             )
+        finally:
+            self._postprocessors_queue.put_nowait(_postprocessors)
         # Canonical IDs must run after custom postprocessors so any nodes minted
         # by local logic are normalized before graph sync patching.
         graph = self._core_ids.process_graph(
@@ -262,7 +279,11 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         logger.info("Wrote %s triples for %s", len(graph), url)
 
     def close(self) -> None:
-        close_loaded_postprocessors(self._postprocessors)
+        while not self._postprocessors_queue.empty():
+            try:
+                close_loaded_postprocessors(self._postprocessors_queue.get_nowait())
+            except asyncio.QueueEmpty:
+                break
 
     def get_kpi_summary(self) -> dict[str, object]:
         return self._kpi.summary(self.profile.name)
@@ -485,7 +506,23 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         response: WebPageScrapeResponse,
         existing_web_page_id: str | None,
     ) -> Graph:
-        if not self._postprocessors:
+        return self._apply_postprocessors_with(
+            graph,
+            url,
+            response,
+            existing_web_page_id,
+            list(self._postprocessors_queue._queue),  # type: ignore[attr-defined]
+        )
+
+    def _apply_postprocessors_with(
+        self,
+        graph: Graph,
+        url: str,
+        response: WebPageScrapeResponse,
+        existing_web_page_id: str | None,
+        postprocessors: list,
+    ) -> Graph:
+        if not postprocessors:
             return graph
 
         pp_context = self._build_pp_context(url, response, existing_web_page_id)
@@ -495,7 +532,7 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
                 "'api_key', WORDLIFT_KEY, or WORDLIFT_API_KEY."
             )
 
-        for processor in self._postprocessors:
+        for processor in postprocessors:
             graph = processor.run(graph, pp_context)
             logger.info("Applied postprocessor '%s' for %s", processor.name, url)
         return graph
