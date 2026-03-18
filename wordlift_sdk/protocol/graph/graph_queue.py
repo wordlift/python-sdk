@@ -39,7 +39,8 @@ class GraphQueue:
         reraise=True,
     )
     async def put(self, graph: Graph) -> None:
-        hash = GraphQueue.hash_graph(graph)
+        loop = asyncio.get_event_loop()
+        hash = await loop.run_in_executor(None, GraphQueue.hash_graph, graph)
         if hash not in self.hashes:
             self.hashes.add(hash)
 
