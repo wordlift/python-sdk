@@ -178,13 +178,20 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
                 "concurrency", self.profile.settings.get("CONCURRENCY", 4)
             )
         )
+        _pp_pool_size = int(
+            self.profile.settings.get(
+                "postprocessor_pool_size",
+                self.profile.settings.get("POSTPROCESSOR_POOL_SIZE", _pool_size),
+            )
+        )
         logger.info(
-            "Postprocessor pool size for profile '%s': %d",
+            "Postprocessor pool size for profile '%s': %d (concurrency=%d)",
             self.profile.name,
+            _pp_pool_size,
             _pool_size,
         )
         self._postprocessors_queue: asyncio.Queue = asyncio.Queue()
-        for _ in range(_pool_size):
+        for _ in range(_pp_pool_size):
             self._postprocessors_queue.put_nowait(
                 load_postprocessors_for_profile(
                     root_dir=self.root_dir,
@@ -221,8 +228,16 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             extra_shapes=shacl_extra_shapes or None,
         )
         if self._shacl_mode != "off":
+            _shacl_pool_size = int(
+                self.profile.settings.get(
+                    "shacl_pool_size",
+                    self.profile.settings.get(
+                        "SHACL_POOL_SIZE", max(2, _pool_size // 2)
+                    ),
+                )
+            )
             self._process_executor: ProcessPoolExecutor | None = ProcessPoolExecutor(
-                max_workers=_pool_size,
+                max_workers=_shacl_pool_size,
                 initializer=_init_shacl_worker,
                 initargs=(
                     self._shacl_shape_specs if self._shacl_shape_specs else None,
@@ -230,7 +245,7 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             )
             logger.info(
                 "Created SHACL process pool with %d workers for profile '%s'",
-                _pool_size,
+                _shacl_pool_size,
                 self.profile.name,
             )
         else:
