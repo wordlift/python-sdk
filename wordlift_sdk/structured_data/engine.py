@@ -32,14 +32,25 @@ from wordlift_sdk.utils.ssl_ca_bundle import resolve_ssl_ca_cert
 from wordlift_sdk.validation.shacl import ValidationResult, validate_file
 
 
+import threading
+import time as _time
+
+
 # Top-level worker — must be module-level to be picklable for ProcessPoolExecutor.
-# Each subprocess has its own Python interpreter so pyparsing state is isolated;
-# no lock needed and genuine parallelism is possible.
-def _morph_kgc_worker(config: str) -> str:
+# Accepts submit_time so it can measure queue wait (time spent waiting for a
+# free subprocess slot). Returns (ntriples, queue_wait_ms).
+def _morph_kgc_worker(config: str, submit_time: float) -> tuple[str, int]:
     import morph_kgc as _mkgc
+    import time as _t
 
-    return _mkgc.materialize(config).serialize(format="nt")
+    queue_wait_ms = int((_t.time() - submit_time) * 1000)
+    ntriples = _mkgc.materialize(config).serialize(format="nt")
+    return ntriples, queue_wait_ms
 
+
+# Thread-local used to pass mapping_wait_ms back to the protocol layer without
+# changing the return type of _materialize_graph / apply_mapping.
+_morph_kgc_tls = threading.local()
 
 # Lazy process pool — created on first use in the main process only.
 # Worker subprocesses import this module but never call _get_morph_kgc_pool(),
@@ -47,11 +58,22 @@ def _morph_kgc_worker(config: str) -> str:
 _morph_kgc_pool: ProcessPoolExecutor | None = None
 
 
+def init_morph_kgc_pool(max_workers: int) -> None:
+    """Pre-create the morph_kgc process pool with a specific worker count.
+    Call once from the protocol __init__ before any mapping work starts.
+    Subsequent calls are no-ops (pool is only created once).
+    """
+    global _morph_kgc_pool
+    if _morph_kgc_pool is not None:
+        return
+    ctx = multiprocessing.get_context("spawn")
+    _morph_kgc_pool = ProcessPoolExecutor(max_workers=max_workers, mp_context=ctx)
+
+
 def _get_morph_kgc_pool() -> ProcessPoolExecutor:
     global _morph_kgc_pool
     if _morph_kgc_pool is None:
-        # Use "spawn" context to start workers cleanly without inheriting any
-        # locks or file descriptors from the parent process.
+        # Fallback if init_morph_kgc_pool was never called.
         ctx = multiprocessing.get_context("spawn")
         _morph_kgc_pool = ProcessPoolExecutor(
             max_workers=os.cpu_count() or 4,
@@ -1387,7 +1409,14 @@ def _materialize_graph(mapping_path: Path) -> Graph:
         # Submit to subprocess pool — each worker has isolated pyparsing state,
         # so calls are genuinely parallel across CPU cores with no lock needed.
         # .result() blocks the calling thread (not the asyncio event loop).
-        ntriples = _get_morph_kgc_pool().submit(_morph_kgc_worker, config).result()
+        ntriples, queue_wait_ms = (
+            _get_morph_kgc_pool()
+            .submit(_morph_kgc_worker, config, _time.time())
+            .result()
+        )
+        # Store wait time in thread-local so protocol.py can read it without
+        # changing the return type of this function.
+        _morph_kgc_tls.mapping_wait_ms = queue_wait_ms
         graph = Graph()
         graph.parse(data=ntriples, format="nt")
         return graph
