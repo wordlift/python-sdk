@@ -62,7 +62,9 @@ def _init_shacl_worker(shape_specs: list[str] | None) -> None:
     )
 
 
-def _shacl_validate_in_worker(ntriples: str) -> dict:
+def _shacl_validate_in_worker(ntriples: str, submit_time: float) -> dict:
+    _queue_wait_ms = int((time.time() - submit_time) * 1000)
+    _t_start = time.perf_counter()
     data_graph = Graph()
     data_graph.parse(data=ntriples, format="nt")
     data_graph = _normalize_schema_org_uris(data_graph)
@@ -100,6 +102,8 @@ def _shacl_validate_in_worker(ntriples: str) -> dict:
             "count": error_count,
             "sources": dict(sorted(error_sources.items())),
         },
+        "_queue_wait_ms": _queue_wait_ms,
+        "_validation_ms": int((time.perf_counter() - _t_start) * 1000),
     }
 
 
@@ -348,9 +352,11 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             )
             self._write_debug_graph(graph, url)
 
-        _t3 = time.perf_counter()
-        validation_payload = await self._async_validate_if_enabled(loop, graph, url)
-        _t_validation = int((time.perf_counter() - _t3) * 1000)
+        (
+            validation_payload,
+            _t_validation_wait,
+            _t_validation_actual,
+        ) = await self._async_validate_if_enabled(loop, graph, url)
         graph_metrics = self._kpi.graph_metrics(graph)
         self._emit_progress(
             {
@@ -370,13 +376,14 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             raise RuntimeError(f"SHACL validation failed for {url} in fail mode.")
         await self._write_graph(graph)
         logger.info(
-            "Wrote %s triples for %s [mapping=%dms queue_wait=%dms postprocessors=%dms validation=%dms]",
+            "Wrote %s triples for %s [mapping=%dms postprocessor_wait=%dms postprocessors=%dms validation_wait=%dms validation=%dms]",
             len(graph),
             url,
             _t_mapping,
             _t_queue_wait,
             _t_postprocessors,
-            _t_validation,
+            _t_validation_wait,
+            _t_validation_actual,
         )
 
     def close(self) -> None:
@@ -424,7 +431,7 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             self._ensure_templates_loaded()
             if self._template_graph and len(self._template_graph) > 0:
                 _loop = asyncio.get_event_loop()
-                validation_payload = await self._async_validate_if_enabled(
+                validation_payload, _, _ = await self._async_validate_if_enabled(
                     _loop, self._template_graph, "static_templates"
                 )
                 self._emit_progress(
@@ -804,29 +811,31 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
 
     async def _async_validate_if_enabled(
         self, loop: Any, graph: Graph, url: str
-    ) -> dict[str, Any] | None:
+    ) -> tuple[dict[str, Any] | None, int, int]:
         if self._shacl_mode == "off":
-            return None
+            return None, 0, 0
         ntriples = graph.serialize(format="nt")
-        summary = await loop.run_in_executor(
+        result = await loop.run_in_executor(
             self._process_executor,
-            functools.partial(_shacl_validate_in_worker, ntriples),
+            functools.partial(_shacl_validate_in_worker, ntriples, time.time()),
         )
+        validation_queue_wait_ms = result.pop("_queue_wait_ms", 0)
+        validation_ms = result.pop("_validation_ms", 0)
         self._kpi.record_validation(
-            passed=summary["pass"],
-            warning_count=summary["warnings"]["count"],
-            error_count=summary["errors"]["count"],
-            warning_sources=summary["warnings"]["sources"],
-            error_sources=summary["errors"]["sources"],
+            passed=result["pass"],
+            warning_count=result["warnings"]["count"],
+            error_count=result["errors"]["count"],
+            warning_sources=result["warnings"]["sources"],
+            error_sources=result["errors"]["sources"],
         )
         logger.info(
             "SHACL validation for %s: pass=%s warnings=%s errors=%s",
             url,
-            summary["pass"],
-            summary["warnings"]["count"],
-            summary["errors"]["count"],
+            result["pass"],
+            result["warnings"]["count"],
+            result["errors"]["count"],
         )
-        return summary
+        return result, validation_queue_wait_ms, validation_ms
 
     def _validate_graph_if_enabled(
         self, graph: Graph, url: str
