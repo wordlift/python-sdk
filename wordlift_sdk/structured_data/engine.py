@@ -7,6 +7,7 @@ import hashlib
 import json
 import logging
 import re
+import threading
 from dataclasses import dataclass
 from importlib import resources
 from pathlib import Path
@@ -28,6 +29,9 @@ from wordlift_sdk.structured_data.constants import DEFAULT_BASE_URL
 from wordlift_sdk.utils.ssl_ca_bundle import resolve_ssl_ca_cert
 from wordlift_sdk.validation.shacl import ValidationResult, validate_file
 
+# morph_kgc uses rdflib's SPARQL parser (pyparsing) which has global state and
+# is NOT thread-safe. Serialize all morph_kgc calls with a module-level lock.
+_morph_kgc_lock = threading.Lock()
 
 _SCHEMA_BASE = "https://schema.org"
 _SCHEMA_HTTP = "http://schema.org/"
@@ -1360,7 +1364,8 @@ def _materialize_graph(mapping_path: Path) -> Graph:
         f"mappings = {mapping_path}\n"
     )
     try:
-        return morph_kgc.materialize(config)
+        with _morph_kgc_lock:
+            return morph_kgc.materialize(config)
     except RuntimeError:
         raise
     except Exception as exc:
