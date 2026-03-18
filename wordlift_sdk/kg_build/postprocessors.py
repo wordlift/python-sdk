@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import asyncio
+import importlib
+import inspect
 import json
 import logging
 import select
@@ -21,6 +24,7 @@ except ModuleNotFoundError:  # pragma: no cover
 
 _RUNTIME_ONESHOT = "oneshot"
 _RUNTIME_PERSISTENT = "persistent"
+_RUNTIME_INPROCESS = "inprocess"
 
 
 @dataclass(frozen=True)
@@ -373,6 +377,23 @@ class SubprocessPostprocessor:
         )
 
 
+@dataclass(frozen=True)
+class InProcessPostprocessor:
+    class_path: str
+
+    def process_graph(
+        self, graph: Graph, context: PostprocessorContext
+    ) -> Graph | None:
+        module_name, class_name = self.class_path.split(":", 1)
+        module = importlib.import_module(module_name)
+        klass = getattr(module, class_name)
+        processor = klass()
+        result = processor.process_graph(graph, context)
+        if inspect.isawaitable(result):
+            result = asyncio.run(result)
+        return result
+
+
 def _as_bool(value: Any, default: bool) -> bool:
     if value is None:
         return default
@@ -399,8 +420,10 @@ def _as_positive_int(value: Any, default: int) -> int:
 
 def _normalize_runtime(value: str | None) -> str:
     runtime = (value or _RUNTIME_ONESHOT).strip().lower()
-    if runtime not in {_RUNTIME_ONESHOT, _RUNTIME_PERSISTENT}:
-        raise ValueError("POSTPROCESSOR_RUNTIME must be one of: oneshot, persistent.")
+    if runtime not in {_RUNTIME_ONESHOT, _RUNTIME_PERSISTENT, _RUNTIME_INPROCESS}:
+        raise ValueError(
+            "POSTPROCESSOR_RUNTIME must be one of: oneshot, persistent, inprocess."
+        )
     return runtime
 
 
@@ -510,16 +533,17 @@ def load_postprocessors_for_profile(
     for spec in specs:
         if not spec.enabled:
             continue
-        loaded.append(
-            LoadedPostprocessor(
-                name=spec.class_path,
-                handler=SubprocessPostprocessor(
-                    spec=spec,
-                    root_dir=root_dir,
-                    runtime=resolved_runtime,
-                ),
+        if resolved_runtime == _RUNTIME_INPROCESS:
+            handler: GraphPostprocessor = InProcessPostprocessor(
+                class_path=spec.class_path
             )
-        )
+        else:
+            handler = SubprocessPostprocessor(
+                spec=spec,
+                root_dir=root_dir,
+                runtime=resolved_runtime,
+            )
+        loaded.append(LoadedPostprocessor(name=spec.class_path, handler=handler))
 
     logger.info(
         "Loaded %s postprocessors for profile '%s' from manifest: %s (runtime=%s)",
@@ -550,16 +574,17 @@ def load_postprocessors(
     for spec in specs:
         if not spec.enabled:
             continue
-        loaded.append(
-            LoadedPostprocessor(
-                name=spec.class_path,
-                handler=SubprocessPostprocessor(
-                    spec=spec,
-                    root_dir=root_dir,
-                    runtime=resolved_runtime,
-                ),
+        if resolved_runtime == _RUNTIME_INPROCESS:
+            handler: GraphPostprocessor = InProcessPostprocessor(
+                class_path=spec.class_path
             )
-        )
+        else:
+            handler = SubprocessPostprocessor(
+                spec=spec,
+                root_dir=root_dir,
+                runtime=resolved_runtime,
+            )
+        loaded.append(LoadedPostprocessor(name=spec.class_path, handler=handler))
     return loaded
 
 
