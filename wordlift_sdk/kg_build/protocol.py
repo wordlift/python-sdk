@@ -5,7 +5,7 @@ import functools
 import hashlib
 import logging
 import os
-import tempfile
+
 import time
 from dataclasses import asdict
 from pathlib import Path
@@ -19,10 +19,13 @@ from wordlift_sdk.protocol import Context
 from wordlift_sdk.protocol.web_page_import_protocol import (
     WebPageImportProtocolInterface,
 )
+from pyshacl import validate as pyshacl_validate
+from rdflib.namespace import SH
 from wordlift_sdk.validation.shacl import (
     ValidationResult,
+    _load_shapes_graph,
+    _normalize_schema_org_uris,
     resolve_shape_specs,
-    validate_file,
 )
 
 from .config import ProfileDefinition
@@ -164,6 +167,24 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             exclude_builtin_shapes=shacl_exclude_builtin_shapes or None,
             extra_shapes=shacl_extra_shapes or None,
         )
+        _shacl_validate_mode_for_preload = self._resolve_validation_mode(
+            self.profile.settings.get(
+                "shacl_validate_mode",
+                self.profile.settings.get("SHACL_VALIDATE_MODE", "warn"),
+            )
+        )
+        if _shacl_validate_mode_for_preload != "off":
+            self._shacl_shapes_graph, self._shacl_source_map = _load_shapes_graph(
+                self._shacl_shape_specs if self._shacl_shape_specs else None
+            )
+            logger.info(
+                "Pre-loaded %d SHACL shape triples for profile '%s'",
+                len(self._shacl_shapes_graph),
+                self.profile.name,
+            )
+        else:
+            self._shacl_shapes_graph = None
+            self._shacl_source_map = {}
         self._import_hash_mode = self._resolve_import_hash_mode(
             self.profile.settings.get(
                 "import_hash_mode",
@@ -745,21 +766,26 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         return summary
 
     def _validate_graph(self, graph: Graph) -> ValidationResult:
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".ttl", delete=False) as f:
-            tmp = Path(f.name)
-        try:
-            graph.serialize(destination=tmp, format="turtle")
-            return validate_file(
-                str(tmp),
-                shape_specs=self._shacl_shape_specs
-                if self._shacl_shape_specs
-                else None,
-            )
-        finally:
-            try:
-                tmp.unlink(missing_ok=True)
-            except Exception:
-                logger.debug("Failed to remove temporary SHACL graph file: %s", tmp)
+        data_graph = _normalize_schema_org_uris(graph)
+        conforms, report_graph, report_text = pyshacl_validate(
+            data_graph,
+            shacl_graph=self._shacl_shapes_graph,
+            inference="rdfs",
+            abort_on_first=False,
+            allow_infos=True,
+            allow_warnings=True,
+        )
+        warning_count = sum(
+            1 for _ in report_graph.subjects(SH.resultSeverity, SH.Warning)
+        )
+        return ValidationResult(
+            conforms=conforms,
+            report_text=report_text,
+            report_graph=report_graph,
+            data_graph=data_graph,
+            shape_source_map=self._shacl_source_map,
+            warning_count=warning_count,
+        )
 
     def _summarize_validation(self, result: ValidationResult) -> dict[str, Any]:
         sh = URIRef("http://www.w3.org/ns/shacl#")
