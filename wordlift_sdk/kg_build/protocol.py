@@ -198,6 +198,12 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         self._pp_executor = ThreadPoolExecutor(
             max_workers=_pp_pool_size, thread_name_prefix="worai_pp"
         )
+        # Wraps apply_mapping calls so they run in a thread rather than blocking
+        # the asyncio event loop. The thread itself blocks on the morph_kgc
+        # ProcessPoolExecutor slot, leaving the event loop free for I/O.
+        self._mapping_executor = ThreadPoolExecutor(
+            max_workers=_pool_size, thread_name_prefix="worai_ml"
+        )
         self._postprocessors_queue: asyncio.Queue = asyncio.Queue()
         for _ in range(_pp_pool_size):
             self._postprocessors_queue.put_nowait(
@@ -306,13 +312,22 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         debug_output: dict[str, str] | None = {} if self.debug_dir else None
 
         _t0 = time.perf_counter()
-        graph = await self.rml_service.apply_mapping(
-            html=response.web_page.html,
-            url=url,
-            mapping_file_path=mapping_path,
-            mapping_content=rendered_mapping,
-            response=mapping_response,
-            debug_output=debug_output,
+        # apply_mapping has no awaits — all work is synchronous (morph_kgc).
+        # Run it in a thread so the event loop stays free for I/O while the
+        # thread waits for its morph_kgc subprocess slot to become available.
+        _loop = asyncio.get_event_loop()
+        graph = await _loop.run_in_executor(
+            self._mapping_executor,
+            lambda: asyncio.run(
+                self.rml_service.apply_mapping(
+                    html=response.web_page.html,
+                    url=url,
+                    mapping_file_path=mapping_path,
+                    mapping_content=rendered_mapping,
+                    response=mapping_response,
+                    debug_output=debug_output,
+                )
+            ),
         )
         _t_mapping = int((time.perf_counter() - _t0) * 1000)
         if not graph or len(graph) == 0:
@@ -397,6 +412,7 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             except asyncio.QueueEmpty:
                 break
         self._pp_executor.shutdown(wait=False)
+        self._mapping_executor.shutdown(wait=False)
         if self._process_executor is not None:
             self._process_executor.shutdown(wait=False)
 
