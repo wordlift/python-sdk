@@ -5,8 +5,8 @@ import functools
 import hashlib
 import logging
 import os
-
 import time
+from concurrent.futures import ProcessPoolExecutor
 from dataclasses import asdict
 from pathlib import Path
 from types import SimpleNamespace
@@ -48,6 +48,59 @@ SEOVOC_IMPORT_HASH = URIRef("https://w3id.org/seovoc/importHash")
 
 def _path_contains_part(path: str, part: str) -> bool:
     return part in Path(path).parts
+
+
+# Module-level state for SHACL worker processes (one copy per process)
+_shacl_worker_shapes_graph: Graph | None = None
+_shacl_worker_source_map: dict = {}
+
+
+def _init_shacl_worker(shape_specs: list[str] | None) -> None:
+    global _shacl_worker_shapes_graph, _shacl_worker_source_map
+    _shacl_worker_shapes_graph, _shacl_worker_source_map = _load_shapes_graph(
+        shape_specs
+    )
+
+
+def _shacl_validate_in_worker(ntriples: str) -> dict:
+    data_graph = Graph()
+    data_graph.parse(data=ntriples, format="nt")
+    data_graph = _normalize_schema_org_uris(data_graph)
+    conforms, report_graph, _ = pyshacl_validate(
+        data_graph,
+        shacl_graph=_shacl_worker_shapes_graph,
+        inference="rdfs",
+        abort_on_first=False,
+        allow_infos=True,
+        allow_warnings=True,
+    )
+    warning_sources: dict[str, int] = {}
+    error_sources: dict[str, int] = {}
+    warning_count = 0
+    error_count = 0
+    for node in report_graph.subjects(SH.resultSeverity, SH.Warning):
+        warning_count += 1
+        shape = next(report_graph.objects(node, SH.sourceShape), None)
+        label = _shacl_worker_source_map.get(shape, "unknown")
+        warning_sources[str(label)] = warning_sources.get(str(label), 0) + 1
+    for node in report_graph.subjects(SH.resultSeverity, SH.Violation):
+        error_count += 1
+        shape = next(report_graph.objects(node, SH.sourceShape), None)
+        label = _shacl_worker_source_map.get(shape, "unknown")
+        error_sources[str(label)] = error_sources.get(str(label), 0) + 1
+    return {
+        "total": 1,
+        "pass": bool(conforms),
+        "fail": not bool(conforms),
+        "warnings": {
+            "count": warning_count,
+            "sources": dict(sorted(warning_sources.items())),
+        },
+        "errors": {
+            "count": error_count,
+            "sources": dict(sorted(error_sources.items())),
+        },
+    }
 
 
 def _resolve_postprocessor_runtime(settings: dict[str, Any]) -> str:
@@ -167,24 +220,21 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             exclude_builtin_shapes=shacl_exclude_builtin_shapes or None,
             extra_shapes=shacl_extra_shapes or None,
         )
-        _shacl_validate_mode_for_preload = self._resolve_validation_mode(
-            self.profile.settings.get(
-                "shacl_validate_mode",
-                self.profile.settings.get("SHACL_VALIDATE_MODE", "warn"),
-            )
-        )
-        if _shacl_validate_mode_for_preload != "off":
-            self._shacl_shapes_graph, self._shacl_source_map = _load_shapes_graph(
-                self._shacl_shape_specs if self._shacl_shape_specs else None
+        if self._shacl_mode != "off":
+            self._process_executor: ProcessPoolExecutor | None = ProcessPoolExecutor(
+                max_workers=_pool_size,
+                initializer=_init_shacl_worker,
+                initargs=(
+                    self._shacl_shape_specs if self._shacl_shape_specs else None,
+                ),
             )
             logger.info(
-                "Pre-loaded %d SHACL shape triples for profile '%s'",
-                len(self._shacl_shapes_graph),
+                "Created SHACL process pool with %d workers for profile '%s'",
+                _pool_size,
                 self.profile.name,
             )
         else:
-            self._shacl_shapes_graph = None
-            self._shacl_source_map = {}
+            self._process_executor = None
         self._import_hash_mode = self._resolve_import_hash_mode(
             self.profile.settings.get(
                 "import_hash_mode",
@@ -284,9 +334,7 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             self._write_debug_graph(graph, url)
 
         _t3 = time.perf_counter()
-        validation_payload = await loop.run_in_executor(
-            None, functools.partial(self._validate_graph_if_enabled, graph, url)
-        )
+        validation_payload = await self._async_validate_if_enabled(loop, graph, url)
         _t_validation = int((time.perf_counter() - _t3) * 1000)
         graph_metrics = self._kpi.graph_metrics(graph)
         self._emit_progress(
@@ -322,6 +370,8 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
                 close_loaded_postprocessors(self._postprocessors_queue.get_nowait())
             except asyncio.QueueEmpty:
                 break
+        if self._process_executor is not None:
+            self._process_executor.shutdown(wait=False)
 
     def get_kpi_summary(self) -> dict[str, object]:
         return self._kpi.summary(self.profile.name)
@@ -359,13 +409,8 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             self._ensure_templates_loaded()
             if self._template_graph and len(self._template_graph) > 0:
                 _loop = asyncio.get_event_loop()
-                validation_payload = await _loop.run_in_executor(
-                    None,
-                    functools.partial(
-                        self._validate_graph_if_enabled,
-                        self._template_graph,
-                        "static_templates",
-                    ),
+                validation_payload = await self._async_validate_if_enabled(
+                    _loop, self._template_graph, "static_templates"
                 )
                 self._emit_progress(
                     {
@@ -741,6 +786,32 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             id=existing_web_page_id,
             web_page=response.web_page,
         )
+
+    async def _async_validate_if_enabled(
+        self, loop: Any, graph: Graph, url: str
+    ) -> dict[str, Any] | None:
+        if self._shacl_mode == "off":
+            return None
+        ntriples = graph.serialize(format="nt")
+        summary = await loop.run_in_executor(
+            self._process_executor,
+            functools.partial(_shacl_validate_in_worker, ntriples),
+        )
+        self._kpi.record_validation(
+            passed=summary["pass"],
+            warning_count=summary["warnings"]["count"],
+            error_count=summary["errors"]["count"],
+            warning_sources=summary["warnings"]["sources"],
+            error_sources=summary["errors"]["sources"],
+        )
+        logger.info(
+            "SHACL validation for %s: pass=%s warnings=%s errors=%s",
+            url,
+            summary["pass"],
+            summary["warnings"]["count"],
+            summary["errors"]["count"],
+        )
+        return summary
 
     def _validate_graph_if_enabled(
         self, graph: Graph, url: str
