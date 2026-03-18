@@ -6,7 +6,7 @@ import hashlib
 import logging
 import os
 import time
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from dataclasses import asdict
 from pathlib import Path
 from types import SimpleNamespace
@@ -194,6 +194,9 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             _pp_pool_size,
             _pool_size,
         )
+        self._pp_executor = ThreadPoolExecutor(
+            max_workers=_pp_pool_size, thread_name_prefix="worai_pp"
+        )
         self._postprocessors_queue: asyncio.Queue = asyncio.Queue()
         for _ in range(_pp_pool_size):
             self._postprocessors_queue.put_nowait(
@@ -324,7 +327,7 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         try:
             _t2 = time.perf_counter()
             graph = await loop.run_in_executor(
-                None,
+                self._pp_executor,
                 functools.partial(
                     self._apply_postprocessors_with,
                     graph,
@@ -392,6 +395,7 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
                 close_loaded_postprocessors(self._postprocessors_queue.get_nowait())
             except asyncio.QueueEmpty:
                 break
+        self._pp_executor.shutdown(wait=False)
         if self._process_executor is not None:
             self._process_executor.shutdown(wait=False)
 
