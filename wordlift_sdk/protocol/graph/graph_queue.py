@@ -8,7 +8,13 @@ import wordlift_client
 from rdflib import Graph
 from rdflib.compare import to_isomorphic
 from wordlift_client import Configuration
-from tenacity import retry, retry_if_exception_type, wait_fixed, after_log
+from tenacity import (
+    retry,
+    retry_if_exception_type,
+    wait_fixed,
+    after_log,
+    stop_after_attempt,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +28,7 @@ class GraphQueue:
         self.hashes = set()
 
     @retry(
-        # stop=stop_after_attempt(5),  # Retry up to 5 times
+        stop=stop_after_attempt(5),
         retry=retry_if_exception_type(
             asyncio.TimeoutError
             | aiohttp.client_exceptions.ServerDisconnectedError
