@@ -41,6 +41,7 @@ from .postprocessors import (
 )
 from .rml_mapping import RmlMappingService
 from .templates import JinjaRdfTemplateReifier, TemplateTextRenderer
+from wordlift_sdk.structured_data.engine import init_morph_kgc_pool, _morph_kgc_tls
 
 logger = logging.getLogger(__name__)
 SEOVOC_SOURCE = URIRef("https://w3id.org/seovoc/source")
@@ -198,6 +199,18 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         self._pp_executor = ThreadPoolExecutor(
             max_workers=_pp_pool_size, thread_name_prefix="worai_pp"
         )
+        _mapping_pool_size = int(
+            self.profile.settings.get(
+                "mapping_pool_size",
+                self.profile.settings.get("MAPPING_POOL_SIZE", os.cpu_count() or 4),
+            )
+        )
+        logger.info(
+            "Mapping pool size for profile '%s': %d",
+            self.profile.name,
+            _mapping_pool_size,
+        )
+        init_morph_kgc_pool(_mapping_pool_size)
         # Wraps apply_mapping calls so they run in a thread rather than blocking
         # the asyncio event loop. The thread itself blocks on the morph_kgc
         # ProcessPoolExecutor slot, leaving the event loop free for I/O.
@@ -330,6 +343,7 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             ),
         )
         _t_mapping = int((time.perf_counter() - _t0) * 1000)
+        _t_mapping_wait = getattr(_morph_kgc_tls, "mapping_wait_ms", 0)
         if not graph or len(graph) == 0:
             logger.warning("No triples produced for %s", url)
             return
@@ -395,9 +409,10 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             raise RuntimeError(f"SHACL validation failed for {url} in fail mode.")
         await self._write_graph(graph)
         logger.info(
-            "Wrote %s triples for %s [mapping=%dms postprocessor_wait=%dms postprocessors=%dms validation_wait=%dms validation=%dms]",
+            "Wrote %s triples for %s [mapping_wait=%dms mapping=%dms postprocessor_wait=%dms postprocessors=%dms validation_wait=%dms validation=%dms]",
             len(graph),
             url,
+            _t_mapping_wait,
             _t_mapping,
             _t_queue_wait,
             _t_postprocessors,
