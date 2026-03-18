@@ -1351,6 +1351,10 @@ def _materialize_graph(mapping_path: Path) -> Graph:
     config = (
         "[CONFIGURATION]\n"
         "output_format = N-TRIPLES\n"
+        # Disable morph_kgc internal multiprocessing: on Linux it uses fork() which
+        # deadlocks when the parent process already has threads running (asyncio pool,
+        # SHACL ProcessPoolExecutor). The outer pipeline handles concurrency.
+        "number_of_processes = 1\n"
         "\n"
         "[DataSource1]\n"
         f"mappings = {mapping_path}\n"
