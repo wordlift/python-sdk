@@ -6,8 +6,10 @@ import asyncio
 import hashlib
 import json
 import logging
+import multiprocessing
+import os
 import re
-import threading
+from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass
 from importlib import resources
 from pathlib import Path
@@ -29,9 +31,34 @@ from wordlift_sdk.structured_data.constants import DEFAULT_BASE_URL
 from wordlift_sdk.utils.ssl_ca_bundle import resolve_ssl_ca_cert
 from wordlift_sdk.validation.shacl import ValidationResult, validate_file
 
-# morph_kgc uses rdflib's SPARQL parser (pyparsing) which has global state and
-# is NOT thread-safe. Serialize all morph_kgc calls with a module-level lock.
-_morph_kgc_lock = threading.Lock()
+
+# Top-level worker — must be module-level to be picklable for ProcessPoolExecutor.
+# Each subprocess has its own Python interpreter so pyparsing state is isolated;
+# no lock needed and genuine parallelism is possible.
+def _morph_kgc_worker(config: str) -> str:
+    import morph_kgc as _mkgc
+
+    return _mkgc.materialize(config).serialize(format="nt")
+
+
+# Lazy process pool — created on first use in the main process only.
+# Worker subprocesses import this module but never call _get_morph_kgc_pool(),
+# so they do NOT create their own pools (no recursive process explosion).
+_morph_kgc_pool: ProcessPoolExecutor | None = None
+
+
+def _get_morph_kgc_pool() -> ProcessPoolExecutor:
+    global _morph_kgc_pool
+    if _morph_kgc_pool is None:
+        # Use "spawn" context to start workers cleanly without inheriting any
+        # locks or file descriptors from the parent process.
+        ctx = multiprocessing.get_context("spawn")
+        _morph_kgc_pool = ProcessPoolExecutor(
+            max_workers=os.cpu_count() or 4,
+            mp_context=ctx,
+        )
+    return _morph_kgc_pool
+
 
 _SCHEMA_BASE = "https://schema.org"
 _SCHEMA_HTTP = "http://schema.org/"
@@ -1345,13 +1372,6 @@ def _normalize_materialization_error(error: Exception) -> RuntimeError:
 
 
 def _materialize_graph(mapping_path: Path) -> Graph:
-    try:
-        import morph_kgc
-    except ImportError as exc:
-        raise RuntimeError(
-            "morph-kgc is required. Install with: pip install morph-kgc"
-        ) from exc
-
     config = (
         "[CONFIGURATION]\n"
         "output_format = N-TRIPLES\n"
@@ -1364,8 +1384,13 @@ def _materialize_graph(mapping_path: Path) -> Graph:
         f"mappings = {mapping_path}\n"
     )
     try:
-        with _morph_kgc_lock:
-            return morph_kgc.materialize(config)
+        # Submit to subprocess pool — each worker has isolated pyparsing state,
+        # so calls are genuinely parallel across CPU cores with no lock needed.
+        # .result() blocks the calling thread (not the asyncio event loop).
+        ntriples = _get_morph_kgc_pool().submit(_morph_kgc_worker, config).result()
+        graph = Graph()
+        graph.parse(data=ntriples, format="nt")
+        return graph
     except RuntimeError:
         raise
     except Exception as exc:
