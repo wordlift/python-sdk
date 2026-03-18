@@ -328,10 +328,13 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         # apply_mapping has no awaits — all work is synchronous (morph_kgc).
         # Run it in a thread so the event loop stays free for I/O while the
         # thread waits for its morph_kgc subprocess slot to become available.
-        _loop = asyncio.get_event_loop()
-        graph = await _loop.run_in_executor(
-            self._mapping_executor,
-            lambda: asyncio.run(
+        # _morph_kgc_tls is thread-local: capture it inside the worker thread
+        # and pass the value back via a closure dict.
+        _timing: dict[str, int] = {}
+
+        def _run_mapping() -> Graph | None:
+            _t_start = time.perf_counter()
+            result = asyncio.run(
                 self.rml_service.apply_mapping(
                     html=response.web_page.html,
                     url=url,
@@ -340,10 +343,18 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
                     response=mapping_response,
                     debug_output=debug_output,
                 )
-            ),
-        )
-        _t_mapping = int((time.perf_counter() - _t0) * 1000)
-        _t_mapping_wait = getattr(_morph_kgc_tls, "mapping_wait_ms", 0)
+            )
+            mw = getattr(_morph_kgc_tls, "mapping_wait_ms", 0)
+            _timing["mapping_wait_ms"] = mw
+            # Subtract queue-wait so mapping= shows actual execution time only,
+            # consistent with how validation_wait/validation are reported.
+            _timing["mapping_ms"] = int((time.perf_counter() - _t_start) * 1000) - mw
+            return result
+
+        _loop = asyncio.get_event_loop()
+        graph = await _loop.run_in_executor(self._mapping_executor, _run_mapping)
+        _t_mapping = _timing.get("mapping_ms", int((time.perf_counter() - _t0) * 1000))
+        _t_mapping_wait = _timing.get("mapping_wait_ms", 0)
         if not graph or len(graph) == 0:
             logger.warning("No triples produced for %s", url)
             return
