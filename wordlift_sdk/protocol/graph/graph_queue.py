@@ -37,14 +37,11 @@ class GraphQueue:
             return self._api_client
         async with self._api_client_lock:
             if self._api_client is None:
-                # ApiClient.__init__ calls ssl.create_default_context() synchronously.
-                # Run it in a thread so the event loop isn't blocked during cert loading.
-                loop = asyncio.get_event_loop()
-                client = await loop.run_in_executor(
-                    None,
-                    lambda: wordlift_client.ApiClient(
-                        configuration=self.client_configuration
-                    ),
+                # ApiClient.__init__ calls ssl.create_default_context() synchronously
+                # and must run on the event loop thread (it calls asyncio internals).
+                # Creating it once and caching avoids repeated SSL cert loading per put().
+                client = wordlift_client.ApiClient(
+                    configuration=self.client_configuration
                 )
                 await client.__aenter__()
                 self._api_client = client
