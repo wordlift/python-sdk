@@ -6,6 +6,7 @@ import hashlib
 import logging
 import os
 import time
+import concurrent.futures
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from dataclasses import asdict
 from pathlib import Path
@@ -819,10 +820,22 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         if self._shacl_mode == "off":
             return None, 0, 0
         ntriples = graph.serialize(format="nt")
-        result = await loop.run_in_executor(
-            self._process_executor,
-            functools.partial(_shacl_validate_in_worker, ntriples, time.time()),
-        )
+        try:
+            result = await asyncio.wait_for(
+                loop.run_in_executor(
+                    self._process_executor,
+                    functools.partial(_shacl_validate_in_worker, ntriples, time.time()),
+                ),
+                timeout=120.0,
+            )
+        except (asyncio.TimeoutError, concurrent.futures.BrokenExecutor) as exc:
+            logger.warning(
+                "SHACL validation skipped for %s: %s (%s)",
+                url,
+                type(exc).__name__,
+                exc,
+            )
+            return None, 0, 0
         validation_queue_wait_ms = result.pop("_queue_wait_ms", 0)
         validation_ms = result.pop("_validation_ms", 0)
         self._kpi.record_validation(
