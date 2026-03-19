@@ -20,10 +20,13 @@ from wordlift_sdk.kg_build.postprocessors import (
     LoadedPostprocessor,
     PostprocessorContext,
     PostprocessorSpec,
-    SubprocessPostprocessor,
-    _build_runner_payload,
     close_loaded_postprocessors,
     load_postprocessors_for_profile,
+)
+from wordlift_sdk.kg_build.postprocessors.graph_io import _build_runner_payload
+from wordlift_sdk.kg_build.postprocessors.subprocess import (
+    OneshotSubprocessPostprocessor,
+    PersistentSubprocessPostprocessor,
 )
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -162,8 +165,8 @@ def test_manifest_precedence_prefers_selected_profile_file(tmp_path: Path) -> No
 
     first = loaded[0].handler
     second = loaded[1].handler
-    assert isinstance(second, SubprocessPostprocessor)
-    assert isinstance(first, SubprocessPostprocessor)
+    assert isinstance(second, OneshotSubprocessPostprocessor)
+    assert isinstance(first, OneshotSubprocessPostprocessor)
     assert first.spec.python == "/profile/python"
     assert first.spec.timeout_seconds == 17
     assert first.spec.keep_temp_on_error is True
@@ -190,7 +193,7 @@ def test_manifest_precedence_uses_base_when_selected_missing(tmp_path: Path) -> 
     assert [item.name for item in loaded] == ["test_pp:BaseOne"]
 
     first = loaded[0].handler
-    assert isinstance(first, SubprocessPostprocessor)
+    assert isinstance(first, OneshotSubprocessPostprocessor)
     assert first.spec.python == "/base/python"
     assert first.spec.timeout_seconds == 11
     assert first.spec.keep_temp_on_error is False
@@ -219,8 +222,7 @@ def test_manifest_runtime_selection(tmp_path: Path) -> None:
         runtime="persistent",
     )
     assert len(loaded) == 1
-    assert isinstance(loaded[0].handler, SubprocessPostprocessor)
-    assert loaded[0].handler.runtime == "persistent"
+    assert isinstance(loaded[0].handler, PersistentSubprocessPostprocessor)
 
 
 def test_subprocess_execution_and_nquads_exchange(tmp_path: Path) -> None:
@@ -249,7 +251,7 @@ def test_subprocess_execution_and_nquads_exchange(tmp_path: Path) -> None:
         enabled=True,
         keep_temp_on_error=False,
     )
-    processor = SubprocessPostprocessor(spec=spec, root_dir=root)
+    processor = OneshotSubprocessPostprocessor(spec=spec, root_dir=root)
 
     output = processor.process_graph(_sample_graph(), _sample_context())
     assert output is not None
@@ -291,11 +293,7 @@ def test_persistent_runtime_reuses_postprocessor_instance(tmp_path: Path) -> Non
         enabled=True,
         keep_temp_on_error=False,
     )
-    processor = SubprocessPostprocessor(
-        spec=spec,
-        root_dir=root,
-        runtime="persistent",
-    )
+    processor = PersistentSubprocessPostprocessor(spec=spec, root_dir=root)
 
     first = processor.process_graph(_sample_graph(), _sample_context())
     second = processor.process_graph(_sample_graph(), _sample_context())
@@ -351,7 +349,12 @@ def test_postprocessor_context_exposes_account_key_and_profile_api_url(
         enabled=True,
         keep_temp_on_error=False,
     )
-    processor = SubprocessPostprocessor(spec=spec, root_dir=root, runtime=runtime)
+    cls = (
+        PersistentSubprocessPostprocessor
+        if runtime == "persistent"
+        else OneshotSubprocessPostprocessor
+    )
+    processor = cls(spec=spec, root_dir=root)
     try:
         output = processor.process_graph(
             _sample_graph(),
@@ -405,7 +408,12 @@ def test_postprocessor_context_defaults_api_url_when_missing(
         enabled=True,
         keep_temp_on_error=False,
     )
-    processor = SubprocessPostprocessor(spec=spec, root_dir=root, runtime=runtime)
+    cls = (
+        PersistentSubprocessPostprocessor
+        if runtime == "persistent"
+        else OneshotSubprocessPostprocessor
+    )
+    processor = cls(spec=spec, root_dir=root)
     try:
         output = processor.process_graph(
             _sample_graph(),
@@ -471,7 +479,7 @@ def test_runner_module_is_runnable_via_python_m(tmp_path: Path) -> None:
         [
             sys.executable,
             "-m",
-            "wordlift_sdk.kg_build.postprocessors.runner",
+            "wordlift_sdk.kg_build.postprocessors.oneshot",
             "--class",
             "test_pp:AddRunnerTriple",
             "--input-graph",
@@ -517,7 +525,7 @@ def test_timeout_seconds_is_enforced(tmp_path: Path) -> None:
         enabled=True,
         keep_temp_on_error=False,
     )
-    processor = SubprocessPostprocessor(spec=spec, root_dir=root)
+    processor = OneshotSubprocessPostprocessor(spec=spec, root_dir=root)
 
     with pytest.raises(subprocess.TimeoutExpired):
         processor.process_graph(_sample_graph(), _sample_context())
@@ -543,11 +551,7 @@ def test_timeout_seconds_is_enforced_in_persistent_runtime(tmp_path: Path) -> No
         enabled=True,
         keep_temp_on_error=False,
     )
-    processor = SubprocessPostprocessor(
-        spec=spec,
-        root_dir=root,
-        runtime="persistent",
-    )
+    processor = PersistentSubprocessPostprocessor(spec=spec, root_dir=root)
 
     with pytest.raises(subprocess.TimeoutExpired):
         processor.process_graph(_sample_graph(), _sample_context())
@@ -571,7 +575,7 @@ def test_keep_temp_on_error_preserves_debug_files(tmp_path: Path) -> None:
         enabled=True,
         keep_temp_on_error=True,
     )
-    processor = SubprocessPostprocessor(spec=spec, root_dir=root)
+    processor = OneshotSubprocessPostprocessor(spec=spec, root_dir=root)
 
     with pytest.raises(RuntimeError):
         processor.process_graph(_sample_graph(), _sample_context())
@@ -607,7 +611,7 @@ def test_keep_temp_on_error_redacts_account_key_in_debug_context(
         enabled=True,
         keep_temp_on_error=True,
     )
-    processor = SubprocessPostprocessor(spec=spec, root_dir=root)
+    processor = OneshotSubprocessPostprocessor(spec=spec, root_dir=root)
     secret = "top-secret-key"
 
     with pytest.raises(RuntimeError):
@@ -683,7 +687,7 @@ def test_subprocess_uses_inherited_environment_without_pythonpath_injection(
         enabled=True,
         keep_temp_on_error=False,
     )
-    processor = SubprocessPostprocessor(spec=spec, root_dir=root)
+    processor = OneshotSubprocessPostprocessor(spec=spec, root_dir=root)
     captured: dict[str, object] = {}
 
     def fake_run(*args, **kwargs):

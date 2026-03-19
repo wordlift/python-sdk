@@ -6,7 +6,7 @@ from types import SimpleNamespace
 
 from rdflib import Graph, Literal, URIRef
 
-from wordlift_sdk.kg_build import postprocessor_runner as runner
+from wordlift_sdk.kg_build.postprocessors import oneshot as runner
 
 
 def _graph() -> Graph:

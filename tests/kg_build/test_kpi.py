@@ -1,6 +1,7 @@
 from rdflib import Graph, Literal, RDF, URIRef
 
 from wordlift_sdk.kg_build.kpi import KgBuildKpiCollector
+from wordlift_sdk.validation.shacl_validation_service import ValidationOutcome
 
 
 def test_kpi_collector_records_graph_and_validation() -> None:
@@ -14,11 +15,13 @@ def test_kpi_collector_records_graph_and_validation() -> None:
 
     collector.record_graph(graph)
     collector.record_validation(
-        passed=False,
-        warning_count=2,
-        error_count=1,
-        warning_sources={"google-article": 2},
-        error_sources={"google-product": 1},
+        ValidationOutcome(
+            passed=False,
+            warning_sources={"google-article": 2},
+            error_sources={"google-product": 1},
+            queue_wait_ms=0,
+            validation_ms=0,
+        )
     )
     summary = collector.summary("demo")
 

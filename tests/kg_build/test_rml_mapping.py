@@ -7,7 +7,6 @@ from unittest.mock import MagicMock
 import pytest
 from rdflib import Graph
 
-import wordlift_sdk.kg_build.rml_mapping as rml_module
 from wordlift_sdk.kg_build.rml_mapping import RmlMappingService
 
 
@@ -34,50 +33,46 @@ def _context(dataset_uri: str | None):
 
 
 @pytest.mark.asyncio
-async def test_apply_mapping_from_content_success(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    service = RmlMappingService(_context("https://data.example.com"))
+async def test_apply_mapping_from_content_success() -> None:
+    service = RmlMappingService(
+        _context("https://data.example.com"), pipeline=_Pipeline()
+    )
     service._html_converter.convert = MagicMock(return_value="<html></html>")
-    monkeypatch.setattr(rml_module, "MaterializationPipeline", _Pipeline)
     debug_output: dict[str, str] = {}
 
-    graph = await service.apply_mapping(
+    result = await service.apply_mapping(
         html="<html></html>",
         url="https://example.com/page",
         mapping_file_path="demo.yarrrml",
         mapping_content="m: 1",
         debug_output=debug_output,
     )
-    assert isinstance(graph, Graph)
-    assert len(graph) > 0
+    assert isinstance(result.graph, Graph)
+    assert len(result.graph) > 0
     assert debug_output["xhtml"] == "<html></html>"
 
 
 @pytest.mark.asyncio
 async def test_apply_mapping_file_not_found_returns_none() -> None:
     service = RmlMappingService(_context("https://data.example.com"))
-    out = await service.apply_mapping(
+    result = await service.apply_mapping(
         html="<html></html>",
         url="https://example.com",
         mapping_file_path=Path("/no/such/file.yarrrml"),
     )
-    assert out is None
+    assert result.graph is None
 
 
 @pytest.mark.asyncio
-async def test_apply_mapping_missing_dataset_uri_returns_none(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    service = RmlMappingService(_context(None))
-    monkeypatch.setattr(rml_module, "MaterializationPipeline", _Pipeline)
-    out = await service.apply_mapping(
+async def test_apply_mapping_missing_dataset_uri_returns_none() -> None:
+    service = RmlMappingService(_context(None), pipeline=_Pipeline())
+    result = await service.apply_mapping(
         html="<html></html>",
         url="https://example.com",
         mapping_file_path="x",
         mapping_content="m: 1",
     )
-    assert out is None
+    assert result.graph is None
 
 
 def test_normalize_schema_uris() -> None:

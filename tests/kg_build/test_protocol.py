@@ -7,7 +7,6 @@ import pytest
 from jinja2 import UndefinedError
 from rdflib import BNode, Graph, Literal, RDF, URIRef
 from wordlift_client import WebPage, WebPageScrapeResponse
-from wordlift_sdk.validation.shacl import ValidationResult
 
 from wordlift_sdk.kg_build.config.loader import ProfileDefinition, ProfileMappingRoute
 import wordlift_sdk.kg_build.protocol as protocol_module
@@ -16,6 +15,17 @@ from wordlift_sdk.kg_build.protocol import (
     _path_contains_part,
     _resolve_postprocessor_runtime,
 )
+from wordlift_sdk.kg_build.rml_mapping import MappingResult
+from wordlift_sdk.kg_build.postprocessors.types import PostprocessorResult
+from wordlift_sdk.kg_build.postprocessors.processors.graph_annotation import (
+    ImportAnnotationPostprocessor,
+)
+from wordlift_sdk.kg_build.postprocessors.processors.id_postprocessor import (
+    CanonicalIdsPostprocessor,
+    RootIdReconcilerPostprocessor,
+    _find_web_page_iri as _find_web_page_iri_impl,
+)
+from wordlift_sdk.validation.shacl_validation_service import ValidationOutcome
 
 
 def _make_profile() -> ProfileDefinition:
@@ -60,7 +70,7 @@ def _make_context() -> SimpleNamespace:
     return SimpleNamespace(
         account=SimpleNamespace(dataset_uri="https://data.example.com/dataset"),
         client_configuration=SimpleNamespace(api_key={}),
-        graph_queue=SimpleNamespace(put=AsyncMock()),
+        graph_queue=SimpleNamespace(put=AsyncMock(), close=AsyncMock()),
         configuration_provider=SimpleNamespace(
             get_value=lambda *_args, **_kwargs: None
         ),
@@ -71,11 +81,71 @@ def _make_context_without_dataset() -> SimpleNamespace:
     return SimpleNamespace(
         account=SimpleNamespace(dataset_uri=None),
         client_configuration=SimpleNamespace(api_key={}),
-        graph_queue=SimpleNamespace(put=AsyncMock()),
+        graph_queue=SimpleNamespace(put=AsyncMock(), close=AsyncMock()),
         configuration_provider=SimpleNamespace(
             get_value=lambda *_args, **_kwargs: None
         ),
     )
+
+
+def _make_mapping_result(graph: Graph) -> MappingResult:
+    return MappingResult(graph=graph, queue_wait_ms=0, mapping_ms=0)
+
+
+def _make_validation_outcome(
+    *,
+    passed: bool,
+    warning_sources: dict | None = None,
+    error_sources: dict | None = None,
+) -> ValidationOutcome:
+    return ValidationOutcome(
+        passed=passed,
+        warning_sources=warning_sources or {},
+        error_sources=error_sources or {},
+        queue_wait_ms=0,
+        validation_ms=0,
+    )
+
+
+def _passthrough_pp() -> AsyncMock:
+    return AsyncMock(
+        side_effect=lambda g, url, resp, ewi, eih: PostprocessorResult(
+            graph=g, queue_wait_ms=0, postprocessors_ms=0
+        )
+    )
+
+
+def _annotating_pp(
+    dataset_uri: str = "https://data.example.com/dataset",
+    import_hash_mode: str = "on",
+) -> AsyncMock:
+    async def _stage(graph, url, resp, ewi, eih):
+        ctx = SimpleNamespace(
+            account=SimpleNamespace(dataset_uri=dataset_uri),
+            existing_import_hash=eih,
+            import_hash_mode=import_hash_mode,
+        )
+        g = ImportAnnotationPostprocessor().process_graph(graph, ctx)
+        return PostprocessorResult(graph=g, queue_wait_ms=0, postprocessors_ms=0)
+
+    return AsyncMock(side_effect=_stage)
+
+
+def _reconciling_pp(
+    dataset_uri: str = "https://data.example.com/dataset",
+) -> AsyncMock:
+    async def _stage(graph, url, resp, ewi, eih):
+        ctx = SimpleNamespace(
+            account=SimpleNamespace(dataset_uri=dataset_uri),
+            existing_import_hash=eih,
+            import_hash_mode="on",
+            existing_web_page_id=ewi,
+        )
+        g = RootIdReconcilerPostprocessor().process_graph(graph, ctx)
+        g = ImportAnnotationPostprocessor().process_graph(g, ctx)
+        return PostprocessorResult(graph=g, queue_wait_ms=0, postprocessors_ms=0)
+
+    return AsyncMock(side_effect=_stage)
 
 
 def _make_graph(subject: str) -> Graph:
@@ -130,12 +200,13 @@ async def test_profile_protocol_reconciles_to_existing_id_and_sets_source():
     protocol._patch_static_templates_once = AsyncMock()
     protocol._resolve_mapping_path = MagicMock(return_value=Path("mapping.yarrrml"))
     protocol._get_mapping_content = MagicMock(return_value="mapping")
-    protocol._core_ids.process_graph = MagicMock(side_effect=lambda g, _: g)
-    protocol._apply_postprocessors = MagicMock(side_effect=lambda g, *_: g)
-    protocol.patcher.patch_all = AsyncMock()
-    protocol.rml_service.apply_mapping = AsyncMock(
-        return_value=_make_graph("https://example.com/mapped-web-page")
+    protocol._run_mapping_stage = AsyncMock(
+        return_value=_make_mapping_result(
+            _make_graph("https://example.com/mapped-web-page")
+        )
     )
+    protocol._run_postprocessing_stage = _reconciling_pp()
+    protocol.patcher.patch_all = AsyncMock()
 
     response = WebPageScrapeResponse(
         web_page=WebPage(url="https://example.com/page", html="<html></html>")
@@ -169,12 +240,11 @@ async def test_profile_protocol_put_strategy_writes_to_graph_queue() -> None:
     protocol._patch_static_templates_once = AsyncMock()
     protocol._resolve_mapping_path = MagicMock(return_value=Path("mapping.yarrrml"))
     protocol._get_mapping_content = MagicMock(return_value="mapping")
-    protocol._core_ids.process_graph = MagicMock(side_effect=lambda g, _: g)
-    protocol._apply_postprocessors = MagicMock(side_effect=lambda g, *_: g)
-    protocol.patcher.patch_all = AsyncMock()
-    protocol.rml_service.apply_mapping = AsyncMock(
-        return_value=_make_dataset_scoped_graph()
+    protocol._run_mapping_stage = AsyncMock(
+        return_value=_make_mapping_result(_make_dataset_scoped_graph())
     )
+    protocol._run_postprocessing_stage = _passthrough_pp()
+    protocol.patcher.patch_all = AsyncMock()
 
     response = WebPageScrapeResponse(
         web_page=WebPage(url="https://example.com/page", html="<html></html>")
@@ -197,7 +267,7 @@ async def test_static_templates_use_graph_queue_when_put_strategy_enabled() -> N
     )
     protocol._template_graph = _make_dataset_scoped_graph()
     protocol._template_exports = {}
-    protocol._validate_graph_if_enabled = MagicMock(return_value=None)
+    protocol._shacl_validator.validate = AsyncMock(return_value=None)
     protocol._emit_progress = MagicMock()
     protocol._kpi.record_graph = MagicMock()
     protocol.patcher.patch_all = AsyncMock()
@@ -220,8 +290,7 @@ async def test_profile_protocol_put_strategy_honors_import_hash_write_mode() -> 
     protocol._patch_static_templates_once = AsyncMock()
     protocol._resolve_mapping_path = MagicMock(return_value=Path("mapping.yarrrml"))
     protocol._get_mapping_content = MagicMock(return_value="mapping")
-    protocol._core_ids.process_graph = MagicMock(side_effect=lambda g, _: g)
-    protocol._apply_postprocessors = MagicMock(side_effect=lambda g, *_: g)
+    protocol._run_postprocessing_stage = _passthrough_pp()
     protocol.patcher.patch_all = AsyncMock()
     graph = _make_dataset_scoped_graph()
     child = URIRef("https://data.example.com/dataset/entities/article-1/faq/1")
@@ -233,7 +302,7 @@ async def test_profile_protocol_put_strategy_honors_import_hash_write_mode() -> 
         )
     )
     graph.add((child, RDF.type, URIRef("https://schema.org/Question")))
-    protocol.rml_service.apply_mapping = AsyncMock(return_value=graph)
+    protocol._run_mapping_stage = AsyncMock(return_value=_make_mapping_result(graph))
 
     response = WebPageScrapeResponse(
         web_page=WebPage(url="https://example.com/page", html="<html></html>")
@@ -264,17 +333,22 @@ async def test_profile_protocol_put_strategy_skips_when_import_hash_matches() ->
     protocol._patch_static_templates_once = AsyncMock()
     protocol._resolve_mapping_path = MagicMock(return_value=Path("mapping.yarrrml"))
     protocol._get_mapping_content = MagicMock(return_value="mapping")
-    protocol._core_ids.process_graph = MagicMock(side_effect=lambda g, _: g)
-    protocol._apply_postprocessors = MagicMock(side_effect=lambda g, *_: g)
-    protocol.patcher.patch_all = AsyncMock()
     graph = _make_dataset_scoped_graph()
-    protocol._set_source(graph, existing_web_page_id=None)
+    # Pre-annotate so the expected hash matches what the pipeline will produce
+    ann_ctx = SimpleNamespace(
+        account=context.account,
+        existing_import_hash=None,
+        import_hash_mode="on",
+    )
+    ImportAnnotationPostprocessor().process_graph(graph, ann_ctx)
     expected_hash = protocol.patcher._compute_import_hash(
         URIRef("https://data.example.com/dataset/web-pages/1"),
         graph,
         "https://data.example.com/dataset",
     )
-    protocol.rml_service.apply_mapping = AsyncMock(return_value=graph)
+    protocol._run_mapping_stage = AsyncMock(return_value=_make_mapping_result(graph))
+    protocol._run_postprocessing_stage = _annotating_pp()
+    protocol.patcher.patch_all = AsyncMock()
 
     response = WebPageScrapeResponse(
         web_page=WebPage(url="https://example.com/page", html="<html></html>")
@@ -297,12 +371,11 @@ async def test_profile_protocol_put_strategy_honors_import_hash_off_mode() -> No
     protocol._patch_static_templates_once = AsyncMock()
     protocol._resolve_mapping_path = MagicMock(return_value=Path("mapping.yarrrml"))
     protocol._get_mapping_content = MagicMock(return_value="mapping")
-    protocol._core_ids.process_graph = MagicMock(side_effect=lambda g, _: g)
-    protocol._apply_postprocessors = MagicMock(side_effect=lambda g, *_: g)
-    protocol.patcher.patch_all = AsyncMock()
-    protocol.rml_service.apply_mapping = AsyncMock(
-        return_value=_make_dataset_scoped_graph()
+    protocol._run_mapping_stage = AsyncMock(
+        return_value=_make_mapping_result(_make_dataset_scoped_graph())
     )
+    protocol._run_postprocessing_stage = _passthrough_pp()
+    protocol.patcher.patch_all = AsyncMock()
 
     response = WebPageScrapeResponse(
         web_page=WebPage(url="https://example.com/page", html="<html></html>")
@@ -335,13 +408,12 @@ async def test_profile_protocol_sets_source_on_mapped_subject_when_existing_id_m
     protocol._patch_static_templates_once = AsyncMock()
     protocol._resolve_mapping_path = MagicMock(return_value=Path("mapping.yarrrml"))
     protocol._get_mapping_content = MagicMock(return_value="mapping")
-    protocol._core_ids.process_graph = MagicMock(side_effect=lambda g, _: g)
-    protocol._apply_postprocessors = MagicMock(side_effect=lambda g, *_: g)
-    protocol.patcher.patch_all = AsyncMock()
     mapped_subject = "https://example.com/mapped-web-page"
-    protocol.rml_service.apply_mapping = AsyncMock(
-        return_value=_make_graph(mapped_subject)
+    protocol._run_mapping_stage = AsyncMock(
+        return_value=_make_mapping_result(_make_graph(mapped_subject))
     )
+    protocol._run_postprocessing_stage = _annotating_pp()
+    protocol.patcher.patch_all = AsyncMock()
 
     response = WebPageScrapeResponse(
         web_page=WebPage(url="https://example.com/page", html="<html></html>")
@@ -367,12 +439,11 @@ async def test_profile_protocol_sets_source_only_on_first_level_uri_subjects():
     protocol._patch_static_templates_once = AsyncMock()
     protocol._resolve_mapping_path = MagicMock(return_value=Path("mapping.yarrrml"))
     protocol._get_mapping_content = MagicMock(return_value="mapping")
-    protocol._core_ids.process_graph = MagicMock(side_effect=lambda g, _: g)
-    protocol._apply_postprocessors = MagicMock(side_effect=lambda g, *_: g)
-    protocol.patcher.patch_all = AsyncMock()
-    protocol.rml_service.apply_mapping = AsyncMock(
-        return_value=_make_multi_entity_graph()
+    protocol._run_mapping_stage = AsyncMock(
+        return_value=_make_mapping_result(_make_multi_entity_graph())
     )
+    protocol._run_postprocessing_stage = _annotating_pp()
+    protocol.patcher.patch_all = AsyncMock()
 
     response = WebPageScrapeResponse(
         web_page=WebPage(url="https://example.com/page", html="<html></html>")
@@ -423,11 +494,8 @@ async def test_callback_runs_canonical_ids_after_postprocessors() -> None:
             Literal("https://translated.com/developers"),
         )
     )
-    protocol.rml_service.apply_mapping = AsyncMock(return_value=mapped_graph)
 
-    def _inject_service_product_and_fragment_offer(
-        graph: Graph, *_args, **_kwargs
-    ) -> Graph:
+    async def _pp_with_injection(graph, url, resp, ewi, eih):
         graph.add((root, RDF.type, URIRef("http://schema.org/Product")))
         graph.add((root, RDF.type, URIRef("http://schema.org/Service")))
         graph.add(
@@ -444,11 +512,17 @@ async def test_callback_runs_canonical_ids_after_postprocessors() -> None:
                 URIRef(f"{root}#aggregate-offer-usd"),
             )
         )
-        return graph
+        ctx = SimpleNamespace(
+            account=SimpleNamespace(dataset_uri="https://data.example.com/dataset"),
+            extensions=None,
+        )
+        g = CanonicalIdsPostprocessor().process_graph(graph, ctx)
+        return PostprocessorResult(graph=g, queue_wait_ms=0, postprocessors_ms=0)
 
-    protocol._apply_postprocessors = MagicMock(
-        side_effect=_inject_service_product_and_fragment_offer
+    protocol._run_mapping_stage = AsyncMock(
+        return_value=_make_mapping_result(mapped_graph)
     )
+    protocol._run_postprocessing_stage = AsyncMock(side_effect=_pp_with_injection)
 
     response = WebPageScrapeResponse(
         web_page=WebPage(url="https://translated.com/developers", html="<html></html>")
@@ -484,12 +558,11 @@ async def test_profile_protocol_applies_existing_import_hash_to_all_uri_subjects
     protocol._patch_static_templates_once = AsyncMock()
     protocol._resolve_mapping_path = MagicMock(return_value=Path("mapping.yarrrml"))
     protocol._get_mapping_content = MagicMock(return_value="mapping")
-    protocol._core_ids.process_graph = MagicMock(side_effect=lambda g, _: g)
-    protocol._apply_postprocessors = MagicMock(side_effect=lambda g, *_: g)
-    protocol.patcher.patch_all = AsyncMock()
-    protocol.rml_service.apply_mapping = AsyncMock(
-        return_value=_make_multi_entity_graph()
+    protocol._run_mapping_stage = AsyncMock(
+        return_value=_make_mapping_result(_make_multi_entity_graph())
     )
+    protocol._run_postprocessing_stage = _annotating_pp()
+    protocol.patcher.patch_all = AsyncMock()
 
     response = WebPageScrapeResponse(
         web_page=WebPage(url="https://example.com/page", html="<html></html>")
@@ -520,15 +593,14 @@ async def test_profile_protocol_sets_source_when_web_page_absent_but_uri_subject
     protocol._patch_static_templates_once = AsyncMock()
     protocol._resolve_mapping_path = MagicMock(return_value=Path("mapping.yarrrml"))
     protocol._get_mapping_content = MagicMock(return_value="mapping")
-    protocol._core_ids.process_graph = MagicMock(side_effect=lambda g, _: g)
-    protocol._apply_postprocessors = MagicMock(side_effect=lambda g, *_: g)
+    protocol._run_postprocessing_stage = _annotating_pp()
     protocol.patcher.patch_all = AsyncMock()
 
     graph = Graph()
     article = URIRef("https://example.com/entities/article-only")
     graph.add((article, RDF.type, URIRef("http://schema.org/Article")))
     graph.add((article, URIRef("http://schema.org/headline"), Literal("Title")))
-    protocol.rml_service.apply_mapping = AsyncMock(return_value=graph)
+    protocol._run_mapping_stage = AsyncMock(return_value=_make_mapping_result(graph))
 
     response = WebPageScrapeResponse(
         web_page=WebPage(url="https://example.com/page", html="<html></html>")
@@ -554,8 +626,7 @@ async def test_profile_protocol_sets_source_by_dataset_id_depth() -> None:
     protocol._patch_static_templates_once = AsyncMock()
     protocol._resolve_mapping_path = MagicMock(return_value=Path("mapping.yarrrml"))
     protocol._get_mapping_content = MagicMock(return_value="mapping")
-    protocol._core_ids.process_graph = MagicMock(side_effect=lambda g, _: g)
-    protocol._apply_postprocessors = MagicMock(side_effect=lambda g, *_: g)
+    protocol._run_postprocessing_stage = _annotating_pp()
     protocol.patcher.patch_all = AsyncMock()
 
     graph = Graph()
@@ -567,7 +638,7 @@ async def test_profile_protocol_sets_source_by_dataset_id_depth() -> None:
     graph.add((entity, RDF.type, URIRef("https://schema.org/Article")))
     graph.add((entity, URIRef("https://schema.org/hasPart"), child))
     graph.add((child, RDF.type, URIRef("https://schema.org/Question")))
-    protocol.rml_service.apply_mapping = AsyncMock(return_value=graph)
+    protocol._run_mapping_stage = AsyncMock(return_value=_make_mapping_result(graph))
 
     response = WebPageScrapeResponse(
         web_page=WebPage(url="https://example.com/page", html="<html></html>")
@@ -598,8 +669,7 @@ async def test_profile_protocol_does_not_set_source_on_blank_nodes():
     protocol._patch_static_templates_once = AsyncMock()
     protocol._resolve_mapping_path = MagicMock(return_value=Path("mapping.yarrrml"))
     protocol._get_mapping_content = MagicMock(return_value="mapping")
-    protocol._core_ids.process_graph = MagicMock(side_effect=lambda g, _: g)
-    protocol._apply_postprocessors = MagicMock(side_effect=lambda g, *_: g)
+    protocol._run_postprocessing_stage = _annotating_pp()
     protocol.patcher.patch_all = AsyncMock()
 
     graph = Graph()
@@ -608,7 +678,7 @@ async def test_profile_protocol_does_not_set_source_on_blank_nodes():
     graph.add((article, RDF.type, URIRef("http://schema.org/Article")))
     graph.add((blank, RDF.type, URIRef("http://schema.org/Thing")))
     graph.add((article, URIRef("http://schema.org/mentions"), blank))
-    protocol.rml_service.apply_mapping = AsyncMock(return_value=graph)
+    protocol._run_mapping_stage = AsyncMock(return_value=_make_mapping_result(graph))
 
     response = WebPageScrapeResponse(
         web_page=WebPage(url="https://example.com/page", html="<html></html>")
@@ -640,12 +710,11 @@ def test_protocol_uses_profile_postprocessor_runtime_setting(
         return []
 
     monkeypatch.setattr(protocol_module, "load_postprocessors_for_profile", fake_loader)
-    protocol = ProfileImportProtocol(
+    ProfileImportProtocol(
         context=_make_context(),
         profile=_make_profile_with_settings({"POSTPROCESSOR_RUNTIME": "persistent"}),
         root_dir=Path.cwd(),
     )
-    assert protocol._postprocessor_runtime == "persistent"
     assert captured["runtime"] == "persistent"
 
 
@@ -675,7 +744,10 @@ def test_build_pp_context_exposes_resolved_profile_and_account_key() -> None:
     )
 
     context = protocol._build_pp_context(
-        "https://example.com/page", response, existing_web_page_id=None
+        "https://example.com/page",
+        response,
+        existing_web_page_id=None,
+        existing_import_hash=None,
     )
 
     assert context.account_key == "profile-secret"
@@ -699,44 +771,37 @@ def test_build_pp_context_preserves_custom_profile_settings() -> None:
     )
 
     context = protocol._build_pp_context(
-        "https://example.com/page", response, existing_web_page_id=None
+        "https://example.com/page",
+        response,
+        existing_web_page_id=None,
+        existing_import_hash=None,
     )
 
     assert context.profile["settings"]["disable_article_markup"] is True
 
 
-def test_apply_postprocessors_fails_fast_when_account_key_missing() -> None:
+def test_account_key_resolved_from_profile_api_key() -> None:
+    profile = ProfileDefinition(
+        **{
+            **_make_profile().__dict__,
+            "api_key": "profile-secret",
+        }
+    )
+    protocol = ProfileImportProtocol(
+        context=_make_context(),
+        profile=profile,
+        root_dir=Path.cwd(),
+    )
+    assert protocol._account_key == "profile-secret"
+
+
+def test_account_key_is_none_when_no_key_configured() -> None:
     protocol = ProfileImportProtocol(
         context=_make_context(),
         profile=_make_profile(),
         root_dir=Path.cwd(),
     )
-
-    class _NeverRun:
-        name = "never-run"
-        called = False
-
-        def run(self, graph, context):
-            self.called = True
-            return graph
-
-    handler = _NeverRun()
-    protocol._postprocessors = [handler]  # type: ignore[assignment]
-
-    response = WebPageScrapeResponse(
-        web_page=WebPage(url="https://example.com/page", html="<html></html>")
-    )
-    graph = _make_graph("https://example.com/mapped-web-page")
-
-    with pytest.raises(RuntimeError, match="Postprocessor runtime requires an API key"):
-        protocol._apply_postprocessors(
-            graph,
-            "https://example.com/page",
-            response,
-            existing_web_page_id=None,
-        )
-
-    assert handler.called is False
+    assert protocol._account_key is None
 
 
 def test_protocol_helpers_runtime_and_path_part() -> None:
@@ -792,7 +857,7 @@ async def test_callback_returns_early_when_mapping_has_no_triples() -> None:
     protocol._patch_static_templates_once = AsyncMock()
     protocol._resolve_mapping_path = MagicMock(return_value=Path("mapping.yarrrml"))
     protocol._get_mapping_content = MagicMock(return_value="mapping")
-    protocol.rml_service.apply_mapping = AsyncMock(return_value=Graph())
+    protocol._run_mapping_stage = AsyncMock(return_value=_make_mapping_result(Graph()))
     protocol.patcher.patch_all = AsyncMock()
 
     response = WebPageScrapeResponse(
@@ -803,21 +868,16 @@ async def test_callback_returns_early_when_mapping_has_no_triples() -> None:
     protocol.patcher.patch_all.assert_not_called()
 
 
-def test_close_invokes_postprocessor_cleanup(monkeypatch: pytest.MonkeyPatch) -> None:
-    called: dict[str, object] = {}
-
-    def fake_close(postprocessors):
-        called["value"] = postprocessors
-
-    monkeypatch.setattr(protocol_module, "close_loaded_postprocessors", fake_close)
+def test_close_invokes_postprocessor_service_close() -> None:
     protocol = ProfileImportProtocol(
         context=_make_context(),
         profile=_make_profile(),
         root_dir=Path.cwd(),
     )
-    protocol._postprocessors = ["x"]  # type: ignore[assignment]
-    protocol.close()
-    assert called["value"] == ["x"]
+    mock_close = MagicMock()
+    protocol._postprocessor_service.close = mock_close
+    asyncio.run(protocol.close())
+    mock_close.assert_called_once()
 
 
 def test_resolve_path_and_overlay_paths(tmp_path: Path) -> None:
@@ -1018,88 +1078,69 @@ def test_get_mapping_content_uses_cache_and_requires_dataset() -> None:
         protocol2._get_mapping_content(path)
 
 
-def test_apply_postprocessors_runs_all_processors() -> None:
-    protocol = ProfileImportProtocol(
-        context=_make_context(),
-        profile=_make_profile_with_settings({"api_key": "x"}),
-        root_dir=Path.cwd(),
-    )
-    response = WebPageScrapeResponse(
-        web_page=WebPage(url="https://example.com/page", html="<html></html>")
-    )
-    graph = _make_graph("https://example.com/page")
-
-    class _P1:
-        name = "p1"
-
-        def run(self, g, _ctx):
-            g.add(
-                (
-                    URIRef("https://example.com/page"),
-                    URIRef("https://schema.org/name"),
-                    Literal("a"),
-                )
-            )
-            return g
-
-    class _P2:
-        name = "p2"
-
-        def run(self, g, _ctx):
-            return g
-
-    protocol._postprocessors = [_P1(), _P2()]  # type: ignore[assignment]
-    protocol._resolve_postprocessor_account_key = MagicMock(return_value="secret")
-    out = protocol._apply_postprocessors(
-        graph, "https://example.com/page", response, None
-    )
-    assert len(out) >= len(graph)
-
-
-def test_resolve_postprocessor_account_key_priority(
+def test_postprocessor_factory_builds_required_processors(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    """Verify the factory used by PostprocessorService includes the standard processors."""
+
+    def fake_loader(*, root_dir, profile_name, runtime=None):
+        return []
+
+    monkeypatch.setattr(protocol_module, "load_postprocessors_for_profile", fake_loader)
     protocol = ProfileImportProtocol(
         context=_make_context(),
         profile=_make_profile(),
         root_dir=Path.cwd(),
     )
-    protocol.profile = ProfileDefinition(
-        **{**protocol.profile.__dict__, "api_key": "profile-key"}
-    )
-    assert protocol._resolve_postprocessor_account_key() == "profile-key"
+    # Get one slot from the pool to inspect the processors
+    processors = list(protocol._postprocessor_service._queue.get_nowait())
+    names = [p.name for p in processors]
+    assert "root_id_reconciler" in names
+    assert "canonical_ids" in names
+    assert "import_annotation" in names
 
-    protocol.profile = ProfileDefinition(
-        **{**protocol.profile.__dict__, "api_key": None}
-    )
-    protocol.context.client_configuration.api_key = {"ApiKey": "runtime-key"}
-    assert protocol._resolve_postprocessor_account_key() == "runtime-key"
 
-    protocol.context.client_configuration.api_key = {}
-    protocol.context.configuration_provider = SimpleNamespace(
+def test_resolve_account_key_priority(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    profile = _make_profile()
+    context = _make_context()
+
+    profile_with_key = ProfileDefinition(
+        **{**profile.__dict__, "api_key": "profile-key"}
+    )
+    assert (
+        protocol_module._resolve_account_key(profile_with_key, context) == "profile-key"
+    )
+
+    context.client_configuration.api_key = {"ApiKey": "runtime-key"}
+    assert protocol_module._resolve_account_key(profile, context) == "runtime-key"
+
+    context.client_configuration.api_key = {}
+    context.configuration_provider = SimpleNamespace(
         get_value=lambda name: "provider-key" if name == "WORDLIFT_KEY" else None
     )
-    assert protocol._resolve_postprocessor_account_key() == "provider-key"
+    assert protocol_module._resolve_account_key(profile, context) == "provider-key"
 
-    protocol.context.configuration_provider = SimpleNamespace(
+    context.configuration_provider = SimpleNamespace(
         get_value=lambda _name: (_ for _ in ()).throw(RuntimeError("nope"))
     )
     monkeypatch.setenv("WORDLIFT_API_KEY", "env-key")
-    assert protocol._resolve_postprocessor_account_key() == "env-key"
+    assert protocol_module._resolve_account_key(profile, context) == "env-key"
     monkeypatch.delenv("WORDLIFT_API_KEY", raising=False)
 
 
 def test_clean_key_write_debug_and_reconcile(tmp_path: Path) -> None:
+    assert protocol_module._clean_key(None) is None
+    assert protocol_module._clean_key("  ") is None
+    assert protocol_module._clean_key(" x ") == "x"
+
     protocol = ProfileImportProtocol(
         context=_make_context(),
         profile=_make_profile(),
         root_dir=tmp_path,
         debug_dir=tmp_path / "debug",
     )
-    assert protocol._clean_key(None) is None
-    assert protocol._clean_key("  ") is None
-    assert protocol._clean_key(" x ") == "x"
-
     graph = _make_graph("https://example.com/old")
     protocol._write_debug_graph(graph, "https://example.com/page")
     protocol._write_debug_source_documents(
@@ -1113,8 +1154,14 @@ def test_clean_key_write_debug_and_reconcile(tmp_path: Path) -> None:
     child = URIRef("https://example.com/child")
     https_graph.add((old, RDF.type, URIRef("https://schema.org/WebPage")))
     https_graph.add((child, URIRef("https://schema.org/about"), old))
-    assert protocol._find_web_page_iri(https_graph) == old
-    protocol._reconcile_root_id(https_graph, str(new))
+    assert _find_web_page_iri_impl(https_graph) == old
+    ctx = SimpleNamespace(
+        existing_web_page_id=str(new),
+        account=SimpleNamespace(dataset_uri=""),
+        existing_import_hash=None,
+        import_hash_mode="on",
+    )
+    RootIdReconcilerPostprocessor().process_graph(https_graph, ctx)
     assert (new, RDF.type, URIRef("https://schema.org/WebPage")) in https_graph
     assert (child, URIRef("https://schema.org/about"), new) in https_graph
 
@@ -1132,17 +1179,15 @@ async def test_callback_writes_html_xhtml_and_ttl_debug_artifacts(
     protocol._patch_static_templates_once = AsyncMock()
     protocol._resolve_mapping_path = MagicMock(return_value=Path("mapping.yarrrml"))
     protocol._get_mapping_content = MagicMock(return_value="mapping")
-    protocol._core_ids.process_graph = MagicMock(side_effect=lambda g, _: g)
-    protocol._apply_postprocessors = MagicMock(side_effect=lambda g, *_: g)
-    protocol.patcher.patch_all = AsyncMock()
 
-    async def _apply_mapping(**kwargs):
-        debug_output = kwargs.get("debug_output")
+    async def _mapping_stage(response, url, ewi, debug_output):
         if isinstance(debug_output, dict):
             debug_output["xhtml"] = "<html><body>Converted</body></html>"
-        return _make_graph("https://example.com/mapped-web-page")
+        return _make_mapping_result(_make_graph("https://example.com/mapped-web-page"))
 
-    protocol.rml_service.apply_mapping = AsyncMock(side_effect=_apply_mapping)
+    protocol._run_mapping_stage = AsyncMock(side_effect=_mapping_stage)
+    protocol._run_postprocessing_stage = _passthrough_pp()
+    protocol.patcher.patch_all = AsyncMock()
 
     response = WebPageScrapeResponse(
         web_page=WebPage(url="https://example.com/page", html="<html>Raw</html>")
@@ -1190,14 +1235,10 @@ def test_protocol_setting_parsers_and_progress_error_logging(
         profile=profile,
         root_dir=Path.cwd(),
     )
-    assert protocol._shacl_mode == "warn"
-    assert protocol._shacl_shape_specs == [
-        "google-article.ttl",
-        "https://example.com/custom-shape.ttl",
-    ]
+    assert protocol._shacl_validator.mode.value == "warn"
     assert protocol._import_hash_mode == "write"
-    assert protocol._resolve_list_setting(["a", " ", "b"]) == ["a", "b"]
-    assert protocol._resolve_list_setting(123) == ["123"]
+    assert protocol_module._resolve_list_setting(["a", " ", "b"]) == ["a", "b"]
+    assert protocol_module._resolve_list_setting(123) == ["123"]
 
     protocol._on_progress = lambda _payload: (_ for _ in ()).throw(RuntimeError("boom"))
     with caplog.at_level("WARNING"):
@@ -1265,8 +1306,8 @@ async def test_patch_static_templates_fail_validation_raises() -> None:
     protocol._template_graph = graph
     protocol._template_exports = {}
     protocol.patcher.patch_all = AsyncMock()
-    protocol._validate_graph = MagicMock(
-        return_value=_make_validation_result(conforms=False)
+    protocol._shacl_validator.validate = AsyncMock(
+        return_value=_make_validation_outcome(passed=False)
     )
 
     with pytest.raises(
@@ -1281,11 +1322,6 @@ async def test_patch_static_templates_fail_validation_raises() -> None:
 
 
 def test_find_web_page_iri_returns_none_when_missing() -> None:
-    protocol = ProfileImportProtocol(
-        context=_make_context(),
-        profile=_make_profile(),
-        root_dir=Path.cwd(),
-    )
     graph = Graph()
     graph.add(
         (
@@ -1294,61 +1330,17 @@ def test_find_web_page_iri_returns_none_when_missing() -> None:
             URIRef("https://schema.org/Thing"),
         )
     )
-    assert protocol._find_web_page_iri(graph) is None
+    assert _find_web_page_iri_impl(graph) is None
 
 
-def _make_validation_result(
-    *,
-    conforms: bool,
-    warning_shapes: list[URIRef] | None = None,
-    error_shapes: list[URIRef] | None = None,
-    shape_map: dict[URIRef, str] | None = None,
-) -> ValidationResult:
-    warning_shapes = warning_shapes or []
-    error_shapes = error_shapes or []
-    shape_map = shape_map or {}
-    report = Graph()
-    sh_result_severity = URIRef("http://www.w3.org/ns/shacl#resultSeverity")
-    sh_warning = URIRef("http://www.w3.org/ns/shacl#Warning")
-    sh_violation = URIRef("http://www.w3.org/ns/shacl#Violation")
-    sh_source_shape = URIRef("http://www.w3.org/ns/shacl#sourceShape")
-
-    for index, shape in enumerate(warning_shapes):
-        node = URIRef(f"https://example.com/report/w/{index}")
-        report.add((node, sh_result_severity, sh_warning))
-        report.add((node, sh_source_shape, shape))
-    for index, shape in enumerate(error_shapes):
-        node = URIRef(f"https://example.com/report/e/{index}")
-        report.add((node, sh_result_severity, sh_violation))
-        report.add((node, sh_source_shape, shape))
-
-    return ValidationResult(
-        conforms=conforms,
-        report_text="report",
-        report_graph=report,
-        data_graph=Graph(),
-        shape_source_map=shape_map,
-        warning_count=len(warning_shapes),
+def test_validation_outcome_to_dict_aggregates_sources() -> None:
+    outcome = _make_validation_outcome(
+        passed=False,
+        warning_sources={"google-article": 1},
+        error_sources={"google-article": 1, "google-product": 1},
     )
-
-
-def test_summarize_validation_aggregates_sources() -> None:
-    protocol = ProfileImportProtocol(
-        context=_make_context(),
-        profile=_make_profile(),
-        root_dir=Path.cwd(),
-    )
-    article_shape = URIRef("https://shape.example/article")
-    product_shape = URIRef("https://shape.example/product")
-    result = _make_validation_result(
-        conforms=False,
-        warning_shapes=[article_shape],
-        error_shapes=[article_shape, product_shape],
-        shape_map={article_shape: "google-article", product_shape: "google-product"},
-    )
-    summary = protocol._summarize_validation(result)
+    summary = outcome.to_dict()
     assert summary == {
-        "total": 1,
         "pass": False,
         "fail": True,
         "warnings": {"count": 1, "sources": {"google-article": 1}},
@@ -1376,21 +1368,16 @@ async def test_profile_protocol_emits_progress_and_validation_in_warn_mode() -> 
     protocol._patch_static_templates_once = AsyncMock()
     protocol._resolve_mapping_path = MagicMock(return_value=Path("mapping.yarrrml"))
     protocol._get_mapping_content = MagicMock(return_value="mapping")
-    protocol._core_ids.process_graph = MagicMock(side_effect=lambda g, _: g)
-    protocol._apply_postprocessors = MagicMock(side_effect=lambda g, *_: g)
-    protocol.patcher.patch_all = AsyncMock()
-    protocol.rml_service.apply_mapping = AsyncMock(
-        return_value=_make_dataset_scoped_graph()
+    protocol._run_mapping_stage = AsyncMock(
+        return_value=_make_mapping_result(_make_dataset_scoped_graph())
     )
-    protocol._validate_graph = MagicMock(
-        return_value=_make_validation_result(
-            conforms=False,
-            warning_shapes=[URIRef("https://shape.example/w")],
-            error_shapes=[URIRef("https://shape.example/e")],
-            shape_map={
-                URIRef("https://shape.example/w"): "google-article",
-                URIRef("https://shape.example/e"): "google-product",
-            },
+    protocol._run_postprocessing_stage = _passthrough_pp()
+    protocol.patcher.patch_all = AsyncMock()
+    protocol._shacl_validator.validate = AsyncMock(
+        return_value=_make_validation_outcome(
+            passed=False,
+            warning_sources={"google-article": 1},
+            error_sources={"google-product": 1},
         )
     )
 
@@ -1404,7 +1391,6 @@ async def test_profile_protocol_emits_progress_and_validation_in_warn_mode() -> 
     assert payload["kind"] == "graph"
     assert payload["url"] == "https://example.com/page"
     assert payload["validation"] == {
-        "total": 1,
         "pass": False,
         "fail": True,
         "warnings": {"count": 1, "sources": {"google-article": 1}},
@@ -1440,14 +1426,13 @@ async def test_profile_protocol_validation_fail_mode_raises() -> None:
     protocol._patch_static_templates_once = AsyncMock()
     protocol._resolve_mapping_path = MagicMock(return_value=Path("mapping.yarrrml"))
     protocol._get_mapping_content = MagicMock(return_value="mapping")
-    protocol._core_ids.process_graph = MagicMock(side_effect=lambda g, _: g)
-    protocol._apply_postprocessors = MagicMock(side_effect=lambda g, *_: g)
-    protocol.patcher.patch_all = AsyncMock()
-    protocol.rml_service.apply_mapping = AsyncMock(
-        return_value=_make_dataset_scoped_graph()
+    protocol._run_mapping_stage = AsyncMock(
+        return_value=_make_mapping_result(_make_dataset_scoped_graph())
     )
-    protocol._validate_graph = MagicMock(
-        return_value=_make_validation_result(conforms=False)
+    protocol._run_postprocessing_stage = _passthrough_pp()
+    protocol.patcher.patch_all = AsyncMock()
+    protocol._shacl_validator.validate = AsyncMock(
+        return_value=_make_validation_outcome(passed=False)
     )
 
     response = WebPageScrapeResponse(
@@ -1475,12 +1460,11 @@ async def test_profile_protocol_emits_null_validation_when_disabled() -> None:
     protocol._patch_static_templates_once = AsyncMock()
     protocol._resolve_mapping_path = MagicMock(return_value=Path("mapping.yarrrml"))
     protocol._get_mapping_content = MagicMock(return_value="mapping")
-    protocol._core_ids.process_graph = MagicMock(side_effect=lambda g, _: g)
-    protocol._apply_postprocessors = MagicMock(side_effect=lambda g, *_: g)
-    protocol.patcher.patch_all = AsyncMock()
-    protocol.rml_service.apply_mapping = AsyncMock(
-        return_value=_make_dataset_scoped_graph()
+    protocol._run_mapping_stage = AsyncMock(
+        return_value=_make_mapping_result(_make_dataset_scoped_graph())
     )
+    protocol._run_postprocessing_stage = _passthrough_pp()
+    protocol.patcher.patch_all = AsyncMock()
 
     response = WebPageScrapeResponse(
         web_page=WebPage(url="https://example.com/page", html="<html></html>")
@@ -1504,12 +1488,11 @@ async def test_profile_protocol_passes_import_hash_mode_to_patcher() -> None:
     protocol._patch_static_templates_once = AsyncMock()
     protocol._resolve_mapping_path = MagicMock(return_value=Path("mapping.yarrrml"))
     protocol._get_mapping_content = MagicMock(return_value="mapping")
-    protocol._core_ids.process_graph = MagicMock(side_effect=lambda g, _: g)
-    protocol._apply_postprocessors = MagicMock(side_effect=lambda g, *_: g)
-    protocol.patcher.patch_all = AsyncMock()
-    protocol.rml_service.apply_mapping = AsyncMock(
-        return_value=_make_dataset_scoped_graph()
+    protocol._run_mapping_stage = AsyncMock(
+        return_value=_make_mapping_result(_make_dataset_scoped_graph())
     )
+    protocol._run_postprocessing_stage = _passthrough_pp()
+    protocol.patcher.patch_all = AsyncMock()
 
     response = WebPageScrapeResponse(
         web_page=WebPage(url="https://example.com/page", html="<html></html>")
@@ -1535,12 +1518,11 @@ async def test_profile_protocol_emits_graph_and_static_template_events() -> None
     protocol._template_exports = {}
     protocol._resolve_mapping_path = MagicMock(return_value=Path("mapping.yarrrml"))
     protocol._get_mapping_content = MagicMock(return_value="mapping")
-    protocol._core_ids.process_graph = MagicMock(side_effect=lambda g, _: g)
-    protocol._apply_postprocessors = MagicMock(side_effect=lambda g, *_: g)
-    protocol.patcher.patch_all = AsyncMock()
-    protocol.rml_service.apply_mapping = AsyncMock(
-        return_value=_make_dataset_scoped_graph()
+    protocol._run_mapping_stage = AsyncMock(
+        return_value=_make_mapping_result(_make_dataset_scoped_graph())
     )
+    protocol._run_postprocessing_stage = _passthrough_pp()
+    protocol.patcher.patch_all = AsyncMock()
 
     response = WebPageScrapeResponse(
         web_page=WebPage(url="https://example.com/page", html="<html></html>")
@@ -1560,12 +1542,11 @@ async def test_profile_protocol_collects_run_level_kpis() -> None:
     protocol._patch_static_templates_once = AsyncMock()
     protocol._resolve_mapping_path = MagicMock(return_value=Path("mapping.yarrrml"))
     protocol._get_mapping_content = MagicMock(return_value="mapping")
-    protocol._core_ids.process_graph = MagicMock(side_effect=lambda g, _: g)
-    protocol._apply_postprocessors = MagicMock(side_effect=lambda g, *_: g)
-    protocol.patcher.patch_all = AsyncMock()
-    protocol.rml_service.apply_mapping = AsyncMock(
-        return_value=_make_dataset_scoped_graph()
+    protocol._run_mapping_stage = AsyncMock(
+        return_value=_make_mapping_result(_make_dataset_scoped_graph())
     )
+    protocol._run_postprocessing_stage = _annotating_pp()
+    protocol.patcher.patch_all = AsyncMock()
 
     response = WebPageScrapeResponse(
         web_page=WebPage(url="https://example.com/page", html="<html></html>")
@@ -1604,7 +1585,7 @@ def test_protocol_validation_mode_normalization_and_deprecation(
             ),
             root_dir=Path.cwd(),
         )
-    assert strict_protocol._shacl_mode == "fail"
+    assert strict_protocol._shacl_validator.mode.value == "fail"
     assert "Deprecated SHACL validation mode 'strict' detected" in caplog.text
 
     with caplog.at_level("WARNING"):
@@ -1615,7 +1596,7 @@ def test_protocol_validation_mode_normalization_and_deprecation(
             ),
             root_dir=Path.cwd(),
         )
-    assert unknown_protocol._shacl_mode == "warn"
+    assert unknown_protocol._shacl_validator.mode.value == "warn"
     assert "Unsupported SHACL validation mode" in caplog.text
 
     with caplog.at_level("WARNING"):
