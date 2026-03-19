@@ -10,7 +10,7 @@ from typing import Callable
 
 from rdflib import Graph
 
-from .postprocessors import (
+from . import (
     LoadedPostprocessor,
     PostprocessorContext,
     PostprocessorResult,

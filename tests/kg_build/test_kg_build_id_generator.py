@@ -3,7 +3,9 @@ from __future__ import annotations
 from rdflib import Graph, Literal, RDF, URIRef
 from rdflib.namespace import XSD
 
-from wordlift_sdk.kg_build.id_generator import CanonicalIdGenerator
+from wordlift_sdk.kg_build.postprocessors.processors.id_generator import (
+    CanonicalIdGenerator,
+)
 from wordlift_sdk.kg_build.iri_lookup import IriLookup
 from wordlift_sdk.kg_build.id_policy import DEFAULT_ID_POLICY, IdPolicy
 

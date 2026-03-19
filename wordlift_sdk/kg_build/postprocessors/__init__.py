@@ -197,7 +197,7 @@ class PersistentPostprocessorClient:
         cmd = [
             self._spec.python,
             "-m",
-            "wordlift_sdk.kg_build.postprocessor_worker",
+            "wordlift_sdk.kg_build.postprocessors.worker",
             "--class",
             self._spec.class_path,
         ]
@@ -359,7 +359,7 @@ class OneshotSubprocessPostprocessor:
         cmd = [
             self.spec.python,
             "-m",
-            "wordlift_sdk.kg_build.postprocessor_runner",
+            "wordlift_sdk.kg_build.postprocessors.runner",
             "--class",
             self.spec.class_path,
             "--input-graph",

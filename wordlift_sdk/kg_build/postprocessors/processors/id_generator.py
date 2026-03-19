@@ -7,8 +7,8 @@ from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from rdflib import Graph, Literal, RDF, URIRef
 
-from .id_policy import DEFAULT_ID_POLICY, IdPolicy
-from .iri_lookup import IriLookup
+from ...id_policy import DEFAULT_ID_POLICY, IdPolicy
+from ...iri_lookup import IriLookup
 
 SCHEMA = "http://schema.org/"
 

@@ -3,7 +3,7 @@ from __future__ import annotations
 from rdflib import Graph, RDF, URIRef
 
 from .id_generator import CanonicalIdGenerator
-from .iri_lookup import IriLookup
+from ...iri_lookup import IriLookup
 
 
 def _find_web_page_iri(graph: Graph) -> URIRef | None:

@@ -2,8 +2,11 @@ from __future__ import annotations
 
 from rdflib import Graph, Literal, RDF, URIRef
 
-import wordlift_sdk.kg_build.id_allocator as id_allocator_module
-from wordlift_sdk.kg_build.id_allocator import IdAllocator, normalize_slug
+import wordlift_sdk.kg_build.postprocessors.processors.id_allocator as id_allocator_module
+from wordlift_sdk.kg_build.postprocessors.processors.id_allocator import (
+    IdAllocator,
+    normalize_slug,
+)
 
 
 def _graph(subject: URIRef) -> Graph:
