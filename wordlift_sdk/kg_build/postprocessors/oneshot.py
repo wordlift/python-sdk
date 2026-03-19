@@ -10,7 +10,7 @@ from typing import Any
 
 from rdflib import Dataset, Graph
 
-from . import PostprocessorContext
+from .types import PostprocessorContext
 from .processors.id_allocator import IdAllocator
 
 

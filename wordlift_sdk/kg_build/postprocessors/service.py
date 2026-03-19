@@ -10,12 +10,8 @@ from typing import Callable
 
 from rdflib import Graph
 
-from . import (
-    LoadedPostprocessor,
-    PostprocessorContext,
-    PostprocessorResult,
-    close_loaded_postprocessors,
-)
+from .graph_io import close_loaded_postprocessors
+from .types import LoadedPostprocessor, PostprocessorContext, PostprocessorResult
 
 logger = logging.getLogger(__name__)
 
