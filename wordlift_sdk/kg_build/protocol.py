@@ -26,18 +26,21 @@ from wordlift_sdk.validation.shacl_validation_service import (
 
 from .config import ProfileDefinition
 from .entity_patcher import EntityPatcher
-from .graph_annotation import ImportAnnotationPostprocessor
-from .graph_utils import first_level_subjects
-from .id_allocator import IdAllocator
-from .id_postprocessor import CanonicalIdsPostprocessor, RootIdReconcilerPostprocessor
 from .kpi import KgBuildKpiCollector
-from .postprocessor_service import PostprocessorService
 from .postprocessors import (
     LoadedPostprocessor,
     PostprocessorContext,
     PostprocessorResult,
     load_postprocessors_for_profile,
 )
+from .postprocessors.processors.graph_annotation import ImportAnnotationPostprocessor
+from .graph_utils import first_level_subjects
+from .postprocessors.processors.id_allocator import IdAllocator
+from .postprocessors.processors.id_postprocessor import (
+    CanonicalIdsPostprocessor,
+    RootIdReconcilerPostprocessor,
+)
+from .postprocessors.service import PostprocessorService
 from .rml_mapping import MappingResult, RmlMappingService
 from .templates import JinjaRdfTemplateReifier, TemplateTextRenderer
 from wordlift_sdk.structured_data.engine import init_morph_kgc_pool

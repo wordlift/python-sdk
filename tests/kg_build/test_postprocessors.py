@@ -12,7 +12,7 @@ from types import SimpleNamespace
 import pytest
 from rdflib import Dataset, Graph, Literal, URIRef
 
-from wordlift_sdk.kg_build.postprocessor_runner import (
+from wordlift_sdk.kg_build.postprocessors.runner import (
     _build_context,
     _read_graph_nquads,
 )
@@ -471,7 +471,7 @@ def test_runner_module_is_runnable_via_python_m(tmp_path: Path) -> None:
         [
             sys.executable,
             "-m",
-            "wordlift_sdk.kg_build.postprocessor_runner",
+            "wordlift_sdk.kg_build.postprocessors.runner",
             "--class",
             "test_pp:AddRunnerTriple",
             "--input-graph",

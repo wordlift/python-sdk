@@ -4,7 +4,9 @@ from types import SimpleNamespace
 
 from rdflib import Graph, Literal, RDF, URIRef
 
-from wordlift_sdk.kg_build.id_postprocessor import CanonicalIdsPostprocessor
+from wordlift_sdk.kg_build.postprocessors.processors.id_postprocessor import (
+    CanonicalIdsPostprocessor,
+)
 
 
 def test_id_postprocessor_no_dataset_uri_returns_original_graph() -> None:

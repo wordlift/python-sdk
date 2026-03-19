@@ -10,8 +10,8 @@ from typing import Any
 
 from rdflib import Dataset, Graph
 
-from .id_allocator import IdAllocator
-from .postprocessors import PostprocessorContext
+from . import PostprocessorContext
+from .processors.id_allocator import IdAllocator
 
 
 def _build_context(payload: dict[str, Any]) -> PostprocessorContext:
@@ -90,7 +90,7 @@ def main() -> None:
         output_graph = graph if result is None else result
         _write_graph_nquads(output_graph, Path(args.output_graph))
     except Exception as exc:  # pragma: no cover - process boundary
-        print(f"[postprocessor_runner] {exc}", file=sys.stderr)
+        print(f"[postprocessors.runner] {exc}", file=sys.stderr)
         raise SystemExit(1) from exc
 
 
