@@ -2,29 +2,10 @@ from __future__ import annotations
 
 from rdflib import Graph, Literal, URIRef
 
+from .graph_utils import first_level_subjects
+
 SEOVOC_SOURCE = URIRef("https://w3id.org/seovoc/source")
 SEOVOC_IMPORT_HASH = URIRef("https://w3id.org/seovoc/importHash")
-
-
-def _first_level_subjects(graph: Graph, dataset_uri: str) -> set[URIRef]:
-    subjects = {s for s in graph.subjects() if isinstance(s, URIRef)}
-    if dataset_uri:
-        first_level_by_id = {
-            s
-            for s in subjects
-            if str(s).startswith(f"{dataset_uri}/")
-            and len([p for p in str(s)[len(dataset_uri) + 1 :].split("/") if p]) == 2
-        }
-        if first_level_by_id:
-            return first_level_by_id
-
-    referenced = {
-        obj
-        for _, _, obj in graph.triples((None, None, None))
-        if isinstance(obj, URIRef) and obj in subjects
-    }
-    first_level = subjects - referenced
-    return first_level or subjects
 
 
 class ImportAnnotationPostprocessor:
@@ -45,7 +26,7 @@ class ImportAnnotationPostprocessor:
         dataset_uri = str(
             getattr(getattr(context, "account", None), "dataset_uri", "") or ""
         ).rstrip("/")
-        for subject in _first_level_subjects(graph, dataset_uri):
+        for subject in first_level_subjects(graph, dataset_uri):
             graph.set((subject, SEOVOC_SOURCE, Literal("web-page-import")))
 
         import_hash_mode = getattr(context, "import_hash_mode", "on")
