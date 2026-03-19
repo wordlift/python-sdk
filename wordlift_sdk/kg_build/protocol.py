@@ -102,16 +102,6 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         self._static_templates_lock = asyncio.Lock()
 
         settings = dict(self.profile.settings)
-        canonical_id_strategy = (
-            str(
-                _setting(
-                    settings, "canonical_id_strategy", "CANONICAL_ID_STRATEGY", "legacy"
-                )
-            )
-            .strip()
-            .lower()
-        )
-        self._core_ids = CanonicalIdsPostprocessor(strategy=canonical_id_strategy)
         _pool_size = int(_setting(settings, "concurrency", "CONCURRENCY", 4))
         self._init_postprocessor_service(settings, context, _pool_size)
         self._init_mapping_executor(settings, _pool_size)
@@ -136,6 +126,16 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
     def _init_postprocessor_service(
         self, settings: dict, context: Context, pool_size: int
     ) -> None:
+        canonical_id_strategy = (
+            str(
+                _setting(
+                    settings, "canonical_id_strategy", "CANONICAL_ID_STRATEGY", "legacy"
+                )
+            )
+            .strip()
+            .lower()
+        )
+        self._core_ids = CanonicalIdsPostprocessor(strategy=canonical_id_strategy)
         runtime = _resolve_postprocessor_runtime(settings)
         logger.info(
             "Resolved postprocessor runtime for profile '%s': %s (origin=%s)",
