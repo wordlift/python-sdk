@@ -90,7 +90,6 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             self.profile.mapping_overlay_dirs or (self.profile.mappings_dir,)
         )
 
-        self.rml_service = RmlMappingService(context)
         self.patcher = EntityPatcher(context)
         self.template_reifier = JinjaRdfTemplateReifier(self._template_dirs)
         self.text_renderer = TemplateTextRenderer()
@@ -104,7 +103,7 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         settings = dict(self.profile.settings)
         _pool_size = int(_setting(settings, "concurrency", "CONCURRENCY", 4))
         self._init_postprocessor_service(settings, context, _pool_size)
-        self._init_mapping_executor(settings, _pool_size)
+        self._init_mapping_service(settings, context, _pool_size)
         self._init_shacl_validator(settings, _pool_size)
         self._import_hash_mode = self._resolve_import_hash_mode(
             _setting(settings, "import_hash_mode", "IMPORT_HASH_MODE", "on")
@@ -165,7 +164,10 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             runtime=runtime,
         )
 
-    def _init_mapping_executor(self, settings: dict, pool_size: int) -> None:
+    def _init_mapping_service(
+        self, settings: dict, context: Context, pool_size: int
+    ) -> None:
+        self.rml_service = RmlMappingService(context)
         mapping_pool_size = int(
             _setting(
                 settings, "mapping_pool_size", "MAPPING_POOL_SIZE", os.cpu_count() or 4
