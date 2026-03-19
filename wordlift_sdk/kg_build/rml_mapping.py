@@ -30,7 +30,7 @@ class RmlMappingService:
         self._context = context
         self._html_converter = HtmlConverter()
 
-    def to_xhtml(self, html: str) -> str:
+    def _to_xhtml(self, html: str) -> str:
         return self._html_converter.convert(html)
 
     async def apply_mapping(
@@ -46,7 +46,7 @@ class RmlMappingService:
         queue_wait_ms = 0
         _t_start = time.perf_counter()
         try:
-            xhtml_str = xhtml or self.to_xhtml(html)
+            xhtml_str = xhtml or self._to_xhtml(html)
             if debug_output is not None:
                 debug_output["xhtml"] = xhtml_str
 
@@ -62,7 +62,11 @@ class RmlMappingService:
                             resolved_mapping_content = f.read()
                     except FileNotFoundError:
                         logger.error("Mapping file not found: %s", mapping_file_path)
-                        return MappingResult(graph=None, queue_wait_ms=queue_wait_ms, mapping_ms=int((time.perf_counter() - _t_start) * 1000))
+                        return MappingResult(
+                            graph=None,
+                            queue_wait_ms=queue_wait_ms,
+                            mapping_ms=int((time.perf_counter() - _t_start) * 1000),
+                        )
 
                 dataset_uri = getattr(self._context.account, "dataset_uri", None)
                 if not dataset_uri:
@@ -106,7 +110,12 @@ class RmlMappingService:
                         "No triples generated from mapping %s.", mapping_file_path
                     )
 
-                return MappingResult(graph=graph, queue_wait_ms=queue_wait_ms, mapping_ms=int((time.perf_counter() - _t_start) * 1000) - queue_wait_ms)
+                return MappingResult(
+                    graph=graph,
+                    queue_wait_ms=queue_wait_ms,
+                    mapping_ms=int((time.perf_counter() - _t_start) * 1000)
+                    - queue_wait_ms,
+                )
 
         except Exception as exc:
             logger.error(
@@ -115,7 +124,11 @@ class RmlMappingService:
                 exc,
                 exc_info=True,
             )
-            return MappingResult(graph=None, queue_wait_ms=queue_wait_ms, mapping_ms=int((time.perf_counter() - _t_start) * 1000))
+            return MappingResult(
+                graph=None,
+                queue_wait_ms=queue_wait_ms,
+                mapping_ms=int((time.perf_counter() - _t_start) * 1000),
+            )
 
     def _normalize_schema_uris(self, payload: Any):
         if isinstance(payload, dict):
