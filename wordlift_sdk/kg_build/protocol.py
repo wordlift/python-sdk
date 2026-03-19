@@ -229,66 +229,26 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             if hasattr(response, "web_page") and response.web_page
             else "Unknown URL"
         )
-
         if hasattr(response, "errors") and response.errors:
             logger.error("Cloud callback error for %s: %s", url, response.errors)
             return
-
         if not response.web_page or not response.web_page.html:
             logger.warning("No HTML content for %s, skipping mapping", url)
             return
 
         await self._patch_static_templates_once()
 
-        mapping_path = self._resolve_mapping_path(url)
-        rendered_mapping = self._get_mapping_content(mapping_path)
-        mapping_response = self._mapping_response(response, existing_web_page_id)
         debug_output: dict[str, str] | None = {} if self.debug_dir else None
-
-        # apply_mapping has no awaits — all work is synchronous (morph_kgc).
-        # Run it in a thread so the event loop stays free for I/O while the
-        # thread waits for its morph_kgc subprocess slot to become available.
-        _timing: dict[str, int] = {}
-
-        def _run_mapping() -> Graph | None:
-            mapping: MappingResult = asyncio.run(
-                self.rml_service.apply_mapping(
-                    html=response.web_page.html,
-                    url=url,
-                    mapping_file_path=mapping_path,
-                    mapping_content=rendered_mapping,
-                    response=mapping_response,
-                    debug_output=debug_output,
-                )
-            )
-            _timing["mapping_wait_ms"] = mapping.queue_wait_ms
-            _timing["mapping_ms"] = mapping.mapping_ms
-            return mapping.graph
-
-        _loop = asyncio.get_event_loop()
-        graph = await _loop.run_in_executor(self._mapping_executor, _run_mapping)
-        _t_mapping = _timing.get("mapping_ms", 0)
-        _t_mapping_wait = _timing.get("mapping_wait_ms", 0)
-        if not graph or len(graph) == 0:
+        mapping = await self._run_mapping_stage(
+            response, url, existing_web_page_id, debug_output
+        )
+        if not mapping.graph or len(mapping.graph) == 0:
             logger.warning("No triples produced for %s", url)
             return
 
-        if existing_web_page_id:
-            self._reconcile_root_id(graph, existing_web_page_id)
-        pp_result = await self._postprocessor_service.apply(
-            graph, url, response, existing_web_page_id, self._template_exports or {}
+        graph, pp_result = await self._run_postprocessing_stage(
+            mapping.graph, url, response, existing_web_page_id, existing_import_hash
         )
-        graph = pp_result.graph
-        # Canonical IDs must run after custom postprocessors so any nodes minted
-        # by local logic are normalized before graph sync patching.
-        graph = self._core_ids.process_graph(
-            graph,
-            self._postprocessor_service.build_context(
-                url, response, existing_web_page_id, self._template_exports or {}
-            ),
-        )
-        self._set_source(graph, existing_web_page_id)
-        self._set_existing_import_hash(graph, existing_import_hash)
 
         if self.debug_dir:
             xhtml = (debug_output or {}).get("xhtml")
@@ -313,19 +273,16 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
                 warning_sources=outcome.warning_sources,
                 error_sources=outcome.error_sources,
             )
-        _t_validation_wait = outcome.queue_wait_ms if outcome else 0
-        _t_validation_actual = outcome.validation_ms if outcome else 0
-        graph_metrics = self._kpi.graph_metrics(graph)
+        self._kpi.record_graph(graph)
         self._emit_progress(
             {
                 "kind": "graph",
                 "profile": self.profile.name,
                 "url": url,
-                "graph": graph_metrics,
+                "graph": self._kpi.graph_metrics(graph),
                 "validation": outcome.to_dict() if outcome else None,
             }
         )
-        self._kpi.record_graph(graph)
         if (
             outcome is not None
             and self._shacl_validator.mode == ValidationMode.FAIL
@@ -337,12 +294,12 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             "Wrote %s triples for %s [mapping_wait=%dms mapping=%dms postprocessor_wait=%dms postprocessors=%dms validation_wait=%dms validation=%dms]",
             len(graph),
             url,
-            _t_mapping_wait,
-            _t_mapping,
+            mapping.queue_wait_ms,
+            mapping.mapping_ms,
             pp_result.queue_wait_ms,
             pp_result.postprocessors_ms,
-            _t_validation_wait,
-            _t_validation_actual,
+            outcome.queue_wait_ms if outcome else 0,
+            outcome.validation_ms if outcome else 0,
         )
 
     def close(self) -> None:
@@ -352,6 +309,63 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
 
     def get_kpi_summary(self) -> dict[str, object]:
         return self._kpi.summary(self.profile.name)
+
+    async def _run_mapping_stage(
+        self,
+        response: WebPageScrapeResponse,
+        url: str,
+        existing_web_page_id: str | None,
+        debug_output: dict[str, str] | None,
+    ) -> MappingResult:
+        mapping_path = self._resolve_mapping_path(url)
+        rendered_mapping = self._get_mapping_content(mapping_path)
+        mapping_response = self._mapping_response(response, existing_web_page_id)
+
+        def _run() -> MappingResult:
+            # apply_mapping has no awaits — all work is synchronous (morph_kgc).
+            # Run in a thread so the event loop stays free for I/O while the
+            # thread waits for its morph_kgc subprocess slot.
+            return asyncio.run(
+                self.rml_service.apply_mapping(
+                    html=response.web_page.html,
+                    url=url,
+                    mapping_file_path=mapping_path,
+                    mapping_content=rendered_mapping,
+                    response=mapping_response,
+                    debug_output=debug_output,
+                )
+            )
+
+        return await asyncio.get_event_loop().run_in_executor(
+            self._mapping_executor, _run
+        )
+
+    async def _run_postprocessing_stage(
+        self,
+        graph: Graph,
+        url: str,
+        response: WebPageScrapeResponse,
+        existing_web_page_id: str | None,
+        existing_import_hash: str | None,
+    ) -> tuple[Graph, Any]:
+        if existing_web_page_id:
+            self._reconcile_root_id(graph, existing_web_page_id)
+        exports = self._template_exports or {}
+        pp_result = await self._postprocessor_service.apply(
+            graph, url, response, existing_web_page_id, exports
+        )
+        graph = pp_result.graph
+        # Canonical IDs must run after custom postprocessors so any nodes minted
+        # by local logic are normalised before graph sync patching.
+        graph = self._core_ids.process_graph(
+            graph,
+            self._postprocessor_service.build_context(
+                url, response, existing_web_page_id, exports
+            ),
+        )
+        self._set_source(graph, existing_web_page_id)
+        self._set_existing_import_hash(graph, existing_import_hash)
+        return graph, pp_result
 
     def _resolve_path(self, raw_path: str) -> Path:
         path = Path(raw_path)
