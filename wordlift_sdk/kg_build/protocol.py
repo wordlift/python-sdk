@@ -344,7 +344,7 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             logger.warning("No triples produced for %s", url)
             return
 
-        graph, pp_result = await self._run_postprocessing_stage(
+        pp_result = await self._run_postprocessing_stage(
             mapping.graph, url, response, existing_web_page_id, existing_import_hash
         )
 
@@ -353,9 +353,11 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             self._write_debug_source_documents(
                 url=url, html=response.web_page.html, xhtml=xhtml
             )
-            self._write_debug_graph(graph, url)
+            self._write_debug_graph(pp_result.graph, url)
 
-        outcome: ValidationOutcome | None = await self._shacl_validator.validate(graph)
+        outcome: ValidationOutcome | None = await self._shacl_validator.validate(
+            pp_result.graph
+        )
         if outcome is not None:
             logger.info(
                 "SHACL validation for %s: pass=%s warnings=%d errors=%d",
@@ -371,13 +373,13 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
                 warning_sources=outcome.warning_sources,
                 error_sources=outcome.error_sources,
             )
-        self._kpi.record_graph(graph)
+        self._kpi.record_graph(pp_result.graph)
         self._emit_progress(
             {
                 "kind": "graph",
                 "profile": self.profile.name,
                 "url": url,
-                "graph": self._kpi.graph_metrics(graph),
+                "graph": self._kpi.graph_metrics(pp_result.graph),
                 "validation": outcome.to_dict() if outcome else None,
             }
         )
@@ -387,10 +389,10 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             and outcome.failed
         ):
             raise RuntimeError(f"SHACL validation failed for {url} in fail mode.")
-        await self._write_graph(graph)
+        await self._write_graph(pp_result.graph)
         logger.info(
             "Wrote %s triples for %s [mapping_wait=%dms mapping=%dms postprocessor_wait=%dms postprocessors=%dms validation_wait=%dms validation=%dms]",
-            len(graph),
+            len(pp_result.graph),
             url,
             mapping.queue_wait_ms,
             mapping.mapping_ms,
@@ -445,12 +447,11 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         response: WebPageScrapeResponse,
         existing_web_page_id: str | None,
         existing_import_hash: str | None,
-    ) -> tuple[Graph, PostprocessorResult]:
+    ) -> PostprocessorResult:
         context = self._build_pp_context(
             url, response, existing_web_page_id, existing_import_hash
         )
-        pp_result = await self._postprocessor_service.apply(graph, context)
-        return pp_result.graph, pp_result
+        return await self._postprocessor_service.apply(graph, context)
 
     def _build_pp_context(
         self,
