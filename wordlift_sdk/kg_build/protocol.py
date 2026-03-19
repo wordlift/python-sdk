@@ -410,6 +410,14 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
     def get_kpi_summary(self) -> dict[str, object]:
         return self._kpi.summary(self.profile.name)
 
+    @property
+    def _dataset_uri(self) -> str:
+        return str(getattr(self.context.account, "dataset_uri", "") or "").rstrip("/")
+
+    @staticmethod
+    def _url_hash(url: str) -> str:
+        return hashlib.sha256(url.encode("utf-8")).hexdigest()
+
     async def _run_mapping_stage(
         self,
         response: WebPageScrapeResponse,
@@ -460,7 +468,7 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         existing_web_page_id: str | None,
         existing_import_hash: str | None,
     ) -> PostprocessorContext:
-        dataset_uri = str(getattr(self.context.account, "dataset_uri", "")).rstrip("/")
+        dataset_uri = self._dataset_uri
         ids = IdAllocator(dataset_uri) if dataset_uri else None
         profile_payload = asdict(self.profile)
         profile_settings = dict(profile_payload.get("settings", {}) or {})
@@ -561,13 +569,13 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         if self._template_graph is not None and self._template_exports is not None:
             return
 
-        dataset_uri = getattr(self.context.account, "dataset_uri", None)
+        dataset_uri = self._dataset_uri
         if not dataset_uri:
             raise RuntimeError("Dataset URI not available on context.account.")
 
         base_context = {
             "account": self.context.account,
-            "dataset_uri": str(dataset_uri).rstrip("/"),
+            "dataset_uri": dataset_uri,
         }
         exports, exports_summary = self.text_renderer.load_exports_with_summary(
             self._template_dirs, base_context
@@ -633,7 +641,7 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         if cached is not None:
             return cached
 
-        dataset_uri = getattr(self.context.account, "dataset_uri", None)
+        dataset_uri = self._dataset_uri
         if not dataset_uri:
             raise RuntimeError("Dataset URI not available on context.account.")
 
@@ -641,7 +649,7 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
 
         context = {
             "account": self.context.account,
-            "dataset_uri": str(dataset_uri).rstrip("/"),
+            "dataset_uri": dataset_uri,
             "exports": self._template_exports or {},
         }
         template_path = self.text_renderer.resolve_mapping_template(mapping_path)
@@ -658,9 +666,7 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         await self.patcher.patch_all(graph, import_hash_mode=self._import_hash_mode)
 
     def _prepare_graph_for_put(self, graph: Graph) -> bool:
-        dataset_uri = str(
-            getattr(self.context.account, "dataset_uri", "") or ""
-        ).rstrip("/")
+        dataset_uri = self._dataset_uri
         if not dataset_uri:
             return False
 
@@ -700,7 +706,7 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
     def _write_debug_graph(self, graph: Graph, url: str) -> None:
         assert self.debug_dir is not None
         self.debug_dir.mkdir(parents=True, exist_ok=True)
-        safe_name = hashlib.sha256(url.encode("utf-8")).hexdigest()
+        safe_name = self._url_hash(url)
         debug_file = self.debug_dir / f"{safe_name}.ttl"
         graph.serialize(destination=debug_file, format="turtle")
 
@@ -709,7 +715,7 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
     ) -> None:
         assert self.debug_dir is not None
         self.debug_dir.mkdir(parents=True, exist_ok=True)
-        safe_name = hashlib.sha256(url.encode("utf-8")).hexdigest()
+        safe_name = self._url_hash(url)
         html_file = self.debug_dir / f"{safe_name}.html"
         html_file.write_text(html, encoding="utf-8")
         if xhtml:
