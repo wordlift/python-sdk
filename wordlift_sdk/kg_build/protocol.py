@@ -27,7 +27,7 @@ from .config import ProfileDefinition
 from .entity_patcher import EntityPatcher
 from .id_postprocessor import CanonicalIdsPostprocessor
 from .kpi import KgBuildKpiCollector
-from .postprocessor_service import PostprocessorService
+from .postprocessor_service import PostprocessorService, PostprocessorResult
 from .rml_mapping import MappingResult, RmlMappingService
 from .templates import JinjaRdfTemplateReifier, TemplateTextRenderer
 from wordlift_sdk.structured_data.engine import init_morph_kgc_pool
@@ -39,6 +39,59 @@ SEOVOC_IMPORT_HASH = URIRef("https://w3id.org/seovoc/importHash")
 
 def _path_contains_part(path: str, part: str) -> bool:
     return part in Path(path).parts
+
+
+def _find_web_page_iri(graph: Graph) -> URIRef | None:
+    for subject in graph.subjects(RDF.type, URIRef("http://schema.org/WebPage")):
+        return subject
+    for subject in graph.subjects(RDF.type, URIRef("https://schema.org/WebPage")):
+        return subject
+    return None
+
+
+def _swap_iris(graph: Graph, old_iri: URIRef, new_iri: URIRef) -> None:
+    for subject, predicate, obj in list(graph.triples((old_iri, None, None))):
+        graph.remove((subject, predicate, obj))
+        graph.add((new_iri, predicate, obj))
+    for subject, predicate, obj in list(graph.triples((None, None, old_iri))):
+        graph.remove((subject, predicate, obj))
+        graph.add((subject, predicate, new_iri))
+
+
+def _resolve_list_setting(value: Any) -> list[str]:
+    if value is None:
+        return []
+    if isinstance(value, str):
+        return [part.strip() for part in value.split(",") if part.strip()]
+    if isinstance(value, (list, tuple)):
+        return [text for item in value if (text := str(item).strip())]
+    return [str(value).strip()] if str(value).strip() else []
+
+
+def _resolve_validation_mode(value: Any) -> ValidationMode:
+    if value is None:
+        return ValidationMode.WARN
+    mode = str(value).strip().lower()
+    if mode == "strict":
+        logger.warning(
+            "Deprecated SHACL validation mode 'strict' detected; using 'fail'."
+        )
+        return ValidationMode.FAIL
+    try:
+        return ValidationMode(mode)
+    except ValueError:
+        logger.warning("Unsupported SHACL validation mode '%s'; using 'warn'.", mode)
+        return ValidationMode.WARN
+
+
+def _resolve_import_hash_mode(value: Any) -> str:
+    if value is None:
+        return "on"
+    mode = str(value).strip().lower()
+    if mode in {"on", "write", "off"}:
+        return mode
+    logger.warning("Unsupported import hash mode '%s'; using 'on'.", mode)
+    return "on"
 
 
 def _setting(settings: dict, name: str, fallback: str, default: Any) -> Any:
@@ -81,23 +134,6 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         self._graph_write_strategy = graph_write_strategy
 
         self.profile_dir = self.root_dir / "profiles" / self.profile.name
-        self.templates_dir = self._resolve_path(self.profile.templates_dir)
-        self.mappings_dir = self._resolve_path(self.profile.mappings_dir)
-        self._template_dirs = self._resolve_overlay_paths(
-            self.profile.template_overlay_dirs or (self.profile.templates_dir,)
-        )
-        self._mapping_dirs = self._resolve_overlay_paths(
-            self.profile.mapping_overlay_dirs or (self.profile.mappings_dir,)
-        )
-
-        self.template_reifier = JinjaRdfTemplateReifier(self._template_dirs)
-        self.text_renderer = TemplateTextRenderer()
-
-        self._template_graph: Graph | None = None
-        self._template_exports: dict[str, Any] | None = None
-        self._mapping_cache: dict[Path, str] = {}
-        self._static_templates_patched = False
-        self._static_templates_lock = asyncio.Lock()
 
         settings = dict(self.profile.settings)
         _pool_size = int(_setting(settings, "concurrency", "CONCURRENCY", 4))
@@ -164,6 +200,21 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
     def _init_mapping_service(
         self, settings: dict, context: Context, pool_size: int
     ) -> None:
+        self.templates_dir = self._resolve_path(self.profile.templates_dir)
+        self.mappings_dir = self._resolve_path(self.profile.mappings_dir)
+        self._template_dirs = self._resolve_overlay_paths(
+            self.profile.template_overlay_dirs or (self.profile.templates_dir,)
+        )
+        self._mapping_dirs = self._resolve_overlay_paths(
+            self.profile.mapping_overlay_dirs or (self.profile.mappings_dir,)
+        )
+        self.template_reifier = JinjaRdfTemplateReifier(self._template_dirs)
+        self.text_renderer = TemplateTextRenderer()
+        self._template_graph: Graph | None = None
+        self._template_exports: dict[str, Any] | None = None
+        self._mapping_cache: dict[Path, str] = {}
+        self._static_templates_patched = False
+        self._static_templates_lock = asyncio.Lock()
         self.rml_service = RmlMappingService(context)
         mapping_pool_size = int(
             _setting(
@@ -184,13 +235,13 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         )
 
     def _init_shacl_validator(self, settings: dict, pool_size: int) -> None:
-        mode = self._resolve_validation_mode(
+        mode = _resolve_validation_mode(
             _setting(settings, "shacl_validate_mode", "SHACL_VALIDATE_MODE", "warn")
         )
-        builtin_shapes = self._resolve_list_setting(
+        builtin_shapes = _resolve_list_setting(
             _setting(settings, "shacl_builtin_shapes", "SHACL_BUILTIN_SHAPES", None)
         )
-        exclude_builtin_shapes = self._resolve_list_setting(
+        exclude_builtin_shapes = _resolve_list_setting(
             _setting(
                 settings,
                 "shacl_exclude_builtin_shapes",
@@ -198,10 +249,10 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
                 None,
             )
         )
-        extra_shapes = self._resolve_list_setting(
+        extra_shapes = _resolve_list_setting(
             _setting(settings, "shacl_extra_shapes", "SHACL_EXTRA_SHAPES", None)
         )
-        self._shacl_shape_specs = resolve_shape_specs(
+        shape_specs = resolve_shape_specs(
             builtin_shapes=builtin_shapes or None,
             exclude_builtin_shapes=exclude_builtin_shapes or None,
             extra_shapes=extra_shapes or None,
@@ -212,14 +263,14 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             )
         )
         self._shacl_validator = ShaclValidationService(
-            shape_specs=self._shacl_shape_specs or None,
+            shape_specs=shape_specs or None,
             mode=mode,
             pool_size=shacl_pool_size,
         )
 
     def _init_graph_writer(self, settings: dict, context: Context) -> None:
         self.patcher = EntityPatcher(context)
-        self._import_hash_mode = self._resolve_import_hash_mode(
+        self._import_hash_mode = _resolve_import_hash_mode(
             _setting(settings, "import_hash_mode", "IMPORT_HASH_MODE", "on")
         )
 
@@ -352,7 +403,7 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         response: WebPageScrapeResponse,
         existing_web_page_id: str | None,
         existing_import_hash: str | None,
-    ) -> tuple[Graph, Any]:
+    ) -> tuple[Graph, PostprocessorResult]:
         if existing_web_page_id:
             self._reconcile_root_id(graph, existing_web_page_id)
         exports = self._template_exports or {}
@@ -368,7 +419,7 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
                 url, response, existing_web_page_id, exports
             ),
         )
-        self._set_source(graph, existing_web_page_id)
+        self._set_source(graph)
         self._set_existing_import_hash(graph, existing_import_hash)
         return graph, pp_result
 
@@ -609,27 +660,11 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             xhtml_file.write_text(xhtml, encoding="utf-8")
 
     def _reconcile_root_id(self, graph: Graph, root_id: str) -> None:
-        old_iri = self._find_web_page_iri(graph)
+        old_iri = _find_web_page_iri(graph)
         if old_iri and str(old_iri) != root_id:
-            self._swap_iris(graph, old_iri, URIRef(root_id))
+            _swap_iris(graph, old_iri, URIRef(root_id))
 
-    def _find_web_page_iri(self, graph: Graph) -> URIRef | None:
-        for subject in graph.subjects(RDF.type, URIRef("http://schema.org/WebPage")):
-            return subject
-        for subject in graph.subjects(RDF.type, URIRef("https://schema.org/WebPage")):
-            return subject
-        return None
-
-    def _swap_iris(self, graph: Graph, old_iri: URIRef, new_iri: URIRef) -> None:
-        for subject, predicate, obj in list(graph.triples((old_iri, None, None))):
-            graph.remove((subject, predicate, obj))
-            graph.add((new_iri, predicate, obj))
-        for subject, predicate, obj in list(graph.triples((None, None, old_iri))):
-            graph.remove((subject, predicate, obj))
-            graph.add((subject, predicate, new_iri))
-
-    def _set_source(self, graph: Graph, existing_web_page_id: str | None) -> None:
-        del existing_web_page_id
+    def _set_source(self, graph: Graph) -> None:
         for subject in self._first_level_subjects(graph):
             graph.set((subject, SEOVOC_SOURCE, Literal("web-page-import")))
 
@@ -696,43 +731,3 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             self._on_progress(payload)
         except Exception:
             logger.warning("Failed to emit kg_build progress payload.", exc_info=True)
-
-    def _resolve_list_setting(self, value: Any) -> list[str]:
-        if value is None:
-            return []
-        if isinstance(value, str):
-            return [part.strip() for part in value.split(",") if part.strip()]
-        if isinstance(value, (list, tuple)):
-            specs: list[str] = []
-            for item in value:
-                text = str(item).strip()
-                if text:
-                    specs.append(text)
-            return specs
-        return [str(value).strip()] if str(value).strip() else []
-
-    def _resolve_validation_mode(self, value: Any) -> ValidationMode:
-        if value is None:
-            return ValidationMode.WARN
-        mode = str(value).strip().lower()
-        if mode == "strict":
-            logger.warning(
-                "Deprecated SHACL validation mode 'strict' detected; using 'fail'."
-            )
-            return ValidationMode.FAIL
-        try:
-            return ValidationMode(mode)
-        except ValueError:
-            logger.warning(
-                "Unsupported SHACL validation mode '%s'; using 'warn'.", mode
-            )
-            return ValidationMode.WARN
-
-    def _resolve_import_hash_mode(self, value: Any) -> str:
-        if value is None:
-            return "on"
-        mode = str(value).strip().lower()
-        if mode in {"on", "write", "off"}:
-            return mode
-        logger.warning("Unsupported import hash mode '%s'; using 'on'.", mode)
-        return "on"
