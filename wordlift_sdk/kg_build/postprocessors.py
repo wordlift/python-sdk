@@ -44,6 +44,11 @@ class PostprocessorContext:
 
 
 @runtime_checkable
+class Closeable(Protocol):
+    def close(self) -> None: ...
+
+
+@runtime_checkable
 class GraphPostprocessor(Protocol):
     def process_graph(
         self, graph: Graph, context: PostprocessorContext
@@ -582,9 +587,8 @@ def load_postprocessors(
 
 def close_loaded_postprocessors(postprocessors: list[LoadedPostprocessor]) -> None:
     for processor in postprocessors:
-        close = getattr(processor.handler, "close", None)
-        if callable(close):
-            close()
+        if isinstance(processor.handler, Closeable):
+            processor.handler.close()
 
 
 def _write_graph_nquads(graph: Graph, path: Path) -> None:
