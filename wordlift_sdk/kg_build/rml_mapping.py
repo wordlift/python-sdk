@@ -4,15 +4,25 @@ import json
 import logging
 import os
 import tempfile
+import time
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 from rdflib import Graph
 from wordlift_sdk.protocol import Context
+from wordlift_sdk.structured_data.engine import _morph_kgc_tls
 from wordlift_sdk.structured_data.materialization import MaterializationPipeline
 from wordlift_sdk.utils.html_converter import HtmlConverter
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True)
+class MappingResult:
+    graph: Graph | None
+    queue_wait_ms: int
+    mapping_ms: int
 
 
 class RmlMappingService:
@@ -32,7 +42,9 @@ class RmlMappingService:
         mapping_content: str | None = None,
         response: object | None = None,
         debug_output: dict[str, str] | None = None,
-    ) -> Graph | None:
+    ) -> MappingResult:
+        queue_wait_ms = 0
+        _t_start = time.perf_counter()
         try:
             xhtml_str = xhtml or self.to_xhtml(html)
             if debug_output is not None:
@@ -50,7 +62,7 @@ class RmlMappingService:
                             resolved_mapping_content = f.read()
                     except FileNotFoundError:
                         logger.error("Mapping file not found: %s", mapping_file_path)
-                        return None
+                        return MappingResult(graph=None, queue_wait_ms=queue_wait_ms, mapping_ms=int((time.perf_counter() - _t_start) * 1000))
 
                 dataset_uri = getattr(self._context.account, "dataset_uri", None)
                 if not dataset_uri:
@@ -70,6 +82,7 @@ class RmlMappingService:
                     url=url,
                     response=response,
                 )
+                queue_wait_ms = getattr(_morph_kgc_tls, "queue_wait_ms", 0)
                 jsonld_data = pipeline.postprocess(
                     jsonld_raw,
                     mappings,
@@ -93,7 +106,7 @@ class RmlMappingService:
                         "No triples generated from mapping %s.", mapping_file_path
                     )
 
-                return graph
+                return MappingResult(graph=graph, queue_wait_ms=queue_wait_ms, mapping_ms=int((time.perf_counter() - _t_start) * 1000) - queue_wait_ms)
 
         except Exception as exc:
             logger.error(
@@ -102,7 +115,7 @@ class RmlMappingService:
                 exc,
                 exc_info=True,
             )
-            return None
+            return MappingResult(graph=None, queue_wait_ms=queue_wait_ms, mapping_ms=int((time.perf_counter() - _t_start) * 1000))
 
     def _normalize_schema_uris(self, payload: Any):
         if isinstance(payload, dict):

@@ -48,8 +48,10 @@ def _morph_kgc_worker(config: str, submit_time: float) -> tuple[str, int]:
     return ntriples, queue_wait_ms
 
 
-# Thread-local used to pass mapping_wait_ms back to the protocol layer without
-# changing the return type of _materialize_graph / apply_mapping.
+# Thread-local used to pass mapping_wait_ms out of _materialize_graph without
+# changing the return type of the public materialization API.
+# Consumed by rml_mapping.RmlMappingService.apply_mapping — callers above that
+# layer receive the timing as a regular return value.
 _morph_kgc_tls = threading.local()
 
 # Lazy process pool — created on first use in the main process only.

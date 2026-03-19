@@ -36,9 +36,9 @@ from .postprocessors import (
     close_loaded_postprocessors,
     load_postprocessors_for_profile,
 )
-from .rml_mapping import RmlMappingService
+from .rml_mapping import MappingResult, RmlMappingService
 from .templates import JinjaRdfTemplateReifier, TemplateTextRenderer
-from wordlift_sdk.structured_data.engine import init_morph_kgc_pool, _morph_kgc_tls
+from wordlift_sdk.structured_data.engine import init_morph_kgc_pool
 
 logger = logging.getLogger(__name__)
 SEOVOC_SOURCE = URIRef("https://w3id.org/seovoc/source")
@@ -252,17 +252,13 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         mapping_response = self._mapping_response(response, existing_web_page_id)
         debug_output: dict[str, str] | None = {} if self.debug_dir else None
 
-        _t0 = time.perf_counter()
         # apply_mapping has no awaits — all work is synchronous (morph_kgc).
         # Run it in a thread so the event loop stays free for I/O while the
         # thread waits for its morph_kgc subprocess slot to become available.
-        # _morph_kgc_tls is thread-local: capture it inside the worker thread
-        # and pass the value back via a closure dict.
         _timing: dict[str, int] = {}
 
         def _run_mapping() -> Graph | None:
-            _t_start = time.perf_counter()
-            result = asyncio.run(
+            mapping: MappingResult = asyncio.run(
                 self.rml_service.apply_mapping(
                     html=response.web_page.html,
                     url=url,
@@ -272,16 +268,13 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
                     debug_output=debug_output,
                 )
             )
-            mw = getattr(_morph_kgc_tls, "mapping_wait_ms", 0)
-            _timing["mapping_wait_ms"] = mw
-            # Subtract queue-wait so mapping= shows actual execution time only,
-            # consistent with how validation_wait/validation are reported.
-            _timing["mapping_ms"] = int((time.perf_counter() - _t_start) * 1000) - mw
-            return result
+            _timing["mapping_wait_ms"] = mapping.queue_wait_ms
+            _timing["mapping_ms"] = mapping.mapping_ms
+            return mapping.graph
 
         _loop = asyncio.get_event_loop()
         graph = await _loop.run_in_executor(self._mapping_executor, _run_mapping)
-        _t_mapping = _timing.get("mapping_ms", int((time.perf_counter() - _t0) * 1000))
+        _t_mapping = _timing.get("mapping_ms", 0)
         _t_mapping_wait = _timing.get("mapping_wait_ms", 0)
         if not graph or len(graph) == 0:
             logger.warning("No triples produced for %s", url)

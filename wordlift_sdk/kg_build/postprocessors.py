@@ -418,6 +418,14 @@ def _as_positive_int(value: Any, default: int) -> int:
     return value
 
 
+def _build_handler(
+    spec: PostprocessorSpec, root_dir: Path, runtime: str
+) -> GraphPostprocessor:
+    if runtime == _RUNTIME_INPROCESS:
+        return InProcessPostprocessor(class_path=spec.class_path)
+    return SubprocessPostprocessor(spec=spec, root_dir=root_dir, runtime=runtime)
+
+
 def _normalize_runtime(value: str | None) -> str:
     runtime = (value or _RUNTIME_ONESHOT).strip().lower()
     if runtime not in {_RUNTIME_ONESHOT, _RUNTIME_PERSISTENT, _RUNTIME_INPROCESS}:
@@ -509,6 +517,21 @@ def _build_runner_payload(context: PostprocessorContext) -> dict[str, Any]:
     }
 
 
+def _load_from_specs(
+    specs: list[PostprocessorSpec],
+    root_dir: Path,
+    runtime: str,
+) -> list[LoadedPostprocessor]:
+    return [
+        LoadedPostprocessor(
+            name=spec.class_path,
+            handler=_build_handler(spec, root_dir, runtime),
+        )
+        for spec in specs
+        if spec.enabled
+    ]
+
+
 def load_postprocessors_for_profile(
     *,
     root_dir: Path,
@@ -518,73 +541,38 @@ def load_postprocessors_for_profile(
     base_manifest = root_dir / "profiles" / "_base" / "postprocessors.toml"
     profile_manifest = root_dir / "profiles" / profile_name / "postprocessors.toml"
 
-    selected_manifest: Path | None
     if profile_manifest.exists():
-        selected_manifest = profile_manifest
+        selected_manifest: Path | None = profile_manifest
     elif base_manifest.exists():
         selected_manifest = base_manifest
     else:
         selected_manifest = None
 
-    specs = _load_manifest_specs(selected_manifest) if selected_manifest else []
-
-    resolved_runtime = _normalize_runtime(runtime)
-    loaded: list[LoadedPostprocessor] = []
-    for spec in specs:
-        if not spec.enabled:
-            continue
-        if resolved_runtime == _RUNTIME_INPROCESS:
-            handler: GraphPostprocessor = InProcessPostprocessor(
-                class_path=spec.class_path
-            )
-        else:
-            handler = SubprocessPostprocessor(
-                spec=spec,
-                root_dir=root_dir,
-                runtime=resolved_runtime,
-            )
-        loaded.append(LoadedPostprocessor(name=spec.class_path, handler=handler))
-
-    logger.info(
-        "Loaded %s postprocessors for profile '%s' from manifest: %s (runtime=%s)",
-        len(loaded),
-        profile_name,
-        selected_manifest or "none",
-        resolved_runtime,
-    )
     logger.debug(
-        "Postprocessor manifest precedence for profile '%s': selected=%s base=%s chosen=%s",
+        "Postprocessor manifest precedence for profile '%s': profile=%s base=%s chosen=%s",
         profile_name,
         profile_manifest,
         base_manifest,
         selected_manifest or "none",
     )
-    return loaded
+    return load_postprocessors(selected_manifest, root_dir=root_dir, runtime=runtime)
 
 
 def load_postprocessors(
-    manifest_path: Path,
+    manifest_path: Path | None,
     *,
     root_dir: Path,
     runtime: str | None = None,
 ) -> list[LoadedPostprocessor]:
-    specs = _load_manifest_specs(manifest_path)
+    specs = _load_manifest_specs(manifest_path) if manifest_path else []
     resolved_runtime = _normalize_runtime(runtime)
-    loaded: list[LoadedPostprocessor] = []
-    for spec in specs:
-        if not spec.enabled:
-            continue
-        if resolved_runtime == _RUNTIME_INPROCESS:
-            handler: GraphPostprocessor = InProcessPostprocessor(
-                class_path=spec.class_path
-            )
-        else:
-            handler = SubprocessPostprocessor(
-                spec=spec,
-                root_dir=root_dir,
-                runtime=resolved_runtime,
-            )
-        loaded.append(LoadedPostprocessor(name=spec.class_path, handler=handler))
+    loaded = _load_from_specs(specs, root_dir, resolved_runtime)
+    logger.info(
+        "Loaded %s postprocessors from manifest: %s (runtime=%s)",
+        len(loaded),
+        manifest_path or "none",
+        resolved_runtime,
+    )
     return loaded
 
 
