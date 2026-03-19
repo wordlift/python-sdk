@@ -4,7 +4,7 @@ from types import ModuleType
 
 from rdflib import Graph, Literal, URIRef
 
-from wordlift_sdk.kg_build import postprocessor_runner as runner
+from wordlift_sdk.kg_build.postprocessors import oneshot as runner
 
 
 def test_load_class_variants(monkeypatch) -> None:

@@ -16,9 +16,7 @@ from typing import Any
 from rdflib import Graph
 
 from .types import (
-    Closeable,
     GraphPostprocessor,
-    LoadedPostprocessor,
     PostprocessorContext,
     PostprocessorRuntime,
     PostprocessorSpec,
@@ -275,6 +273,7 @@ class OneshotSubprocessPostprocessor:
         self, graph: Graph, context: PostprocessorContext
     ) -> Graph | None:
         from .graph_io import _build_runner_payload
+
         return _run_subprocess(
             self.spec, self.root_dir, graph, _build_runner_payload(context), self._run
         )
@@ -315,6 +314,9 @@ class OneshotSubprocessPostprocessor:
                 f"(exit={completed.returncode})" + (f"\n{stderr}" if stderr else "")
             )
 
+    def close(self) -> None:
+        pass  # oneshot processors have no persistent resources to release
+
 
 @dataclass
 class PersistentSubprocessPostprocessor:
@@ -335,6 +337,7 @@ class PersistentSubprocessPostprocessor:
         self, graph: Graph, context: PostprocessorContext
     ) -> Graph | None:
         from .graph_io import _build_runner_payload
+
         return _run_subprocess(
             self.spec, self.root_dir, graph, _build_runner_payload(context), self._run
         )

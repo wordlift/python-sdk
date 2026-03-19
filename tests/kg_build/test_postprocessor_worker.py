@@ -7,7 +7,7 @@ from types import ModuleType, SimpleNamespace
 
 from rdflib import Graph, Literal, URIRef
 
-from wordlift_sdk.kg_build import postprocessor_worker as worker
+from wordlift_sdk.kg_build.postprocessors import persistent as worker
 
 
 def _graph() -> Graph:
