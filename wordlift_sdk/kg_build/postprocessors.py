@@ -43,6 +43,17 @@ class PostprocessorContext:
     ids: Any | None = None
 
 
+class _SubprocessRunner(Protocol):
+    def __call__(
+        self,
+        *,
+        input_graph_path: Path,
+        output_graph_path: Path,
+        context_path: Path,
+        context_payload: dict[str, Any],
+    ) -> None: ...
+
+
 @runtime_checkable
 class Closeable(Protocol):
     def close(self) -> None: ...
@@ -260,83 +271,79 @@ class PersistentPostprocessorClient:
                 pass
 
 
-@dataclass
-class SubprocessPostprocessor:
+def _run_subprocess(
+    spec: PostprocessorSpec,
+    root_dir: Path,
+    graph: Graph,
+    payload: dict[str, Any],
+    runner: _SubprocessRunner,
+) -> Graph | None:
+    """Shared scaffolding for subprocess-based postprocessors.
+
+    Handles temp-dir lifecycle, graph serialization, output verification,
+    and debug-copy on failure. *runner* is called with the prepared paths
+    and is responsible only for the actual subprocess execution step.
+    """
+    temp_dir_path = Path(tempfile.mkdtemp(prefix="worai_pp_"))
+    failed = False
+    try:
+        input_graph_path = temp_dir_path / "input_graph.nq"
+        output_graph_path = temp_dir_path / "output_graph.nq"
+        context_path = temp_dir_path / "context.json"
+
+        _write_graph_nquads(graph, input_graph_path)
+        context_path.write_text(
+            json.dumps(payload, ensure_ascii=True, default=str),
+            encoding="utf-8",
+        )
+
+        runner(
+            input_graph_path=input_graph_path,
+            output_graph_path=output_graph_path,
+            context_path=context_path,
+            context_payload=payload,
+        )
+
+        if not output_graph_path.exists():
+            failed = True
+            raise RuntimeError(
+                f"Postprocessor did not produce output graph: {spec.class_path}"
+            )
+
+        return _read_graph_nquads(output_graph_path)
+    except Exception:
+        failed = True
+        raise
+    finally:
+        if failed and spec.keep_temp_on_error:
+            debug_dir = root_dir / "output" / "postprocessor_debug"
+            debug_dir.mkdir(parents=True, exist_ok=True)
+            target = debug_dir / (spec.class_path.replace(":", "_").replace(".", "_"))
+            if target.exists():
+                shutil.rmtree(target)
+            shutil.copytree(temp_dir_path, target)
+            _redact_debug_context(target / "context.json")
+        if temp_dir_path.exists():
+            shutil.rmtree(temp_dir_path, ignore_errors=True)
+
+
+@dataclass(frozen=True)
+class OneshotSubprocessPostprocessor:
     spec: PostprocessorSpec
     root_dir: Path
-    runtime: PostprocessorRuntime = PostprocessorRuntime.ONESHOT
-    _persistent_client: PersistentPostprocessorClient | None = field(
-        init=False,
-        default=None,
-        repr=False,
-    )
-
-    def close(self) -> None:
-        if self._persistent_client is not None:
-            self._persistent_client.close()
-            self._persistent_client = None
 
     def process_graph(
         self, graph: Graph, context: PostprocessorContext
     ) -> Graph | None:
-        payload = _build_runner_payload(context)
-        temp_dir_path = Path(tempfile.mkdtemp(prefix="worai_pp_"))
-        failed = False
-        try:
-            input_graph_path = temp_dir_path / "input_graph.nq"
-            output_graph_path = temp_dir_path / "output_graph.nq"
-            context_path = temp_dir_path / "context.json"
+        return _run_subprocess(self.spec, self.root_dir, graph, _build_runner_payload(context), self._run)
 
-            _write_graph_nquads(graph, input_graph_path)
-            context_path.write_text(
-                json.dumps(payload, ensure_ascii=True, default=str),
-                encoding="utf-8",
-            )
-
-            if self.runtime == PostprocessorRuntime.PERSISTENT:
-                self._run_persistent(
-                    input_graph_path=input_graph_path,
-                    output_graph_path=output_graph_path,
-                    context_payload=payload,
-                )
-            else:
-                self._run_oneshot(
-                    input_graph_path=input_graph_path,
-                    output_graph_path=output_graph_path,
-                    context_path=context_path,
-                )
-
-            if not output_graph_path.exists():
-                failed = True
-                raise RuntimeError(
-                    "Postprocessor did not produce output graph: "
-                    f"{self.spec.class_path}"
-                )
-
-            return _read_graph_nquads(output_graph_path)
-        except Exception:
-            failed = True
-            raise
-        finally:
-            if failed and self.spec.keep_temp_on_error:
-                debug_dir = self.root_dir / "output" / "postprocessor_debug"
-                debug_dir.mkdir(parents=True, exist_ok=True)
-                target = debug_dir / (
-                    self.spec.class_path.replace(":", "_").replace(".", "_")
-                )
-                if target.exists():
-                    shutil.rmtree(target)
-                shutil.copytree(temp_dir_path, target)
-                _redact_debug_context(target / "context.json")
-            if temp_dir_path.exists():
-                shutil.rmtree(temp_dir_path, ignore_errors=True)
-
-    def _run_oneshot(
+    def _run(
         self,
         *,
         input_graph_path: Path,
         output_graph_path: Path,
         context_path: Path,
+        **_: Any,
     ) -> None:
         cmd = [
             self.spec.python,
@@ -366,19 +373,41 @@ class SubprocessPostprocessor:
                 f"(exit={completed.returncode})" + (f"\n{stderr}" if stderr else "")
             )
 
-    def _run_persistent(
+
+@dataclass
+class PersistentSubprocessPostprocessor:
+    spec: PostprocessorSpec
+    root_dir: Path
+    _client: PersistentPostprocessorClient | None = field(
+        init=False,
+        default=None,
+        repr=False,
+    )
+
+    def close(self) -> None:
+        if self._client is not None:
+            self._client.close()
+            self._client = None
+
+    def process_graph(
+        self, graph: Graph, context: PostprocessorContext
+    ) -> Graph | None:
+        return _run_subprocess(self.spec, self.root_dir, graph, _build_runner_payload(context), self._run)
+
+    def _run(
         self,
         *,
         input_graph_path: Path,
         output_graph_path: Path,
         context_payload: dict[str, Any],
+        **_: Any,
     ) -> None:
-        if self._persistent_client is None:
-            self._persistent_client = PersistentPostprocessorClient(
+        if self._client is None:
+            self._client = PersistentPostprocessorClient(
                 spec=self.spec,
                 root_dir=self.root_dir,
             )
-        self._persistent_client.process_graph(
+        self._client.process_graph(
             input_graph_path=input_graph_path,
             output_graph_path=output_graph_path,
             context_payload=context_payload,
@@ -431,7 +460,9 @@ def _build_handler(
 ) -> GraphPostprocessor:
     if runtime == PostprocessorRuntime.INPROCESS:
         return InProcessPostprocessor(class_path=spec.class_path)
-    return SubprocessPostprocessor(spec=spec, root_dir=root_dir, runtime=runtime)
+    if runtime == PostprocessorRuntime.PERSISTENT:
+        return PersistentSubprocessPostprocessor(spec=spec, root_dir=root_dir)
+    return OneshotSubprocessPostprocessor(spec=spec, root_dir=root_dir)
 
 
 def _normalize_runtime(value: str | None) -> PostprocessorRuntime:
