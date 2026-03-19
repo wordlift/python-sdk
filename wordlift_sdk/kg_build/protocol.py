@@ -27,6 +27,7 @@ from wordlift_sdk.validation.shacl_validation_service import (
 from .config import ProfileDefinition
 from .entity_patcher import EntityPatcher
 from .graph_annotation import ImportAnnotationPostprocessor
+from .graph_utils import first_level_subjects
 from .id_allocator import IdAllocator
 from .id_postprocessor import CanonicalIdsPostprocessor, RootIdReconcilerPostprocessor
 from .kpi import KgBuildKpiCollector
@@ -670,23 +671,23 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         if not subjects:
             return False
 
-        first_level_subjects = {
+        page_subjects = {
             subject
-            for subject in self._first_level_subjects(graph)
+            for subject in first_level_subjects(graph, dataset_uri)
             if subject in subjects
         }
-        if not first_level_subjects:
+        if not page_subjects:
             return False
 
         if self._import_hash_mode == "off":
             return True
 
-        representative = next(iter(first_level_subjects))
+        representative = next(iter(page_subjects))
         existing_hash = self.patcher._existing_import_hash(representative, graph)
         import_hash = self.patcher._compute_import_hash(
             representative, graph, dataset_uri
         )
-        for subject in first_level_subjects:
+        for subject in page_subjects:
             self.patcher._set_import_hash(subject, graph, import_hash)
 
         return not (
