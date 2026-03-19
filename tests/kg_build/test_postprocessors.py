@@ -12,7 +12,7 @@ from types import SimpleNamespace
 import pytest
 from rdflib import Dataset, Graph, Literal, URIRef
 
-from wordlift_sdk.kg_build.postprocessors.runner import (
+from wordlift_sdk.kg_build.postprocessors.oneshot import (
     _build_context,
     _read_graph_nquads,
 )

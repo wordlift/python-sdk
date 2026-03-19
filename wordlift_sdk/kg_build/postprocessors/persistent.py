@@ -12,7 +12,7 @@ from typing import Any
 
 from rdflib import Dataset, Graph
 
-from .runner import _build_context
+from .oneshot import _build_context
 
 
 def _load_class(class_path: str):
