@@ -24,8 +24,8 @@ from pyshacl import validate as pyshacl_validate
 from rdflib.namespace import SH
 from wordlift_sdk.validation.shacl import (
     ValidationResult,
-    _load_shapes_graph,
-    _normalize_schema_org_uris,
+    load_shapes_graph,
+    normalize_schema_org_uris,
     resolve_shape_specs,
 )
 
@@ -59,7 +59,7 @@ _shacl_worker_source_map: dict = {}
 
 def _init_shacl_worker(shape_specs: list[str] | None) -> None:
     global _shacl_worker_shapes_graph, _shacl_worker_source_map
-    _shacl_worker_shapes_graph, _shacl_worker_source_map = _load_shapes_graph(
+    _shacl_worker_shapes_graph, _shacl_worker_source_map = load_shapes_graph(
         shape_specs
     )
 
@@ -69,7 +69,7 @@ def _shacl_validate_in_worker(ntriples: str, submit_time: float) -> dict:
     _t_start = time.perf_counter()
     data_graph = Graph()
     data_graph.parse(data=ntriples, format="nt")
-    data_graph = _normalize_schema_org_uris(data_graph)
+    data_graph = normalize_schema_org_uris(data_graph)
     conforms, report_graph, _ = pyshacl_validate(
         data_graph,
         shacl_graph=_shacl_worker_shapes_graph,
@@ -920,7 +920,7 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         return summary
 
     def _validate_graph(self, graph: Graph) -> ValidationResult:
-        data_graph = _normalize_schema_org_uris(graph)
+        data_graph = normalize_schema_org_uris(graph)
         conforms, report_graph, report_text = pyshacl_validate(
             data_graph,
             shacl_graph=self._shacl_shapes_graph,

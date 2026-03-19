@@ -15,7 +15,7 @@ from wordlift_sdk.graph.audit.kpis.schema_compliance import (
     _find_webpage_urls,
 )
 from wordlift_sdk.validation.shacl import (
-    _normalize_schema_org_uris,  # type: ignore[attr-defined]
+    normalize_schema_org_uris,
 )
 
 _SCHEMA_ORG_PREFIXES = ("http://schema.org/", "https://schema.org/")
@@ -120,7 +120,7 @@ def build_entity_matrix(
     excl: set[str] = set(exclude_types or [])
 
     load_result = load_graph(path)
-    normalized = _normalize_schema_org_uris(load_result.graph)
+    normalized = normalize_schema_org_uris(load_result.graph)
     webpage_urls = _find_webpage_urls(normalized)
 
     if not webpage_urls:
