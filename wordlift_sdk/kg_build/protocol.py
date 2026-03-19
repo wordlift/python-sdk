@@ -10,7 +10,7 @@ from types import SimpleNamespace
 from typing import Any
 
 from jinja2 import UndefinedError
-from rdflib import Graph, Literal, URIRef
+from rdflib import Graph, URIRef
 from wordlift_client.models.web_page_scrape_response import WebPageScrapeResponse
 from wordlift_sdk.protocol import Context
 from wordlift_sdk.protocol.web_page_import_protocol import (
@@ -25,6 +25,7 @@ from wordlift_sdk.validation.shacl_validation_service import (
 
 from .config import ProfileDefinition
 from .entity_patcher import EntityPatcher
+from .graph_annotation import ImportAnnotationPostprocessor
 from .id_postprocessor import CanonicalIdsPostprocessor, RootIdReconcilerPostprocessor
 from .kpi import KgBuildKpiCollector
 from .postprocessor_service import PostprocessorService, PostprocessorResult
@@ -33,8 +34,6 @@ from .templates import JinjaRdfTemplateReifier, TemplateTextRenderer
 from wordlift_sdk.structured_data.engine import init_morph_kgc_pool
 
 logger = logging.getLogger(__name__)
-SEOVOC_SOURCE = URIRef("https://w3id.org/seovoc/source")
-SEOVOC_IMPORT_HASH = URIRef("https://w3id.org/seovoc/importHash")
 
 
 def _path_contains_part(path: str, part: str) -> bool:
@@ -403,8 +402,14 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
                 url, response, existing_web_page_id, exports
             ),
         )
-        self._set_source(graph)
-        self._set_existing_import_hash(graph, existing_import_hash)
+        graph = ImportAnnotationPostprocessor().process_graph(
+            graph,
+            SimpleNamespace(
+                account=self.context.account,
+                existing_import_hash=existing_import_hash,
+                import_hash_mode=self._import_hash_mode,
+            ),
+        )
         return graph, pp_result
 
     def _resolve_path(self, raw_path: str) -> Path:
@@ -642,53 +647,6 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         if xhtml:
             xhtml_file = self.debug_dir / f"{safe_name}.xhtml"
             xhtml_file.write_text(xhtml, encoding="utf-8")
-
-    def _set_source(self, graph: Graph) -> None:
-        for subject in self._first_level_subjects(graph):
-            graph.set((subject, SEOVOC_SOURCE, Literal("web-page-import")))
-
-    def _set_existing_import_hash(self, graph: Graph, import_hash: str | None) -> None:
-        if self._import_hash_mode == "off":
-            return
-        if not import_hash:
-            return
-        subjects = {
-            subject for subject in graph.subjects() if isinstance(subject, URIRef)
-        }
-        for subject in subjects:
-            graph.set((subject, SEOVOC_IMPORT_HASH, Literal(import_hash)))
-
-    def _first_level_subjects(self, graph: Graph) -> set[URIRef]:
-        subjects = {
-            subject for subject in graph.subjects() if isinstance(subject, URIRef)
-        }
-        dataset_uri = str(
-            getattr(self.context.account, "dataset_uri", "") or ""
-        ).rstrip("/")
-        if dataset_uri:
-            first_level_by_id = {
-                subject
-                for subject in subjects
-                if str(subject).startswith(f"{dataset_uri}/")
-                and len(
-                    [
-                        part
-                        for part in str(subject)[len(dataset_uri) + 1 :].split("/")
-                        if part
-                    ]
-                )
-                == 2
-            }
-            if first_level_by_id:
-                return first_level_by_id
-
-        referenced = {
-            obj
-            for _, _, obj in graph.triples((None, None, None))
-            if isinstance(obj, URIRef) and obj in subjects
-        }
-        first_level = subjects - referenced
-        return first_level or subjects
 
     def _mapping_response(
         self,
