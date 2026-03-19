@@ -67,6 +67,13 @@ class GraphPostprocessor(Protocol):
 
 
 @dataclass(frozen=True)
+class PostprocessorResult:
+    graph: Graph
+    queue_wait_ms: int
+    postprocessors_ms: int
+
+
+@dataclass(frozen=True)
 class LoadedPostprocessor:
     name: str
     handler: GraphPostprocessor
@@ -335,7 +342,9 @@ class OneshotSubprocessPostprocessor:
     def process_graph(
         self, graph: Graph, context: PostprocessorContext
     ) -> Graph | None:
-        return _run_subprocess(self.spec, self.root_dir, graph, _build_runner_payload(context), self._run)
+        return _run_subprocess(
+            self.spec, self.root_dir, graph, _build_runner_payload(context), self._run
+        )
 
     def _run(
         self,
@@ -392,7 +401,9 @@ class PersistentSubprocessPostprocessor:
     def process_graph(
         self, graph: Graph, context: PostprocessorContext
     ) -> Graph | None:
-        return _run_subprocess(self.spec, self.root_dir, graph, _build_runner_payload(context), self._run)
+        return _run_subprocess(
+            self.spec, self.root_dir, graph, _build_runner_payload(context), self._run
+        )
 
     def _run(
         self,
