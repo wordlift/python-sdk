@@ -399,10 +399,11 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             outcome.validation_ms if outcome else 0,
         )
 
-    def close(self) -> None:
+    async def close(self) -> None:
         self._postprocessor_service.close()
         self._mapping_executor.shutdown(wait=False)
         self._shacl_validator.close()
+        await self.context.graph_queue.close()
 
     def get_kpi_summary(self) -> dict[str, object]:
         return self._kpi.summary(self.profile.name)
