@@ -10,7 +10,7 @@ from types import SimpleNamespace
 from typing import Any
 
 from jinja2 import UndefinedError
-from rdflib import Graph, Literal, RDF, URIRef
+from rdflib import Graph, Literal, URIRef
 from wordlift_client.models.web_page_scrape_response import WebPageScrapeResponse
 from wordlift_sdk.protocol import Context
 from wordlift_sdk.protocol.web_page_import_protocol import (
@@ -25,7 +25,7 @@ from wordlift_sdk.validation.shacl_validation_service import (
 
 from .config import ProfileDefinition
 from .entity_patcher import EntityPatcher
-from .id_postprocessor import CanonicalIdsPostprocessor
+from .id_postprocessor import CanonicalIdsPostprocessor, RootIdReconcilerPostprocessor
 from .kpi import KgBuildKpiCollector
 from .postprocessor_service import PostprocessorService, PostprocessorResult
 from .rml_mapping import MappingResult, RmlMappingService
@@ -39,23 +39,6 @@ SEOVOC_IMPORT_HASH = URIRef("https://w3id.org/seovoc/importHash")
 
 def _path_contains_part(path: str, part: str) -> bool:
     return part in Path(path).parts
-
-
-def _find_web_page_iri(graph: Graph) -> URIRef | None:
-    for subject in graph.subjects(RDF.type, URIRef("http://schema.org/WebPage")):
-        return subject
-    for subject in graph.subjects(RDF.type, URIRef("https://schema.org/WebPage")):
-        return subject
-    return None
-
-
-def _swap_iris(graph: Graph, old_iri: URIRef, new_iri: URIRef) -> None:
-    for subject, predicate, obj in list(graph.triples((old_iri, None, None))):
-        graph.remove((subject, predicate, obj))
-        graph.add((new_iri, predicate, obj))
-    for subject, predicate, obj in list(graph.triples((None, None, old_iri))):
-        graph.remove((subject, predicate, obj))
-        graph.add((subject, predicate, new_iri))
 
 
 def _resolve_list_setting(value: Any) -> list[str]:
@@ -404,8 +387,9 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         existing_web_page_id: str | None,
         existing_import_hash: str | None,
     ) -> tuple[Graph, PostprocessorResult]:
-        if existing_web_page_id:
-            self._reconcile_root_id(graph, existing_web_page_id)
+        graph = RootIdReconcilerPostprocessor().process_graph(
+            graph, SimpleNamespace(existing_web_page_id=existing_web_page_id)
+        )
         exports = self._template_exports or {}
         pp_result = await self._postprocessor_service.apply(
             graph, url, response, existing_web_page_id, exports
@@ -658,11 +642,6 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         if xhtml:
             xhtml_file = self.debug_dir / f"{safe_name}.xhtml"
             xhtml_file.write_text(xhtml, encoding="utf-8")
-
-    def _reconcile_root_id(self, graph: Graph, root_id: str) -> None:
-        old_iri = _find_web_page_iri(graph)
-        if old_iri and str(old_iri) != root_id:
-            _swap_iris(graph, old_iri, URIRef(root_id))
 
     def _set_source(self, graph: Graph) -> None:
         for subject in self._first_level_subjects(graph):
