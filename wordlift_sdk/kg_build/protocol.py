@@ -41,11 +41,20 @@ def _path_contains_part(path: str, part: str) -> bool:
     return part in Path(path).parts
 
 
+def _setting(settings: dict, name: str, fallback: str, default: Any) -> Any:
+    """Read a profile setting by snake_case name, falling back to UPPER_CASE, then default."""
+    v = settings.get(name)
+    if v is None:
+        v = settings.get(fallback)
+    return default if v is None else v
+
+
 def _resolve_postprocessor_runtime(settings: dict[str, Any]) -> str:
-    value = settings.get("postprocessor_runtime")
-    if value is None:
-        value = settings.get("POSTPROCESSOR_RUNTIME")
-    return str(value or "persistent")
+    return str(
+        _setting(
+            settings, "postprocessor_runtime", "POSTPROCESSOR_RUNTIME", "persistent"
+        )
+    )
 
 
 class ProfileImportProtocol(WebPageImportProtocolInterface):
@@ -91,35 +100,32 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         self._mapping_cache: dict[Path, str] = {}
         self._static_templates_patched = False
         self._static_templates_lock = asyncio.Lock()
+
+        settings = dict(self.profile.settings)
         canonical_id_strategy = (
             str(
-                self.profile.settings.get(
-                    "canonical_id_strategy",
-                    self.profile.settings.get("CANONICAL_ID_STRATEGY", "legacy"),
+                _setting(
+                    settings, "canonical_id_strategy", "CANONICAL_ID_STRATEGY", "legacy"
                 )
             )
             .strip()
             .lower()
         )
         self._core_ids = CanonicalIdsPostprocessor(strategy=canonical_id_strategy)
-        _postprocessor_runtime = _resolve_postprocessor_runtime(
-            dict(self.profile.settings)
-        )
+        _postprocessor_runtime = _resolve_postprocessor_runtime(settings)
         logger.info(
             "Resolved postprocessor runtime for profile '%s': %s (origin=%s)",
             self.profile.name,
             _postprocessor_runtime,
             self.profile.origins.get("postprocessor_runtime", "default"),
         )
-        _pool_size = int(
-            self.profile.settings.get(
-                "concurrency", self.profile.settings.get("CONCURRENCY", 4)
-            )
-        )
+        _pool_size = int(_setting(settings, "concurrency", "CONCURRENCY", 4))
         _pp_pool_size = int(
-            self.profile.settings.get(
+            _setting(
+                settings,
                 "postprocessor_pool_size",
-                self.profile.settings.get("POSTPROCESSOR_POOL_SIZE", _pool_size),
+                "POSTPROCESSOR_POOL_SIZE",
+                _pool_size,
             )
         )
         logger.info(
@@ -136,9 +142,8 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             runtime=_postprocessor_runtime,
         )
         _mapping_pool_size = int(
-            self.profile.settings.get(
-                "mapping_pool_size",
-                self.profile.settings.get("MAPPING_POOL_SIZE", os.cpu_count() or 4),
+            _setting(
+                settings, "mapping_pool_size", "MAPPING_POOL_SIZE", os.cpu_count() or 4
             )
         )
         logger.info(
@@ -154,27 +159,21 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             max_workers=_pool_size, thread_name_prefix="worai_ml"
         )
         shacl_mode = self._resolve_validation_mode(
-            self.profile.settings.get(
-                "shacl_validate_mode",
-                self.profile.settings.get("SHACL_VALIDATE_MODE", "warn"),
-            )
+            _setting(settings, "shacl_validate_mode", "SHACL_VALIDATE_MODE", "warn")
         )
         shacl_builtin_shapes = self._resolve_list_setting(
-            self.profile.settings.get(
-                "shacl_builtin_shapes",
-                self.profile.settings.get("SHACL_BUILTIN_SHAPES"),
-            )
+            _setting(settings, "shacl_builtin_shapes", "SHACL_BUILTIN_SHAPES", None)
         )
         shacl_exclude_builtin_shapes = self._resolve_list_setting(
-            self.profile.settings.get(
+            _setting(
+                settings,
                 "shacl_exclude_builtin_shapes",
-                self.profile.settings.get("SHACL_EXCLUDE_BUILTIN_SHAPES"),
+                "SHACL_EXCLUDE_BUILTIN_SHAPES",
+                None,
             )
         )
         shacl_extra_shapes = self._resolve_list_setting(
-            self.profile.settings.get(
-                "shacl_extra_shapes", self.profile.settings.get("SHACL_EXTRA_SHAPES")
-            )
+            _setting(settings, "shacl_extra_shapes", "SHACL_EXTRA_SHAPES", None)
         )
         self._shacl_shape_specs = resolve_shape_specs(
             builtin_shapes=shacl_builtin_shapes or None,
@@ -182,9 +181,8 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             extra_shapes=shacl_extra_shapes or None,
         )
         _shacl_pool_size = int(
-            self.profile.settings.get(
-                "shacl_pool_size",
-                self.profile.settings.get("SHACL_POOL_SIZE", max(2, _pool_size // 2)),
+            _setting(
+                settings, "shacl_pool_size", "SHACL_POOL_SIZE", max(2, _pool_size // 2)
             )
         )
         self._shacl_validator = ShaclValidationService(
@@ -193,10 +191,7 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             pool_size=_shacl_pool_size,
         )
         self._import_hash_mode = self._resolve_import_hash_mode(
-            self.profile.settings.get(
-                "import_hash_mode",
-                self.profile.settings.get("IMPORT_HASH_MODE", "on"),
-            )
+            _setting(settings, "import_hash_mode", "IMPORT_HASH_MODE", "on")
         )
         self._kpi = KgBuildKpiCollector(
             dataset_uri=getattr(self.context.account, "dataset_uri", None),
