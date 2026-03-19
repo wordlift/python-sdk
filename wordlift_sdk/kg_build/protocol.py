@@ -90,7 +90,6 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             self.profile.mapping_overlay_dirs or (self.profile.mappings_dir,)
         )
 
-        self.patcher = EntityPatcher(context)
         self.template_reifier = JinjaRdfTemplateReifier(self._template_dirs)
         self.text_renderer = TemplateTextRenderer()
 
@@ -105,9 +104,7 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         self._init_postprocessor_service(settings, context, _pool_size)
         self._init_mapping_service(settings, context, _pool_size)
         self._init_shacl_validator(settings, _pool_size)
-        self._import_hash_mode = self._resolve_import_hash_mode(
-            _setting(settings, "import_hash_mode", "IMPORT_HASH_MODE", "on")
-        )
+        self._init_graph_writer(settings, context)
         self._kpi = KgBuildKpiCollector(
             dataset_uri=getattr(self.context.account, "dataset_uri", None),
             validation_enabled=self._shacl_validator.mode != ValidationMode.OFF,
@@ -218,6 +215,12 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             shape_specs=self._shacl_shape_specs or None,
             mode=mode,
             pool_size=shacl_pool_size,
+        )
+
+    def _init_graph_writer(self, settings: dict, context: Context) -> None:
+        self.patcher = EntityPatcher(context)
+        self._import_hash_mode = self._resolve_import_hash_mode(
+            _setting(settings, "import_hash_mode", "IMPORT_HASH_MODE", "on")
         )
 
     async def callback(
