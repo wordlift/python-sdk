@@ -10,6 +10,7 @@ import shutil
 import subprocess
 import tempfile
 from dataclasses import dataclass, field
+from enum import Enum
 from pathlib import Path
 from typing import Any, Protocol, runtime_checkable
 
@@ -22,9 +23,11 @@ try:
 except ModuleNotFoundError:  # pragma: no cover
     import tomli as tomllib
 
-_RUNTIME_ONESHOT = "oneshot"
-_RUNTIME_PERSISTENT = "persistent"
-_RUNTIME_INPROCESS = "inprocess"
+
+class PostprocessorRuntime(str, Enum):
+    ONESHOT = "oneshot"
+    PERSISTENT = "persistent"
+    INPROCESS = "inprocess"
 
 
 @dataclass(frozen=True)
@@ -256,7 +259,7 @@ class PersistentPostprocessorClient:
 class SubprocessPostprocessor:
     spec: PostprocessorSpec
     root_dir: Path
-    runtime: str = _RUNTIME_ONESHOT
+    runtime: PostprocessorRuntime = PostprocessorRuntime.ONESHOT
     _persistent_client: PersistentPostprocessorClient | None = field(
         init=False,
         default=None,
@@ -285,7 +288,7 @@ class SubprocessPostprocessor:
                 encoding="utf-8",
             )
 
-            if self.runtime == _RUNTIME_PERSISTENT:
+            if self.runtime == PostprocessorRuntime.PERSISTENT:
                 self._run_persistent(
                     input_graph_path=input_graph_path,
                     output_graph_path=output_graph_path,
@@ -419,20 +422,21 @@ def _as_positive_int(value: Any, default: int) -> int:
 
 
 def _build_handler(
-    spec: PostprocessorSpec, root_dir: Path, runtime: str
+    spec: PostprocessorSpec, root_dir: Path, runtime: PostprocessorRuntime
 ) -> GraphPostprocessor:
-    if runtime == _RUNTIME_INPROCESS:
+    if runtime == PostprocessorRuntime.INPROCESS:
         return InProcessPostprocessor(class_path=spec.class_path)
     return SubprocessPostprocessor(spec=spec, root_dir=root_dir, runtime=runtime)
 
 
-def _normalize_runtime(value: str | None) -> str:
-    runtime = (value or _RUNTIME_ONESHOT).strip().lower()
-    if runtime not in {_RUNTIME_ONESHOT, _RUNTIME_PERSISTENT, _RUNTIME_INPROCESS}:
+def _normalize_runtime(value: str | None) -> PostprocessorRuntime:
+    raw = (value or PostprocessorRuntime.ONESHOT.value).strip().lower()
+    try:
+        return PostprocessorRuntime(raw)
+    except ValueError:
         raise ValueError(
             "POSTPROCESSOR_RUNTIME must be one of: oneshot, persistent, inprocess."
         )
-    return runtime
 
 
 def _load_manifest_specs(manifest_path: Path) -> list[PostprocessorSpec]:
@@ -520,7 +524,7 @@ def _build_runner_payload(context: PostprocessorContext) -> dict[str, Any]:
 def _load_from_specs(
     specs: list[PostprocessorSpec],
     root_dir: Path,
-    runtime: str,
+    runtime: PostprocessorRuntime,
 ) -> list[LoadedPostprocessor]:
     return [
         LoadedPostprocessor(
