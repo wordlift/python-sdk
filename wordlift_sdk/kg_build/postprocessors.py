@@ -40,6 +40,8 @@ class PostprocessorContext:
     exports: dict[str, Any]
     response: Any
     existing_web_page_id: str | None
+    existing_import_hash: str | None = None
+    import_hash_mode: str = "on"
     ids: Any | None = None
 
 

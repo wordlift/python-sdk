@@ -5,6 +5,7 @@ import hashlib
 import logging
 import os
 from concurrent.futures import ThreadPoolExecutor
+from dataclasses import asdict
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
@@ -26,9 +27,16 @@ from wordlift_sdk.validation.shacl_validation_service import (
 from .config import ProfileDefinition
 from .entity_patcher import EntityPatcher
 from .graph_annotation import ImportAnnotationPostprocessor
+from .id_allocator import IdAllocator
 from .id_postprocessor import CanonicalIdsPostprocessor, RootIdReconcilerPostprocessor
 from .kpi import KgBuildKpiCollector
-from .postprocessor_service import PostprocessorService, PostprocessorResult
+from .postprocessor_service import PostprocessorService
+from .postprocessors import (
+    LoadedPostprocessor,
+    PostprocessorContext,
+    PostprocessorResult,
+    load_postprocessors_for_profile,
+)
 from .rml_mapping import MappingResult, RmlMappingService
 from .templates import JinjaRdfTemplateReifier, TemplateTextRenderer
 from wordlift_sdk.structured_data.engine import init_morph_kgc_pool
@@ -38,6 +46,34 @@ logger = logging.getLogger(__name__)
 
 def _path_contains_part(path: str, part: str) -> bool:
     return part in Path(path).parts
+
+
+def _clean_key(value: Any) -> str | None:
+    key = str(value).strip() if value is not None else ""
+    return key or None
+
+
+def _resolve_account_key(profile: Any, context: Any) -> str | None:
+    if key := _clean_key(getattr(profile, "api_key", None)):
+        return key
+    api_key_map = getattr(
+        getattr(context, "client_configuration", None), "api_key", None
+    )
+    if isinstance(api_key_map, dict):
+        if key := _clean_key(api_key_map.get("ApiKey")):
+            return key
+    provider = getattr(context, "configuration_provider", None)
+    if provider is not None:
+        for name in ("WORDLIFT_KEY", "WORDLIFT_API_KEY"):
+            try:
+                if key := _clean_key(provider.get_value(name)):
+                    return key
+            except Exception:
+                pass
+    for name in ("WORDLIFT_KEY", "WORDLIFT_API_KEY"):
+        if key := _clean_key(os.getenv(name)):
+            return key
+    return None
 
 
 def _resolve_list_setting(value: Any) -> list[str]:
@@ -149,7 +185,7 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             .strip()
             .lower()
         )
-        self._core_ids = CanonicalIdsPostprocessor(strategy=canonical_id_strategy)
+        core_ids = CanonicalIdsPostprocessor(strategy=canonical_id_strategy)
         runtime = _resolve_postprocessor_runtime(settings)
         logger.info(
             "Resolved postprocessor runtime for profile '%s': %s (origin=%s)",
@@ -171,12 +207,35 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             pp_pool_size,
             pool_size,
         )
+        account_key = _resolve_account_key(self.profile, context)
+        root_dir = self.root_dir
+        profile = self.profile
+
+        def _postprocessors_factory() -> list[LoadedPostprocessor]:
+            leading = [
+                LoadedPostprocessor(
+                    name="root_id_reconciler",
+                    handler=RootIdReconcilerPostprocessor(),
+                )
+            ]
+            custom = load_postprocessors_for_profile(
+                root_dir=root_dir,
+                profile_name=profile.name,
+                runtime=runtime,
+            )
+            trailing = [
+                LoadedPostprocessor(name="canonical_ids", handler=core_ids),
+                LoadedPostprocessor(
+                    name="import_annotation",
+                    handler=ImportAnnotationPostprocessor(),
+                ),
+            ]
+            return leading + custom + trailing
+
+        self._account_key = account_key
         self._postprocessor_service = PostprocessorService(
-            root_dir=self.root_dir,
-            profile=self.profile,
-            context=context,
+            postprocessors_factory=_postprocessors_factory,
             pool_size=pp_pool_size,
-            runtime=runtime,
         )
 
     def _init_mapping_service(
@@ -386,31 +445,38 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         existing_web_page_id: str | None,
         existing_import_hash: str | None,
     ) -> tuple[Graph, PostprocessorResult]:
-        graph = RootIdReconcilerPostprocessor().process_graph(
-            graph, SimpleNamespace(existing_web_page_id=existing_web_page_id)
+        context = self._build_pp_context(
+            url, response, existing_web_page_id, existing_import_hash
         )
-        exports = self._template_exports or {}
-        pp_result = await self._postprocessor_service.apply(
-            graph, url, response, existing_web_page_id, exports
+        pp_result = await self._postprocessor_service.apply(graph, context)
+        return pp_result.graph, pp_result
+
+    def _build_pp_context(
+        self,
+        url: str,
+        response: WebPageScrapeResponse,
+        existing_web_page_id: str | None,
+        existing_import_hash: str | None,
+    ) -> PostprocessorContext:
+        dataset_uri = str(getattr(self.context.account, "dataset_uri", "")).rstrip("/")
+        ids = IdAllocator(dataset_uri) if dataset_uri else None
+        profile_payload = asdict(self.profile)
+        profile_settings = dict(profile_payload.get("settings", {}) or {})
+        profile_settings.setdefault("api_url", "https://api.wordlift.io")
+        profile_payload["settings"] = profile_settings
+        return PostprocessorContext(
+            profile_name=self.profile.name,
+            profile=profile_payload,
+            url=url,
+            account=self.context.account,
+            account_key=self._account_key,
+            exports=self._template_exports or {},
+            response=response,
+            existing_web_page_id=existing_web_page_id,
+            existing_import_hash=existing_import_hash,
+            import_hash_mode=self._import_hash_mode,
+            ids=ids,
         )
-        graph = pp_result.graph
-        # Canonical IDs must run after custom postprocessors so any nodes minted
-        # by local logic are normalised before graph sync patching.
-        graph = self._core_ids.process_graph(
-            graph,
-            self._postprocessor_service.build_context(
-                url, response, existing_web_page_id, exports
-            ),
-        )
-        graph = ImportAnnotationPostprocessor().process_graph(
-            graph,
-            SimpleNamespace(
-                account=self.context.account,
-                existing_import_hash=existing_import_hash,
-                import_hash_mode=self._import_hash_mode,
-            ),
-        )
-        return graph, pp_result
 
     def _resolve_path(self, raw_path: str) -> Path:
         path = Path(raw_path)
