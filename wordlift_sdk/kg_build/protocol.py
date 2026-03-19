@@ -33,6 +33,7 @@ from .id_postprocessor import CanonicalIdsPostprocessor
 from .kpi import KgBuildKpiCollector
 from .postprocessors import (
     PostprocessorContext,
+    PostprocessorResult,
     close_loaded_postprocessors,
     load_postprocessors_for_profile,
 )
@@ -285,10 +286,9 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         loop = asyncio.get_event_loop()
         _t1 = time.perf_counter()
         _postprocessors = await self._postprocessors_queue.get()
-        _t_queue_wait = int((time.perf_counter() - _t1) * 1000)
+        _queue_wait_ms = int((time.perf_counter() - _t1) * 1000)
         try:
-            _t2 = time.perf_counter()
-            graph = await loop.run_in_executor(
+            pp_result: PostprocessorResult = await loop.run_in_executor(
                 self._pp_executor,
                 functools.partial(
                     self._apply_postprocessors_with,
@@ -297,11 +297,12 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
                     response,
                     existing_web_page_id,
                     _postprocessors,
+                    _queue_wait_ms,
                 ),
             )
-            _t_postprocessors = int((time.perf_counter() - _t2) * 1000)
         finally:
             self._postprocessors_queue.put_nowait(_postprocessors)
+        graph = pp_result.graph
         # Canonical IDs must run after custom postprocessors so any nodes minted
         # by local logic are normalized before graph sync patching.
         graph = self._core_ids.process_graph(
@@ -359,8 +360,8 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             url,
             _t_mapping_wait,
             _t_mapping,
-            _t_queue_wait,
-            _t_postprocessors,
+            pp_result.queue_wait_ms,
+            pp_result.postprocessors_ms,
             _t_validation_wait,
             _t_validation_actual,
         )
@@ -595,21 +596,6 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             and existing_hash == import_hash
         )
 
-    def _apply_postprocessors(
-        self,
-        graph: Graph,
-        url: str,
-        response: WebPageScrapeResponse,
-        existing_web_page_id: str | None,
-    ) -> Graph:
-        return self._apply_postprocessors_with(
-            graph,
-            url,
-            response,
-            existing_web_page_id,
-            list(self._postprocessors_queue._queue),  # type: ignore[attr-defined]
-        )
-
     def _apply_postprocessors_with(
         self,
         graph: Graph,
@@ -617,9 +603,13 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         response: WebPageScrapeResponse,
         existing_web_page_id: str | None,
         postprocessors: list,
-    ) -> Graph:
+        queue_wait_ms: int,
+    ) -> PostprocessorResult:
+        _t_start = time.perf_counter()
         if not postprocessors:
-            return graph
+            return PostprocessorResult(
+                graph=graph, queue_wait_ms=queue_wait_ms, postprocessors_ms=0
+            )
 
         pp_context = self._build_pp_context(url, response, existing_web_page_id)
         if not pp_context.account_key:
@@ -637,7 +627,11 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
                 url,
                 int((time.perf_counter() - _tp) * 1000),
             )
-        return graph
+        return PostprocessorResult(
+            graph=graph,
+            queue_wait_ms=queue_wait_ms,
+            postprocessors_ms=int((time.perf_counter() - _t_start) * 1000),
+        )
 
     def _build_pp_context(
         self,
@@ -799,7 +793,6 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             id=existing_web_page_id,
             web_page=response.web_page,
         )
-
 
     def _emit_progress(self, payload: dict[str, Any]) -> None:
         if not callable(self._on_progress):
