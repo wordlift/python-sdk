@@ -112,84 +112,10 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             .lower()
         )
         self._core_ids = CanonicalIdsPostprocessor(strategy=canonical_id_strategy)
-        _postprocessor_runtime = _resolve_postprocessor_runtime(settings)
-        logger.info(
-            "Resolved postprocessor runtime for profile '%s': %s (origin=%s)",
-            self.profile.name,
-            _postprocessor_runtime,
-            self.profile.origins.get("postprocessor_runtime", "default"),
-        )
         _pool_size = int(_setting(settings, "concurrency", "CONCURRENCY", 4))
-        _pp_pool_size = int(
-            _setting(
-                settings,
-                "postprocessor_pool_size",
-                "POSTPROCESSOR_POOL_SIZE",
-                _pool_size,
-            )
-        )
-        logger.info(
-            "Postprocessor pool size for profile '%s': %d (concurrency=%d)",
-            self.profile.name,
-            _pp_pool_size,
-            _pool_size,
-        )
-        self._postprocessor_service = PostprocessorService(
-            root_dir=self.root_dir,
-            profile=self.profile,
-            context=context,
-            pool_size=_pp_pool_size,
-            runtime=_postprocessor_runtime,
-        )
-        _mapping_pool_size = int(
-            _setting(
-                settings, "mapping_pool_size", "MAPPING_POOL_SIZE", os.cpu_count() or 4
-            )
-        )
-        logger.info(
-            "Mapping pool size for profile '%s': %d",
-            self.profile.name,
-            _mapping_pool_size,
-        )
-        init_morph_kgc_pool(_mapping_pool_size)
-        # Wraps apply_mapping calls so they run in a thread rather than blocking
-        # the asyncio event loop. The thread itself blocks on the morph_kgc
-        # ProcessPoolExecutor slot, leaving the event loop free for I/O.
-        self._mapping_executor = ThreadPoolExecutor(
-            max_workers=_pool_size, thread_name_prefix="worai_ml"
-        )
-        shacl_mode = self._resolve_validation_mode(
-            _setting(settings, "shacl_validate_mode", "SHACL_VALIDATE_MODE", "warn")
-        )
-        shacl_builtin_shapes = self._resolve_list_setting(
-            _setting(settings, "shacl_builtin_shapes", "SHACL_BUILTIN_SHAPES", None)
-        )
-        shacl_exclude_builtin_shapes = self._resolve_list_setting(
-            _setting(
-                settings,
-                "shacl_exclude_builtin_shapes",
-                "SHACL_EXCLUDE_BUILTIN_SHAPES",
-                None,
-            )
-        )
-        shacl_extra_shapes = self._resolve_list_setting(
-            _setting(settings, "shacl_extra_shapes", "SHACL_EXTRA_SHAPES", None)
-        )
-        self._shacl_shape_specs = resolve_shape_specs(
-            builtin_shapes=shacl_builtin_shapes or None,
-            exclude_builtin_shapes=shacl_exclude_builtin_shapes or None,
-            extra_shapes=shacl_extra_shapes or None,
-        )
-        _shacl_pool_size = int(
-            _setting(
-                settings, "shacl_pool_size", "SHACL_POOL_SIZE", max(2, _pool_size // 2)
-            )
-        )
-        self._shacl_validator = ShaclValidationService(
-            shape_specs=self._shacl_shape_specs or None,
-            mode=shacl_mode,
-            pool_size=_shacl_pool_size,
-        )
+        self._init_postprocessor_service(settings, context, _pool_size)
+        self._init_mapping_executor(settings, _pool_size)
+        self._init_shacl_validator(settings, _pool_size)
         self._import_hash_mode = self._resolve_import_hash_mode(
             _setting(settings, "import_hash_mode", "IMPORT_HASH_MODE", "on")
         )
@@ -205,6 +131,91 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             len(self.profile.routes),
             self.profile.origins.get("routes", "default"),
             [str(p) for p in self._mapping_dirs],
+        )
+
+    def _init_postprocessor_service(
+        self, settings: dict, context: Context, pool_size: int
+    ) -> None:
+        runtime = _resolve_postprocessor_runtime(settings)
+        logger.info(
+            "Resolved postprocessor runtime for profile '%s': %s (origin=%s)",
+            self.profile.name,
+            runtime,
+            self.profile.origins.get("postprocessor_runtime", "default"),
+        )
+        pp_pool_size = int(
+            _setting(
+                settings,
+                "postprocessor_pool_size",
+                "POSTPROCESSOR_POOL_SIZE",
+                pool_size,
+            )
+        )
+        logger.info(
+            "Postprocessor pool size for profile '%s': %d (concurrency=%d)",
+            self.profile.name,
+            pp_pool_size,
+            pool_size,
+        )
+        self._postprocessor_service = PostprocessorService(
+            root_dir=self.root_dir,
+            profile=self.profile,
+            context=context,
+            pool_size=pp_pool_size,
+            runtime=runtime,
+        )
+
+    def _init_mapping_executor(self, settings: dict, pool_size: int) -> None:
+        mapping_pool_size = int(
+            _setting(
+                settings, "mapping_pool_size", "MAPPING_POOL_SIZE", os.cpu_count() or 4
+            )
+        )
+        logger.info(
+            "Mapping pool size for profile '%s': %d",
+            self.profile.name,
+            mapping_pool_size,
+        )
+        init_morph_kgc_pool(mapping_pool_size)
+        # Wraps apply_mapping calls so they run in a thread rather than blocking
+        # the asyncio event loop. The thread itself blocks on the morph_kgc
+        # ProcessPoolExecutor slot, leaving the event loop free for I/O.
+        self._mapping_executor = ThreadPoolExecutor(
+            max_workers=pool_size, thread_name_prefix="worai_ml"
+        )
+
+    def _init_shacl_validator(self, settings: dict, pool_size: int) -> None:
+        mode = self._resolve_validation_mode(
+            _setting(settings, "shacl_validate_mode", "SHACL_VALIDATE_MODE", "warn")
+        )
+        builtin_shapes = self._resolve_list_setting(
+            _setting(settings, "shacl_builtin_shapes", "SHACL_BUILTIN_SHAPES", None)
+        )
+        exclude_builtin_shapes = self._resolve_list_setting(
+            _setting(
+                settings,
+                "shacl_exclude_builtin_shapes",
+                "SHACL_EXCLUDE_BUILTIN_SHAPES",
+                None,
+            )
+        )
+        extra_shapes = self._resolve_list_setting(
+            _setting(settings, "shacl_extra_shapes", "SHACL_EXTRA_SHAPES", None)
+        )
+        self._shacl_shape_specs = resolve_shape_specs(
+            builtin_shapes=builtin_shapes or None,
+            exclude_builtin_shapes=exclude_builtin_shapes or None,
+            extra_shapes=extra_shapes or None,
+        )
+        shacl_pool_size = int(
+            _setting(
+                settings, "shacl_pool_size", "SHACL_POOL_SIZE", max(2, pool_size // 2)
+            )
+        )
+        self._shacl_validator = ShaclValidationService(
+            shape_specs=self._shacl_shape_specs or None,
+            mode=mode,
+            pool_size=shacl_pool_size,
         )
 
     async def callback(
