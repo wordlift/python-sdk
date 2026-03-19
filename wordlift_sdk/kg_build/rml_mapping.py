@@ -26,9 +26,15 @@ class MappingResult:
 
 
 class RmlMappingService:
-    def __init__(self, context: Context) -> None:
+    def __init__(
+        self,
+        context: Context,
+        pipeline: MaterializationPipeline | None = None,
+        html_converter: HtmlConverter | None = None,
+    ) -> None:
         self._context = context
-        self._html_converter = HtmlConverter()
+        self._pipeline = pipeline or MaterializationPipeline()
+        self._html_converter = html_converter or HtmlConverter()
 
     def _to_xhtml(self, html: str) -> str:
         return self._html_converter.convert(html)
@@ -72,22 +78,21 @@ class RmlMappingService:
                 if not dataset_uri:
                     raise RuntimeError("Dataset URI not available on context.account.")
 
-                pipeline = MaterializationPipeline()
-                normalized_yarrrml, mappings = pipeline.normalize(
+                normalized_yarrrml, mappings = self._pipeline.normalize(
                     resolved_mapping_content,
                     url,
                     Path(data_path),
                     response=response,
                 )
-                jsonld_raw = pipeline.materialize(
+                jsonld_raw = self._pipeline.materialize(
                     normalized_yarrrml,
                     Path(data_path),
                     Path(temp_dir),
                     url=url,
                     response=response,
                 )
-                queue_wait_ms = getattr(_morph_kgc_tls, "queue_wait_ms", 0)
-                jsonld_data = pipeline.postprocess(
+                queue_wait_ms = getattr(_morph_kgc_tls, "mapping_wait_ms", 0)
+                jsonld_data = self._pipeline.postprocess(
                     jsonld_raw,
                     mappings,
                     xhtml_str,
