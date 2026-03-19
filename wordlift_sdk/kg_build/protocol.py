@@ -1,13 +1,10 @@
 from __future__ import annotations
 
 import asyncio
-import functools
 import hashlib
 import logging
 import os
-import time
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import asdict
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
@@ -28,15 +25,9 @@ from wordlift_sdk.validation.shacl_validation_service import (
 
 from .config import ProfileDefinition
 from .entity_patcher import EntityPatcher
-from .id_allocator import IdAllocator
 from .id_postprocessor import CanonicalIdsPostprocessor
 from .kpi import KgBuildKpiCollector
-from .postprocessors import (
-    PostprocessorContext,
-    PostprocessorResult,
-    close_loaded_postprocessors,
-    load_postprocessors_for_profile,
-)
+from .postprocessor_service import PostprocessorService
 from .rml_mapping import MappingResult, RmlMappingService
 from .templates import JinjaRdfTemplateReifier, TemplateTextRenderer
 from wordlift_sdk.structured_data.engine import init_morph_kgc_pool
@@ -111,13 +102,13 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             .lower()
         )
         self._core_ids = CanonicalIdsPostprocessor(strategy=canonical_id_strategy)
-        self._postprocessor_runtime = _resolve_postprocessor_runtime(
+        _postprocessor_runtime = _resolve_postprocessor_runtime(
             dict(self.profile.settings)
         )
         logger.info(
             "Resolved postprocessor runtime for profile '%s': %s (origin=%s)",
             self.profile.name,
-            self._postprocessor_runtime,
+            _postprocessor_runtime,
             self.profile.origins.get("postprocessor_runtime", "default"),
         )
         _pool_size = int(
@@ -137,8 +128,12 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             _pp_pool_size,
             _pool_size,
         )
-        self._pp_executor = ThreadPoolExecutor(
-            max_workers=_pp_pool_size, thread_name_prefix="worai_pp"
+        self._postprocessor_service = PostprocessorService(
+            root_dir=self.root_dir,
+            profile=self.profile,
+            context=context,
+            pool_size=_pp_pool_size,
+            runtime=_postprocessor_runtime,
         )
         _mapping_pool_size = int(
             self.profile.settings.get(
@@ -158,15 +153,6 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         self._mapping_executor = ThreadPoolExecutor(
             max_workers=_pool_size, thread_name_prefix="worai_ml"
         )
-        self._postprocessors_queue: asyncio.Queue = asyncio.Queue()
-        for _ in range(_pp_pool_size):
-            self._postprocessors_queue.put_nowait(
-                load_postprocessors_for_profile(
-                    root_dir=self.root_dir,
-                    profile_name=self.profile.name,
-                    runtime=self._postprocessor_runtime,
-                )
-            )
         shacl_mode = self._resolve_validation_mode(
             self.profile.settings.get(
                 "shacl_validate_mode",
@@ -283,30 +269,17 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
 
         if existing_web_page_id:
             self._reconcile_root_id(graph, existing_web_page_id)
-        loop = asyncio.get_event_loop()
-        _t1 = time.perf_counter()
-        _postprocessors = await self._postprocessors_queue.get()
-        _queue_wait_ms = int((time.perf_counter() - _t1) * 1000)
-        try:
-            pp_result: PostprocessorResult = await loop.run_in_executor(
-                self._pp_executor,
-                functools.partial(
-                    self._apply_postprocessors_with,
-                    graph,
-                    url,
-                    response,
-                    existing_web_page_id,
-                    _postprocessors,
-                    _queue_wait_ms,
-                ),
-            )
-        finally:
-            self._postprocessors_queue.put_nowait(_postprocessors)
+        pp_result = await self._postprocessor_service.apply(
+            graph, url, response, existing_web_page_id, self._template_exports or {}
+        )
         graph = pp_result.graph
         # Canonical IDs must run after custom postprocessors so any nodes minted
         # by local logic are normalized before graph sync patching.
         graph = self._core_ids.process_graph(
-            graph, self._build_pp_context(url, response, existing_web_page_id)
+            graph,
+            self._postprocessor_service.build_context(
+                url, response, existing_web_page_id, self._template_exports or {}
+            ),
         )
         self._set_source(graph, existing_web_page_id)
         self._set_existing_import_hash(graph, existing_import_hash)
@@ -367,12 +340,7 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         )
 
     def close(self) -> None:
-        while not self._postprocessors_queue.empty():
-            try:
-                close_loaded_postprocessors(self._postprocessors_queue.get_nowait())
-            except asyncio.QueueEmpty:
-                break
-        self._pp_executor.shutdown(wait=False)
+        self._postprocessor_service.close()
         self._mapping_executor.shutdown(wait=False)
         self._shacl_validator.close()
 
@@ -595,104 +563,6 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             and existing_hash
             and existing_hash == import_hash
         )
-
-    def _apply_postprocessors_with(
-        self,
-        graph: Graph,
-        url: str,
-        response: WebPageScrapeResponse,
-        existing_web_page_id: str | None,
-        postprocessors: list,
-        queue_wait_ms: int,
-    ) -> PostprocessorResult:
-        _t_start = time.perf_counter()
-        if not postprocessors:
-            return PostprocessorResult(
-                graph=graph, queue_wait_ms=queue_wait_ms, postprocessors_ms=0
-            )
-
-        pp_context = self._build_pp_context(url, response, existing_web_page_id)
-        if not pp_context.account_key:
-            raise RuntimeError(
-                "Postprocessor runtime requires an API key. Configure one via profile "
-                "'api_key', WORDLIFT_KEY, or WORDLIFT_API_KEY."
-            )
-
-        for processor in postprocessors:
-            _tp = time.perf_counter()
-            graph = processor.run(graph, pp_context)
-            logger.info(
-                "Applied postprocessor '%s' for %s [%dms]",
-                processor.name,
-                url,
-                int((time.perf_counter() - _tp) * 1000),
-            )
-        return PostprocessorResult(
-            graph=graph,
-            queue_wait_ms=queue_wait_ms,
-            postprocessors_ms=int((time.perf_counter() - _t_start) * 1000),
-        )
-
-    def _build_pp_context(
-        self,
-        url: str,
-        response: WebPageScrapeResponse,
-        existing_web_page_id: str | None,
-    ) -> PostprocessorContext:
-        dataset_uri = str(getattr(self.context.account, "dataset_uri", "")).rstrip("/")
-        ids = IdAllocator(dataset_uri) if dataset_uri else None
-        profile_payload = asdict(self.profile)
-        profile_settings = dict(profile_payload.get("settings", {}) or {})
-        profile_settings.setdefault("api_url", "https://api.wordlift.io")
-        profile_payload["settings"] = profile_settings
-        return PostprocessorContext(
-            profile_name=self.profile.name,
-            profile=profile_payload,
-            url=url,
-            account=self.context.account,
-            account_key=self._resolve_postprocessor_account_key(),
-            exports=self._template_exports or {},
-            response=response,
-            existing_web_page_id=existing_web_page_id,
-            ids=ids,
-        )
-
-    def _resolve_postprocessor_account_key(self) -> str | None:
-        profile_key = self._clean_key(self.profile.api_key)
-        if profile_key:
-            return profile_key
-
-        client_config = getattr(self.context, "client_configuration", None)
-        if client_config is not None:
-            api_key_map = getattr(client_config, "api_key", None)
-            if isinstance(api_key_map, dict):
-                runtime_key = self._clean_key(api_key_map.get("ApiKey"))
-                if runtime_key:
-                    return runtime_key
-
-        provider = getattr(self.context, "configuration_provider", None)
-        if provider is not None:
-            for name in ("WORDLIFT_KEY", "WORDLIFT_API_KEY"):
-                try:
-                    key = self._clean_key(provider.get_value(name))
-                except Exception:
-                    key = None
-                if key:
-                    return key
-
-        for name in ("WORDLIFT_KEY", "WORDLIFT_API_KEY"):
-            key = self._clean_key(os.getenv(name))
-            if key:
-                return key
-
-        return None
-
-    @staticmethod
-    def _clean_key(value: Any) -> str | None:
-        if value is None:
-            return None
-        key = str(value).strip()
-        return key or None
 
     def _write_debug_graph(self, graph: Graph, url: str) -> None:
         assert self.debug_dir is not None
