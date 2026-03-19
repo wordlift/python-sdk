@@ -366,13 +366,7 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
                 outcome.warning_count,
                 outcome.error_count,
             )
-            self._kpi.record_validation(
-                passed=outcome.passed,
-                warning_count=outcome.warning_count,
-                error_count=outcome.error_count,
-                warning_sources=outcome.warning_sources,
-                error_sources=outcome.error_sources,
-            )
+            self._kpi.record_validation(outcome)
         self._kpi.record_graph(pp_result.graph)
         self._emit_progress(
             {
@@ -528,13 +522,7 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
                         outcome.warning_count,
                         outcome.error_count,
                     )
-                    self._kpi.record_validation(
-                        passed=outcome.passed,
-                        warning_count=outcome.warning_count,
-                        error_count=outcome.error_count,
-                        warning_sources=outcome.warning_sources,
-                        error_sources=outcome.error_sources,
-                    )
+                    self._kpi.record_validation(outcome)
                 self._emit_progress(
                     {
                         "kind": "static_templates",

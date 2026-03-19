@@ -6,6 +6,8 @@ from datetime import datetime, timezone
 
 from rdflib import Graph, RDF, URIRef
 
+from wordlift_sdk.validation.shacl_validation_service import ValidationOutcome
+
 
 @dataclass
 class KgBuildKpiCollector:
@@ -98,26 +100,18 @@ class KgBuildKpiCollector:
             self._property_assertions_total += 1
             self._properties_by_predicate[str(predicate)] += 1
 
-    def record_validation(
-        self,
-        *,
-        passed: bool,
-        warning_count: int,
-        error_count: int,
-        warning_sources: dict[str, int] | Counter[str] | None = None,
-        error_sources: dict[str, int] | Counter[str] | None = None,
-    ) -> None:
+    def record_validation(self, outcome: ValidationOutcome) -> None:
         self._validation_total += 1
-        if passed:
+        if outcome.passed:
             self._validation_pass += 1
         else:
             self._validation_fail += 1
-        self._warning_count += warning_count
-        self._error_count += error_count
-        if warning_sources:
-            self._warning_sources.update(warning_sources)
-        if error_sources:
-            self._error_sources.update(error_sources)
+        self._warning_count += outcome.warning_count
+        self._error_count += outcome.error_count
+        if outcome.warning_sources:
+            self._warning_sources.update(outcome.warning_sources)
+        if outcome.error_sources:
+            self._error_sources.update(outcome.error_sources)
 
     def summary(self, profile_name: str) -> dict[str, object]:
         entities_by_type = {
