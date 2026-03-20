@@ -41,7 +41,6 @@ SLICE_TESTS: dict[str, list[str]] = {
         "tests/ingestion",
         "tests/test_google_sheets_url_provider.py",
         "tests/test_list_url_provider.py",
-        "tests/test_ingestion_source_bridge.py",
         "tests/url_provider/test_sitemap_url_provider.py",
     ],
     "structured-data": [
