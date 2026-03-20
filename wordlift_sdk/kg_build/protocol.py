@@ -24,6 +24,7 @@ from wordlift_sdk.validation.shacl_validation_service import (
     ValidationOutcome,
 )
 
+from .cloud_flow import run_cloud_workflow as run_cloud_workflow  # noqa: F401
 from .config import ProfileDefinition
 from .entity_patcher import EntityPatcher
 from .kpi import KgBuildKpiCollector

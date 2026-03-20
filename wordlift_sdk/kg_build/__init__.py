@@ -59,7 +59,7 @@ _EXPORTS: dict[str, tuple[str, str]] = {
         "wordlift_sdk.kg_build.cloud_flow",
         "get_debug_output_dir",
     ),
-    "run_cloud_workflow": ("wordlift_sdk.kg_build.cloud_flow", "run_cloud_workflow"),
+    "run_cloud_workflow": ("wordlift_sdk.kg_build.protocol", "run_cloud_workflow"),
     "KgBuildApplicationContainer": (
         "wordlift_sdk.kg_build.container",
         "KgBuildApplicationContainer",
