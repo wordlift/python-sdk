@@ -81,6 +81,7 @@ workflow = [
     "pandas",
     "playwright",
     "pydantic-core",
+    "python-liquid",
     "rdflib",
     "tqdm",
 ]
