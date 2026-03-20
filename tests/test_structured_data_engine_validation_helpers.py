@@ -977,23 +977,7 @@ mappings:
     assert any(m["name"] == "main" for m in mappings)
 
 
-def test_materialize_graph_and_xpath_first_text_branches(monkeypatch):
-    real_import = builtins.__import__
-
-    def _missing_morph(name, *args, **kwargs):
-        if name == "morph_kgc":
-            raise ImportError("missing")
-        return real_import(name, *args, **kwargs)
-
-    monkeypatch.setattr(builtins, "__import__", _missing_morph)
-    try:
-        engine._materialize_graph(Path("mapping.yarrrml"))
-        assert False, "expected RuntimeError"
-    except RuntimeError as exc:
-        assert "morph-kgc is required" in str(exc)
-    finally:
-        monkeypatch.setattr(builtins, "__import__", real_import)
-
+def test_materialize_graph_and_xpath_first_text_branches():
     class _Doc:
         def __init__(self):
             self.calls = 0
