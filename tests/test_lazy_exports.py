@@ -12,24 +12,50 @@ def _drop_modules(prefix: str) -> None:
             sys.modules.pop(name, None)
 
 
-def test_root_package_import_is_lazy():
+def test_root_package_import_is_lazy(monkeypatch: pytest.MonkeyPatch):
     _drop_modules("wordlift_sdk")
 
     package = importlib.import_module("wordlift_sdk")
 
     assert "wordlift_sdk.main" not in sys.modules
 
+    import types
+
+    stub_main = types.ModuleType("wordlift_sdk.main")
+    stub_main.run_kg_import_workflow = object()  # type: ignore[attr-defined]
+
+    def fake_import_module(name: str):
+        if name == "wordlift_sdk.main":
+            sys.modules["wordlift_sdk.main"] = stub_main
+            return stub_main
+        return importlib.import_module(name)
+
+    monkeypatch.setattr("wordlift_sdk._lazy_exports.import_module", fake_import_module)
+
     package.run_kg_import_workflow
 
     assert "wordlift_sdk.main" in sys.modules
 
 
-def test_feature_package_import_is_lazy():
+def test_feature_package_import_is_lazy(monkeypatch: pytest.MonkeyPatch):
     _drop_modules("wordlift_sdk.render")
 
     package = importlib.import_module("wordlift_sdk.render")
 
     assert "wordlift_sdk.render.html_renderer" not in sys.modules
+
+    import types
+
+    stub_renderer = types.ModuleType("wordlift_sdk.render.html_renderer")
+    stub_renderer.HtmlRenderer = object()  # type: ignore[attr-defined]
+
+    def fake_import_module(name: str):
+        if name == "wordlift_sdk.render.html_renderer":
+            sys.modules["wordlift_sdk.render.html_renderer"] = stub_renderer
+            return stub_renderer
+        return importlib.import_module(name)
+
+    monkeypatch.setattr("wordlift_sdk._lazy_exports.import_module", fake_import_module)
 
     package.HtmlRenderer
 
