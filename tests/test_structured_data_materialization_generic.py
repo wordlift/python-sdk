@@ -577,12 +577,17 @@ def test_unsupported_xpath_or_function_raises_actionable_error(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    fake_morph = types.SimpleNamespace(
-        materialize=lambda _cfg: (_ for _ in ()).throw(
-            ValueError("XPathEvalError: Unsupported function local-namez()")
-        )
-    )
-    monkeypatch.setitem(sys.modules, "morph_kgc", fake_morph)
+    import wordlift_sdk.structured_data.engine as _engine
+
+    class _FakeFuture:
+        def result(self):
+            raise ValueError("XPathEvalError: Unsupported function local-namez()")
+
+    class _FakePool:
+        def submit(self, fn, *args, **kwargs):
+            return _FakeFuture()
+
+    monkeypatch.setattr(_engine, "_get_morph_kgc_pool", lambda: _FakePool())
 
     mapping = """
 prefixes:
