@@ -64,13 +64,16 @@ _EXPORTS: dict[str, tuple[str, str]] = {
         "wordlift_sdk.kg_build.container",
         "KgBuildApplicationContainer",
     ),
-    "IdAllocator": ("wordlift_sdk.kg_build.id_allocator", "IdAllocator"),
+    "IdAllocator": (
+        "wordlift_sdk.kg_build.postprocessors.processors.id_allocator",
+        "IdAllocator",
+    ),
     "CanonicalIdGenerator": (
-        "wordlift_sdk.kg_build.id_generator",
+        "wordlift_sdk.kg_build.postprocessors.processors.id_generator",
         "CanonicalIdGenerator",
     ),
     "CanonicalIdsPostprocessor": (
-        "wordlift_sdk.kg_build.id_postprocessor",
+        "wordlift_sdk.kg_build.postprocessors.processors.id_postprocessor",
         "CanonicalIdsPostprocessor",
     ),
     "IriLookup": ("wordlift_sdk.kg_build.iri_lookup", "IriLookup"),
