@@ -21,12 +21,12 @@ __all__ = [
 
 
 _EXPORTS = {
-    "CreateRequest": ("wordlift_sdk.structured_data.models", "CreateRequest"),
+    "CreateRequest": ("wordlift_sdk.structured_data.orchestrator", "CreateRequest"),
     "CreateWorkflow": (
         "wordlift_sdk.structured_data.orchestrator",
         "CreateWorkflow",
     ),
-    "GenerateRequest": ("wordlift_sdk.structured_data.models", "GenerateRequest"),
+    "GenerateRequest": ("wordlift_sdk.structured_data.orchestrator", "GenerateRequest"),
     "GenerateWorkflow": (
         "wordlift_sdk.structured_data.orchestrator",
         "GenerateWorkflow",
