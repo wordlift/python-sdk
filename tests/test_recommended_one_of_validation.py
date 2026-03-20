@@ -1,23 +1,8 @@
-import importlib.util
 import json
-import sys
 from pathlib import Path
-
-import pytest
 
 from wordlift_sdk.validation import shacl
 from wordlift_sdk.validation.shacl import extract_validation_issues
-
-
-def _load_real_validate(monkeypatch: pytest.MonkeyPatch):
-    if "pyshacl" in sys.modules:
-        monkeypatch.delitem(sys.modules, "pyshacl", raising=False)
-    spec = importlib.util.find_spec("pyshacl")
-    if spec is None or spec.loader is None:
-        raise RuntimeError("pyshacl is required for this test.")
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module.validate
 
 
 def _write_jsonld(tmp_path: Path, name: str, payload: dict) -> Path:
@@ -31,10 +16,8 @@ def _messages_for(result) -> list[str]:
 
 
 def test_dataset_recommended_either_or_is_warning_only(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path,
 ) -> None:
-    monkeypatch.setattr(shacl, "validate", _load_real_validate(monkeypatch))
-
     missing_payload = {
         "@context": {"@vocab": "http://schema.org/"},
         "@type": "Dataset",
@@ -74,10 +57,8 @@ def test_dataset_recommended_either_or_is_warning_only(
 
 
 def test_offer_shipping_details_recommended_either_or_is_warning_only(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path,
 ) -> None:
-    monkeypatch.setattr(shacl, "validate", _load_real_validate(monkeypatch))
-
     missing_payload = {
         "@context": {"@vocab": "http://schema.org/"},
         "@type": "OfferShippingDetails",
@@ -116,10 +97,8 @@ def test_offer_shipping_details_recommended_either_or_is_warning_only(
 
 
 def test_product_offer_price_currency_recommended_either_or_is_warning_only(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path,
 ) -> None:
-    monkeypatch.setattr(shacl, "validate", _load_real_validate(monkeypatch))
-
     missing_payload = {
         "@context": {"@vocab": "http://schema.org/"},
         "@type": "Product",

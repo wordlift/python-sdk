@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-from importlib import import_module
-from typing import Any
-
+from .._lazy_exports import resolve_attr
 
 __all__ = [
     "ProfileConfig",
@@ -142,12 +140,10 @@ _EXPORTS: dict[str, tuple[str, str]] = {
 }
 
 
-def __getattr__(name: str) -> Any:
-    target = _EXPORTS.get(name)
-    if target is None:
-        raise AttributeError(
-            f"module 'wordlift_sdk.kg_build' has no attribute '{name}'"
-        )
-    module_name, attr_name = target
-    module = import_module(module_name)
-    return getattr(module, attr_name)
+def __getattr__(name: str):
+    return resolve_attr(
+        name=name,
+        module_name="wordlift_sdk.kg_build",
+        exports=_EXPORTS,
+        extra="kg-build",
+    )

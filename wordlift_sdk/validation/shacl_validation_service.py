@@ -10,11 +10,10 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
-from pyshacl import validate as pyshacl_validate
 from rdflib import Graph
 from rdflib.namespace import SH
 
-from wordlift_sdk.validation.shacl import load_shapes_graph, normalize_schema_org_uris
+from wordlift_sdk.validation.shacl import PreparedShaclValidator
 
 logger = logging.getLogger(__name__)
 
@@ -29,13 +28,12 @@ class ValidationMode(str, Enum):
 
 # Module-level worker state — one copy per subprocess, initialised by _init_worker.
 # Must be module-level for picklability by ProcessPoolExecutor.
-_worker_shapes_graph: Graph | None = None
-_worker_source_map: dict = {}
+_worker_validator: PreparedShaclValidator | None = None
 
 
 def _init_worker(shape_specs: list[str] | None) -> None:
-    global _worker_shapes_graph, _worker_source_map
-    _worker_shapes_graph, _worker_source_map = load_shapes_graph(shape_specs)
+    global _worker_validator
+    _worker_validator = PreparedShaclValidator.from_shape_specs(shape_specs)
 
 
 def _validate_in_worker(ntriples: str, submit_time: float) -> dict:
@@ -44,30 +42,23 @@ def _validate_in_worker(ntriples: str, submit_time: float) -> dict:
 
     data_graph = Graph()
     data_graph.parse(data=ntriples, format="nt")
-    data_graph = normalize_schema_org_uris(data_graph)
 
-    conforms, report_graph, _ = pyshacl_validate(
-        data_graph,
-        shacl_graph=_worker_shapes_graph,
-        inference="rdfs",
-        abort_on_first=False,
-        allow_infos=True,
-        allow_warnings=True,
-    )
+    result = _worker_validator.validate_graph(data_graph)
+    source_map = _worker_validator.prepared_shapes.shape_source_map
 
     warning_sources: dict[str, int] = {}
     error_sources: dict[str, int] = {}
-    for node in report_graph.subjects(SH.resultSeverity, SH.Warning):
-        shape = next(report_graph.objects(node, SH.sourceShape), None)
-        label = _worker_source_map.get(shape, "unknown")
+    for node in result.report_graph.subjects(SH.resultSeverity, SH.Warning):
+        shape = next(result.report_graph.objects(node, SH.sourceShape), None)
+        label = source_map.get(shape, "unknown")
         warning_sources[str(label)] = warning_sources.get(str(label), 0) + 1
-    for node in report_graph.subjects(SH.resultSeverity, SH.Violation):
-        shape = next(report_graph.objects(node, SH.sourceShape), None)
-        label = _worker_source_map.get(shape, "unknown")
+    for node in result.report_graph.subjects(SH.resultSeverity, SH.Violation):
+        shape = next(result.report_graph.objects(node, SH.sourceShape), None)
+        label = source_map.get(shape, "unknown")
         error_sources[str(label)] = error_sources.get(str(label), 0) + 1
 
     return {
-        "passed": bool(conforms),
+        "passed": bool(result.conforms),
         "warning_sources": dict(sorted(warning_sources.items())),
         "error_sources": dict(sorted(error_sources.items())),
         "queue_wait_ms": queue_wait_ms,

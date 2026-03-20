@@ -52,15 +52,16 @@ if "wordlift_client" not in sys.modules:
         sys.modules.setdefault("wordlift_client.models", _models_module)
         sys.modules.setdefault("wordlift_client.models.ask_request", _ask_module)
 
-_pyshacl = types.ModuleType("pyshacl")
+try:
+    import pyshacl as _pyshacl_real  # noqa: F401
+except ImportError:
+    _pyshacl = types.ModuleType("pyshacl")
 
+    def _stub_validate(*_args, **_kwargs):
+        return None, None, None
 
-def _stub_validate(*_args, **_kwargs):
-    return None, None, None
-
-
-_pyshacl.validate = _stub_validate
-sys.modules.setdefault("pyshacl", _pyshacl)
+    _pyshacl.validate = _stub_validate
+    sys.modules["pyshacl"] = _pyshacl
 
 from wordlift_sdk.structured_data import (  # noqa: E402
     CreateRequest,

@@ -17,6 +17,9 @@ __all__ = [
     "prepare_shapes",
     "validate_file",
     "validate_jsonld_from_url",
+    "ShaclValidationService",
+    "ValidationMode",
+    "ValidationOutcome",
 ]
 
 
@@ -50,6 +53,18 @@ _EXPORTS = {
     "validate_jsonld_from_url": (
         "wordlift_sdk.validation.shacl",
         "validate_jsonld_from_url",
+    ),
+    "ShaclValidationService": (
+        "wordlift_sdk.validation.shacl_validation_service",
+        "ShaclValidationService",
+    ),
+    "ValidationMode": (
+        "wordlift_sdk.validation.shacl_validation_service",
+        "ValidationMode",
+    ),
+    "ValidationOutcome": (
+        "wordlift_sdk.validation.shacl_validation_service",
+        "ValidationOutcome",
     ),
 }
 
