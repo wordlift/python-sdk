@@ -15,7 +15,7 @@ from wordlift_sdk.graph.audit.kpis.schema_compliance import (
     _find_webpage_urls,
 )
 from wordlift_sdk.validation.shacl import (
-    normalize_schema_org_uris,
+    _normalize_schema_org_uris as normalize_schema_org_uris,  # type: ignore[attr-defined]
 )
 
 _SCHEMA_ORG_PREFIXES = ("http://schema.org/", "https://schema.org/")

@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
+import wordlift_sdk.workflow.url_handler.ingestion_web_page_scrape_url_handler as _handler_mod
 from wordlift_sdk.ingestion.errors import LoaderRuntimeError
 from wordlift_sdk.ingestion.loaders import PlaywrightLoaderAdapter
 from wordlift_sdk.url_source import Url
@@ -37,7 +38,8 @@ async def test_ingestion_bridge_handler_calls_callback(
     )
 
     monkeypatch.setattr(
-        "wordlift_sdk.workflow.url_handler.ingestion_web_page_scrape_url_handler.run_ingestion",
+        _handler_mod,
+        "run_ingestion",
         lambda settings: SimpleNamespace(
             pages=[
                 SimpleNamespace(
@@ -88,7 +90,8 @@ async def test_ingestion_bridge_handler_raises_on_failed_ingestion(
     )
 
     monkeypatch.setattr(
-        "wordlift_sdk.workflow.url_handler.ingestion_web_page_scrape_url_handler.run_ingestion",
+        _handler_mod,
+        "run_ingestion",
         lambda settings: SimpleNamespace(
             pages=[],
             events=[
@@ -124,7 +127,8 @@ async def test_ingestion_bridge_handler_raises_and_skips_callback_on_http_404(
     )
 
     monkeypatch.setattr(
-        "wordlift_sdk.workflow.url_handler.ingestion_web_page_scrape_url_handler.run_ingestion",
+        _handler_mod,
+        "run_ingestion",
         lambda settings: SimpleNamespace(
             pages=[
                 SimpleNamespace(
@@ -164,7 +168,8 @@ async def test_ingestion_bridge_handler_raises_and_skips_callback_on_http_500(
     )
 
     monkeypatch.setattr(
-        "wordlift_sdk.workflow.url_handler.ingestion_web_page_scrape_url_handler.run_ingestion",
+        _handler_mod,
+        "run_ingestion",
         lambda settings: SimpleNamespace(
             pages=[
                 SimpleNamespace(
@@ -205,7 +210,8 @@ async def test_ingestion_bridge_handler_surfaces_failed_meta_diagnostics(
     caplog.set_level("ERROR")
 
     monkeypatch.setattr(
-        "wordlift_sdk.workflow.url_handler.ingestion_web_page_scrape_url_handler.run_ingestion",
+        _handler_mod,
+        "run_ingestion",
         lambda settings: SimpleNamespace(
             pages=[],
             events=[
@@ -265,7 +271,8 @@ async def test_ingestion_bridge_handler_meta_fallback_keeps_old_message(
     )
 
     monkeypatch.setattr(
-        "wordlift_sdk.workflow.url_handler.ingestion_web_page_scrape_url_handler.run_ingestion",
+        _handler_mod,
+        "run_ingestion",
         lambda settings: SimpleNamespace(
             pages=[],
             events=[
@@ -306,7 +313,8 @@ async def test_ingestion_bridge_handler_truncates_diagnostics_payload(
 
     long_message = "token=abc123 " + ("x" * 10000)
     monkeypatch.setattr(
-        "wordlift_sdk.workflow.url_handler.ingestion_web_page_scrape_url_handler.run_ingestion",
+        _handler_mod,
+        "run_ingestion",
         lambda settings: SimpleNamespace(
             pages=[],
             events=[

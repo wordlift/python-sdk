@@ -36,8 +36,8 @@ _EXPORTS = {
         "create_entity_patch_request",
     ),
     "create_delayed": ("wordlift_sdk.utils.delayed", "create_delayed"),
-    "get_me": ("wordlift_sdk.utils.get_me", "get_me"),
-    "reset_me": ("wordlift_sdk.utils.reset_me", "reset_me"),
+    "get_me": ("wordlift_sdk.utils._get_me", "get_me"),
+    "reset_me": ("wordlift_sdk.utils._reset_me", "reset_me"),
     "HtmlConverter": ("wordlift_sdk.utils.html_converter", "HtmlConverter"),
     "AutoConcurrencyController": (
         "wordlift_sdk.utils.auto_concurrency",

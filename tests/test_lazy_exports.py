@@ -6,8 +6,22 @@ import sys
 import pytest
 
 
+# Modules that own ProcessPoolExecutors must not be evicted — dropping them
+# causes function-identity mismatches when the pool tries to pickle workers.
+_PRESERVE_MODULES = frozenset(
+    [
+        "wordlift_sdk.structured_data.engine",
+        "wordlift_sdk.validation.shacl_validation_service",
+        "wordlift_sdk.workflow.url_handler.ingestion_web_page_scrape_url_handler",
+        "wordlift_sdk.workflow.url_handler.web_page_scrape_url_handler",
+    ]
+)
+
+
 def _drop_modules(prefix: str) -> None:
     for name in list(sys.modules):
+        if name in _PRESERVE_MODULES:
+            continue
         if name == prefix or name.startswith(f"{prefix}."):
             sys.modules.pop(name, None)
 
