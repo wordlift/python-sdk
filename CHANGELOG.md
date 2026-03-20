@@ -1,5 +1,40 @@
 # Changelog
 
+## 8.0.0 - 2026-03-20
+
+### Breaking
+
+- `kg_build` postprocessor subprocess entry points renamed:
+  - `runner.py` → `oneshot.py`
+  - `worker.py` → `persistent.py`
+- `SubprocessPostprocessor` split into `OneshotPostprocessor` and `PersistentPostprocessor`; any host code referencing the old class name must be updated.
+- `PostprocessorService` is now profile-agnostic; profile resolution no longer happens inside the service.
+- `utils.get_me` / `utils.reset_me` module files renamed to `_get_me.py` / `_reset_me.py`; direct submodule imports (not recommended) must be updated.
+
+### Added
+
+- `ShaclValidationService` — runs SHACL validation in a dedicated process pool via `PreparedShaclValidator`, wired into `ProfileImportProtocol`.
+- Separate pool-size settings for postprocessors and SHACL validation.
+- In-process postprocessor runtime (`inprocess`) for single-process execution.
+- SHACL process-pool queue-wait and execution-time tracking in timing logs.
+- `morph_kgc` subprocess pool for true RML-mapping parallelism, bypassing `pyparsing` lock contention and the GIL.
+  - Configurable pool size via `morph_kgc_pool_size` / `MORPH_KGC_POOL_SIZE`.
+  - Subprocess queue-wait tracked separately in timing logs.
+- `PostprocessorResult` dataclass — replaces implicit tuple return from postprocessing stage.
+- `ImportAnnotationPostprocessor` and `RootIdReconcilerPostprocessor` extracted as named processors.
+- `first_level_subjects` graph utility helper.
+- Slice verification tooling extended with `run_slice_smoke_imports.py` and `run_slice_tests.py`.
+
+### Changed
+
+- Postprocessors reorganised into `postprocessors/` subpackage (`processors/`, `PostprocessorService`, loader helpers).
+- `ProfileImportProtocol.__init__` decomposed into focused `_init_*` factory methods; class surface significantly reduced.
+- `morph_kgc` RML mapping stage runs in subprocess pool instead of a thread executor.
+- SHACL validation and postprocessors offloaded to dedicated thread/process pools; ingestion runs in an executor to avoid blocking the event loop.
+- Persistent `ApiClient` reused across requests instead of one per graph; `ApiClient` is closed on protocol shutdown.
+- Lazy-export guards remapped to modules with real third-party dependencies so `ModuleNotFoundError` fires correctly when an extra is absent.
+- `python-liquid` added to the `workflow` extra (required by `graph.ttl_liquid`).
+
 ## 7.0.0 - 2026-03-15
 
 ### Breaking
