@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import asyncio
 import importlib
+import sys
+import types
 from datetime import datetime, timedelta
 from types import SimpleNamespace
 
@@ -15,6 +17,8 @@ from wordlift_sdk.google_search_console.create_google_search_console_data_import
 from wordlift_sdk.google_search_console.raise_error_if_account_analytics_not_configured import (
     raise_error_if_account_analytics_not_configured,
 )
+
+_ENTITIES_MOD = "wordlift_sdk.deprecated.create_entities_with_top_query_dataframe"
 
 gsc_import_mod = importlib.import_module(
     "wordlift_sdk.google_search_console.create_google_search_console_data_import"
@@ -43,9 +47,9 @@ async def test_create_google_search_console_data_import_only_imports_stale_rows(
     async def _fake_entities_df(key, url_list):
         return source_df
 
-    monkeypatch.setattr(
-        gsc_import_mod, "create_entities_with_top_query_dataframe", _fake_entities_df
-    )
+    stub = types.ModuleType(_ENTITIES_MOD)
+    stub.create_entities_with_top_query_dataframe = _fake_entities_df  # type: ignore[attr-defined]
+    monkeypatch.setitem(sys.modules, _ENTITIES_MOD, stub)
 
     called_urls: list[str] = []
 
@@ -100,9 +104,9 @@ async def test_create_google_search_console_data_import_skips_when_no_stale(
     async def _fake_entities_df(key, url_list):
         return source_df
 
-    monkeypatch.setattr(
-        gsc_import_mod, "create_entities_with_top_query_dataframe", _fake_entities_df
-    )
+    stub = types.ModuleType(_ENTITIES_MOD)
+    stub.create_entities_with_top_query_dataframe = _fake_entities_df  # type: ignore[attr-defined]
+    monkeypatch.setitem(sys.modules, _ENTITIES_MOD, stub)
 
     calls: dict[str, int] = {"gather": 0}
 

@@ -9,7 +9,6 @@ from tqdm.asyncio import tqdm
 from twisted.mail.scripts.mailmail import Configuration
 from wordlift_client import AnalyticsImportRequest
 
-from ..deprecated import create_entities_with_top_query_dataframe
 from ..utils import create_delayed
 
 logger = logging.getLogger(__name__)
@@ -19,6 +18,8 @@ async def create_google_search_console_data_import(
     configuration: Configuration, key: str, url_list: list[str]
 ) -> None:
     # Get the entities data with the top query.
+    from ..deprecated import create_entities_with_top_query_dataframe
+
     entities_with_top_query_df = await create_entities_with_top_query_dataframe(
         key=key, url_list=url_list
     )
