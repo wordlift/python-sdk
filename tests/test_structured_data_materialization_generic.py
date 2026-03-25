@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import sys
 import types
 import xml.etree.ElementTree as ET
@@ -606,6 +607,90 @@ mappings:
             xhtml_path=tmp_path / "page.xhtml",
             workdir=tmp_path / "work",
         )
+
+
+def _run_materialization_with_fake_morph_logging(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    *,
+    root_level: int,
+) -> str:
+    capture: dict[str, str] = {}
+    mapping_partitioner_logger = logging.getLogger("mapping_partitioner")
+    previous_root_level = logging.getLogger().level
+    previous_mapping_partitioner_level = mapping_partitioner_logger.level
+
+    class _FakeFuture:
+        def __init__(self, config: str) -> None:
+            self._config = config
+
+        def result(self):
+            capture["config"] = self._config
+            if "logging_level = INFO" in self._config:
+                mapping_partitioner_logger.info("INFO | mapping_partitioner")
+            return engine_module.Graph().serialize(format="nt"), 0
+
+    class _FakePool:
+        def submit(self, _fn, config: str, _submit_time: float):
+            return _FakeFuture(config)
+
+    monkeypatch.setattr(engine_module, "_get_morph_kgc_pool", lambda: _FakePool())
+    logging.getLogger().setLevel(root_level)
+    mapping_partitioner_logger.setLevel(logging.NOTSET)
+
+    try:
+        materialize_yarrrml_jsonld(
+            """
+prefixes:
+  schema: 'https://schema.org/'
+mappings:
+  page:
+    sources:
+      - [__XHTML__~xpath, '/']
+    s: https://example.com/page~iri
+    po:
+      - [a, 'schema:WebPage']
+""",
+            xhtml_path=tmp_path / "page.xhtml",
+            workdir=tmp_path / "work",
+        )
+    finally:
+        logging.getLogger().setLevel(previous_root_level)
+        mapping_partitioner_logger.setLevel(previous_mapping_partitioner_level)
+
+    return capture.get("config", "")
+
+
+def test_morph_logging_level_warning_omits_mapping_partitioner_info(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    caplog.set_level(logging.INFO)
+    config = _run_materialization_with_fake_morph_logging(
+        monkeypatch,
+        tmp_path,
+        root_level=logging.WARNING,
+    )
+
+    assert "logging_level = WARNING" in config
+    assert "INFO | mapping_partitioner" not in caplog.text
+
+
+def test_morph_logging_level_info_allows_mapping_partitioner_info(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    caplog.set_level(logging.INFO)
+    config = _run_materialization_with_fake_morph_logging(
+        monkeypatch,
+        tmp_path,
+        root_level=logging.INFO,
+    )
+
+    assert "logging_level = INFO" in config
+    assert "INFO | mapping_partitioner" in caplog.text
 
 
 def test_xpath_mapping_over_xhtml_callback_input_regression(tmp_path: Path) -> None:

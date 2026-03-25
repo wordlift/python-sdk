@@ -1395,6 +1395,20 @@ def _normalize_materialization_error(error: Exception) -> RuntimeError:
     )
 
 
+def _resolve_morph_logging_level() -> str:
+    """Map effective Python logger level to morph-kgc logging_level values."""
+    level = logging.getLogger().getEffectiveLevel()
+    if level <= logging.DEBUG:
+        return "DEBUG"
+    if level <= logging.INFO:
+        return "INFO"
+    if level <= logging.WARNING:
+        return "WARNING"
+    if level <= logging.ERROR:
+        return "ERROR"
+    return "CRITICAL"
+
+
 def _materialize_graph(mapping_path: Path) -> Graph:
     config = (
         "[CONFIGURATION]\n"
@@ -1403,6 +1417,7 @@ def _materialize_graph(mapping_path: Path) -> Graph:
         # deadlocks when the parent process already has threads running (asyncio pool,
         # SHACL ProcessPoolExecutor). The outer pipeline handles concurrency.
         "number_of_processes = 1\n"
+        f"logging_level = {_resolve_morph_logging_level()}\n"
         "\n"
         "[DataSource1]\n"
         f"mappings = {mapping_path}\n"
