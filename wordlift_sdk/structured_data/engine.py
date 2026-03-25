@@ -10,6 +10,7 @@ import multiprocessing
 import os
 import re
 from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures.process import BrokenProcessPool
 from dataclasses import dataclass
 from importlib import resources
 from pathlib import Path
@@ -54,34 +55,39 @@ def _morph_kgc_worker(config: str, submit_time: float) -> tuple[str, int]:
 # layer receive the timing as a regular return value.
 _morph_kgc_tls = threading.local()
 
+logger = logging.getLogger(__name__)
+
 # Lazy process pool — created on first use in the main process only.
 # Worker subprocesses import this module but never call _get_morph_kgc_pool(),
 # so they do NOT create their own pools (no recursive process explosion).
 _morph_kgc_pool: ProcessPoolExecutor | None = None
+_morph_kgc_pool_max_workers: int = 0
+_morph_kgc_pool_lock = threading.Lock()
 
 
 def init_morph_kgc_pool(max_workers: int) -> None:
     """Pre-create the morph_kgc process pool with a specific worker count.
     Call once from the protocol __init__ before any mapping work starts.
-    Subsequent calls are no-ops (pool is only created once).
+    Subsequent calls are no-ops (pool is only created once per worker count).
     """
-    global _morph_kgc_pool
-    if _morph_kgc_pool is not None:
-        return
-    ctx = multiprocessing.get_context("spawn")
-    _morph_kgc_pool = ProcessPoolExecutor(max_workers=max_workers, mp_context=ctx)
+    global _morph_kgc_pool, _morph_kgc_pool_max_workers
+    with _morph_kgc_pool_lock:
+        _morph_kgc_pool_max_workers = max_workers
+        if _morph_kgc_pool is not None:
+            return
+        ctx = multiprocessing.get_context("spawn")
+        _morph_kgc_pool = ProcessPoolExecutor(max_workers=max_workers, mp_context=ctx)
 
 
 def _get_morph_kgc_pool() -> ProcessPoolExecutor:
-    global _morph_kgc_pool
-    if _morph_kgc_pool is None:
-        # Fallback if init_morph_kgc_pool was never called.
-        ctx = multiprocessing.get_context("spawn")
-        _morph_kgc_pool = ProcessPoolExecutor(
-            max_workers=os.cpu_count() or 4,
-            mp_context=ctx,
-        )
-    return _morph_kgc_pool
+    global _morph_kgc_pool, _morph_kgc_pool_max_workers
+    with _morph_kgc_pool_lock:
+        if _morph_kgc_pool is None:
+            # Fallback if init_morph_kgc_pool was never called, or after a reset.
+            workers = _morph_kgc_pool_max_workers or (os.cpu_count() or 4)
+            ctx = multiprocessing.get_context("spawn")
+            _morph_kgc_pool = ProcessPoolExecutor(max_workers=workers, mp_context=ctx)
+        return _morph_kgc_pool
 
 
 _SCHEMA_BASE = "https://schema.org"
@@ -1422,25 +1428,40 @@ def _materialize_graph(mapping_path: Path) -> Graph:
         "[DataSource1]\n"
         f"mappings = {mapping_path}\n"
     )
-    try:
-        # Submit to subprocess pool — each worker has isolated pyparsing state,
-        # so calls are genuinely parallel across CPU cores with no lock needed.
-        # .result() blocks the calling thread (not the asyncio event loop).
-        ntriples, queue_wait_ms = (
-            _get_morph_kgc_pool()
-            .submit(_morph_kgc_worker, config, _time.time())
-            .result()
-        )
-        # Store wait time in thread-local so protocol.py can read it without
-        # changing the return type of this function.
-        _morph_kgc_tls.mapping_wait_ms = queue_wait_ms
-        graph = Graph()
-        graph.parse(data=ntriples, format="nt")
-        return graph
-    except RuntimeError:
-        raise
-    except Exception as exc:
-        raise _normalize_materialization_error(exc) from exc
+    for attempt in range(2):
+        pool = _get_morph_kgc_pool()
+        try:
+            # Submit to subprocess pool — each worker has isolated pyparsing state,
+            # so calls are genuinely parallel across CPU cores with no lock needed.
+            # .result() blocks the calling thread (not the asyncio event loop).
+            ntriples, queue_wait_ms = pool.submit(
+                _morph_kgc_worker, config, _time.time()
+            ).result()
+            # Store wait time in thread-local so protocol.py can read it without
+            # changing the return type of this function.
+            _morph_kgc_tls.mapping_wait_ms = queue_wait_ms
+            graph = Graph()
+            graph.parse(data=ntriples, format="nt")
+            return graph
+        except BrokenProcessPool:
+            logger.warning(
+                "morph-kgc process pool broken (attempt %d/2), recreating.",
+                attempt + 1,
+            )
+            global _morph_kgc_pool
+            with _morph_kgc_pool_lock:
+                # Only reset if this is still the same broken pool instance,
+                # preventing a race where multiple threads all try to reset it.
+                if _morph_kgc_pool is pool:
+                    _morph_kgc_pool = None
+            if attempt >= 1:
+                raise _normalize_materialization_error(
+                    RuntimeError("morph-kgc process pool broke twice in a row")
+                ) from None
+        except RuntimeError:
+            raise
+        except Exception as exc:
+            raise _normalize_materialization_error(exc) from exc
 
 
 def materialize_yarrrml(
