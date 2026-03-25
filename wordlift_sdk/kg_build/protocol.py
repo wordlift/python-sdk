@@ -277,7 +277,7 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         # the asyncio event loop. The thread itself blocks on the morph_kgc
         # ProcessPoolExecutor slot, leaving the event loop free for I/O.
         self._mapping_executor = ThreadPoolExecutor(
-            max_workers=pool_size, thread_name_prefix="worai_ml"
+            max_workers=mapping_pool_size, thread_name_prefix="worai_ml"
         )
 
     def _init_shacl_validator(self, settings: dict, pool_size: int) -> None:
