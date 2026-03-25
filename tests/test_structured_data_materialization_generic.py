@@ -854,3 +854,155 @@ mappings:
     payload = str(jsonld)
     assert "__ID__" not in payload
     assert runtime_id in payload
+
+
+# ---------------------------------------------------------------------------
+# morph-kgc process pool: BrokenProcessPool recovery and pool sizing
+# ---------------------------------------------------------------------------
+
+
+def _make_ntriples_pool(ntriples: str):
+    """Return a fake pool whose submit() returns (ntriples, 0)."""
+
+    class _Future:
+        def result(self):
+            return ntriples, 0
+
+    class _Pool:
+        def submit(self, fn, *args, **kwargs):
+            return _Future()
+
+    return _Pool()
+
+
+def _make_broken_pool():
+    """Return a fake pool whose submit() raises BrokenProcessPool."""
+    from concurrent.futures.process import BrokenProcessPool
+
+    class _Future:
+        def result(self):
+            raise BrokenProcessPool("simulated crash")
+
+    class _Pool:
+        def submit(self, fn, *args, **kwargs):
+            return _Future()
+
+    return _Pool()
+
+
+def test_broken_process_pool_retries_and_recovers(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """First call raises BrokenProcessPool; second succeeds with a fresh pool."""
+    import wordlift_sdk.structured_data.engine as _engine
+    from rdflib import Graph
+
+    xhtml_path = tmp_path / "page.xhtml"
+    xhtml_path.write_text("<html><head></head><body></body></html>")
+
+    good_graph = Graph()
+    ntriples = good_graph.serialize(format="nt")
+
+    broken = _make_broken_pool()
+    good = _make_ntriples_pool(ntriples)
+    pools = iter([broken, good])
+
+    monkeypatch.setattr(_engine, "_morph_kgc_pool", None)
+    monkeypatch.setattr(_engine, "_morph_kgc_pool_max_workers", 0)
+    monkeypatch.setattr(_engine, "_get_morph_kgc_pool", lambda: next(pools))
+
+    mapping = """
+prefixes:
+  schema: 'https://schema.org/'
+mappings:
+  page:
+    sources:
+      - [__XHTML__~xpath, '/']
+    s: https://example.com/page~iri
+    po:
+      - [a, 'schema:WebPage']
+"""
+    from wordlift_sdk.structured_data.engine import materialize_yarrrml_jsonld
+
+    result = materialize_yarrrml_jsonld(
+        mapping,
+        xhtml_path=xhtml_path,
+        workdir=tmp_path / "work",
+    )
+    assert isinstance(result, (dict, list))
+
+
+def test_broken_process_pool_twice_raises(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Two consecutive BrokenProcessPool errors must raise RuntimeError."""
+    import wordlift_sdk.structured_data.engine as _engine
+
+    xhtml_path = tmp_path / "page.xhtml"
+    xhtml_path.write_text("<html><head></head><body></body></html>")
+
+    pools = iter([_make_broken_pool(), _make_broken_pool()])
+
+    monkeypatch.setattr(_engine, "_morph_kgc_pool", None)
+    monkeypatch.setattr(_engine, "_morph_kgc_pool_max_workers", 0)
+    monkeypatch.setattr(_engine, "_get_morph_kgc_pool", lambda: next(pools))
+
+    mapping = """
+prefixes:
+  schema: 'https://schema.org/'
+mappings:
+  page:
+    sources:
+      - [__XHTML__~xpath, '/']
+    s: https://example.com/page~iri
+"""
+    from wordlift_sdk.structured_data.engine import materialize_yarrrml_jsonld
+
+    with pytest.raises(RuntimeError, match="broke twice"):
+        materialize_yarrrml_jsonld(
+            mapping,
+            xhtml_path=xhtml_path,
+            workdir=tmp_path / "work",
+        )
+
+
+def test_init_morph_kgc_pool_is_noop_when_pool_exists(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """init_morph_kgc_pool must not replace an already-existing pool."""
+    import wordlift_sdk.structured_data.engine as _engine
+
+    sentinel = object()
+    monkeypatch.setattr(_engine, "_morph_kgc_pool", sentinel)
+    monkeypatch.setattr(_engine, "_morph_kgc_pool_max_workers", 2)
+
+    _engine.init_morph_kgc_pool(8)
+
+    assert _engine._morph_kgc_pool is sentinel
+
+
+def test_get_morph_kgc_pool_reuses_max_workers_after_reset(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """After a pool reset, _get_morph_kgc_pool recreates with the stored worker count."""
+    import wordlift_sdk.structured_data.engine as _engine
+
+    created_with: list[int] = []
+
+    class _FakePool:
+        def __init__(self, max_workers: int, **_kwargs):
+            created_with.append(max_workers)
+
+    monkeypatch.setattr(_engine, "_morph_kgc_pool", None)
+    monkeypatch.setattr(_engine, "_morph_kgc_pool_max_workers", 6)
+    monkeypatch.setattr(
+        _engine,
+        "ProcessPoolExecutor",
+        lambda max_workers, **kw: _FakePool(max_workers, **kw),
+    )
+
+    pool = _engine._get_morph_kgc_pool()
+    assert isinstance(pool, _FakePool)
+    assert created_with == [6]
