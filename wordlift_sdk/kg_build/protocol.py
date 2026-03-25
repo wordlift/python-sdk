@@ -203,7 +203,7 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
                 settings,
                 "postprocessor_pool_size",
                 "POSTPROCESSOR_POOL_SIZE",
-                pool_size,
+                max(2, int(pool_size * 3 / 4)),
             )
         )
         logger.info(
