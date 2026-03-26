@@ -160,6 +160,11 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
 
         settings = dict(self.profile.settings)
         _pool_size = int(_setting(settings, "concurrency", "CONCURRENCY", 4))
+        logger.info(
+            "Concurrency for profile '%s': %d",
+            self.profile.name,
+            _pool_size
+        )
         self._init_postprocessor_service(settings, context, _pool_size)
         self._init_mapping_service(settings, context, _pool_size)
         self._init_shacl_validator(settings, _pool_size)
