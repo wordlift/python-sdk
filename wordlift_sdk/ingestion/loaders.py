@@ -261,12 +261,19 @@ def _is_running_in_event_loop() -> bool:
 def _render_with_loop_safety(
     render_fn: Callable[[RenderOptions], Any], options: RenderOptions
 ) -> Any:
-    if not _is_running_in_event_loop():
-        return render_fn(options)
-    return _run_in_worker_thread(lambda: render_fn(options))
+    # Always delegate to a dedicated daemon worker thread so that:
+    # 1. Playwright's greenlet event loop does not run on the calling thread
+    #    (avoids blocking the asyncio executor thread introduced in 8.0.3).
+    # 2. A hard wall-clock timeout can be enforced even when the browser
+    #    subprocess becomes permanently unresponsive (stuck WebSocket, no
+    #    CDP response to page.content() or browser.close(), etc.).
+    hard_timeout = options.timeout_ms / 1000 * 2 + 30
+    return _run_in_worker_thread(lambda: render_fn(options), timeout=hard_timeout)
 
 
-def _run_in_worker_thread(fn: Callable[[], Any]) -> Any:
+def _run_in_worker_thread(
+    fn: Callable[[], Any], *, timeout: float | None = None
+) -> Any:
     result: dict[str, Any] = {}
     error: dict[str, BaseException] = {}
 
@@ -276,9 +283,20 @@ def _run_in_worker_thread(fn: Callable[[], Any]) -> Any:
         except BaseException as exc:  # pragma: no cover - asserted via caller paths
             error["exc"] = exc
 
-    thread = threading.Thread(target=target, name="playwright-render-worker")
+    # daemon=True: if this thread is abandoned on timeout it will not block
+    # process exit — Chromium subprocesses it owns are cleaned up by the OS.
+    thread = threading.Thread(
+        target=target, name="playwright-render-worker", daemon=True
+    )
     thread.start()
-    thread.join()
+    thread.join(timeout=timeout)
+
+    if thread.is_alive():
+        raise LoaderRuntimeError(
+            f"Playwright render hard timeout after {timeout:.0f}s for render operation",
+            code="INGEST_LOAD_BROWSER_TIMEOUT",
+            retryable=True,
+        )
 
     exc = error.get("exc")
     if exc is not None:
