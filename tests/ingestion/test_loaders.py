@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import threading
+import time
 import urllib.error
 from io import BytesIO
 from types import SimpleNamespace
@@ -205,6 +206,14 @@ def test_playwright_loader_offloads_render_when_event_loop_is_active() -> None:
 
     assert len(seen_thread_ids) == 1
     assert seen_thread_ids[0] != main_thread_id
+
+
+def test_run_in_worker_thread_raises_on_hard_timeout() -> None:
+    with pytest.raises(LoaderRuntimeError) as exc:
+        loaders_module._run_in_worker_thread(lambda: time.sleep(10), timeout=0.05)
+
+    assert exc.value.code == "INGEST_LOAD_BROWSER_TIMEOUT"
+    assert exc.value.retryable is True
 
 
 def test_playwright_loader_wraps_non_runtime_exceptions(
