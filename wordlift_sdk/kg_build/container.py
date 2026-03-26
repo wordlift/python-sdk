@@ -54,6 +54,9 @@ class KgBuildApplicationContainer(ApplicationContainer):
 
     async def create_kg_import_workflow(self) -> KgImportWorkflow:
         concurrency = self._configuration_provider.get_value("CONCURRENCY", 2)
+        logger.info(
+            "URL fetch concurrency: %d", concurrency
+        )
         url_source = await self.create_new_or_changed_source()
 
         return KgImportWorkflow(

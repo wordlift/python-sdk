@@ -1,3 +1,4 @@
+import logging
 from os import cpu_count
 from wordlift_client import Configuration, AccountInfo, WebPageImportFetchOptions
 
@@ -21,6 +22,8 @@ from ..workflow.url_handler import WebPageImportUrlHandler
 from ..workflow.url_handler.default_url_handler import DefaultUrlHandler
 from ..workflow.url_handler.search_console_url_handler import SearchConsoleUrlHandler
 from ..workflow.url_handler.url_handler import UrlHandler
+
+logger = logging.getLogger(__name__)
 
 
 class ApplicationContainer:
@@ -129,6 +132,9 @@ class ApplicationContainer:
     async def create_kg_import_workflow(self) -> KgImportWorkflow:
         concurrency = self._configuration_provider.get_value(
             "CONCURRENCY", min(cpu_count(), 4)
+        )
+        logger.info(
+            "URL fetch concurrency: %d", concurrency
         )
         return KgImportWorkflow(
             context=await self.get_context(),
