@@ -1,5 +1,12 @@
 # Changelog
 
+## 8.0.4 - 2026-03-26
+
+### Fixed
+
+- Loaders: enforce a hard wall-clock timeout on the Playwright render worker thread (2× browser timeout + 30 s); raises a retryable `LoaderRuntimeError` if Chromium becomes permanently unresponsive (stuck WebSocket, no CDP response).
+- Loaders: render thread is now always a daemon thread so an abandoned timeout does not block process exit.
+
 ## 8.0.3 - 2026-03-26
 
 ### Fixed
