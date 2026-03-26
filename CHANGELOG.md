@@ -1,5 +1,17 @@
 # Changelog
 
+## 8.0.3 - 2026-03-26
+
+### Fixed
+
+- Engine: recover from `BrokenProcessPool` by recreating the morph-kgc pool instead of crashing.
+- Protocol: use the correct `mapping_pool_size` variable when sizing the `ThreadPoolExecutor`.
+- Protocol: cap postprocessor pool size at 75 % of `pool_size` (minimum 2) to avoid starving the main pool.
+
+### Changed
+
+- Logging: url-fetch and postprocessor concurrency levels are now logged at startup.
+
 ## 8.0.0 - 2026-03-20
 
 ### Breaking
