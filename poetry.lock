@@ -8,8 +8,10 @@ optional = true
 python-versions = "*"
 groups = ["main"]
 markers = "extra == \"ingestion\" or extra == \"structured-data\" or extra == \"workflow\" or extra == \"kg-build\" or extra == \"all\""
-files = []
-develop = false
+files = [
+    {file = "advertools-0.17.1-py2.py3-none-any.whl", hash = "sha256:3e81a511d35c8e768d7be31bf22e659b5bcc091f7ca52abe50124f0056043813"},
+    {file = "advertools-0.17.1.tar.gz", hash = "sha256:6b629a47f08ce9800e9032ce15e47afda0f6213d11c174991be51665c678280d"},
+]
 
 [package.dependencies]
 pandas = ">=1.1.0"
@@ -18,12 +20,6 @@ pyasn1 = ">=0.4"
 requests = ">=2.25.0"
 scrapy = ">=2.5.0"
 twython = ">=3.8.0"
-
-[package.source]
-type = "git"
-url = "https://github.com/ziodave/advertools.git"
-reference = "0f3597ce6a447ac0992ead4067a57cc7799c36c5"
-resolved_reference = "0f3597ce6a447ac0992ead4067a57cc7799c36c5"
 
 [[package]]
 name = "aiohappyeyeballs"
@@ -1478,7 +1474,7 @@ description = "Read metadata from Python packages"
 optional = true
 python-versions = ">=3.10"
 groups = ["main"]
-markers = "python_version <= \"3.11\" and (extra == \"validation\" or extra == \"ingestion\" or extra == \"structured-data\" or extra == \"graph\" or extra == \"kg-build\" or extra == \"all\")"
+markers = "(extra == \"validation\" or extra == \"ingestion\" or extra == \"structured-data\" or extra == \"graph\" or extra == \"kg-build\" or extra == \"all\") and python_version < \"3.12\""
 files = [
     {file = "importlib_metadata-9.0.0-py3-none-any.whl", hash = "sha256:2d21d1cc5a017bd0559e36150c21c830ab1dc304dedd1b7ea85d20f45ef3edd7"},
     {file = "importlib_metadata-9.0.0.tar.gz", hash = "sha256:a4f57ab599e6a2e3016d7595cfd72eb4661a5106e787a95bcc90c7105b831efc"},
@@ -2265,7 +2261,7 @@ files = [
     {file = "numpy-2.4.4-pp311-pypy311_pp73-win_amd64.whl", hash = "sha256:f2cf083b324a467e1ab358c105f6cad5ea950f50524668a80c486ff1db24e119"},
     {file = "numpy-2.4.4.tar.gz", hash = "sha256:2d390634c5182175533585cc89f3608a4682ccb173cc9bb940b2881c8d6f8fa0"},
 ]
-markers = {main = "(extra == \"google-sheets\" or extra == \"google-search-console\" or extra == \"ingestion\" or extra == \"workflow\" or extra == \"kg-build\" or extra == \"legacy\" or extra == \"all\" or extra == \"structured-data\") and python_version >= \"3.11\"", dev = "python_version >= \"3.11\""}
+markers = {main = "python_version >= \"3.11\" and (extra == \"google-sheets\" or extra == \"google-search-console\" or extra == \"ingestion\" or extra == \"workflow\" or extra == \"kg-build\" or extra == \"legacy\" or extra == \"all\" or extra == \"structured-data\")", dev = "python_version >= \"3.11\""}
 
 [[package]]
 name = "oauthlib"
@@ -4004,7 +4000,7 @@ files = [
     {file = "typing_extensions-4.15.0-py3-none-any.whl", hash = "sha256:f0fa19c6845758ab08074a0cfa8b7aecb71c999ca73d62883bc25cc018c4e548"},
     {file = "typing_extensions-4.15.0.tar.gz", hash = "sha256:0cea48d173cc12fa28ecabc3b837ea3cf6f38c6d1136f85cbaaf598984861466"},
 ]
-markers = {dev = "python_version < \"3.13\""}
+markers = {dev = "python_version <= \"3.12\""}
 
 [[package]]
 name = "typing-inspection"
@@ -4286,7 +4282,7 @@ description = "Backport of pathlib-compatible object wrapper for zip files"
 optional = true
 python-versions = ">=3.9"
 groups = ["main"]
-markers = "python_version <= \"3.11\" and (extra == \"validation\" or extra == \"ingestion\" or extra == \"structured-data\" or extra == \"graph\" or extra == \"kg-build\" or extra == \"all\")"
+markers = "(extra == \"validation\" or extra == \"ingestion\" or extra == \"structured-data\" or extra == \"graph\" or extra == \"kg-build\" or extra == \"all\") and python_version < \"3.12\""
 files = [
     {file = "zipp-3.23.0-py3-none-any.whl", hash = "sha256:071652d6115ed432f5ce1d34c336c0adfd6a884660d1e9712a256d3d3bd4b14e"},
     {file = "zipp-3.23.0.tar.gz", hash = "sha256:a07157588a12518c9d4034df3fbbee09c814741a33ff63c05fa29d26a2404166"},
@@ -4364,4 +4360,4 @@ workflow = ["advertools", "google-auth", "gql", "gspread", "lxml", "pandas", "pl
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10, <3.15"
-content-hash = "87d2de7ce61daf0aedb271547f7632bf51b9aa142b246fb351cfa1412bcc0b23"
+content-hash = "c25613fc0dbdb5cf6308c25b72ccbbd9c3c7d01644c3792b96f90c0b7840aae5"
