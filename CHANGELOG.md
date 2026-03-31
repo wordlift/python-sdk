@@ -1,5 +1,15 @@
 # Changelog
 
+## 8.0.5 - 2026-03-31
+
+### Changed
+
+- Dependencies: pin `advertools` to `ziodave/advertools@0f3597ce6a447ac0992ead4067a57cc7799c36c5` (includes recursive sitemap `request_headers` propagation fix).
+
+### Fixed
+
+- URL source: `SitemapUrlSource` now passes browser-like `request_headers` to `advertools.sitemap_to_df`, aligning sitemap discovery behavior with ingestion sources.
+
 ## 8.0.4 - 2026-03-26
 
 ### Fixed

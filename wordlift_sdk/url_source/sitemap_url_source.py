@@ -4,6 +4,8 @@ from typing import AsyncGenerator, Optional
 import advertools as adv
 import pandas as pd
 
+from wordlift_sdk.render.render_options import build_browser_like_headers
+
 from .url_source import UrlSource, Url
 
 
@@ -16,7 +18,10 @@ class SitemapUrlSource(UrlSource):
         self.sitemap_url = sitemap_url
 
     async def urls(self) -> AsyncGenerator[Url, None]:
-        sitemap_df = adv.sitemaps.sitemap_to_df(sitemap_url=self.sitemap_url)
+        sitemap_df = adv.sitemaps.sitemap_to_df(
+            sitemap_url=self.sitemap_url,
+            request_headers=build_browser_like_headers(),
+        )
         # Ensure 'lastmod' column exists
         if "lastmod" not in sitemap_df.columns:
             sitemap_df["lastmod"] = None
