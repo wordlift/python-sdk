@@ -1,0 +1,12 @@
+{
+  "pages": [
+    {
+      "url": "https://example.com/blog/post-1",
+      "html": "<html><head><title>Post 1</title><meta property='og:type' content='article' /></head><body><article>content</article><script type='application/ld+json'>{\"@context\":\"https://schema.org\",\"@graph\":[{\"@type\":\"Article\",\"headline\":\"Post 1\",\"url\":\"https://example.com/blog/post-1\"},{\"@type\":\"Product\",\"name\":\"Widget inline\",\"url\":\"https://example.com/shop/widget\"}]}</script></body></html>"
+    },
+    {
+      "url": "https://example.com/blog/post-2",
+      "html": "<html><head><title>Post 2</title><meta property='og:type' content='article' /></head><body><article>content</article><script type='application/ld+json'>{\"@context\":\"https://schema.org\",\"@graph\":[{\"@type\":\"Article\",\"headline\":\"Post 2\",\"url\":\"https://example.com/blog/post-2\"},{\"@type\":\"Product\",\"name\":\"Widget inline\",\"url\":\"https://example.com/shop/widget\"}]}</script></body></html>"
+    }
+  ]
+}

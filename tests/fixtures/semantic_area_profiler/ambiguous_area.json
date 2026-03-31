@@ -1,0 +1,12 @@
+{
+  "pages": [
+    {
+      "url": "https://example.com/ambiguous/a1",
+      "html": "<html><head><title>A1</title></head><body><script type='application/ld+json'>{\"@context\":\"https://schema.org\",\"@graph\":[{\"@type\":\"Article\",\"headline\":\"A1\",\"url\":\"https://example.com/ambiguous/a1\"}]}</script></body></html>"
+    },
+    {
+      "url": "https://example.com/ambiguous/p1",
+      "html": "<html><head><title>P1</title></head><body><script type='application/ld+json'>{\"@context\":\"https://schema.org\",\"@graph\":[{\"@type\":\"Product\",\"name\":\"P1\",\"url\":\"https://example.com/ambiguous/p1\"}]}</script></body></html>"
+    }
+  ]
+}

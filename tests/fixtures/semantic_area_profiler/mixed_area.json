@@ -1,0 +1,16 @@
+{
+  "pages": [
+    {
+      "url": "https://example.com/mixed/a1",
+      "html": "<html><head><title>A1</title><meta property='og:type' content='article' /></head><body><script type='application/ld+json'>{\"@context\":\"https://schema.org\",\"@graph\":[{\"@type\":\"Article\",\"headline\":\"A1\",\"url\":\"https://example.com/mixed/a1\",\"author\":{\"@type\":\"Person\",\"name\":\"Editor\"}},{\"@type\":\"Organization\",\"name\":\"WordLift\"}]}</script></body></html>"
+    },
+    {
+      "url": "https://example.com/mixed/p1",
+      "html": "<html><head><title>P1</title></head><body><script type='application/ld+json'>{\"@context\":\"https://schema.org\",\"@graph\":[{\"@type\":\"Product\",\"name\":\"Widget\",\"url\":\"https://example.com/mixed/p1\",\"offers\":{\"@type\":\"Offer\",\"price\":\"10\"}}]}</script></body></html>"
+    },
+    {
+      "url": "https://example.com/mixed/e1",
+      "html": "<html><head><title>E1</title></head><body><script type='application/ld+json'>{\"@context\":\"https://schema.org\",\"@graph\":[{\"@type\":\"Event\",\"name\":\"Launch\",\"url\":\"https://example.com/mixed/e1\",\"startDate\":\"2026-01-01\"}]}</script></body></html>"
+    }
+  ]
+}
