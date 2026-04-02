@@ -47,3 +47,14 @@ class KgImportWorkflow:
             *[delayed(url) for url in list(url_list)],
             total=len(url_list),
         )
+
+        failures = getattr(self._url_handler, "failures", None)
+        if isinstance(failures, list) and failures:
+            summary_lines = [f"{len(failures)} URL handler failure(s) detected."]
+            for url, handler_name, message in failures[:10]:
+                summary_lines.append(f"- {handler_name} failed for {url}: {message}")
+            if len(failures) > 10:
+                summary_lines.append(f"- ... and {len(failures) - 10} more.")
+            summary = "\n".join(summary_lines)
+            logger.error(summary)
+            raise RuntimeError(summary)
