@@ -259,6 +259,18 @@ async def run_cloud_workflow(
 
         await workflow.run()
 
+        url_handler = getattr(workflow, "_url_handler", None)
+        failures = getattr(url_handler, "failures", None) if url_handler else None
+        if isinstance(failures, list) and failures:
+            summary_lines = [f"{len(failures)} URL handler failure(s) detected."]
+            for url, handler_name, message in failures[:10]:
+                summary_lines.append(f"- {handler_name} failed for {url}: {message}")
+            if len(failures) > 10:
+                summary_lines.append(f"- ... and {len(failures) - 10} more.")
+            summary = "\n".join(summary_lines)
+            logger.error(summary)
+            raise RuntimeError(summary)
+
     finally:
         if protocol is not None and on_kpi is not None:
             get_kpi_summary = getattr(protocol, "get_kpi_summary", None)

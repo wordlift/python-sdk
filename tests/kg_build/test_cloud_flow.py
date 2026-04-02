@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any
 
 import pytest
@@ -16,6 +17,14 @@ from wordlift_sdk.kg_build.cloud_flow import (
 
 
 class _Workflow:
+    async def run(self) -> None:
+        return None
+
+
+class _WorkflowWithFailures:
+    def __init__(self, failures: list[tuple[object, str, str]]):
+        self._url_handler = SimpleNamespace(failures=failures)
+
     async def run(self) -> None:
         return None
 
@@ -129,6 +138,24 @@ async def test_cloud_flow_closes_protocol_on_failure() -> None:
 
     assert protocol.closed is True
     assert captured == [{"totals": {"total_entities": 1}}]
+
+
+@pytest.mark.asyncio
+async def test_cloud_flow_raises_when_url_handler_failures_present() -> None:
+    protocol = _Protocol()
+    failures = [("https://example.com", "Handler", "boom")]
+
+    with pytest.raises(RuntimeError, match="URL handler failure"):
+        await run_cloud_workflow(
+            config=CloudWorkflowConfig(
+                wordlift_key="key",
+                sheets_service_account_json="{}",
+                urls=["https://example.com"],
+            ),
+            configuration_provider_create=lambda _: object(),
+            container_factory=lambda _: _Container(_WorkflowWithFailures(failures)),
+            protocol_factory=lambda *_args, **_kwargs: protocol,
+        )
 
 
 def test_get_debug_output_dir_requires_profile_name() -> None:
