@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import os
 import tempfile
+from datetime import datetime
 from inspect import isawaitable
 from dataclasses import dataclass
 from pathlib import Path
@@ -22,6 +23,18 @@ KpiReporter = Callable[[dict[str, Any]], None]
 ProgressReporter = Callable[[dict[str, Any]], None]
 
 logger = logging.getLogger(__name__)
+
+
+def _format_failure_timestamp(value: Any) -> str:
+    raw = str(value or "").strip()
+    if not raw:
+        return ""
+    try:
+        dt = datetime.fromisoformat(raw)
+        text = dt.strftime("%b %d, %H:%M:%S")
+        return text.replace(" 0", " ")
+    except Exception:
+        return raw
 
 
 @dataclass(frozen=True)
@@ -262,14 +275,51 @@ async def run_cloud_workflow(
         url_handler = getattr(workflow, "_url_handler", None)
         failures = getattr(url_handler, "failures", None) if url_handler else None
         if isinstance(failures, list) and failures:
-            summary_lines = [f"{len(failures)} URL handler failure(s) detected."]
-            for url, handler_name, message in failures[:10]:
+            total_urls = getattr(workflow, "_url_count", None)
+            if isinstance(total_urls, int) and total_urls >= 0:
+                success_count = max(total_urls - len(failures), 0)
+                summary_lines = [
+                    f"Total URLs: {total_urls}",
+                    f"Successes: {success_count}",
+                    f"Failures: {len(failures)}",
+                ]
+            else:
+                summary_lines = [f"{len(failures)} URL handler failure(s) detected."]
+            for _, url, handler_name, message in failures[:10]:
                 summary_lines.append(f"- {handler_name} failed for {url}: {message}")
             if len(failures) > 10:
                 summary_lines.append(f"- ... and {len(failures) - 10} more.")
             summary = "\n".join(summary_lines)
             logger.error(summary)
-            raise RuntimeError(summary)
+
+            report_path = Path.cwd() / "output" / "graph_sync_failures.md"
+            report_path.parent.mkdir(parents=True, exist_ok=True)
+            report_lines = [
+                "# Graph Sync Failures",
+                "",
+                f"Total failures: **{len(failures)}**",
+                f"Total URLs: **{total_urls}**" if isinstance(total_urls, int) else "",
+                f"Successes: **{success_count}**"
+                if isinstance(total_urls, int)
+                else "",
+                "",
+                "## Details",
+                "",
+                "| Timestamp (UTC) | URL | Handler | Error |",
+                "| --- | --- | --- | --- |",
+            ]
+            for timestamp, url, handler_name, message in failures:
+                safe_message = str(message).replace("\n", " ").replace("|", "\\|")
+                url_value = getattr(url, "value", None)
+                display_url = str(url_value or url)
+                display_ts = _format_failure_timestamp(timestamp)
+                report_lines.append(
+                    f"| {display_ts} | `{display_url}` | `{handler_name}` | `{safe_message}` |"
+                )
+            report_path.write_text("\n".join(report_lines) + "\n", encoding="utf-8")
+            logger.error("Wrote failure report to %s", report_path)
+
+            raise SystemExit(summary)
 
     finally:
         if protocol is not None and on_kpi is not None:
