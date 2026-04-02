@@ -143,9 +143,9 @@ async def test_cloud_flow_closes_protocol_on_failure() -> None:
 @pytest.mark.asyncio
 async def test_cloud_flow_raises_when_url_handler_failures_present() -> None:
     protocol = _Protocol()
-    failures = [("https://example.com", "Handler", "boom")]
+    failures = [("2026-04-02T00:00:00+00:00", "https://example.com", "Handler", "boom")]
 
-    with pytest.raises(RuntimeError, match="URL handler failure"):
+    with pytest.raises(SystemExit, match="URL handler failure"):
         await run_cloud_workflow(
             config=CloudWorkflowConfig(
                 wordlift_key="key",

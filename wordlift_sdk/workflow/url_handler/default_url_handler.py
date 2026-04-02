@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime, timezone
 
 from ...url_source import Url
 from ...workflow.url_handler.url_handler import UrlHandler
@@ -12,10 +13,10 @@ class DefaultUrlHandler(UrlHandler):
     def __init__(self, url_handler_list: list[UrlHandler]):
         super().__init__()
         self._url_handler_list = url_handler_list
-        self._failures: list[tuple[Url, str, str]] = []
+        self._failures: list[tuple[str, Url, str, str]] = []
 
     @property
-    def failures(self) -> list[tuple[Url, str, str]]:
+    def failures(self) -> list[tuple[str, Url, str, str]]:
         return list(self._failures)
 
     async def __call__(self, url: Url) -> None:
@@ -23,7 +24,10 @@ class DefaultUrlHandler(UrlHandler):
             try:
                 await url_handler.__call__(url)
             except Exception as e:
-                self._failures.append((url, type(url_handler).__name__, str(e)))
+                timestamp = datetime.now(timezone.utc).isoformat()
+                self._failures.append(
+                    (timestamp, url, type(url_handler).__name__, str(e))
+                )
                 logger.error(
                     f"Handler {type(url_handler).__name__} errored while handling url {url}: {e}"
                 )
