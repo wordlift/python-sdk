@@ -15,8 +15,27 @@ class _Pipeline:
         del url, data_path, response
         return content, {"x": "y"}
 
-    def materialize(self, normalized, data_path, out_dir, url=None, response=None):
-        del normalized, data_path, out_dir, url, response
+    def materialize(
+        self,
+        normalized,
+        data_path,
+        out_dir,
+        url=None,
+        response=None,
+        strict_url_token=False,
+        materialization_backend="morph",
+        **_kwargs,
+    ):
+        del (
+            normalized,
+            data_path,
+            out_dir,
+            url,
+            response,
+            strict_url_token,
+            materialization_backend,
+            _kwargs,
+        )
         return {
             "@context": "https://schema.org",
             "@id": "https://example.com/a",

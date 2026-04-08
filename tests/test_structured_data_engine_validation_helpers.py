@@ -791,7 +791,7 @@ def test_materialize_yarrrml_and_xpath_evidence_error_branches(monkeypatch):
     monkeypatch.setattr(
         engine, "_replace_runtime_tokens", lambda *_a, **_k: "mappings:\n"
     )
-    monkeypatch.setattr(engine, "_materialize_graph", lambda _path: Graph())
+    monkeypatch.setattr(engine, "_materialize_graph", lambda _path, **_kwargs: Graph())
     with tempfile.TemporaryDirectory() as tmp:
         graph = engine.materialize_yarrrml(
             "mappings:\n",
