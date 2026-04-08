@@ -30,7 +30,7 @@ Generic YARRRML helpers for structural normalization, materialization, and postp
 
 Key methods:
 - `normalize_mappings(yarrrml, url, xhtml_path, response=None)`
-- `materialize_jsonld(yarrrml, xhtml_path, workdir, response=None, url=None, strict_url_token=False)`
+- `materialize_jsonld(yarrrml, xhtml_path, workdir, response=None, url=None, strict_url_token=False, materialization_backend="morph")`
 - `postprocess_jsonld(jsonld_raw, mappings, xhtml, dataset_uri, url)`
 - `ensure_no_blank_nodes(graph)`
 
@@ -41,6 +41,7 @@ The materialization path is mapping-preserving by default:
 - No implicit coercion to `Review`/`Thing`.
 - No review-specific postprocessing (`_dedupe_review_notes`, review URL/author/rating injections).
 - YARRRML is executed directly by `morph-kgc` native YARRRML support (no `yarrrml-parser` transpile step and no temporary RML `.ttl` artifact).
+  - `kg_build` can opt into `worph` via profile setting `materialization_backend = "worph"`; default remains `morph`.
 
 ### Runtime tokens
 

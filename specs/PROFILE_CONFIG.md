@@ -45,6 +45,7 @@ web_page_import_block_ads = "${WEB_PAGE_IMPORT_BLOCK_ADS}"
 ingest_timeout_ms = "${INGEST_TIMEOUT_MS}"
 google_search_console = "${GOOGLE_SEARCH_CONSOLE}"
 service_account_file = "${SERVICE_ACCOUNT_FILE}"
+materialization_backend = "${MATERIALIZATION_BACKEND}" # optional: morph|worph
 
 [profiles.sample_profile]
 inherit = "_base"
@@ -101,6 +102,7 @@ Env-fallback runtime keys currently supported:
 - `google_search_console`
 - `service_account_file`
 - `postprocessor_runtime`
+- `materialization_backend`
 
 ## Mapping Routing
 

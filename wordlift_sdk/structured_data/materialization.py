@@ -35,6 +35,7 @@ class MaterializationPipeline:
         url: str | None = None,
         response: object | None = None,
         strict_url_token: bool = False,
+        materialization_backend: str = "morph",
     ) -> dict:
         return self._pipeline.materialize_jsonld(
             normalized_yarrrml,
@@ -43,6 +44,7 @@ class MaterializationPipeline:
             response=response,
             url=url,
             strict_url_token=strict_url_token,
+            materialization_backend=materialization_backend,
         )
 
     def postprocess(
@@ -71,6 +73,7 @@ class MaterializationPipeline:
         workdir: Path,
         response: object | None = None,
         strict_url_token: bool = False,
+        materialization_backend: str = "morph",
     ) -> tuple[dict, list[dict]]:
         normalized_yarrrml, mappings = self.normalize(
             yarrrml,
@@ -85,6 +88,7 @@ class MaterializationPipeline:
             url=url,
             response=response,
             strict_url_token=strict_url_token,
+            materialization_backend=materialization_backend,
         )
         jsonld = self.postprocess(
             jsonld_raw,

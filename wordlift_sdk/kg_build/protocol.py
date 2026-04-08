@@ -44,7 +44,7 @@ from .postprocessors.processors.id_postprocessor import (
 from .postprocessors.service import PostprocessorService
 from .rml_mapping import MappingResult, RmlMappingService
 from .templates import JinjaRdfTemplateReifier, TemplateTextRenderer
-from wordlift_sdk.structured_data.engine import init_morph_kgc_pool
+from wordlift_sdk.structured_data.engine import init_materialization_pool
 
 logger = logging.getLogger(__name__)
 
@@ -133,6 +133,26 @@ def _resolve_postprocessor_runtime(settings: dict[str, Any]) -> str:
     )
 
 
+def _resolve_materialization_backend(settings: dict[str, Any]) -> str:
+    value = str(
+        _setting(
+            settings,
+            "materialization_backend",
+            "MATERIALIZATION_BACKEND",
+            "morph",
+        )
+    ).strip()
+    if value.lower() in {"morph", "morph-kgc"}:
+        return "morph"
+    if value.lower() == "worph":
+        return "worph"
+    logger.warning(
+        "Unsupported materialization backend '%s'; using 'morph'.",
+        value,
+    )
+    return "morph"
+
+
 class ProfileImportProtocol(WebPageImportProtocolInterface):
     """Generic cloud callback protocol driven by profile mappings and templates."""
 
@@ -160,11 +180,7 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
 
         settings = dict(self.profile.settings)
         _pool_size = int(_setting(settings, "concurrency", "CONCURRENCY", 4))
-        logger.info(
-            "Concurrency for profile '%s': %d",
-            self.profile.name,
-            _pool_size
-        )
+        logger.info("Concurrency for profile '%s': %d", self.profile.name, _pool_size)
         self._init_postprocessor_service(settings, context, _pool_size)
         self._init_mapping_service(settings, context, _pool_size)
         self._init_shacl_validator(settings, _pool_size)
@@ -266,7 +282,11 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         self._mapping_cache: dict[Path, str] = {}
         self._static_templates_patched = False
         self._static_templates_lock = asyncio.Lock()
-        self.rml_service = RmlMappingService(context)
+        materialization_backend = _resolve_materialization_backend(settings)
+        self.rml_service = RmlMappingService(
+            context,
+            materialization_backend=materialization_backend,
+        )
         mapping_pool_size = int(
             _setting(
                 settings, "mapping_pool_size", "MAPPING_POOL_SIZE", os.cpu_count() or 4
@@ -277,9 +297,14 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             self.profile.name,
             mapping_pool_size,
         )
-        init_morph_kgc_pool(mapping_pool_size)
+        logger.info(
+            "Materialization backend for profile '%s': %s",
+            self.profile.name,
+            materialization_backend,
+        )
+        init_materialization_pool(mapping_pool_size, backend=materialization_backend)
         # Wraps apply_mapping calls so they run in a thread rather than blocking
-        # the asyncio event loop. The thread itself blocks on the morph_kgc
+        # the asyncio event loop. The thread itself blocks on the materialization
         # ProcessPoolExecutor slot, leaving the event loop free for I/O.
         self._mapping_executor = ThreadPoolExecutor(
             max_workers=mapping_pool_size, thread_name_prefix="worai_ml"
@@ -434,9 +459,9 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         mapping_response = self._mapping_response(response, existing_web_page_id)
 
         def _run() -> MappingResult:
-            # apply_mapping has no awaits — all work is synchronous (morph_kgc).
+            # apply_mapping has no awaits — all work is synchronous.
             # Run in a thread so the event loop stays free for I/O while the
-            # thread waits for its morph_kgc subprocess slot.
+            # thread waits for its materialization subprocess slot.
             return asyncio.run(
                 self.rml_service.apply_mapping(
                     html=response.web_page.html,

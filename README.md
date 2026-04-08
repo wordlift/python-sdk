@@ -258,6 +258,7 @@ poetry run playwright install
 YARRRML mappings are now executed directly by `morph-kgc` native YARRRML support.
 There is no JS transpile step via `yarrrml-parser`, and no temporary `mapping.ttl`
 conversion artifact in the materialization pipeline.
+For `kg_build`, set `materialization_backend = "worph"` to use the `worph` PyPI backend; default remains `morph`.
 
 Customer-authored mappings can use runtime tokens:
 - `__XHTML__` for the local XHTML source path used by materialization.

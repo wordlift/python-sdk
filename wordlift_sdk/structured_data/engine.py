@@ -41,11 +41,20 @@ import time as _time
 # Accepts submit_time so it can measure queue wait (time spent waiting for a
 # free subprocess slot). Returns (ntriples, queue_wait_ms).
 def _morph_kgc_worker(config: str, submit_time: float) -> tuple[str, int]:
-    import morph_kgc as _mkgc
+    import morph_kgc as _backend
     import time as _t
 
     queue_wait_ms = int((_t.time() - submit_time) * 1000)
-    ntriples = _mkgc.materialize(config).serialize(format="nt")
+    ntriples = _backend.materialize(config).serialize(format="nt")
+    return ntriples, queue_wait_ms
+
+
+def _worph_worker(config: str, submit_time: float) -> tuple[str, int]:
+    import worph as _backend
+    import time as _t
+
+    queue_wait_ms = int((_t.time() - submit_time) * 1000)
+    ntriples = _backend.materialize(config).serialize(format="nt")
     return ntriples, queue_wait_ms
 
 
@@ -63,6 +72,37 @@ logger = logging.getLogger(__name__)
 _morph_kgc_pool: ProcessPoolExecutor | None = None
 _morph_kgc_pool_max_workers: int = 0
 _morph_kgc_pool_lock = threading.Lock()
+_worph_pool: ProcessPoolExecutor | None = None
+_worph_pool_max_workers: int = 0
+_worph_pool_lock = threading.Lock()
+
+
+def _resolve_materialization_backend(backend: str | None) -> str:
+    value = (backend or "morph").strip().lower()
+    if value in {"morph", "morph-kgc"}:
+        return "morph"
+    if value == "worph":
+        return "worph"
+    logger.warning("Unsupported materialization backend '%s'; using 'morph'.", value)
+    return "morph"
+
+
+def _spawn_pool(max_workers: int) -> ProcessPoolExecutor:
+    ctx = multiprocessing.get_context("spawn")
+    return ProcessPoolExecutor(max_workers=max_workers, mp_context=ctx)
+
+
+def init_materialization_pool(max_workers: int, backend: str = "morph") -> None:
+    backend_name = _resolve_materialization_backend(backend)
+    if backend_name == "morph":
+        init_morph_kgc_pool(max_workers)
+        return
+    global _worph_pool, _worph_pool_max_workers
+    with _worph_pool_lock:
+        _worph_pool_max_workers = max_workers
+        if _worph_pool is not None:
+            return
+        _worph_pool = _spawn_pool(max_workers)
 
 
 def init_morph_kgc_pool(max_workers: int) -> None:
@@ -75,8 +115,7 @@ def init_morph_kgc_pool(max_workers: int) -> None:
         _morph_kgc_pool_max_workers = max_workers
         if _morph_kgc_pool is not None:
             return
-        ctx = multiprocessing.get_context("spawn")
-        _morph_kgc_pool = ProcessPoolExecutor(max_workers=max_workers, mp_context=ctx)
+        _morph_kgc_pool = _spawn_pool(max_workers)
 
 
 def _get_morph_kgc_pool() -> ProcessPoolExecutor:
@@ -85,9 +124,17 @@ def _get_morph_kgc_pool() -> ProcessPoolExecutor:
         if _morph_kgc_pool is None:
             # Fallback if init_morph_kgc_pool was never called, or after a reset.
             workers = _morph_kgc_pool_max_workers or (os.cpu_count() or 4)
-            ctx = multiprocessing.get_context("spawn")
-            _morph_kgc_pool = ProcessPoolExecutor(max_workers=workers, mp_context=ctx)
+            _morph_kgc_pool = _spawn_pool(workers)
         return _morph_kgc_pool
+
+
+def _get_worph_pool() -> ProcessPoolExecutor:
+    global _worph_pool, _worph_pool_max_workers
+    with _worph_pool_lock:
+        if _worph_pool is None:
+            workers = _worph_pool_max_workers or (os.cpu_count() or 4)
+            _worph_pool = _spawn_pool(workers)
+        return _worph_pool
 
 
 _SCHEMA_BASE = "https://schema.org"
@@ -1373,7 +1420,11 @@ def _quote_unquoted_xpath_attributes(text: str) -> str:
     return pattern.sub(repl, text)
 
 
-def _normalize_materialization_error(error: Exception) -> RuntimeError:
+def _normalize_materialization_error(
+    error: Exception, backend: str = "morph"
+) -> RuntimeError:
+    backend_name = _resolve_materialization_backend(backend)
+    backend_label = "morph-kgc" if backend_name == "morph" else "worph"
     message = str(error).strip() or error.__class__.__name__
     lowered = message.lower()
     if "parsererror" in lowered or "while parsing" in lowered:
@@ -1391,11 +1442,11 @@ def _normalize_materialization_error(error: Exception) -> RuntimeError:
     ):
         return RuntimeError(
             "Unsupported XPath/function construct in YARRRML mapping."
-            " Adjust XPath/functions to constructs supported by morph-kgc."
+            f" Adjust XPath/functions to constructs supported by {backend_label}."
             f" Details: {message}"
         )
     return RuntimeError(
-        "Failed to materialize YARRRML mapping with morph-kgc."
+        f"Failed to materialize YARRRML mapping with {backend_label}."
         " Check mapping syntax and source expressions."
         f" Details: {message}"
     )
@@ -1415,7 +1466,8 @@ def _resolve_morph_logging_level() -> str:
     return "CRITICAL"
 
 
-def _materialize_graph(mapping_path: Path) -> Graph:
+def _materialize_graph(mapping_path: Path, backend: str = "morph") -> Graph:
+    backend_name = _resolve_materialization_backend(backend)
     config = (
         "[CONFIGURATION]\n"
         "output_format = N-TRIPLES\n"
@@ -1429,14 +1481,17 @@ def _materialize_graph(mapping_path: Path) -> Graph:
         f"mappings = {mapping_path}\n"
     )
     for attempt in range(2):
-        pool = _get_morph_kgc_pool()
+        if backend_name == "morph":
+            pool = _get_morph_kgc_pool()
+            worker = _morph_kgc_worker
+        else:
+            pool = _get_worph_pool()
+            worker = _worph_worker
         try:
             # Submit to subprocess pool — each worker has isolated pyparsing state,
             # so calls are genuinely parallel across CPU cores with no lock needed.
             # .result() blocks the calling thread (not the asyncio event loop).
-            ntriples, queue_wait_ms = pool.submit(
-                _morph_kgc_worker, config, _time.time()
-            ).result()
+            ntriples, queue_wait_ms = pool.submit(worker, config, _time.time()).result()
             # Store wait time in thread-local so protocol.py can read it without
             # changing the return type of this function.
             _morph_kgc_tls.mapping_wait_ms = queue_wait_ms
@@ -1445,23 +1500,33 @@ def _materialize_graph(mapping_path: Path) -> Graph:
             return graph
         except BrokenProcessPool:
             logger.warning(
-                "morph-kgc process pool broken (attempt %d/2), recreating.",
+                "%s process pool broken (attempt %d/2), recreating.",
+                "morph-kgc" if backend_name == "morph" else "worph",
                 attempt + 1,
             )
-            global _morph_kgc_pool
-            with _morph_kgc_pool_lock:
-                # Only reset if this is still the same broken pool instance,
-                # preventing a race where multiple threads all try to reset it.
-                if _morph_kgc_pool is pool:
-                    _morph_kgc_pool = None
+            if backend_name == "morph":
+                global _morph_kgc_pool
+                with _morph_kgc_pool_lock:
+                    # Only reset if this is still the same broken pool instance,
+                    # preventing a race where multiple threads all try to reset it.
+                    if _morph_kgc_pool is pool:
+                        _morph_kgc_pool = None
+            else:
+                global _worph_pool
+                with _worph_pool_lock:
+                    if _worph_pool is pool:
+                        _worph_pool = None
             if attempt >= 1:
                 raise _normalize_materialization_error(
-                    RuntimeError("morph-kgc process pool broke twice in a row")
+                    RuntimeError(
+                        f"{'morph-kgc' if backend_name == 'morph' else 'worph'} process pool broke twice in a row"
+                    ),
+                    backend=backend_name,
                 ) from None
         except RuntimeError:
             raise
         except Exception as exc:
-            raise _normalize_materialization_error(exc) from exc
+            raise _normalize_materialization_error(exc, backend=backend_name) from exc
 
 
 def materialize_yarrrml(
@@ -1472,6 +1537,7 @@ def materialize_yarrrml(
     response: Any | None = None,
     url: str | None = None,
     strict_url_token: bool = False,
+    materialization_backend: str = "morph",
 ) -> Graph:
     file_uri = xhtml_path.as_posix()
     normalized = _replace_runtime_tokens(
@@ -1484,7 +1550,9 @@ def materialize_yarrrml(
     workdir.mkdir(parents=True, exist_ok=True)
     yarrml_path = workdir / "mapping.yarrrml"
     yarrml_path.write_text(normalized)
-    return _materialize_graph(yarrml_path)
+    return _materialize_graph(
+        yarrml_path, backend=_resolve_materialization_backend(materialization_backend)
+    )
 
 
 def normalize_yarrrml_mappings(
@@ -1511,6 +1579,7 @@ def materialize_yarrrml_jsonld(
     response: Any | None = None,
     url: str | None = None,
     strict_url_token: bool = False,
+    materialization_backend: str = "morph",
 ) -> dict[str, Any] | list[Any]:
     file_uri = xhtml_path.as_posix()
     normalized = _replace_runtime_tokens(
@@ -1523,7 +1592,9 @@ def materialize_yarrrml_jsonld(
     workdir.mkdir(parents=True, exist_ok=True)
     yarrml_path = workdir / "mapping.yarrrml"
     yarrml_path.write_text(normalized)
-    return _materialize_jsonld(yarrml_path)
+    return _materialize_jsonld(
+        yarrml_path, backend=_resolve_materialization_backend(materialization_backend)
+    )
 
 
 def postprocess_jsonld(
@@ -1537,8 +1608,10 @@ def postprocess_jsonld(
     return normalize_jsonld(jsonld_raw, dataset_uri, url, None, embed_nodes=False)
 
 
-def _materialize_jsonld(mapping_path: Path) -> dict[str, Any] | list[Any]:
-    graph = _materialize_graph(mapping_path)
+def _materialize_jsonld(
+    mapping_path: Path, backend: str = "morph"
+) -> dict[str, Any] | list[Any]:
+    graph = _materialize_graph(mapping_path, backend=backend)
     jsonld_str = graph.serialize(format="json-ld")
     return json.loads(jsonld_str)
 

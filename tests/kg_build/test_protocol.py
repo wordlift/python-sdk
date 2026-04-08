@@ -812,6 +812,37 @@ def test_protocol_helpers_runtime_and_path_part() -> None:
         _resolve_postprocessor_runtime({"POSTPROCESSOR_RUNTIME": "persistent"})
         == "persistent"
     )
+    assert protocol_module._resolve_materialization_backend({}) == "morph"
+    assert (
+        protocol_module._resolve_materialization_backend(
+            {"MATERIALIZATION_BACKEND": "worph"}
+        )
+        == "worph"
+    )
+
+
+def test_protocol_initializes_materialization_pool_with_selected_backend(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    captured: dict[str, object] = {}
+
+    def _fake_init_pool(max_workers: int, backend: str = "morph") -> None:
+        captured["max_workers"] = max_workers
+        captured["backend"] = backend
+
+    monkeypatch.setattr(protocol_module, "init_materialization_pool", _fake_init_pool)
+    ProfileImportProtocol(
+        context=_make_context(),
+        profile=_make_profile_with_settings(
+            {
+                "mapping_pool_size": 3,
+                "materialization_backend": "worph",
+            }
+        ),
+        root_dir=Path.cwd(),
+    )
+
+    assert captured == {"max_workers": 3, "backend": "worph"}
 
 
 @pytest.mark.asyncio

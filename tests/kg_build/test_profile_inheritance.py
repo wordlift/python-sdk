@@ -60,6 +60,7 @@ def test_validation_settings_parse_into_profile_settings(tmp_path: Path) -> None
         shacl_exclude_builtin_shapes = "schemaorg-grammar"
         shacl_extra_shapes = "https://example.com/custom.ttl"
         import_hash_mode = "write"
+        materialization_backend = "worph"
         """,
     )
 
@@ -72,6 +73,7 @@ def test_validation_settings_parse_into_profile_settings(tmp_path: Path) -> None
     assert profile.settings["shacl_exclude_builtin_shapes"] == ["schemaorg-grammar"]
     assert profile.settings["shacl_extra_shapes"] == ["https://example.com/custom.ttl"]
     assert profile.settings["import_hash_mode"] == "write"
+    assert profile.settings["materialization_backend"] == "worph"
 
 
 def test_custom_profile_settings_are_preserved_in_runtime_settings(

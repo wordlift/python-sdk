@@ -74,7 +74,10 @@ from wordlift_sdk.utils.html_converter import HtmlConverter  # noqa: E402
 def _install_materialization_stubs(
     monkeypatch: pytest.MonkeyPatch, capture: dict
 ) -> None:
-    def _fake_materialize(input_path: Path) -> dict[str, object]:
+    def _fake_materialize(
+        input_path: Path, backend: str = "morph"
+    ) -> dict[str, object]:
+        del backend
         capture["mapping_path"] = str(input_path)
         capture["mapping_text"] = input_path.read_text()
         return {"@graph": []}
@@ -462,7 +465,10 @@ def test_runtime_url_precedence_in_materialization_pipeline_run(
 ) -> None:
     capture: dict[str, str] = {}
 
-    def _fake_materialize(input_path: Path) -> dict[str, object]:
+    def _fake_materialize(
+        input_path: Path, backend: str = "morph"
+    ) -> dict[str, object]:
+        del backend
         capture["mapping_path"] = str(input_path)
         capture["mapping_text"] = input_path.read_text()
         return {
@@ -514,7 +520,10 @@ def test_runtime_id_resolution_in_materialization_pipeline_run(
 ) -> None:
     capture: dict[str, str] = {}
 
-    def _fake_materialize(input_path: Path) -> dict[str, object]:
+    def _fake_materialize(
+        input_path: Path, backend: str = "morph"
+    ) -> dict[str, object]:
+        del backend
         capture["mapping_path"] = str(input_path)
         capture["mapping_text"] = input_path.read_text()
         return {
@@ -1006,3 +1015,47 @@ def test_get_morph_kgc_pool_reuses_max_workers_after_reset(
     pool = _engine._get_morph_kgc_pool()
     assert isinstance(pool, _FakePool)
     assert created_with == [6]
+
+
+def test_materialization_worph_backend_uses_worph_pool(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import wordlift_sdk.structured_data.engine as _engine
+
+    xhtml_path = tmp_path / "page.xhtml"
+    xhtml_path.write_text("<html><head></head><body></body></html>")
+
+    used: dict[str, bool] = {"worph": False}
+
+    class _Future:
+        def result(self):
+            g = engine_module.Graph()
+            return g.serialize(format="nt"), 0
+
+    class _WorphPool:
+        def submit(self, fn, *args, **kwargs):
+            used["worph"] = True
+            return _Future()
+
+    monkeypatch.setattr(_engine, "_get_worph_pool", lambda: _WorphPool())
+
+    mapping = """
+prefixes:
+  schema: 'https://schema.org/'
+mappings:
+  page:
+    sources:
+      - [__XHTML__~xpath, '/']
+    s: https://example.com/page~iri
+    po:
+      - [a, 'schema:WebPage']
+"""
+    out = materialize_yarrrml_jsonld(
+        mapping,
+        xhtml_path=xhtml_path,
+        workdir=tmp_path / "work",
+        materialization_backend="worph",
+    )
+    assert isinstance(out, (dict, list))
+    assert used["worph"] is True

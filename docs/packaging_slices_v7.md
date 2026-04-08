@@ -43,7 +43,7 @@ distribution model:
 - `ingestion`
   - Modules: `wordlift_sdk.ingestion.*`, most `wordlift_sdk.url_source.*`
   - Dependencies: `advertools`, `google-auth`, `gspread`, `lxml`,
-    `morph-kgc`, `pandas`, `playwright`, `pyshacl`, `rdflib`, `requests`,
+    `morph-kgc`, `worph`, `pandas`, `playwright`, `pyshacl`, `rdflib`, `requests`,
     `tqdm`, `trafilatura`
   - Notes: intentionally broad because the public ingestion package also exports
     inventory and classification helpers; this is a DX-first slice, not the
@@ -51,7 +51,7 @@ distribution model:
 
 - `structured-data`
   - Modules: `wordlift_sdk.structured_data.*`
-  - Dependencies: `advertools`, `lxml`, `morph-kgc`, `playwright`, `pyshacl`,
+  - Dependencies: `advertools`, `lxml`, `morph-kgc`, `worph`, `playwright`, `pyshacl`,
     `rdflib`, `requests`, `tqdm`
 
 - `workflow`
@@ -70,7 +70,7 @@ distribution model:
 - `kg-build`
   - Modules: `wordlift_sdk.kg_build.*`
   - Dependencies: `advertools`, `gql`, `google-auth`, `gspread`, `jinja2`,
-    `lxml`, `morph-kgc`, `pandas`, `playwright`, `pydantic-core`, `pyshacl`,
+    `lxml`, `morph-kgc`, `worph`, `pandas`, `playwright`, `pydantic-core`, `pyshacl`,
     `python-liquid`, `rdflib`, `requests`, `tomli`, `tqdm`, `trafilatura`
   - Notes: this is intentionally broad because `kg_build` composes multiple
     subsystems.

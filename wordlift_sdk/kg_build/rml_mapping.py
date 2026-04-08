@@ -31,10 +31,12 @@ class RmlMappingService:
         context: Context,
         pipeline: MaterializationPipeline | None = None,
         html_converter: HtmlConverter | None = None,
+        materialization_backend: str = "morph",
     ) -> None:
         self._context = context
         self._pipeline = pipeline or MaterializationPipeline()
         self._html_converter = html_converter or HtmlConverter()
+        self._materialization_backend = materialization_backend
 
     def _to_xhtml(self, html: str) -> str:
         return self._html_converter.convert(html)
@@ -90,6 +92,7 @@ class RmlMappingService:
                     Path(temp_dir),
                     url=url,
                     response=response,
+                    materialization_backend=self._materialization_backend,
                 )
                 queue_wait_ms = getattr(_morph_kgc_tls, "mapping_wait_ms", 0)
                 jsonld_data = self._pipeline.postprocess(
