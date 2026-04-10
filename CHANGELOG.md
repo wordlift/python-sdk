@@ -1,5 +1,14 @@
 # Changelog
 
+## 8.0.10 - 2026-04-10
+
+### Changed
+
+- Bump package version to `8.0.10`.
+- Refresh lockfile metadata via `poetry lock`.
+- Sync release-facing documentation and indexes (`README.md`, `AGENTS.md`,
+  `docs/INDEX.md`, `specs/INDEX.md`, `specs/versioning.md`).
+
 ## 8.0.5 - 2026-03-31
 
 ### Changed

@@ -2,6 +2,9 @@
 
 ## Project Notes
 
+- Patch-release hygiene: keep `pyproject.toml`, `poetry.lock`,
+  `CHANGELOG.md`, `README.md`, `docs/INDEX.md`, and `specs/INDEX.md`
+  synchronized for every tagged patch release.
 - Packaging is slice-based as of v7: `wordlift-sdk` installs a lean base by
   default and exposes optional extras (`core`, `render`, `validation`,
   `google-sheets`, `google-search-console`, `ingestion`, `structured-data`,

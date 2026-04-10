@@ -6,7 +6,7 @@ The project follows [Semantic Versioning 2.0.0](https://semver.org/).
 
 ## Tag Format
 
-Canonical release tags use the `v<x.y.z>` format (for example `v7.0.0`).
+Canonical release tags use the `v<x.y.z>` format (for example `v8.0.10`).
 Bare semver tags (`x.y.z`) are tolerated by publish automation for backward
 compatibility, but new manual release tags should use the `v` prefix.
 
