@@ -1,5 +1,27 @@
 # Changelog
 
+## 8.0.14 - 2026-04-11
+
+### Fixed
+
+- Structured-data ID normalization now recognizes `http://schema.org/url` in
+  `_extract_url_any`, preventing numeric fallback IDs like `web-page-1` when
+  URL-hash IDs should be generated.
+- Structured-data helper parity improvements for schema-key handling:
+  `_extract_name_any`, `_local_prop_name`, and `_is_jsonld_node` now support
+  both `http://schema.org/*` and `https://schema.org/*` forms.
+
+### Changed
+
+- Add regression coverage for http/https schema-key parity in structured-data
+  helper extraction and ID assignment paths.
+- Add deterministic before/after fixture parity check to bound Phase 2 ID churn
+  for schema-key normalization changes.
+- Bump package version to `8.0.14`.
+- Refresh lockfile metadata via `poetry lock --no-cache`.
+- Sync release-facing documentation and indexes (`README.md`,
+  `docs/INDEX.md`, `specs/INDEX.md`).
+
 ## 8.0.13 - 2026-04-11
 
 ### Changed

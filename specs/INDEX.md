@@ -1,6 +1,6 @@
 # Specs Index
 
-Release sync: this index is aligned with SDK `8.0.13` (see `CHANGELOG.md`).
+Release sync: this index is aligned with SDK `8.0.14` (see `CHANGELOG.md`).
 
 - `specs/GSC_CANONICAL_SELECTION.md`: Client integration spec for canonical URL election from GSC impressions (`url,title` CSV input, OAuth/service-account credential handoff, interval/concurrency contract).
 - `specs/GRAPH_SYNC_API.md`: Graph-scoped REST API and persistence model for recording sync runs, live progress, aggregate KPIs, and per-URL SHACL reporting.

@@ -2,7 +2,7 @@
 
 A Python toolkit for orchestrating WordLift imports: fetch URLs from sitemaps, Google Sheets, or explicit lists, filter out already imported pages, enqueue search console jobs, push RDF graphs, and call the WordLift APIs to import web pages.
 
-Current release: `8.0.13` (2026-04-11).
+Current release: `8.0.14` (2026-04-11).
 
 ## Features
 - URL sources: XML sitemaps, Google Sheets (`url` column), or Python lists, with global optional `URL_REGEX` filtering (also enforced in graph-sync source selection before `new_or_changed` GraphQL lookup).

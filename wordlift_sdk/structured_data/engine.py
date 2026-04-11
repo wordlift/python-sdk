@@ -1797,6 +1797,9 @@ def _extract_name_any(node: dict[str, Any]) -> str | None:
         f"{_SCHEMA_BASE}/name",
         f"{_SCHEMA_BASE}/headline",
         f"{_SCHEMA_BASE}/title",
+        f"{_SCHEMA_HTTP}name",
+        f"{_SCHEMA_HTTP}headline",
+        f"{_SCHEMA_HTTP}title",
     ):
         value = _extract_text_value(node.get(key))
         if value:
@@ -1813,11 +1816,17 @@ def _extract_url_any(node: dict[str, Any]) -> str | None:
     text = _extract_text_value(value)
     if text:
         return text
+    value = node.get(f"{_SCHEMA_HTTP}url")
+    text = _extract_text_value(value)
+    if text:
+        return text
     return None
 
 
 def _local_prop_name(name: str) -> str:
     if name.startswith(_SCHEMA_BASE):
+        return name.rsplit("/", 1)[-1]
+    if name.startswith(_SCHEMA_HTTP):
         return name.rsplit("/", 1)[-1]
     if name.startswith("schema:"):
         return name.split(":", 1)[-1]
@@ -1861,7 +1870,11 @@ _INDEPENDENT_PROPERTIES = {
 def _is_jsonld_node(node: dict[str, Any]) -> bool:
     if "@type" in node:
         return True
-    return any(isinstance(key, str) and key.startswith(_SCHEMA_BASE) for key in node)
+    return any(
+        isinstance(key, str)
+        and (key.startswith(_SCHEMA_BASE) or key.startswith(_SCHEMA_HTTP))
+        for key in node
+    )
 
 
 def _ensure_node_ids(

@@ -42,6 +42,106 @@ def test_ensure_node_ids_assigns_deterministic_ids_with_parent_rules():
     assert root["mentions"]["@id"].startswith("https://data.example.org/")
 
 
+def test_ensure_node_ids_uses_http_schema_url_for_hash_suffix():
+    page_url = "https://example.org/debtconsolidation/"
+    data = [
+        {
+            "@id": "https://example.org/debtconsolidation/",
+            "@type": "http://schema.org/WebPage",
+            "http://schema.org/url": [{"@value": page_url}],
+        }
+    ]
+
+    engine._ensure_node_ids(data, "https://data.example.org", page_url)
+
+    node_id = data[0]["@id"]
+    assert node_id.startswith("https://data.example.org/web-pages/web-page-")
+    assert node_id.endswith(engine._hash_url(page_url))
+    assert not node_id.endswith("-1")
+
+
+def test_ensure_node_ids_http_https_schema_name_key_parity():
+    page_url = "https://example.org/debtconsolidation/"
+    dataset_uri = "https://data.example.org"
+
+    https_data = [
+        {
+            "@id": "https://example.org/debtconsolidation/",
+            "@type": "http://schema.org/WebPage",
+            "https://schema.org/headline": [{"@value": "Debt Consolidation"}],
+            "http://schema.org/url": [{"@value": page_url}],
+        }
+    ]
+    http_data = [
+        {
+            "@id": "https://example.org/debtconsolidation/",
+            "@type": "http://schema.org/WebPage",
+            "http://schema.org/headline": [{"@value": "Debt Consolidation"}],
+            "http://schema.org/url": [{"@value": page_url}],
+        }
+    ]
+
+    engine._ensure_node_ids(https_data, dataset_uri, page_url)
+    engine._ensure_node_ids(http_data, dataset_uri, page_url)
+
+    assert https_data[0]["@id"] == http_data[0]["@id"]
+    assert "debt-consolidation" in https_data[0]["@id"]
+
+
+def test_phase2_fixture_id_churn_is_bounded_for_http_schema_name_keys():
+    page_url = "https://example.org/debtconsolidation/"
+    dataset_uri = "https://data.example.org"
+
+    before_fixture = [
+        {
+            "@id": "https://example.org/debtconsolidation/",
+            "@type": "http://schema.org/WebPage",
+            "https://schema.org/headline": [{"@value": "Debt Consolidation"}],
+            "http://schema.org/url": [{"@value": page_url}],
+            "mentions": {
+                "@id": "_:m1",
+                "@type": "schema:Thing",
+                "name": "Consumer Debt",
+            },
+        }
+    ]
+    after_fixture = [
+        {
+            "@id": "https://example.org/debtconsolidation/",
+            "@type": "http://schema.org/WebPage",
+            "http://schema.org/headline": [{"@value": "Debt Consolidation"}],
+            "http://schema.org/url": [{"@value": page_url}],
+            "mentions": {
+                "@id": "_:m1",
+                "@type": "schema:Thing",
+                "name": "Consumer Debt",
+            },
+        }
+    ]
+
+    engine._ensure_node_ids(before_fixture, dataset_uri, page_url)
+    engine._ensure_node_ids(after_fixture, dataset_uri, page_url)
+
+    def _collect_ids(payload):
+        ids = []
+
+        def _walk(value):
+            if isinstance(value, dict):
+                node_id = value.get("@id")
+                if isinstance(node_id, str):
+                    ids.append(node_id)
+                for child in value.values():
+                    _walk(child)
+            elif isinstance(value, list):
+                for item in value:
+                    _walk(item)
+
+        _walk(payload)
+        return sorted(set(ids))
+
+    assert _collect_ids(before_fixture) == _collect_ids(after_fixture)
+
+
 def test_normalize_jsonld_embed_and_graph_modes():
     data = [
         {

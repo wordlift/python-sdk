@@ -208,9 +208,29 @@ def test_text_extraction_helpers():
         engine._extract_name_any({"https://schema.org/headline": {"@value": "H"}})
         == "H"
     )
+    assert (
+        engine._extract_name_any({"http://schema.org/headline": {"@value": "H2"}})
+        == "H2"
+    )
     assert engine._extract_url_any(node) == "https://example.org"
+    assert (
+        engine._extract_url_any(
+            {"http://schema.org/url": [{"@value": "https://example.org/http"}]}
+        )
+        == "https://example.org/http"
+    )
+    assert (
+        engine._extract_url_any(
+            {"https://schema.org/url": [{"@value": "https://example.org/https"}]}
+        )
+        == "https://example.org/https"
+    )
     assert engine._extract_text_value([{"@value": " X "}]) == "X"
     assert engine._extract_type({"@type": ["schema:Article"]}) == "Article"
     assert engine._is_item_list_value([{"@type": "ItemList"}]) is True
     assert engine._local_prop_name("https://schema.org/name") == "name"
+    assert engine._local_prop_name("http://schema.org/name") == "name"
     assert engine._local_prop_name("schema:name") == "name"
+    assert (
+        engine._is_jsonld_node({"http://schema.org/url": "https://example.org"}) is True
+    )
