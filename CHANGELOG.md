@@ -1,5 +1,26 @@
 # Changelog
 
+## 8.0.12 - 2026-04-11
+
+### Changed
+
+- Bump package version to `8.0.12`.
+- Update `worph` dependency constraint to `>=0.1.10,<0.2.0`.
+- Refresh lockfile metadata via `poetry lock --no-cache` (resolves `worph` to
+  `0.1.10`).
+- Sync release-facing documentation and indexes (`README.md`,
+  `docs/INDEX.md`, `specs/INDEX.md`).
+
+## 8.0.11 - 2026-04-11
+
+### Changed
+
+- Bump package version to `8.0.11`.
+- Update `worph` dependency constraint to `>=0.1.9,<2.0.0`.
+- Refresh lockfile metadata via `poetry lock` (resolves `worph` to `0.1.9`).
+- Sync release-facing documentation and indexes (`README.md`,
+  `docs/INDEX.md`, `specs/INDEX.md`).
+
 ## 8.0.10 - 2026-04-10
 
 ### Changed

@@ -4381,15 +4381,15 @@ urllib3 = ">=1.25.3,<2.1.0"
 
 [[package]]
 name = "worph"
-version = "0.1.8"
+version = "0.1.10"
 description = "Materialize RDF knowledge graphs from RML/YARRRML mappings with Morph-KGC compatibility"
 optional = true
 python-versions = ">=3.10"
 groups = ["main"]
 markers = "extra == \"ingestion\" or extra == \"structured-data\" or extra == \"kg-build\" or extra == \"all\""
 files = [
-    {file = "worph-0.1.8-py3-none-any.whl", hash = "sha256:a70693f512bde76eaf6ad9f816e4765b99049403f1aec102259168bab798cf59"},
-    {file = "worph-0.1.8.tar.gz", hash = "sha256:139b8c43363b213bbc039b52ceb29bb4fa2154a5b99d70fe6f77f22fa0282b2a"},
+    {file = "worph-0.1.10-py3-none-any.whl", hash = "sha256:b03e0ae7a98ce450b346e09f02e4b176dc8e87d49717d4ea7be21b7ce12af903"},
+    {file = "worph-0.1.10.tar.gz", hash = "sha256:12482f1e4a649bf69f181f9e73c798f20c9c68bd587e116a34244154c1bc84b2"},
 ]
 
 [package.dependencies]
@@ -4633,4 +4633,4 @@ workflow = ["advertools", "google-auth", "gql", "gspread", "lxml", "pandas", "pl
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10, <3.15"
-content-hash = "50a427bc039da4664c414c09480cf288af7c00a618292d20588dc463cd4bda79"
+content-hash = "3a52e1ab159f9b6b2e1371e46d91eda0a28a972e3d504316ac94933044821e1f"
