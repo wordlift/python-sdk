@@ -1,6 +1,6 @@
 # Docs Index
 
-Release sync: this index is aligned with SDK `8.0.14` (see `CHANGELOG.md`).
+Release sync: this index is aligned with SDK `8.0.15` (see `CHANGELOG.md`).
 
 - `docs/public_entry_points.md`: Task-oriented public API inventory for clients/agents.
 - `docs/packaging_slices_v7.md`: v7 packaging model for lean base installs plus optional feature extras under the same `wordlift_sdk` namespace.
