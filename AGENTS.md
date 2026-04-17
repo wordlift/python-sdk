@@ -84,6 +84,10 @@
   bumping the range.
 - Schema.org grammar checks are deliberately permissive, accepting URL/text literals
   for all properties.
+- Schema.org grammar issue extraction is subclass-aware for range checks:
+  warnings like `Schema.org range check: priceSpecification.` are suppressed
+  when the value node type is a valid schema.org subclass of the expected
+  class (for example `UnitPriceSpecification` under `PriceSpecification`).
 - URL validation can render pages with Playwright, extract JSON-LD fragments, and
   validate them via SHACL. Playwright browser binaries must be installed.
 - Validation exposes SDK-level shape composition (`resolve_shape_specs`) with

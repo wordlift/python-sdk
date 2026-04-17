@@ -1,5 +1,27 @@
 # Changelog
 
+## 8.0.16 - 2026-04-17
+
+### Fixed
+
+- Validation: `schemaorg-grammar` range warnings now treat subclass values as
+  valid when extracting issues (for example
+  `Offer.priceSpecification -> UnitPriceSpecification` no longer emits
+  `Schema.org range check: priceSpecification.`).
+- Graph audit: schema-compliance issue extraction applies the same subclass
+  range handling so audit output matches SDK validation behavior.
+
+### Changed
+
+- Add bundled schema.org subclass ontology resource used for subclass
+  relationship checks during issue extraction.
+- Add regression coverage for positive/negative
+  `priceSpecification` range behavior and graph-audit case handling.
+- Bump package version to `8.0.16`.
+- Refresh lockfile metadata via `poetry lock --no-cache`.
+- Sync release-facing documentation and indexes (`README.md`,
+  `docs/INDEX.md`, `specs/INDEX.md`).
+
 ## 8.0.15 - 2026-04-13
 
 ### Changed
