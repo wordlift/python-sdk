@@ -15,6 +15,7 @@ from .rich_snippets import (
 from wordlift_sdk.validation.shacl import (
     _normalize_schema_org_uris,  # type: ignore[attr-defined]
     PreparedShaclValidator,
+    _should_skip_schemaorg_subclass_range_warning,  # type: ignore[attr-defined]
 )
 
 _SCHEMA_URL_HTTP = URIRef("http://schema.org/url")
@@ -196,12 +197,16 @@ class SchemaComplianceKpi:
             main_issues = _extract_issues(
                 main_validation.report_graph,
                 self._main_validator.prepared_shapes.shape_source_map,
+                data_graph=subgraph,
+                shapes_graph=self._main_validator.prepared_shapes.shapes_graph,
                 issue_level=self._issue_level,
                 include_issue_details=self._include_issue_details,
             )
             merchant_issues = _extract_issues(
                 merchant_validation.report_graph,
                 self._merchant_validator.prepared_shapes.shape_source_map,
+                data_graph=subgraph,
+                shapes_graph=self._merchant_validator.prepared_shapes.shapes_graph,
                 issue_level=self._issue_level,
                 include_issue_details=self._include_issue_details,
             )
@@ -310,6 +315,9 @@ def _build_subgraph(
 def _extract_issues(
     report_graph: Graph,
     source_map: dict,
+    *,
+    data_graph: Graph | None = None,
+    shapes_graph: Graph | None = None,
     issue_level: str = "warning",
     include_issue_details: bool = True,
 ) -> ExtractedIssues:
@@ -319,6 +327,14 @@ def _extract_issues(
     warning_count = 0
 
     for node in report_graph.subjects(SH.resultSeverity, None):
+        if _should_skip_schemaorg_subclass_range_warning(
+            report_graph=report_graph,
+            node=node,
+            source_map=source_map,
+            data_graph=data_graph,
+            shapes_graph=shapes_graph,
+        ):
+            continue
         severity_iri = report_graph.value(node, SH.resultSeverity)
         if severity_iri == SH.Violation:
             error_count += 1

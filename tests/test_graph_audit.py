@@ -353,6 +353,39 @@ def test_schema_compliance_empty_graph() -> None:
     assert result.by_url == []
 
 
+def test_schema_compliance_offer_unit_price_specification_no_range_warning() -> None:
+    from wordlift_sdk.validation.shacl import resolve_shape_specs
+
+    product = URIRef("https://example.org/products/p1")
+    offer = URIRef("https://example.org/offers/o1")
+    price_spec = URIRef("https://example.org/price-specs/ps1")
+    graph = _g(
+        (product, RDF.type, _schema("Product")),
+        (product, _schema("url"), Literal("https://example.org/product/p1")),
+        (product, _schema("offers"), offer),
+        (offer, RDF.type, _schema("Offer")),
+        (offer, _schema("priceSpecification"), price_spec),
+        (price_spec, RDF.type, _schema("UnitPriceSpecification")),
+        (price_spec, _schema("price"), Literal("10.00")),
+        (price_spec, _schema("priceCurrency"), Literal("USD")),
+    )
+
+    kpi = SchemaComplianceKpi(
+        shape_specs=resolve_shape_specs(builtin_shapes=["schemaorg-grammar"]),
+        depth=2,
+    )
+    result = kpi.collect(graph)
+
+    warning_messages = [entry.message for entry in result.by_url[0].warnings]
+    merchant_warning_messages = [
+        entry.message for entry in result.by_url[0].google_merchant.warnings
+    ]
+    assert "Schema.org range check: priceSpecification." not in warning_messages
+    assert (
+        "Schema.org range check: priceSpecification." not in merchant_warning_messages
+    )
+
+
 # ---------------------------------------------------------------------------
 # GraphAuditor integration
 # ---------------------------------------------------------------------------

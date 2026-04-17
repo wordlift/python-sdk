@@ -18,7 +18,7 @@ def _fake_render_html(html: str):
 
 
 class _FakePreparedValidator:
-    prepared_shapes = SimpleNamespace(shape_source_map={})
+    prepared_shapes = SimpleNamespace(shape_source_map={}, shapes_graph=Graph())
 
     def validate_graph(self, data_graph, *, normalize_schema_org=True):
         return SimpleNamespace(
