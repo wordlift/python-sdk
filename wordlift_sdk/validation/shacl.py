@@ -13,14 +13,17 @@ from urllib.parse import urlparse
 from html.parser import HTMLParser
 import json
 
+from rdflib.collection import Collection
 from rdflib import Graph, URIRef
-from rdflib.namespace import SH
+from rdflib.namespace import RDF, SH
 from rdflib.term import Identifier
 from requests import Response, get
 
 from wordlift_sdk.render import RenderOptions, render_html
 
 DEFAULT_OPT_IN_EXCLUDED_SHAPES = {"google-image-license-metadata.ttl"}
+_SCHEMAORG_GRAMMAR_SHAPE = "schemaorg-grammar.ttl"
+_SCHEMAORG_SUBCLASS_ONTOLOGY_RESOURCE = "schemaorg-subclass-ontology.nt"
 _VALIDATOR_OPTIONS = {
     "inference": "rdfs",
     "abort_on_first": False,
@@ -37,6 +40,7 @@ class ValidationResult:
     data_graph: Graph
     shape_source_map: dict[Identifier, str]
     warning_count: int
+    shapes_graph: Graph | None = None
 
 
 @dataclass
@@ -289,6 +293,129 @@ def _read_shape_resource(name: str) -> str | None:
     return resource.read_text(encoding="utf-8")
 
 
+@lru_cache(maxsize=1)
+def _load_schemaorg_subclass_ontology() -> Graph | None:
+    data = _read_shape_resource(_SCHEMAORG_SUBCLASS_ONTOLOGY_RESOURCE)
+    if data is None:
+        return None
+    ontology = Graph()
+    ontology.parse(data=data, format="nt")
+    return _normalize_schema_org_uris(ontology)
+
+
+def _normalize_schema_uri_ref(term: Identifier | None) -> URIRef | None:
+    if not isinstance(term, URIRef):
+        return None
+    value = str(term)
+    if value.startswith("https://schema.org/"):
+        return URIRef("http://schema.org/" + value[len("https://schema.org/") :])
+    return term
+
+
+@lru_cache(maxsize=1)
+def _schemaorg_subclass_map() -> dict[URIRef, set[URIRef]]:
+    ontology = _load_schemaorg_subclass_ontology()
+    if ontology is None:
+        return {}
+
+    subclass_map: dict[URIRef, set[URIRef]] = {}
+    for child, parent in ontology.subject_objects(
+        URIRef("http://www.w3.org/2000/01/rdf-schema#subClassOf")
+    ):
+        child_ref = _normalize_schema_uri_ref(child)
+        parent_ref = _normalize_schema_uri_ref(parent)
+        if child_ref is None or parent_ref is None:
+            continue
+        subclass_map.setdefault(child_ref, set()).add(parent_ref)
+    return subclass_map
+
+
+def _schemaorg_superclasses(class_iri: URIRef) -> set[URIRef]:
+    subclass_map = _schemaorg_subclass_map()
+    seen: set[URIRef] = set()
+    stack = [class_iri]
+    while stack:
+        current = stack.pop()
+        for parent in subclass_map.get(current, set()):
+            if parent in seen:
+                continue
+            seen.add(parent)
+            stack.append(parent)
+    return seen
+
+
+def _shape_expected_classes(
+    shapes_graph: Graph, source_shape: Identifier
+) -> set[URIRef]:
+    expected: set[URIRef] = set()
+    list_node = shapes_graph.value(source_shape, SH["or"])
+    if list_node is None:
+        return expected
+    try:
+        members = Collection(shapes_graph, list_node)
+    except Exception:
+        return expected
+
+    for member in members:
+        class_term = shapes_graph.value(member, SH["class"])
+        class_ref = _normalize_schema_uri_ref(class_term)
+        if class_ref is not None:
+            expected.add(class_ref)
+    return expected
+
+
+def _should_skip_schemaorg_subclass_range_warning(
+    *,
+    report_graph: Graph,
+    node: Identifier,
+    source_map: dict[Identifier, str],
+    data_graph: Graph | None,
+    shapes_graph: Graph | None,
+) -> bool:
+    if data_graph is None or shapes_graph is None:
+        return False
+
+    source_shape = report_graph.value(node, SH.sourceShape)
+    if source_shape is None:
+        return False
+    shape_source = source_map.get(source_shape) or source_map.get(str(source_shape))
+    if shape_source != _SCHEMAORG_GRAMMAR_SHAPE.removesuffix(".ttl"):
+        return False
+
+    message = report_graph.value(node, SH.resultMessage)
+    if not isinstance(message, Identifier) or not str(message).startswith(
+        "Schema.org range check:"
+    ):
+        return False
+
+    value = report_graph.value(node, SH.value)
+    value_ref = _normalize_schema_uri_ref(value)
+    if value_ref is None:
+        return False
+
+    expected_classes = _shape_expected_classes(shapes_graph, source_shape)
+    if not expected_classes:
+        return False
+
+    value_types = {
+        type_ref
+        for type_ref in (
+            _normalize_schema_uri_ref(term)
+            for term in data_graph.objects(value_ref, RDF.type)
+        )
+        if type_ref is not None
+    }
+    if not value_types:
+        return False
+
+    for value_type in value_types:
+        if value_type in expected_classes:
+            return True
+        if expected_classes.intersection(_schemaorg_superclasses(value_type)):
+            return True
+    return False
+
+
 def _resolve_shape_sources(shape_specs: Iterable[str] | None) -> list[str]:
     if not shape_specs:
         return _default_shape_resource_names()
@@ -429,6 +556,7 @@ def validate_file(
         data_graph=result.data_graph,
         shape_source_map=validator.prepared_shapes.shape_source_map,
         warning_count=result.warning_count,
+        shapes_graph=validator.prepared_shapes.shapes_graph,
     )
 
 
@@ -458,6 +586,7 @@ def validate_jsonld_from_url(
         data_graph=result.data_graph,
         shape_source_map=validator.prepared_shapes.shape_source_map,
         warning_count=result.warning_count,
+        shapes_graph=validator.prepared_shapes.shapes_graph,
     )
 
 
@@ -470,6 +599,14 @@ def _severity_to_level(severity: Identifier | None) -> str:
 def extract_validation_issues(result: ValidationResult) -> list[ValidationIssue]:
     issues: list[ValidationIssue] = []
     for node in result.report_graph.subjects(SH.resultSeverity, None):
+        if _should_skip_schemaorg_subclass_range_warning(
+            report_graph=result.report_graph,
+            node=node,
+            source_map=result.shape_source_map,
+            data_graph=result.data_graph,
+            shapes_graph=result.shapes_graph,
+        ):
+            continue
         severity = result.report_graph.value(node, SH.resultSeverity)
         source_shape = result.report_graph.value(node, SH.sourceShape)
         message = result.report_graph.value(node, SH.resultMessage)
