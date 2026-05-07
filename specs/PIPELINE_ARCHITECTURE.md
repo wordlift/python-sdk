@@ -114,6 +114,9 @@ Current implementation status:
   (`IriLookup.iri_for_subject(graph, subject)`) resolved via
   `Context.extensions["kg_build.iri_lookup"]`; lookup applies only to root
   subjects and falls back to generated IDs on misses.
+- callback postprocessor contexts inject that lookup from the callback URL and
+  `existing_web_page_id` when the source lookup has resolved an existing
+  URL-mapped IRI.
 - callback graph canonicalization includes a fallback subject pass so non-blank
   subject IRIs are rewritten to canonical dataset-rooted paths when they are not
   already under canonical root prefixes; static-template graph patching remains

@@ -2,7 +2,7 @@
 
 A Python toolkit for orchestrating WordLift imports: fetch URLs from sitemaps, Google Sheets, or explicit lists, filter out already imported pages, enqueue search console jobs, push RDF graphs, and call the WordLift APIs to import web pages.
 
-Current release: `8.0.16` (2026-04-17).
+Current release: `8.0.17` (2026-05-07).
 
 ## Features
 - URL sources: XML sitemaps, Google Sheets (`url` column), or Python lists, with global optional `URL_REGEX` filtering (also enforced in graph-sync source selection before `new_or_changed` GraphQL lookup).
@@ -317,6 +317,8 @@ The SDK now includes a profile-driven cloud mapping module under `wordlift_sdk.k
 3. otherwise no postprocessors
 - Callback canonicalization order: profile postprocessors run first, then built-in canonical ID generation runs on the postprocessed graph immediately before patching.
 - Built-in canonical IDs support optional lookup-based root IRI reuse via `Context.extensions["kg_build.iri_lookup"]` (`IriLookup.iri_for_subject(graph, subject)`), with default fallback to generated IDs when lookup misses.
+- `kg_build` callback contexts populate that lookup from the callback URL and
+  existing URL-mapped IRI when the URL source provides one.
 - Lookup-based reuse is root-only: dependent nodes (for example `Offer`, `Answer`, `Action`) still follow canonical parent-nested rewrite rules.
 - Execution is manifest-based only (hard cutover): no legacy `.py` or `*.command.toml` discovery.
 - During callback patch preparation, the SDK annotates first-level URI-subject nodes in the generated graph with `seovoc:source "web-page-import"` where first-level is dataset ID depth `/<dataset>/<bucket>/<id>` (for example `https://data.host/dataset/types/name`); deeper child IDs and blank nodes are not annotated.

@@ -11,6 +11,7 @@ from types import SimpleNamespace
 from typing import Any
 
 from jinja2 import UndefinedError
+import pandas as pd
 from rdflib import Graph, URIRef
 from wordlift_client.models.web_page_scrape_response import WebPageScrapeResponse
 from wordlift_sdk.protocol import Context
@@ -27,6 +28,7 @@ from wordlift_sdk.validation.shacl_validation_service import (
 from .cloud_flow import run_cloud_workflow as run_cloud_workflow  # noqa: F401
 from .config import ProfileDefinition
 from .entity_patcher import EntityPatcher
+from .iri_lookup import DataFrameUrlIriLookup
 from .kpi import KgBuildKpiCollector
 from .postprocessors import (
     LoadedPostprocessor,
@@ -503,6 +505,11 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         profile_settings = dict(profile_payload.get("settings", {}) or {})
         profile_settings.setdefault("api_url", "https://api.wordlift.io")
         profile_payload["settings"] = profile_settings
+        extensions: dict[str, Any] = {}
+        if url and existing_web_page_id:
+            extensions["kg_build.iri_lookup"] = DataFrameUrlIriLookup(
+                pd.DataFrame([{"url": url, "iri": existing_web_page_id}])
+            )
         return PostprocessorContext(
             profile_name=self.profile.name,
             profile=profile_payload,
@@ -515,6 +522,7 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             existing_import_hash=existing_import_hash,
             import_hash_mode=self._import_hash_mode,
             ids=ids,
+            extensions=extensions,
         )
 
     def _resolve_path(self, raw_path: str) -> Path:
