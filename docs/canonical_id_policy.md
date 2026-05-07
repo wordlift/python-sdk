@@ -76,6 +76,8 @@ hook:
 - protocol: `IriLookup.iri_for_subject(graph, subject) -> str | None`
 - builtin dataframe implementation:
   `wordlift_sdk.kg_build.DataFrameUrlIriLookup` (`url`/`iri` columns)
+- `kg_build` callback contexts populate this lookup from the callback URL and
+  `existing_web_page_id` when the URL source already resolved a URL-mapped IRI.
 
 Behavior:
 

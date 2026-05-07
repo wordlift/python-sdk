@@ -1,5 +1,20 @@
 # Changelog
 
+## 8.0.17 - 2026-05-07
+
+### Fixed
+
+- `kg_build` postprocessor contexts now inject
+  `Context.extensions["kg_build.iri_lookup"]` from the callback URL and
+  `existing_web_page_id`, allowing the trailing canonical ID postprocessor to
+  reuse existing URL-mapped IRIs before falling back to generated IDs.
+
+### Changed
+
+- Bump package version to `8.0.17`.
+- Sync release-facing documentation and indexes (`README.md`,
+  `docs/INDEX.md`, `specs/INDEX.md`).
+
 ## 8.0.16 - 2026-04-17
 
 ### Fixed

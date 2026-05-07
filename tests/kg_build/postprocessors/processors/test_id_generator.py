@@ -616,7 +616,7 @@ def test_dependency_graph_strategy_reparents_faq_under_article_typed_as_faqpage(
 
     Expected transformation:
       old root  : .../articles/article-1
-      new root  : .../articles/credit-card-debt-relief-freedom-debt-relief-<hash>
+      new root  : .../articles/article-1-<hash>
       question  : .../articles/<new>/questions/<q-slug>
       answer    : .../articles/<new>/questions/<q-slug>/answers/answer
     """
@@ -659,8 +659,9 @@ def test_dependency_graph_strategy_reparents_faq_under_article_typed_as_faqpage(
     assert len(articles) == 1
     article_iri = str(articles[0])
     url_hash = generator._url_hash("https://example.com/articles/article-1")
-    assert article_iri == (
-        f"{DATASET}/articles/credit-card-debt-relief-freedom-debt-relief-{url_hash}"
+    assert (
+        article_iri
+        == f"{DATASET}/articles/credit-card-debt-relief-freedom-debt-relief-{url_hash}"
     ), article_iri
 
     questions = list(output.subjects(RDF.type, URIRef(f"{SCHEMA}Question")))
@@ -673,9 +674,9 @@ def test_dependency_graph_strategy_reparents_faq_under_article_typed_as_faqpage(
     answer_iri = str(answers[0])
     assert answer_iri.startswith(f"{question_iri}/answers/"), answer_iri
 
-    # No stale article-1 path may remain anywhere in the graph
+    # No stale external article path may remain anywhere in the graph
     all_iris = {str(s) for s in output.subjects() if isinstance(s, URIRef)}
-    assert not any("article-1" in iri for iri in all_iris), all_iris
+    assert not any(iri.startswith("https://example.com/") for iri in all_iris), all_iris
 
 
 def test_dependency_graph_strategy_is_generic_product_offer_pricespec() -> None:

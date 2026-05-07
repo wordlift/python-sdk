@@ -107,6 +107,62 @@ def _make_validation_outcome(
     )
 
 
+def test_build_pp_context_injects_url_iri_lookup() -> None:
+    protocol = ProfileImportProtocol(
+        context=_make_context(),
+        profile=_make_profile(),
+        root_dir=Path("."),
+    )
+    response = WebPageScrapeResponse(
+        web_page=WebPage(url="https://example.com/article", html="<html></html>")
+    )
+
+    context = protocol._build_pp_context(
+        "https://example.com/article",
+        response,
+        "https://data.example.com/dataset/articles/existing-article",
+        "existing-hash",
+    )
+    lookup = context.extensions.get("kg_build.iri_lookup")
+
+    assert lookup is not None
+
+    graph = Graph()
+    subject = URIRef("https://example.com/article#node")
+    faq_page = URIRef("https://example.com/article#faq")
+    graph.add((subject, RDF.type, URIRef("http://schema.org/Article")))
+    graph.add(
+        (
+            subject,
+            URIRef("http://schema.org/url"),
+            Literal("https://example.com/article"),
+        )
+    )
+    graph.add((faq_page, RDF.type, URIRef("http://schema.org/FAQPage")))
+    graph.add((subject, URIRef("http://schema.org/subjectOf"), faq_page))
+    graph.add((faq_page, URIRef("http://schema.org/about"), subject))
+    assert (
+        lookup.iri_for_subject(graph, subject)
+        == "https://data.example.com/dataset/articles/existing-article"
+    )
+
+    output = CanonicalIdsPostprocessor(strategy="dependency_graph").process_graph(
+        graph, context
+    )
+    assert (
+        URIRef("https://data.example.com/dataset/articles/existing-article"),
+        RDF.type,
+        URIRef("http://schema.org/Article"),
+    ) in output
+    assert (
+        URIRef(
+            "https://data.example.com/dataset/articles/existing-article/faq-pages/faq-page"
+        ),
+        URIRef("http://schema.org/about"),
+        URIRef("https://data.example.com/dataset/articles/existing-article"),
+    ) in output
+
+
 def _passthrough_pp() -> AsyncMock:
     return AsyncMock(
         side_effect=lambda g, url, resp, ewi, eih: PostprocessorResult(

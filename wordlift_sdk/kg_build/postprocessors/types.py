@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
 from typing import Any, Protocol, runtime_checkable
@@ -27,6 +27,7 @@ class PostprocessorContext:
     existing_import_hash: str | None = None
     import_hash_mode: str = "on"
     ids: Any | None = None
+    extensions: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
