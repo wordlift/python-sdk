@@ -24,7 +24,7 @@ class IdGenerator(IdGeneratorInterface):
         slug = ''.join(c for c in slug if unicodedata.category(c) != 'Mn')
 
         # Remove punctuation, convert to lowercase, format dashes
-        slug = re.sub(r'[^\w\s-]', '', slug)  # remove punctuation
+        slug = re.sub(r'[^\w\s-]', '', slug, flags=re.ASCII)  # remove non-ASCII and punctuation
         slug = re.sub(r'\s+', '-', slug)  # replace spaces with dashes
         slug = re.sub(r'-+', '-', slug)  # collapse multiple dashes
         slug = slug.strip('-')  # trim leading/trailing dashes
