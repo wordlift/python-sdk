@@ -1,5 +1,21 @@
 # Changelog
 
+## 8.1.0 - 2026-05-18
+
+### Added
+
+- New `crawler` ingestion loader backed by `FetchApi`, supporting configurable
+  JS rendering (`CRAWLER_JS_RENDER_MODE`), proxy mode (`CRAWLER_PROXY_MODE`),
+  and custom user-agent (`CRAWLER_USER_AGENT`) via env vars.
+- Retry support with retryable error classification (5xx / 429) for the
+  crawler loader.
+
+### Changed
+
+- Bump `wordlift-client` dependency to `>=1.166.0` to pick up `FetchApi`,
+  `FetchJsRenderMode`, and `ProxyMode`.
+- Bump package version to `8.1.0`.
+
 ## 8.0.17 - 2026-05-07
 
 ### Fixed
