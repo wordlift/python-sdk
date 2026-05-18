@@ -14,6 +14,9 @@ from wordlift_client import (
     WebPageScrapeApi,
     WebPageScrapeRequest,
 )
+from wordlift_client.api.fetch_api import FetchApi
+from wordlift_client.exceptions import ApiException
+from wordlift_client.models.fetch_js_render_mode import FetchJsRenderMode
 
 from wordlift_sdk.render.browser import BrowserOperationError
 from wordlift_sdk.render import HtmlRenderer, RenderOptions
@@ -414,6 +417,75 @@ class PremiumScraperLoaderAdapter(WebScrapeApiLoaderAdapter):
         super().__init__(mode="premium_scraper", backend="premium_scraper")
 
 
+class CrawlerLoaderAdapter(BaseLoaderAdapter):
+    def load(self, item: SourceItem, config: ResolvedIngestionConfig) -> LoadedPage:
+        client_configuration = config.loader_config.get("client_configuration")
+        if client_configuration is None:
+            raise LoaderConfigError(
+                "WORDLIFT_KEY is required for the crawler loader",
+                code="INGEST_CFG_INVALID_OPTION_COMBINATION",
+            )
+
+        def _run() -> LoadedPage:
+            response = _run_coro_sync(
+                self._fetch_async(
+                    item_url=item.url,
+                    timeout_ms=config.timeout_ms,
+                    client_configuration=client_configuration,
+                )
+            )
+
+            html = getattr(response, "html", None)
+            if not html:
+                raise LoaderRuntimeError(
+                    f"Crawler loader returned no HTML for {item.url}",
+                    code="INGEST_LOAD_REMOTE_API_ERROR",
+                    retryable=True,
+                )
+
+            return LoadedPage(
+                item_id=item.id,
+                url=item.url,
+                final_url=getattr(response, "url_final", None) or item.url,
+                status_code=getattr(response, "status_code", None),
+                html=html,
+                fetch_meta={
+                    "backend": "crawler",
+                    "from_cache": getattr(response, "from_cache", None),
+                    "error_code": getattr(response, "error_code", None),
+                },
+            )
+
+        return self._with_retry(
+            _run,
+            attempts=config.retry_attempts,
+            backoff_ms=config.retry_backoff_ms,
+        )
+
+    async def _fetch_async(
+        self,
+        *,
+        item_url: str,
+        timeout_ms: int,
+        client_configuration: Any,
+    ) -> Any:
+        async with ApiClient(client_configuration) as client:
+            api = FetchApi(client)
+            try:
+                return await api.fetch_page_fetch_get(
+                    url=item_url,
+                    js_render_mode=FetchJsRenderMode.AUTO,
+                    _request_timeout=max(timeout_ms, 1) / 1000.0,
+                )
+            except ApiException as exc:
+                raise LoaderRuntimeError(
+                    f"Crawler API error {exc.status} for {item_url}: {exc.body}",
+                    code="INGEST_LOAD_REMOTE_API_ERROR",
+                    retryable=exc.status >= 500 or exc.status == 429,
+                    details={"status": exc.status, "body": exc.body},
+                ) from exc
+
+
 def _run_coro_sync(coro: Any) -> Any:
     try:
         asyncio.get_running_loop()
@@ -440,6 +512,7 @@ def _run_coro_sync(coro: Any) -> Any:
 
 __all__ = [
     "BaseLoaderAdapter",
+    "CrawlerLoaderAdapter",
     "PassthroughLoaderAdapter",
     "PlaywrightLoaderAdapter",
     "PremiumScraperLoaderAdapter",
