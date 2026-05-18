@@ -109,6 +109,7 @@ class IngestionWebPageScrapeUrlHandler(UrlHandler):
             "PLAYWRIGHT_HEADLESS",
             "CRAWLER_JS_RENDER_MODE",
             "CRAWLER_PROXY_MODE",
+            "CRAWLER_USER_AGENT",
         ]
         settings = {
             key: self._configuration_provider.get_value(key)

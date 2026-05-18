@@ -440,6 +440,10 @@ class CrawlerLoaderAdapter(BaseLoaderAdapter):
                 code="INGEST_CFG_INVALID_OPTION_COMBINATION",
             )
 
+        user_agent = config.loader_config.get("crawler_user_agent")
+        if user_agent:
+            client_configuration.user_agent = str(user_agent)
+
         js_render_mode = _parse_crawler_enum(
             FetchJsRenderMode,
             config.loader_config.get("crawler_js_render_mode"),

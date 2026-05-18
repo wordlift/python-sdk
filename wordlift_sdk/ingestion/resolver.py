@@ -256,6 +256,7 @@ def resolve_ingestion_config_from_getter(
         "headless": _parse_bool(get_value("PLAYWRIGHT_HEADLESS"), default=True),
         "crawler_js_render_mode": get_value("CRAWLER_JS_RENDER_MODE"),
         "crawler_proxy_mode": get_value("CRAWLER_PROXY_MODE"),
+        "crawler_user_agent": get_value("CRAWLER_USER_AGENT"),
     }
 
     return ResolvedIngestionConfig(
