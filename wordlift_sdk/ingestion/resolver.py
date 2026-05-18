@@ -254,6 +254,8 @@ def resolve_ingestion_config_from_getter(
         "block_ads": get_value("WEB_PAGE_IMPORT_BLOCK_ADS"),
         "wait_until": get_value("PLAYWRIGHT_WAIT_UNTIL", DEFAULT_PLAYWRIGHT_WAIT_UNTIL),
         "headless": _parse_bool(get_value("PLAYWRIGHT_HEADLESS"), default=True),
+        "crawler_js_render_mode": get_value("CRAWLER_JS_RENDER_MODE"),
+        "crawler_proxy_mode": get_value("CRAWLER_PROXY_MODE"),
     }
 
     return ResolvedIngestionConfig(
