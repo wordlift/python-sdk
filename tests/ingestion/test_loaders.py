@@ -8,11 +8,14 @@ from io import BytesIO
 from types import SimpleNamespace
 
 import pytest
+from wordlift_client.models.fetch_js_render_mode import FetchJsRenderMode
+from wordlift_client.models.proxy_mode import ProxyMode
 
 from wordlift_sdk.ingestion.errors import LoaderConfigError, LoaderRuntimeError
 import wordlift_sdk.ingestion.loaders as loaders_module
 from wordlift_sdk.ingestion.loaders import (
     BaseLoaderAdapter,
+    CrawlerLoaderAdapter,
     PassthroughLoaderAdapter,
     PlaywrightLoaderAdapter,
     PremiumScraperLoaderAdapter,
@@ -466,3 +469,246 @@ def test_proxy_and_premium_loader_backends(
     monkeypatch.setattr(loader, "_scrape_async", fake_scrape_async)
     page = loader.load(SourceItem(id="1", url="https://example.com/source"), _config())
     assert page.fetch_meta["backend"] == backend
+
+
+# ---------------------------------------------------------------------------
+# _parse_crawler_enum
+# ---------------------------------------------------------------------------
+
+
+def test_parse_crawler_enum_returns_default_for_none() -> None:
+    default = FetchJsRenderMode.DISABLED
+    result = loaders_module._parse_crawler_enum(
+        FetchJsRenderMode, None, default, "crawler_js_render_mode"
+    )
+    assert result is default
+
+
+def test_parse_crawler_enum_valid_value() -> None:
+    result = loaders_module._parse_crawler_enum(
+        FetchJsRenderMode, "auto", FetchJsRenderMode.DISABLED, "crawler_js_render_mode"
+    )
+    assert result == FetchJsRenderMode.AUTO
+
+
+def test_parse_crawler_enum_case_insensitive() -> None:
+    result = loaders_module._parse_crawler_enum(
+        ProxyMode, "  STANDARD  ", ProxyMode.DISABLED, "crawler_proxy_mode"
+    )
+    assert result == ProxyMode.STANDARD
+
+
+def test_parse_crawler_enum_invalid_value_raises() -> None:
+    with pytest.raises(LoaderConfigError) as exc:
+        loaders_module._parse_crawler_enum(
+            FetchJsRenderMode,
+            "turbo",
+            FetchJsRenderMode.DISABLED,
+            "crawler_js_render_mode",
+        )
+    assert exc.value.code == "INGEST_CFG_INVALID_OPTION_COMBINATION"
+    assert "turbo" in str(exc.value)
+    assert "crawler_js_render_mode" in str(exc.value)
+
+
+# ---------------------------------------------------------------------------
+# CrawlerLoaderAdapter
+# ---------------------------------------------------------------------------
+
+
+def _crawler_config(**overrides) -> ResolvedIngestionConfig:
+    cfg = _config(
+        loader_name="crawler",
+        loader_config={
+            "client_configuration": object(),
+            "crawler_js_render_mode": None,
+            "crawler_proxy_mode": None,
+        },
+    )
+    if overrides:
+        merged = dict(cfg.loader_config)
+        merged.update(overrides)
+        cfg = _config(loader_name="crawler", loader_config=merged)
+    return cfg
+
+
+def test_crawler_loader_missing_client_configuration_raises() -> None:
+    loader = CrawlerLoaderAdapter()
+    with pytest.raises(LoaderConfigError) as exc:
+        loader.load(
+            SourceItem(id="1", url="https://example.com"),
+            _config(loader_name="crawler", loader_config={}),
+        )
+    assert exc.value.code == "INGEST_CFG_INVALID_OPTION_COMBINATION"
+
+
+def test_crawler_loader_success_returns_loaded_page(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    loader = CrawlerLoaderAdapter()
+
+    async def fake_fetch(**kwargs):
+        del kwargs
+        return SimpleNamespace(
+            html="<html>crawler</html>",
+            url_final="https://example.com/final",
+            status_code=200,
+            from_cache=True,
+            error_code=None,
+        )
+
+    monkeypatch.setattr(loader, "_fetch_async", fake_fetch)
+
+    page = loader.load(
+        SourceItem(id="42", url="https://example.com"), _crawler_config()
+    )
+
+    assert page.item_id == "42"
+    assert page.url == "https://example.com"
+    assert page.final_url == "https://example.com/final"
+    assert page.status_code == 200
+    assert page.html == "<html>crawler</html>"
+    assert page.fetch_meta["backend"] == "crawler"
+    assert page.fetch_meta["from_cache"] is True
+    assert page.fetch_meta["error_code"] is None
+
+
+def test_crawler_loader_final_url_falls_back_to_item_url(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    loader = CrawlerLoaderAdapter()
+
+    async def fake_fetch(**kwargs):
+        del kwargs
+        return SimpleNamespace(
+            html="<html>ok</html>",
+            url_final=None,
+            status_code=200,
+            from_cache=None,
+            error_code=None,
+        )
+
+    monkeypatch.setattr(loader, "_fetch_async", fake_fetch)
+
+    page = loader.load(
+        SourceItem(id="1", url="https://example.com/original"), _crawler_config()
+    )
+    assert page.final_url == "https://example.com/original"
+
+
+def test_crawler_loader_empty_html_raises_runtime_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    loader = CrawlerLoaderAdapter()
+
+    async def fake_fetch(**kwargs):
+        del kwargs
+        return SimpleNamespace(html=None, url_final=None, status_code=200)
+
+    monkeypatch.setattr(loader, "_fetch_async", fake_fetch)
+
+    with pytest.raises(LoaderRuntimeError) as exc:
+        loader.load(
+            SourceItem(id="1", url="https://example.com"),
+            _crawler_config(),
+        )
+    assert exc.value.code == "INGEST_LOAD_REMOTE_API_ERROR"
+    assert exc.value.retryable is True
+
+
+@pytest.mark.asyncio
+async def test_crawler_fetch_async_passes_enum_args(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    loader = CrawlerLoaderAdapter()
+    captured: dict = {}
+
+    class _Api:
+        def __init__(self, client):
+            pass
+
+        async def fetch_page_fetch_get(self, **kwargs):
+            captured.update(kwargs)
+            return SimpleNamespace(html="<html/>", url_final=None, status_code=200)
+
+    class _ClientCtx:
+        def __init__(self, cfg):
+            pass
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb):
+            return False
+
+    monkeypatch.setattr(loaders_module, "ApiClient", _ClientCtx)
+    monkeypatch.setattr(loaders_module, "FetchApi", _Api)
+
+    await loader._fetch_async(
+        item_url="https://example.com",
+        timeout_ms=5000,
+        client_configuration=object(),
+        js_render_mode=FetchJsRenderMode.AUTO,
+        proxy_mode=ProxyMode.STANDARD,
+    )
+
+    assert captured["url"] == "https://example.com"
+    assert captured["js_render_mode"] == FetchJsRenderMode.AUTO
+    assert captured["proxy_mode"] == ProxyMode.STANDARD
+    assert captured["_request_timeout"] == pytest.approx(5.0)
+
+
+@pytest.mark.parametrize(
+    ("status", "expected_retryable"),
+    [
+        (500, True),
+        (503, True),
+        (429, True),
+        (403, False),
+        (404, False),
+    ],
+)
+@pytest.mark.asyncio
+async def test_crawler_fetch_async_api_exception_retryable(
+    monkeypatch: pytest.MonkeyPatch,
+    status: int,
+    expected_retryable: bool,
+) -> None:
+    from wordlift_client.exceptions import ApiException
+
+    loader = CrawlerLoaderAdapter()
+
+    class _Api:
+        def __init__(self, client):
+            pass
+
+        async def fetch_page_fetch_get(self, **kwargs):
+            exc = ApiException(status=status)
+            exc.body = "error body"
+            raise exc
+
+    class _ClientCtx:
+        def __init__(self, cfg):
+            pass
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb):
+            return False
+
+    monkeypatch.setattr(loaders_module, "ApiClient", _ClientCtx)
+    monkeypatch.setattr(loaders_module, "FetchApi", _Api)
+
+    with pytest.raises(LoaderRuntimeError) as exc:
+        await loader._fetch_async(
+            item_url="https://example.com",
+            timeout_ms=1000,
+            client_configuration=object(),
+            js_render_mode=FetchJsRenderMode.DISABLED,
+            proxy_mode=ProxyMode.DISABLED,
+        )
+
+    assert exc.value.code == "INGEST_LOAD_REMOTE_API_ERROR"
+    assert exc.value.retryable is expected_retryable
+    assert exc.value.details["status"] == status

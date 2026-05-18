@@ -13,6 +13,7 @@ LOADERS = (
     "premium_scraper",
     "web_scrape_api",
     "passthrough",
+    "crawler",
 )
 
 
