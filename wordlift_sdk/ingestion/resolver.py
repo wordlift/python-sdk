@@ -46,6 +46,7 @@ def _normalize_loader_name(value: str) -> str:
         "playwright": "playwright",
         "premium_scraper": "premium_scraper",
         "passthrough": "passthrough",
+        "crawler": "crawler",
     }.get(key, key)
 
 
@@ -178,6 +179,7 @@ def resolve_ingestion_config_from_getter(
         "premium_scraper",
         "web_scrape_api",
         "passthrough",
+        "crawler",
     }:
         raise IngestionConfigError(
             f"Unsupported loader '{loader_name}'",

@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from .loaders import (
+    CrawlerLoaderAdapter,
     PassthroughLoaderAdapter,
     PlaywrightLoaderAdapter,
     PremiumScraperLoaderAdapter,
@@ -38,6 +39,7 @@ def create_loader_registry() -> AdapterRegistry[Any]:
     registry.register("premium_scraper", PremiumScraperLoaderAdapter())
     registry.register("web_scrape_api", WebScrapeApiLoaderAdapter(mode="default"))
     registry.register("passthrough", PassthroughLoaderAdapter())
+    registry.register("crawler", CrawlerLoaderAdapter())
     return registry
 
 
