@@ -107,6 +107,8 @@ class IngestionWebPageScrapeUrlHandler(UrlHandler):
             "WEB_PAGE_IMPORT_BLOCK_ADS",
             "PLAYWRIGHT_WAIT_UNTIL",
             "PLAYWRIGHT_HEADLESS",
+            "CRAWLER_JS_RENDER_MODE",
+            "CRAWLER_PROXY_MODE",
         ]
         settings = {
             key: self._configuration_provider.get_value(key)

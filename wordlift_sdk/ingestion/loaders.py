@@ -17,6 +17,7 @@ from wordlift_client import (
 from wordlift_client.api.fetch_api import FetchApi
 from wordlift_client.exceptions import ApiException
 from wordlift_client.models.fetch_js_render_mode import FetchJsRenderMode
+from wordlift_client.models.proxy_mode import ProxyMode
 
 from wordlift_sdk.render.browser import BrowserOperationError
 from wordlift_sdk.render import HtmlRenderer, RenderOptions
@@ -417,6 +418,19 @@ class PremiumScraperLoaderAdapter(WebScrapeApiLoaderAdapter):
         super().__init__(mode="premium_scraper", backend="premium_scraper")
 
 
+def _parse_crawler_enum(enum_class: type, raw: Any, default: Any, key: str) -> Any:
+    if raw is None:
+        return default
+    try:
+        return enum_class(str(raw).strip().lower())
+    except ValueError:
+        allowed = ", ".join(m.value for m in enum_class)
+        raise LoaderConfigError(
+            f"Invalid value {raw!r} for {key}. Allowed: {allowed}.",
+            code="INGEST_CFG_INVALID_OPTION_COMBINATION",
+        )
+
+
 class CrawlerLoaderAdapter(BaseLoaderAdapter):
     def load(self, item: SourceItem, config: ResolvedIngestionConfig) -> LoadedPage:
         client_configuration = config.loader_config.get("client_configuration")
@@ -426,12 +440,27 @@ class CrawlerLoaderAdapter(BaseLoaderAdapter):
                 code="INGEST_CFG_INVALID_OPTION_COMBINATION",
             )
 
+        js_render_mode = _parse_crawler_enum(
+            FetchJsRenderMode,
+            config.loader_config.get("crawler_js_render_mode"),
+            FetchJsRenderMode.DISABLED,
+            "crawler_js_render_mode",
+        )
+        proxy_mode = _parse_crawler_enum(
+            ProxyMode,
+            config.loader_config.get("crawler_proxy_mode"),
+            ProxyMode.DISABLED,
+            "crawler_proxy_mode",
+        )
+
         def _run() -> LoadedPage:
             response = _run_coro_sync(
                 self._fetch_async(
                     item_url=item.url,
                     timeout_ms=config.timeout_ms,
                     client_configuration=client_configuration,
+                    js_render_mode=js_render_mode,
+                    proxy_mode=proxy_mode,
                 )
             )
 
@@ -468,13 +497,16 @@ class CrawlerLoaderAdapter(BaseLoaderAdapter):
         item_url: str,
         timeout_ms: int,
         client_configuration: Any,
+        js_render_mode: FetchJsRenderMode,
+        proxy_mode: ProxyMode,
     ) -> Any:
         async with ApiClient(client_configuration) as client:
             api = FetchApi(client)
             try:
                 return await api.fetch_page_fetch_get(
                     url=item_url,
-                    js_render_mode=FetchJsRenderMode.AUTO,
+                    js_render_mode=js_render_mode,
+                    proxy_mode=proxy_mode,
                     _request_timeout=max(timeout_ms, 1) / 1000.0,
                 )
             except ApiException as exc:
