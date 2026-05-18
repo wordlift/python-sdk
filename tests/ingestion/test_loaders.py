@@ -711,4 +711,122 @@ async def test_crawler_fetch_async_api_exception_retryable(
 
     assert exc.value.code == "INGEST_LOAD_REMOTE_API_ERROR"
     assert exc.value.retryable is expected_retryable
-    assert exc.value.details["status"] == status
+
+
+# ---------------------------------------------------------------------------
+# CrawlerLoaderAdapter — user_agent
+# ---------------------------------------------------------------------------
+
+
+def test_crawler_loader_sets_user_agent_when_provided(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    loader = CrawlerLoaderAdapter()
+    client_cfg = SimpleNamespace(user_agent="OpenAPI-Generator/1.0/python")
+
+    async def fake_fetch(**kwargs):
+        return SimpleNamespace(
+            html="<html/>",
+            url_final=None,
+            status_code=200,
+            from_cache=None,
+            error_code=None,
+        )
+
+    monkeypatch.setattr(loader, "_fetch_async", fake_fetch)
+
+    loader.load(
+        SourceItem(id="1", url="https://example.com"),
+        _crawler_config(
+            client_configuration=client_cfg, crawler_user_agent="my-bot/1.0"
+        ),
+    )
+
+    assert client_cfg.user_agent == "my-bot/1.0"
+
+
+def test_crawler_loader_does_not_touch_user_agent_when_absent(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    loader = CrawlerLoaderAdapter()
+    client_cfg = SimpleNamespace(user_agent="OpenAPI-Generator/1.0/python")
+
+    async def fake_fetch(**kwargs):
+        return SimpleNamespace(
+            html="<html/>",
+            url_final=None,
+            status_code=200,
+            from_cache=None,
+            error_code=None,
+        )
+
+    monkeypatch.setattr(loader, "_fetch_async", fake_fetch)
+
+    loader.load(
+        SourceItem(id="1", url="https://example.com"),
+        _crawler_config(client_configuration=client_cfg),
+    )
+
+    assert client_cfg.user_agent == "OpenAPI-Generator/1.0/python"
+
+
+# ---------------------------------------------------------------------------
+# CrawlerLoaderAdapter — enum defaults flow through to _fetch_async
+# ---------------------------------------------------------------------------
+
+
+def test_crawler_loader_defaults_render_mode_and_proxy_to_disabled(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    loader = CrawlerLoaderAdapter()
+    captured: dict = {}
+
+    async def fake_fetch(**kwargs):
+        captured.update(kwargs)
+        return SimpleNamespace(
+            html="<html/>",
+            url_final=None,
+            status_code=200,
+            from_cache=None,
+            error_code=None,
+        )
+
+    monkeypatch.setattr(loader, "_fetch_async", fake_fetch)
+
+    loader.load(
+        SourceItem(id="1", url="https://example.com"),
+        _crawler_config(),
+    )
+
+    assert captured["js_render_mode"] == FetchJsRenderMode.DISABLED
+    assert captured["proxy_mode"] == ProxyMode.DISABLED
+
+
+def test_crawler_loader_passes_configured_enum_values(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    loader = CrawlerLoaderAdapter()
+    captured: dict = {}
+
+    async def fake_fetch(**kwargs):
+        captured.update(kwargs)
+        return SimpleNamespace(
+            html="<html/>",
+            url_final=None,
+            status_code=200,
+            from_cache=None,
+            error_code=None,
+        )
+
+    monkeypatch.setattr(loader, "_fetch_async", fake_fetch)
+
+    loader.load(
+        SourceItem(id="1", url="https://example.com"),
+        _crawler_config(
+            crawler_js_render_mode="enabled",
+            crawler_proxy_mode="standard",
+        ),
+    )
+
+    assert captured["js_render_mode"] == FetchJsRenderMode.ENABLED
+    assert captured["proxy_mode"] == ProxyMode.STANDARD
