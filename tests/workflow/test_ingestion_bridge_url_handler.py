@@ -396,6 +396,26 @@ async def test_ingestion_bridge_handler_shows_orchestrator_failure_diagnostics(
     assert diagnostics["root_exception_type"] == "TimeoutError"
 
 
+def test_build_settings_includes_crawler_keys() -> None:
+    provider = MagicMock()
+    provider.get_value.side_effect = lambda key, default=None: {
+        "WORDLIFT_KEY": "key",
+        "CRAWLER_JS_RENDER_MODE": "auto",
+        "CRAWLER_PROXY_MODE": "standard",
+    }.get(key, default)
+
+    handler = IngestionWebPageScrapeUrlHandler(
+        context=MagicMock(),
+        configuration_provider=provider,
+        web_page_scrape_callback=MagicMock(),
+    )
+    from wordlift_sdk.url_source import Url
+
+    settings = handler._build_settings(Url(value="https://example.com"))
+    assert settings.get("CRAWLER_JS_RENDER_MODE") == "auto"
+    assert settings.get("CRAWLER_PROXY_MODE") == "standard"
+
+
 def test_diagnostic_helpers_cover_fallback_paths() -> None:
     assert _format_failure_diagnostics(None) is None
     assert _format_failure_diagnostics({}) is None

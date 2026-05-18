@@ -91,6 +91,44 @@ def test_url_regex_is_resolved_and_validated() -> None:
     assert exc.value.code == "INGEST_CFG_INVALID_URL_REGEX"
 
 
+def test_crawler_loader_is_accepted() -> None:
+    cfg = resolve_ingestion_config_from_mapping(
+        {
+            "INGEST_SOURCE": "urls",
+            "INGEST_LOADER": "crawler",
+            "URLS": ["https://example.com"],
+        }
+    )
+    assert cfg.loader_name == "crawler"
+    assert cfg.warnings == ()
+
+
+def test_crawler_env_vars_are_passed_to_loader_config() -> None:
+    cfg = resolve_ingestion_config_from_mapping(
+        {
+            "INGEST_SOURCE": "urls",
+            "INGEST_LOADER": "crawler",
+            "URLS": ["https://example.com"],
+            "CRAWLER_JS_RENDER_MODE": "auto",
+            "CRAWLER_PROXY_MODE": "standard",
+        }
+    )
+    assert cfg.loader_config["crawler_js_render_mode"] == "auto"
+    assert cfg.loader_config["crawler_proxy_mode"] == "standard"
+
+
+def test_crawler_env_vars_default_to_none_when_absent() -> None:
+    cfg = resolve_ingestion_config_from_mapping(
+        {
+            "INGEST_SOURCE": "urls",
+            "INGEST_LOADER": "crawler",
+            "URLS": ["https://example.com"],
+        }
+    )
+    assert cfg.loader_config["crawler_js_render_mode"] is None
+    assert cfg.loader_config["crawler_proxy_mode"] is None
+
+
 def test_sitemap_url_pattern_is_deprecated_alias_for_url_regex() -> None:
     cfg = resolve_ingestion_config_from_mapping(
         {
