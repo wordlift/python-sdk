@@ -13,6 +13,8 @@ from wordlift_sdk.render.render_options import (
 from .errors import IngestionConfigError, SourceConfigError
 from .events import IngestionWarning
 
+DEFAULT_CRAWLER_TIMEOUT_MS = 600_000
+
 
 def _parse_bool(value: Any, *, default: bool = False) -> bool:
     if value is None:
@@ -189,9 +191,12 @@ def resolve_ingestion_config_from_getter(
     passthrough_when_html = _parse_bool(
         get_value("INGEST_PASSTHROUGH_WHEN_HTML"), default=True
     )
-    timeout_ms = _parse_int(
-        get_value("INGEST_TIMEOUT_MS"), default=DEFAULT_PLAYWRIGHT_TIMEOUT_MS
+    _default_timeout_ms = (
+        DEFAULT_CRAWLER_TIMEOUT_MS
+        if loader_name == "crawler"
+        else DEFAULT_PLAYWRIGHT_TIMEOUT_MS
     )
+    timeout_ms = _parse_int(get_value("INGEST_TIMEOUT_MS"), default=_default_timeout_ms)
     retry_attempts = _parse_int(get_value("INGEST_RETRY_ATTEMPTS"), default=5)
     retry_backoff_ms = _parse_int(get_value("INGEST_RETRY_BACKOFF_MS"), default=2000)
 
@@ -312,6 +317,7 @@ def _validate_loader_option_combinations(
 
 
 __all__ = [
+    "DEFAULT_CRAWLER_TIMEOUT_MS",
     "ResolvedIngestionConfig",
     "resolve_ingestion_config_from_getter",
     "resolve_ingestion_config_from_mapping",
