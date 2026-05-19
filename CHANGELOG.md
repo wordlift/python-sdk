@@ -1,5 +1,12 @@
 # Changelog
 
+## 8.2.1 - 2026-05-19
+
+### Changed
+
+- Remove hardcoded version pins from `README.md`, `docs/INDEX.md`, and
+  `specs/INDEX.md`; they now point to `CHANGELOG.md` instead.
+
 ## 8.2.0 - 2026-05-19
 
 ### Added
