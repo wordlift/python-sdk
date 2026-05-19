@@ -1,5 +1,13 @@
 # Changelog
 
+## 8.2.0 - 2026-05-19
+
+### Added
+
+- `CrawlerLoaderAdapter` now populates `fetch_meta["resources"]` with a flat
+  list of `{url, status, resource_type}` dicts when the crawler response
+  includes a HAR payload; the key is omitted when HAR is absent.
+
 ## 8.1.0 - 2026-05-18
 
 ### Added
