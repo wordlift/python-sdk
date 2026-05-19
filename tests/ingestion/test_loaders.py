@@ -22,6 +22,7 @@ from wordlift_sdk.ingestion.loaders import (
     ProxyLoaderAdapter,
     SimpleLoaderAdapter,
     WebScrapeApiLoaderAdapter,
+    _har_to_resources,
 )
 from wordlift_sdk.ingestion.models import SourceItem
 from wordlift_sdk.ingestion.resolver import ResolvedIngestionConfig
@@ -830,3 +831,146 @@ def test_crawler_loader_passes_configured_enum_values(
 
     assert captured["js_render_mode"] == FetchJsRenderMode.ENABLED
     assert captured["proxy_mode"] == ProxyMode.STANDARD
+
+
+# ---------------------------------------------------------------------------
+# _har_to_resources
+# ---------------------------------------------------------------------------
+
+_SAMPLE_HAR = {
+    "log": {
+        "version": "1.2",
+        "entries": [
+            {
+                "request": {"url": "https://example.com/"},
+                "response": {"status": 200},
+                "resourceType": "document",
+            },
+            {
+                "request": {"url": "https://example.com/style.css"},
+                "response": {"status": 200},
+                "resourceType": "stylesheet",
+            },
+            {
+                "request": {"url": "https://example.com/img.png"},
+                "response": {"status": 304},
+                "resourceType": "image",
+            },
+        ],
+    }
+}
+
+
+def test_har_to_resources_converts_entries() -> None:
+    resources = _har_to_resources(_SAMPLE_HAR)
+    assert resources == [
+        {"url": "https://example.com/", "status": 200, "resource_type": "document"},
+        {
+            "url": "https://example.com/style.css",
+            "status": 200,
+            "resource_type": "stylesheet",
+        },
+        {"url": "https://example.com/img.png", "status": 304, "resource_type": "image"},
+    ]
+
+
+def test_har_to_resources_returns_none_for_non_dict() -> None:
+    assert _har_to_resources(None) is None
+    assert _har_to_resources("not a dict") is None
+    assert _har_to_resources([]) is None
+
+
+def test_har_to_resources_returns_none_for_empty_entries() -> None:
+    assert _har_to_resources({"log": {"entries": []}}) is None
+
+
+def test_har_to_resources_skips_entries_without_url() -> None:
+    har = {
+        "log": {
+            "entries": [
+                {"request": {}, "response": {"status": 200}, "resourceType": "script"}
+            ]
+        }
+    }
+    assert _har_to_resources(har) is None
+
+
+def test_har_to_resources_filters_entries_missing_url() -> None:
+    har = {
+        "log": {
+            "entries": [
+                {
+                    "request": {"url": "https://example.com/"},
+                    "response": {"status": 200},
+                    "resourceType": "document",
+                },
+                {"request": {}, "response": {"status": 200}, "resourceType": "script"},
+                {
+                    "request": {"url": "https://example.com/style.css"},
+                    "response": {"status": 200},
+                    "resourceType": "stylesheet",
+                },
+            ]
+        }
+    }
+    assert _har_to_resources(har) == [
+        {"url": "https://example.com/", "status": 200, "resource_type": "document"},
+        {
+            "url": "https://example.com/style.css",
+            "status": 200,
+            "resource_type": "stylesheet",
+        },
+    ]
+
+
+def test_crawler_loader_exposes_resources_in_fetch_meta(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    loader = CrawlerLoaderAdapter()
+
+    async def fake_fetch(**kwargs):
+        return SimpleNamespace(
+            html="<html/>",
+            url_final=None,
+            status_code=200,
+            from_cache=None,
+            error_code=None,
+            har=_SAMPLE_HAR,
+        )
+
+    monkeypatch.setattr(loader, "_fetch_async", fake_fetch)
+
+    page = loader.load(SourceItem(id="1", url="https://example.com"), _crawler_config())
+
+    assert page.fetch_meta["backend"] == "crawler"
+    assert page.fetch_meta["resources"] == [
+        {"url": "https://example.com/", "status": 200, "resource_type": "document"},
+        {
+            "url": "https://example.com/style.css",
+            "status": 200,
+            "resource_type": "stylesheet",
+        },
+        {"url": "https://example.com/img.png", "status": 304, "resource_type": "image"},
+    ]
+
+
+def test_crawler_loader_omits_resources_when_har_absent(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    loader = CrawlerLoaderAdapter()
+
+    async def fake_fetch(**kwargs):
+        return SimpleNamespace(
+            html="<html/>",
+            url_final=None,
+            status_code=200,
+            from_cache=None,
+            error_code=None,
+            har=None,
+        )
+
+    monkeypatch.setattr(loader, "_fetch_async", fake_fetch)
+
+    page = loader.load(SourceItem(id="1", url="https://example.com"), _crawler_config())
+
+    assert "resources" not in page.fetch_meta
