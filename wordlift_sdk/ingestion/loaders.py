@@ -418,6 +418,29 @@ class PremiumScraperLoaderAdapter(WebScrapeApiLoaderAdapter):
         super().__init__(mode="premium_scraper", backend="premium_scraper")
 
 
+def _har_to_resources(har: Any) -> list[dict] | None:
+    if not isinstance(har, dict):
+        return None
+    entries = har.get("log", {}).get("entries")
+    if not isinstance(entries, list):
+        return None
+    resources = []
+    for entry in entries:
+        if not isinstance(entry, dict):
+            continue
+        url = entry.get("request", {}).get("url")
+        if not url:
+            continue
+        resources.append(
+            {
+                "url": url,
+                "status": entry.get("response", {}).get("status"),
+                "resource_type": entry.get("resourceType"),
+            }
+        )
+    return resources or None
+
+
 def _parse_crawler_enum(enum_class: type, raw: Any, default: Any, key: str) -> Any:
     if raw is None:
         return default
@@ -476,17 +499,21 @@ class CrawlerLoaderAdapter(BaseLoaderAdapter):
                     retryable=True,
                 )
 
+            meta: dict[str, Any] = {
+                "backend": "crawler",
+                "from_cache": getattr(response, "from_cache", None),
+                "error_code": getattr(response, "error_code", None),
+            }
+            resources = _har_to_resources(getattr(response, "har", None))
+            if resources is not None:
+                meta["resources"] = resources
             return LoadedPage(
                 item_id=item.id,
                 url=item.url,
                 final_url=getattr(response, "url_final", None) or item.url,
                 status_code=getattr(response, "status_code", None),
                 html=html,
-                fetch_meta={
-                    "backend": "crawler",
-                    "from_cache": getattr(response, "from_cache", None),
-                    "error_code": getattr(response, "error_code", None),
-                },
+                fetch_meta=meta,
             )
 
         return self._with_retry(
