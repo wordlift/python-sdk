@@ -3,7 +3,10 @@ from __future__ import annotations
 import pytest
 
 from wordlift_sdk.ingestion.errors import IngestionConfigError, SourceConfigError
-from wordlift_sdk.ingestion.resolver import resolve_ingestion_config_from_mapping
+from wordlift_sdk.ingestion.resolver import (
+    DEFAULT_CRAWLER_TIMEOUT_MS,
+    resolve_ingestion_config_from_mapping,
+)
 
 
 def test_missing_ingest_source_fails_fast() -> None:
@@ -127,6 +130,43 @@ def test_crawler_env_vars_default_to_none_when_absent() -> None:
     )
     assert cfg.loader_config["crawler_js_render_mode"] is None
     assert cfg.loader_config["crawler_proxy_mode"] is None
+
+
+def test_crawler_loader_defaults_timeout_to_ten_minutes() -> None:
+    cfg = resolve_ingestion_config_from_mapping(
+        {
+            "INGEST_SOURCE": "urls",
+            "INGEST_LOADER": "crawler",
+            "URLS": ["https://example.com"],
+        }
+    )
+    assert cfg.timeout_ms == DEFAULT_CRAWLER_TIMEOUT_MS
+    assert DEFAULT_CRAWLER_TIMEOUT_MS == 600_000
+
+
+def test_crawler_loader_explicit_timeout_overrides_default() -> None:
+    cfg = resolve_ingestion_config_from_mapping(
+        {
+            "INGEST_SOURCE": "urls",
+            "INGEST_LOADER": "crawler",
+            "URLS": ["https://example.com"],
+            "INGEST_TIMEOUT_MS": 30000,
+        }
+    )
+    assert cfg.timeout_ms == 30000
+
+
+def test_non_crawler_loader_keeps_thirty_second_default() -> None:
+    from wordlift_sdk.render.render_options import DEFAULT_PLAYWRIGHT_TIMEOUT_MS
+
+    cfg = resolve_ingestion_config_from_mapping(
+        {
+            "INGEST_SOURCE": "urls",
+            "INGEST_LOADER": "web_scrape_api",
+            "URLS": ["https://example.com"],
+        }
+    )
+    assert cfg.timeout_ms == DEFAULT_PLAYWRIGHT_TIMEOUT_MS
 
 
 def test_sitemap_url_pattern_is_deprecated_alias_for_url_regex() -> None:
