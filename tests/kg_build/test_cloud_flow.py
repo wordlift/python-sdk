@@ -22,7 +22,7 @@ class _Workflow:
 
 
 class _WorkflowWithFailures:
-    def __init__(self, failures: list[tuple[object, str, str]]):
+    def __init__(self, failures: list):
         self._url_handler = SimpleNamespace(failures=failures)
 
     async def run(self) -> None:
@@ -142,8 +142,17 @@ async def test_cloud_flow_closes_protocol_on_failure() -> None:
 
 @pytest.mark.asyncio
 async def test_cloud_flow_raises_when_url_handler_failures_present() -> None:
+    from datetime import datetime, timezone
+
     protocol = _Protocol()
-    failures = [("2026-04-02T00:00:00+00:00", "https://example.com", "Handler", "boom")]
+    failures = [
+        SimpleNamespace(
+            timestamp=datetime(2026, 4, 2, tzinfo=timezone.utc),
+            url=SimpleNamespace(value="https://example.com"),
+            handler_name="Handler",
+            message="boom",
+        )
+    ]
 
     with pytest.raises(SystemExit, match="URL handler failure"):
         await run_cloud_workflow(

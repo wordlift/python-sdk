@@ -25,16 +25,9 @@ ProgressReporter = Callable[[dict[str, Any]], None]
 logger = logging.getLogger(__name__)
 
 
-def _format_failure_timestamp(value: Any) -> str:
-    raw = str(value or "").strip()
-    if not raw:
-        return ""
-    try:
-        dt = datetime.fromisoformat(raw)
-        text = dt.strftime("%b %d, %H:%M:%S")
-        return text.replace(" 0", " ")
-    except Exception:
-        return raw
+def _format_failure_timestamp(dt: datetime) -> str:
+    day = str(dt.day)
+    return dt.strftime(f"%b {day}, %H:%M:%S")
 
 
 @dataclass(frozen=True)
@@ -285,8 +278,10 @@ async def run_cloud_workflow(
                 ]
             else:
                 summary_lines = [f"{len(failures)} URL handler failure(s) detected."]
-            for _, url, handler_name, message in failures[:10]:
-                summary_lines.append(f"- {handler_name} failed for {url}: {message}")
+            for f in failures[:10]:
+                summary_lines.append(
+                    f"- {f.handler_name} failed for {f.url}: {f.message}"
+                )
             if len(failures) > 10:
                 summary_lines.append(f"- ... and {len(failures) - 10} more.")
             summary = "\n".join(summary_lines)
@@ -308,13 +303,12 @@ async def run_cloud_workflow(
                 "| Timestamp (UTC) | URL | Handler | Error |",
                 "| --- | --- | --- | --- |",
             ]
-            for timestamp, url, handler_name, message in failures:
-                safe_message = str(message).replace("\n", " ").replace("|", "\\|")
-                url_value = getattr(url, "value", None)
-                display_url = str(url_value or url)
-                display_ts = _format_failure_timestamp(timestamp)
+            for f in failures:
+                safe_message = f.message.replace("\n", " ").replace("|", "\\|")
+                display_url = f.url.value
+                display_ts = _format_failure_timestamp(f.timestamp)
                 report_lines.append(
-                    f"| {display_ts} | `{display_url}` | `{handler_name}` | `{safe_message}` |"
+                    f"| {display_ts} | `{display_url}` | `{f.handler_name}` | `{safe_message}` |"
                 )
             report_path.write_text("\n".join(report_lines) + "\n", encoding="utf-8")
             logger.error("Wrote failure report to %s", report_path)
