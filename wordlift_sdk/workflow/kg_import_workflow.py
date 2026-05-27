@@ -1,9 +1,11 @@
 import logging
+from dataclasses import dataclass, field
 from os import cpu_count
 from pathlib import Path
 
 from tqdm.asyncio import tqdm
 
+from .url_handler.default_url_handler import FailedUrl
 from .url_handler.url_handler import UrlHandler
 from ..graph.ttl_liquid import TtlLiquidGraphFactory
 from ..protocol import (
@@ -13,6 +15,16 @@ from ..url_source import UrlSource
 from ..utils import create_delayed
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class KgImportResult:
+    url_count: int
+    failures: list[FailedUrl] = field(default_factory=list)
+
+    @property
+    def ok(self) -> bool:
+        return not self.failures
 
 
 class KgImportWorkflow:
@@ -33,13 +45,12 @@ class KgImportWorkflow:
         self._url_handler = url_handler
         self._concurrency = concurrency
 
-    async def run(self):
+    async def run(self) -> KgImportResult:
         await TtlLiquidGraphFactory(
             context=self._context, path=Path("data/templates")
         ).graphs()
 
         url_list = [url async for url in self._url_source.urls()]
-        self._url_count = len(url_list)
 
         logger.info("Applying %d URL import request(s)" % len(url_list))
 
@@ -49,14 +60,5 @@ class KgImportWorkflow:
             total=len(url_list),
         )
 
-        failures = getattr(self._url_handler, "failures", None)
-        if isinstance(failures, list) and failures:
-            summary_lines = [f"{len(failures)} URL handler failure(s) detected."]
-            for f in failures[:10]:
-                summary_lines.append(
-                    f"- {f.handler_name} failed for {f.url}: {f.message}"
-                )
-            if len(failures) > 10:
-                summary_lines.append(f"- ... and {len(failures) - 10} more.")
-            summary = "\n".join(summary_lines)
-            logger.error(summary)
+        failures: list[FailedUrl] = getattr(self._url_handler, "failures", None) or []
+        return KgImportResult(url_count=len(url_list), failures=failures)

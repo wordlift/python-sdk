@@ -48,10 +48,10 @@ async def test_kg_import_workflow_fails_after_urls_when_handlers_error(monkeypat
         concurrency=1,
     )
 
-    await workflow.run()
+    result = await workflow.run()
 
-    assert handler.failures
-    failure = handler.failures[0]
+    assert result.failures
+    failure = result.failures[0]
     assert failure.url.value == "https://example.com/a"
     assert failure.handler_name == "_FailingHandler"
     assert "boom" in failure.message

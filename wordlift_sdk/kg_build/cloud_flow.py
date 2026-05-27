@@ -263,27 +263,21 @@ async def run_cloud_workflow(
         if on_info:
             on_info("Running Workflow (this may take several minutes)...")
 
-        await workflow.run()
+        result = await workflow.run()
 
-        url_handler = getattr(workflow, "_url_handler", None)
-        failures = getattr(url_handler, "failures", None) if url_handler else None
-        if isinstance(failures, list) and failures:
-            total_urls = getattr(workflow, "_url_count", None)
-            if isinstance(total_urls, int) and total_urls >= 0:
-                success_count = max(total_urls - len(failures), 0)
-                summary_lines = [
-                    f"Total URLs: {total_urls}",
-                    f"Successes: {success_count}",
-                    f"Failures: {len(failures)}",
-                ]
-            else:
-                summary_lines = [f"{len(failures)} URL handler failure(s) detected."]
-            for f in failures[:10]:
+        if result.failures:
+            success_count = max(result.url_count - len(result.failures), 0)
+            summary_lines = [
+                f"Total URLs: {result.url_count}",
+                f"Successes: {success_count}",
+                f"Failures: {len(result.failures)}",
+            ]
+            for f in result.failures[:10]:
                 summary_lines.append(
                     f"- {f.handler_name} failed for {f.url}: {f.message}"
                 )
-            if len(failures) > 10:
-                summary_lines.append(f"- ... and {len(failures) - 10} more.")
+            if len(result.failures) > 10:
+                summary_lines.append(f"- ... and {len(result.failures) - 10} more.")
             summary = "\n".join(summary_lines)
             logger.error(summary)
 
@@ -292,23 +286,20 @@ async def run_cloud_workflow(
             report_lines = [
                 "# Graph Sync Failures",
                 "",
-                f"Total failures: **{len(failures)}**",
-                f"Total URLs: **{total_urls}**" if isinstance(total_urls, int) else "",
-                f"Successes: **{success_count}**"
-                if isinstance(total_urls, int)
-                else "",
+                f"Total failures: **{len(result.failures)}**",
+                f"Total URLs: **{result.url_count}**",
+                f"Successes: **{success_count}**",
                 "",
                 "## Details",
                 "",
                 "| Timestamp (UTC) | URL | Handler | Error |",
                 "| --- | --- | --- | --- |",
             ]
-            for f in failures:
+            for f in result.failures:
                 safe_message = f.message.replace("\n", " ").replace("|", "\\|")
-                display_url = f.url.value
                 display_ts = _format_failure_timestamp(f.timestamp)
                 report_lines.append(
-                    f"| {display_ts} | `{display_url}` | `{f.handler_name}` | `{safe_message}` |"
+                    f"| {display_ts} | `{f.url.value}` | `{f.handler_name}` | `{safe_message}` |"
                 )
             report_path.write_text("\n".join(report_lines) + "\n", encoding="utf-8")
             logger.error("Wrote failure report to %s", report_path)
