@@ -17,16 +17,16 @@ from wordlift_sdk.kg_build.cloud_flow import (
 
 
 class _Workflow:
-    async def run(self) -> None:
-        return None
+    async def run(self):
+        return SimpleNamespace(url_count=0, failures=[])
 
 
 class _WorkflowWithFailures:
     def __init__(self, failures: list):
-        self._url_handler = SimpleNamespace(failures=failures)
+        self._failures = failures
 
-    async def run(self) -> None:
-        return None
+    async def run(self):
+        return SimpleNamespace(url_count=len(self._failures), failures=self._failures)
 
 
 class _FailingWorkflow:
@@ -154,7 +154,7 @@ async def test_cloud_flow_raises_when_url_handler_failures_present() -> None:
         )
     ]
 
-    with pytest.raises(SystemExit, match="URL handler failure"):
+    with pytest.raises(SystemExit, match="Failures: 1"):
         await run_cloud_workflow(
             config=CloudWorkflowConfig(
                 wordlift_key="key",
