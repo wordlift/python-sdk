@@ -1,4 +1,5 @@
 import logging
+from dataclasses import dataclass
 from datetime import datetime, timezone
 
 from ...url_source import Url
@@ -7,16 +8,24 @@ from ...workflow.url_handler.url_handler import UrlHandler
 logger = logging.getLogger(__name__)
 
 
+@dataclass
+class FailedUrl:
+    timestamp: datetime
+    url: Url
+    handler_name: str
+    message: str
+
+
 class DefaultUrlHandler(UrlHandler):
     _url_handler_list: list[UrlHandler]
 
     def __init__(self, url_handler_list: list[UrlHandler]):
         super().__init__()
         self._url_handler_list = url_handler_list
-        self._failures: list[tuple[str, Url, str, str]] = []
+        self._failures: list[FailedUrl] = []
 
     @property
-    def failures(self) -> list[tuple[str, Url, str, str]]:
+    def failures(self) -> list[FailedUrl]:
         return list(self._failures)
 
     async def __call__(self, url: Url) -> None:
@@ -24,9 +33,13 @@ class DefaultUrlHandler(UrlHandler):
             try:
                 await url_handler.__call__(url)
             except Exception as e:
-                timestamp = datetime.now(timezone.utc).isoformat()
                 self._failures.append(
-                    (timestamp, url, type(url_handler).__name__, str(e))
+                    FailedUrl(
+                        timestamp=datetime.now(timezone.utc),
+                        url=url,
+                        handler_name=type(url_handler).__name__,
+                        message=str(e),
+                    )
                 )
                 logger.error(
                     f"Handler {type(url_handler).__name__} errored while handling url {url}: {e}"

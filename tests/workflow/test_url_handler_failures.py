@@ -51,8 +51,8 @@ async def test_kg_import_workflow_fails_after_urls_when_handlers_error(monkeypat
     await workflow.run()
 
     assert handler.failures
-    timestamp, url, handler_name, message = handler.failures[0]
-    assert url.value == "https://example.com/a"
-    assert handler_name == "_FailingHandler"
-    assert "boom" in message
-    assert timestamp
+    failure = handler.failures[0]
+    assert failure.url.value == "https://example.com/a"
+    assert failure.handler_name == "_FailingHandler"
+    assert "boom" in failure.message
+    assert failure.timestamp.tzinfo is not None
