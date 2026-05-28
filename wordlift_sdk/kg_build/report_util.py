@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import csv
 import io
+import re
+from collections import Counter
 from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -9,6 +11,10 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from wordlift_sdk.workflow.kg_import_workflow import KgImportResult
     from wordlift_sdk.workflow.url_handler.default_url_handler import FailedUrl
+
+_URL_RE = re.compile(r"https?://\S*")
+_TOP_ERRORS = 10
+_ERROR_PREFIX_LEN = 80
 
 
 def _format_timestamp(dt: datetime) -> str:
@@ -19,6 +25,13 @@ def _md_cell(value: str) -> str:
     return value.replace("\n", " ").replace("|", "\\|")
 
 
+def _error_key(message: str) -> str:
+    """Return a stable grouping key by stripping URL-specific segments."""
+    stripped = _URL_RE.sub("", message).strip(": ")
+    key = stripped or message
+    return key[:_ERROR_PREFIX_LEN]
+
+
 def render_as_markdown(result: KgImportResult) -> str:
     success_count = max(result.url_count - len(result.failures), 0)
     lines = [
@@ -27,30 +40,43 @@ def render_as_markdown(result: KgImportResult) -> str:
         f"Total URLs: **{result.url_count}**",
         f"Successes: **{success_count}**",
         f"Failures: **{len(result.failures)}**",
-        "",
-        "## Failures",
-        "",
-        "| Timestamp (UTC) | URL | Handler | Error |",
-        "| --- | --- | --- | --- |",
     ]
-    for f in result.failures:
-        lines.append(
-            f"| {_format_timestamp(f.timestamp)}"
-            f" | `{_md_cell(f.url.value)}`"
-            f" | `{_md_cell(f.handler_name)}`"
-            f" | `{_md_cell(f.message)}` |"
-        )
+    if result.failures:
+        examples: dict[str, object] = {}
+        for f in result.failures:
+            key = _error_key(f.message)
+            if key not in examples:
+                examples[key] = f
+        counts = Counter(_error_key(f.message) for f in result.failures)
+        lines += [
+            "",
+            "## Top Errors",
+            "",
+            "| Count | Error | Example URL | Full error |",
+            "| --- | --- | --- | --- |",
+        ]
+        for key, count in counts.most_common(_TOP_ERRORS):
+            ex = examples[key]
+            lines.append(
+                f"| {count}"
+                f" | `{_md_cell(key)}`"
+                f" | `{_md_cell(ex.url.value)}`"
+                f" | `{_md_cell(ex.message)}` |"
+            )
+        remaining = len(counts) - _TOP_ERRORS
+        if remaining > 0:
+            lines.append(
+                f"\n_…and {remaining} more error type(s). See the CSV for the full list._"
+            )
     return "\n".join(lines) + "\n"
 
 
 def render_as_csv(failures: list[FailedUrl]) -> str:
     buf = io.StringIO()
     writer = csv.writer(buf)
-    writer.writerow(["timestamp", "url", "handler", "error"])
+    writer.writerow(["timestamp", "url", "error"])
     for f in failures:
-        writer.writerow(
-            [f.timestamp.isoformat(), f.url.value, f.handler_name, f.message]
-        )
+        writer.writerow([f.timestamp.isoformat(), f.url.value, f.message])
     return buf.getvalue()
 
 

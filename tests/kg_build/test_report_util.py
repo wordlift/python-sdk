@@ -7,6 +7,7 @@ from types import SimpleNamespace
 
 
 from wordlift_sdk.kg_build.report_util import (
+    _error_key,
     _format_timestamp,
     _md_cell,
     render_as_csv,
@@ -67,6 +68,35 @@ def test_format_timestamp_double_digit_day():
     assert _format_timestamp(dt) == "Apr 15, 14:05:09 UTC"
 
 
+# --- _error_key ---
+
+
+def test_error_key_strips_url():
+    msg = "Ingestion loader returned HTTP error status for https://example.com/page: status_code=403"
+    assert "https://" not in _error_key(msg)
+
+
+def test_error_key_groups_same_http_status():
+    msg1 = "HTTP error for https://example.com/a: status_code=403"
+    msg2 = "HTTP error for https://example.com/b: status_code=403"
+    assert _error_key(msg1) == _error_key(msg2)
+
+
+def test_error_key_no_url_unchanged():
+    msg = "Malformed YARRRML mapping. Validate YAML syntax."
+    assert _error_key(msg) == msg
+
+
+def test_error_key_falls_back_to_message_when_only_url():
+    msg = "https://example.com/page"
+    assert _error_key(msg) == msg
+
+
+def test_error_key_truncates_to_prefix_len():
+    long_msg = "x" * 200
+    assert len(_error_key(long_msg)) <= 80
+
+
 # --- render_as_markdown ---
 
 
@@ -78,14 +108,51 @@ def test_render_as_markdown_summary_counts():
     assert "Failures: **1**" in md
 
 
-def test_render_as_markdown_table_row_contains_fields():
+def test_render_as_markdown_shows_top_errors_section():
+    result = _result(failures=[_failure(message="boom")])
+    md = render_as_markdown(result)
+    assert "## Top Errors" in md
+    assert "boom" in md
+
+
+def test_render_as_markdown_shows_example_url_and_full_error():
     result = _result(
-        failures=[_failure(url="https://ex.com", handler="MyHandler", message="oops")]
+        failures=[_failure(url="https://ex.com/page", message="Malformed YARRRML")]
     )
     md = render_as_markdown(result)
-    assert "https://ex.com" in md
-    assert "MyHandler" in md
-    assert "oops" in md
+    assert "https://ex.com/page" in md
+    assert "Malformed YARRRML" in md
+
+
+def test_render_as_markdown_aggregates_same_error():
+    result = _result(
+        url_count=3,
+        failures=[
+            _failure(url="https://a.com", message="HTTP error: status_code=403"),
+            _failure(url="https://b.com", message="HTTP error: status_code=403"),
+            _failure(url="https://c.com", message="other error"),
+        ],
+    )
+    md = render_as_markdown(result)
+    assert "| 2 |" in md
+    assert "| 1 |" in md
+
+
+def test_render_as_markdown_groups_http_errors_by_stripping_url():
+    result = _result(
+        url_count=2,
+        failures=[
+            _failure(message="HTTP error for https://example.com/a: status_code=403"),
+            _failure(message="HTTP error for https://example.com/b: status_code=403"),
+        ],
+    )
+    md = render_as_markdown(result)
+    assert "| 2 |" in md
+
+
+def test_render_as_markdown_no_handler_column():
+    result = _result(failures=[_failure(handler="SomeHandler")])
+    assert "SomeHandler" not in render_as_markdown(result)
 
 
 def test_render_as_markdown_escapes_pipe_in_message():
@@ -93,21 +160,23 @@ def test_render_as_markdown_escapes_pipe_in_message():
     assert "err\\|or" in render_as_markdown(result)
 
 
-def test_render_as_markdown_escapes_pipe_in_url():
-    result = _result(failures=[_failure(url="https://ex.com?a=1|2")])
-    assert "1\\|2" in render_as_markdown(result)
+def test_render_as_markdown_overflow_note_when_more_than_top_n():
+    failures = [_failure(message=f"error type {i}") for i in range(12)]
+    md = render_as_markdown(_result(url_count=12, failures=failures))
+    assert "2 more error type(s)" in md
 
 
-def test_render_as_markdown_escapes_pipe_in_handler():
-    result = _result(failures=[_failure(handler="Han|dler")])
-    assert "Han\\|dler" in render_as_markdown(result)
+def test_render_as_markdown_no_overflow_note_when_within_top_n():
+    failures = [_failure(message=f"error type {i}") for i in range(3)]
+    md = render_as_markdown(_result(url_count=3, failures=failures))
+    assert "more error type" not in md
 
 
-def test_render_as_markdown_zero_failures():
+def test_render_as_markdown_zero_failures_no_top_errors_section():
     result = _result(url_count=5, failures=[])
     md = render_as_markdown(result)
     assert "Failures: **0**" in md
-    assert "Successes: **5**" in md
+    assert "## Top Errors" not in md
 
 
 def test_render_as_markdown_ends_with_newline():
@@ -119,27 +188,32 @@ def test_render_as_markdown_ends_with_newline():
 
 def test_render_as_csv_header():
     rows = list(csv.reader(io.StringIO(render_as_csv([]))))
-    assert rows[0] == ["timestamp", "url", "handler", "error"]
+    assert rows[0] == ["timestamp", "url", "error"]
+
+
+def test_render_as_csv_no_handler_column():
+    rows = list(csv.reader(io.StringIO(render_as_csv([_failure()]))))
+    assert len(rows[1]) == 3
 
 
 def test_render_as_csv_data_row():
     ts = datetime(2026, 4, 2, 14, 5, 9, tzinfo=timezone.utc)
     rows = list(csv.reader(io.StringIO(render_as_csv([_failure(ts=ts)]))))
-    assert rows[1] == [ts.isoformat(), "https://example.com", "Handler", "boom"]
+    assert rows[1] == [ts.isoformat(), "https://example.com", "boom"]
 
 
 def test_render_as_csv_escapes_comma():
     rows = list(
         csv.reader(io.StringIO(render_as_csv([_failure(message="err, comma")])))
     )
-    assert rows[1][3] == "err, comma"
+    assert rows[1][2] == "err, comma"
 
 
 def test_render_as_csv_preserves_newline_in_message():
     rows = list(
         csv.reader(io.StringIO(render_as_csv([_failure(message="line1\nline2")])))
     )
-    assert rows[1][3] == "line1\nline2"
+    assert rows[1][2] == "line1\nline2"
 
 
 def test_render_as_csv_empty_failures_header_only():
