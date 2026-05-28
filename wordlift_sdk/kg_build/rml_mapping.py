@@ -132,11 +132,7 @@ class RmlMappingService:
                 exc,
                 exc_info=True,
             )
-            return MappingResult(
-                graph=None,
-                queue_wait_ms=queue_wait_ms,
-                mapping_ms=int((time.perf_counter() - _t_start) * 1000),
-            )
+            raise
 
     def _normalize_schema_uris(self, payload: Any):
         if isinstance(payload, dict):
