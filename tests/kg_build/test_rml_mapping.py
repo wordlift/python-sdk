@@ -74,6 +74,7 @@ async def test_apply_mapping_from_content_success() -> None:
 @pytest.mark.asyncio
 async def test_apply_mapping_file_not_found_returns_none() -> None:
     service = RmlMappingService(_context("https://data.example.com"))
+    service._html_converter.convert = MagicMock(return_value="<html></html>")
     result = await service.apply_mapping(
         html="<html></html>",
         url="https://example.com",
@@ -83,15 +84,37 @@ async def test_apply_mapping_file_not_found_returns_none() -> None:
 
 
 @pytest.mark.asyncio
-async def test_apply_mapping_missing_dataset_uri_returns_none() -> None:
+async def test_apply_mapping_missing_dataset_uri_raises() -> None:
     service = RmlMappingService(_context(None), pipeline=_Pipeline())
-    result = await service.apply_mapping(
-        html="<html></html>",
-        url="https://example.com",
-        mapping_file_path="x",
-        mapping_content="m: 1",
+    service._html_converter.convert = MagicMock(return_value="<html></html>")
+    with pytest.raises(RuntimeError, match="Dataset URI not available"):
+        await service.apply_mapping(
+            html="<html></html>",
+            url="https://example.com",
+            mapping_file_path="x",
+            mapping_content="m: 1",
+        )
+
+
+@pytest.mark.asyncio
+async def test_apply_mapping_materialization_error_raises() -> None:
+    class _FailingPipeline(_Pipeline):
+        def materialize(self, *args, **kwargs):
+            raise RuntimeError(
+                "Malformed YARRRML mapping. Validate YAML/YARRRML syntax and prefixes."
+            )
+
+    service = RmlMappingService(
+        _context("https://data.example.com"), pipeline=_FailingPipeline()
     )
-    assert result.graph is None
+    service._html_converter.convert = MagicMock(return_value="<html></html>")
+    with pytest.raises(RuntimeError, match="Malformed YARRRML"):
+        await service.apply_mapping(
+            html="<html></html>",
+            url="https://example.com",
+            mapping_file_path="x",
+            mapping_content="m: 1",
+        )
 
 
 def test_normalize_schema_uris() -> None:
