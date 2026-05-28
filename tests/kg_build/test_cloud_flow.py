@@ -170,8 +170,7 @@ async def test_cloud_flow_raises_when_url_handler_failures_present() -> None:
 
 
 @pytest.mark.asyncio
-async def test_cloud_flow_writes_md_report_on_success(tmp_path, monkeypatch) -> None:
-    monkeypatch.chdir(tmp_path)
+async def test_cloud_flow_writes_md_report_on_success(tmp_path) -> None:
     protocol = _Protocol()
 
     await run_cloud_workflow(
@@ -179,21 +178,21 @@ async def test_cloud_flow_writes_md_report_on_success(tmp_path, monkeypatch) -> 
             wordlift_key="key",
             sheets_service_account_json="{}",
             urls=["https://example.com"],
+            output_dir=tmp_path,
         ),
         configuration_provider_create=lambda _: object(),
         container_factory=lambda _: _Container(_Workflow()),
         protocol_factory=lambda *_args, **_kwargs: protocol,
     )
 
-    assert (tmp_path / "output" / "graph_sync_report.md").exists()
-    assert not (tmp_path / "output" / "graph_sync_failures.csv").exists()
+    assert (tmp_path / "graph_sync_report.md").exists()
+    assert not (tmp_path / "graph_sync_failures.csv").exists()
 
 
 @pytest.mark.asyncio
-async def test_cloud_flow_writes_both_reports_on_failure(tmp_path, monkeypatch) -> None:
+async def test_cloud_flow_writes_both_reports_on_failure(tmp_path) -> None:
     from datetime import datetime, timezone
 
-    monkeypatch.chdir(tmp_path)
     protocol = _Protocol()
     failures = [
         SimpleNamespace(
@@ -210,14 +209,15 @@ async def test_cloud_flow_writes_both_reports_on_failure(tmp_path, monkeypatch) 
                 wordlift_key="key",
                 sheets_service_account_json="{}",
                 urls=["https://example.com"],
+                output_dir=tmp_path,
             ),
             configuration_provider_create=lambda _: object(),
             container_factory=lambda _: _Container(_WorkflowWithFailures(failures)),
             protocol_factory=lambda *_args, **_kwargs: protocol,
         )
 
-    assert (tmp_path / "output" / "graph_sync_report.md").exists()
-    assert (tmp_path / "output" / "graph_sync_failures.csv").exists()
+    assert (tmp_path / "graph_sync_report.md").exists()
+    assert (tmp_path / "graph_sync_failures.csv").exists()
 
 
 def test_get_debug_output_dir_requires_profile_name() -> None:
@@ -242,10 +242,10 @@ def test_get_debug_output_dir_returns_expected_path(tmp_path: Path) -> None:
             urls=["https://example.com"],
             debug=True,
             debug_profile_name="profile-a",
-        ),
-        root_dir=tmp_path,
+            output_dir=tmp_path,
+        )
     )
-    assert out == tmp_path / "output" / "debug_cloud" / "profile-a"
+    assert out == tmp_path / "debug_cloud" / "profile-a"
 
 
 def test_build_settings_lines_with_sheets_and_extra_settings() -> None:
