@@ -11,7 +11,9 @@ from wordlift_sdk.kg_build.cloud_flow import (
     CloudWorkflowConfig,
     CloudWorkflowConfigError,
     _build_settings_lines,
+    _report_execution,
     get_debug_output_dir,
+    get_output_dir,
     run_cloud_workflow,
 )
 
@@ -612,6 +614,74 @@ async def test_cloud_flow_debug_info_and_async_close(tmp_path: Path) -> None:
     assert any(
         "Debug mode enabled. Saving intermediate graphs to:" in msg for msg in info
     )
+
+
+@pytest.mark.asyncio
+async def test_cloud_flow_no_reports_when_output_dir_not_set(
+    tmp_path: Path, monkeypatch
+) -> None:
+    from datetime import datetime, timezone
+
+    monkeypatch.chdir(tmp_path)
+    protocol = _Protocol()
+    failures = [
+        SimpleNamespace(
+            timestamp=datetime(2026, 4, 2, tzinfo=timezone.utc),
+            url=SimpleNamespace(value="https://example.com"),
+            handler_name="Handler",
+            message="boom",
+        )
+    ]
+
+    with pytest.raises(SystemExit):
+        await run_cloud_workflow(
+            config=CloudWorkflowConfig(
+                wordlift_key="key",
+                sheets_service_account_json="{}",
+                urls=["https://example.com"],
+                output_dir=None,
+            ),
+            configuration_provider_create=lambda _: object(),
+            container_factory=lambda _: _Container(_WorkflowWithFailures(failures)),
+            protocol_factory=lambda *_args, **_kwargs: protocol,
+        )
+
+    assert not (tmp_path / "output").exists()
+
+
+def test_get_output_dir_returns_config_output_dir(tmp_path: Path) -> None:
+    config = CloudWorkflowConfig(
+        wordlift_key="k", urls=["https://example.com"], output_dir=tmp_path
+    )
+    assert get_output_dir(config) == tmp_path
+
+
+def test_get_output_dir_fallback_to_cwd(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.chdir(tmp_path)
+    config = CloudWorkflowConfig(wordlift_key="k", urls=["https://example.com"])
+    assert get_output_dir(config) == tmp_path / "output"
+
+
+def test_report_execution_writes_md_always(tmp_path: Path) -> None:
+    result = SimpleNamespace(url_count=1, failures=[], ok=True)
+    _report_execution(result, tmp_path)
+    assert (tmp_path / "graph_sync_report.md").exists()
+    assert not (tmp_path / "graph_sync_failures.csv").exists()
+
+
+def test_report_execution_writes_csv_only_on_failure(tmp_path: Path) -> None:
+    from datetime import datetime, timezone
+
+    failure = SimpleNamespace(
+        timestamp=datetime(2026, 4, 2, tzinfo=timezone.utc),
+        url=SimpleNamespace(value="https://example.com"),
+        handler_name="Handler",
+        message="boom",
+    )
+    result = SimpleNamespace(url_count=1, failures=[failure], ok=False)
+    _report_execution(result, tmp_path)
+    assert (tmp_path / "graph_sync_report.md").exists()
+    assert (tmp_path / "graph_sync_failures.csv").exists()
 
 
 @pytest.mark.asyncio
