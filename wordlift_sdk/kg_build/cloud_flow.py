@@ -6,7 +6,10 @@ import tempfile
 from inspect import isawaitable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Awaitable, Callable, Mapping, Sequence
+from typing import TYPE_CHECKING, Any, Awaitable, Callable, Mapping, Sequence
+
+if TYPE_CHECKING:
+    from wordlift_sdk.workflow.kg_import_workflow import KgImportResult
 
 from wordlift_sdk.kg_build.report_util import (
     render_as_csv,
@@ -98,6 +101,14 @@ def _resolved_playwright_wait_until(config: CloudWorkflowConfig) -> str:
     if value is None:
         return DEFAULT_PLAYWRIGHT_WAIT_UNTIL
     return str(value)
+
+
+def _report_execution(result: KgImportResult, output_dir: Path) -> None:
+    write_report(render_as_markdown(result), output_dir / "graph_sync_report.md")
+    if not result.ok:
+        write_report(
+            render_as_csv(result.failures), output_dir / "graph_sync_failures.csv"
+        )
 
 
 def get_output_dir(config: CloudWorkflowConfig) -> Path:
@@ -266,16 +277,10 @@ async def run_cloud_workflow(
 
         result = await workflow.run()
 
-        output_dir = get_output_dir(config)
-        report_md_path = output_dir / "graph_sync_report.md"
-        write_report(render_as_markdown(result), report_md_path)
-        logger.info("Wrote run report to %s", report_md_path)
+        if config.output_dir is not None:
+            _report_execution(result, config.output_dir)
 
         if not result.ok:
-            failures_csv_path = output_dir / "graph_sync_failures.csv"
-            write_report(render_as_csv(result.failures), failures_csv_path)
-            logger.info("Wrote failures CSV to %s", failures_csv_path)
-
             summary = (
                 f"Total URLs: {result.url_count}, "
                 f"Successes: {max(result.url_count - len(result.failures), 0)}, "
