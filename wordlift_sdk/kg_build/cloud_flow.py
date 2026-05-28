@@ -3,12 +3,16 @@ from __future__ import annotations
 import logging
 import os
 import tempfile
-from datetime import datetime
 from inspect import isawaitable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Awaitable, Callable, Mapping, Sequence
 
+from wordlift_sdk.kg_build.report_util import (
+    render_as_csv,
+    render_as_markdown,
+    write_report,
+)
 from wordlift_sdk.render.render_options import (
     DEFAULT_PLAYWRIGHT_TIMEOUT_MS,
     DEFAULT_PLAYWRIGHT_WAIT_UNTIL,
@@ -23,11 +27,6 @@ KpiReporter = Callable[[dict[str, Any]], None]
 ProgressReporter = Callable[[dict[str, Any]], None]
 
 logger = logging.getLogger(__name__)
-
-
-def _format_failure_timestamp(dt: datetime) -> str:
-    day = str(dt.day)
-    return dt.strftime(f"%b {day}, %H:%M:%S")
 
 
 @dataclass(frozen=True)
@@ -265,45 +264,21 @@ async def run_cloud_workflow(
 
         result = await workflow.run()
 
-        if result.failures:
-            success_count = max(result.url_count - len(result.failures), 0)
-            summary_lines = [
-                f"Total URLs: {result.url_count}",
-                f"Successes: {success_count}",
-                f"Failures: {len(result.failures)}",
-            ]
-            for f in result.failures[:10]:
-                summary_lines.append(
-                    f"- {f.handler_name} failed for {f.url}: {f.message}"
-                )
-            if len(result.failures) > 10:
-                summary_lines.append(f"- ... and {len(result.failures) - 10} more.")
-            summary = "\n".join(summary_lines)
-            logger.error(summary)
+        output_dir = Path.cwd() / "output"
+        report_md_path = output_dir / "graph_sync_report.md"
+        write_report(render_as_markdown(result), report_md_path)
+        logger.info("Wrote run report to %s", report_md_path)
 
-            report_path = Path.cwd() / "output" / "graph_sync_failures.md"
-            report_path.parent.mkdir(parents=True, exist_ok=True)
-            report_lines = [
-                "# Graph Sync Failures",
-                "",
-                f"Total failures: **{len(result.failures)}**",
-                f"Total URLs: **{result.url_count}**",
-                f"Successes: **{success_count}**",
-                "",
-                "## Details",
-                "",
-                "| Timestamp (UTC) | URL | Handler | Error |",
-                "| --- | --- | --- | --- |",
-            ]
-            for f in result.failures:
-                safe_message = f.message.replace("\n", " ").replace("|", "\\|")
-                display_ts = _format_failure_timestamp(f.timestamp)
-                report_lines.append(
-                    f"| {display_ts} | `{f.url.value}` | `{f.handler_name}` | `{safe_message}` |"
-                )
-            report_path.write_text("\n".join(report_lines) + "\n", encoding="utf-8")
-            logger.error("Wrote failure report to %s", report_path)
+        if not result.ok:
+            failures_csv_path = output_dir / "graph_sync_failures.csv"
+            write_report(render_as_csv(result.failures), failures_csv_path)
+            logger.info("Wrote failures CSV to %s", failures_csv_path)
 
+            summary = (
+                f"Total URLs: {result.url_count}, "
+                f"Successes: {max(result.url_count - len(result.failures), 0)}, "
+                f"Failures: {len(result.failures)}"
+            )
             raise SystemExit(summary)
 
     finally:

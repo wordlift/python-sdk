@@ -18,7 +18,7 @@ from wordlift_sdk.kg_build.cloud_flow import (
 
 class _Workflow:
     async def run(self):
-        return SimpleNamespace(url_count=0, failures=[])
+        return SimpleNamespace(url_count=0, failures=[], ok=True)
 
 
 class _WorkflowWithFailures:
@@ -26,7 +26,9 @@ class _WorkflowWithFailures:
         self._failures = failures
 
     async def run(self):
-        return SimpleNamespace(url_count=len(self._failures), failures=self._failures)
+        return SimpleNamespace(
+            url_count=len(self._failures), failures=self._failures, ok=False
+        )
 
 
 class _FailingWorkflow:
@@ -165,6 +167,57 @@ async def test_cloud_flow_raises_when_url_handler_failures_present() -> None:
             container_factory=lambda _: _Container(_WorkflowWithFailures(failures)),
             protocol_factory=lambda *_args, **_kwargs: protocol,
         )
+
+
+@pytest.mark.asyncio
+async def test_cloud_flow_writes_md_report_on_success(tmp_path, monkeypatch) -> None:
+    monkeypatch.chdir(tmp_path)
+    protocol = _Protocol()
+
+    await run_cloud_workflow(
+        config=CloudWorkflowConfig(
+            wordlift_key="key",
+            sheets_service_account_json="{}",
+            urls=["https://example.com"],
+        ),
+        configuration_provider_create=lambda _: object(),
+        container_factory=lambda _: _Container(_Workflow()),
+        protocol_factory=lambda *_args, **_kwargs: protocol,
+    )
+
+    assert (tmp_path / "output" / "graph_sync_report.md").exists()
+    assert not (tmp_path / "output" / "graph_sync_failures.csv").exists()
+
+
+@pytest.mark.asyncio
+async def test_cloud_flow_writes_both_reports_on_failure(tmp_path, monkeypatch) -> None:
+    from datetime import datetime, timezone
+
+    monkeypatch.chdir(tmp_path)
+    protocol = _Protocol()
+    failures = [
+        SimpleNamespace(
+            timestamp=datetime(2026, 4, 2, tzinfo=timezone.utc),
+            url=SimpleNamespace(value="https://example.com"),
+            handler_name="Handler",
+            message="boom",
+        )
+    ]
+
+    with pytest.raises(SystemExit):
+        await run_cloud_workflow(
+            config=CloudWorkflowConfig(
+                wordlift_key="key",
+                sheets_service_account_json="{}",
+                urls=["https://example.com"],
+            ),
+            configuration_provider_create=lambda _: object(),
+            container_factory=lambda _: _Container(_WorkflowWithFailures(failures)),
+            protocol_factory=lambda *_args, **_kwargs: protocol,
+        )
+
+    assert (tmp_path / "output" / "graph_sync_report.md").exists()
+    assert (tmp_path / "output" / "graph_sync_failures.csv").exists()
 
 
 def test_get_debug_output_dir_requires_profile_name() -> None:
