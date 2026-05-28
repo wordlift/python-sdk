@@ -47,6 +47,7 @@ class CloudWorkflowConfig:
     extra_settings: Mapping[str, Any] | None = None
     debug: bool = False
     debug_profile_name: str | None = None
+    output_dir: Path | None = None
 
 
 class CloudWorkflowConfigError(ValueError):
@@ -99,17 +100,18 @@ def _resolved_playwright_wait_until(config: CloudWorkflowConfig) -> str:
     return str(value)
 
 
-def get_debug_output_dir(
-    config: CloudWorkflowConfig, root_dir: Path | None = None
-) -> Path | None:
+def get_output_dir(config: CloudWorkflowConfig) -> Path:
+    return config.output_dir or Path.cwd() / "output"
+
+
+def get_debug_output_dir(config: CloudWorkflowConfig) -> Path | None:
     if not config.debug:
         return None
     if not config.debug_profile_name:
         raise CloudWorkflowConfigError(
             "debug_profile_name is required when debug is enabled."
         )
-    base = root_dir or Path.cwd()
-    return base / "output" / "debug_cloud" / config.debug_profile_name
+    return get_output_dir(config) / "debug_cloud" / config.debug_profile_name
 
 
 def _build_settings_lines(
@@ -264,7 +266,7 @@ async def run_cloud_workflow(
 
         result = await workflow.run()
 
-        output_dir = Path.cwd() / "output"
+        output_dir = get_output_dir(config)
         report_md_path = output_dir / "graph_sync_report.md"
         write_report(render_as_markdown(result), report_md_path)
         logger.info("Wrote run report to %s", report_md_path)
