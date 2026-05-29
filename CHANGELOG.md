@@ -1,5 +1,33 @@
 # Changelog
 
+## 8.3.0 - 2026-05-29
+
+### Added
+
+- `KgImportResult` dataclass returned by `KgImportWorkflow.run()`: typed
+  result carrying `url_count`, `failures` (`list[FailedUrl]`), `ok`, and
+  `elapsed_seconds` (full run duration).
+- `FailedUrl` dataclass in `DefaultUrlHandler`: captures `timestamp`, `url`,
+  `handler_name`, and `message` for every URL handler exception.
+- `report_util` module: `render_as_markdown`, `render_as_csv`, `write_report`
+  pure functions for rendering and persisting sync reports.
+- `output_dir` field on `CloudWorkflowConfig`: when set, writes
+  `graph_sync_report.md` (always) and `graph_sync_failures.csv` (on failure)
+  after each run.
+- Markdown report includes a summary table (total URLs, successes, failures,
+  success rate, execution time) and a top-10 error groups table with clickable
+  example URLs and full error text.
+
+### Changed
+
+- `run_cloud_workflow` and `main.run_kg_import_workflow` now raise
+  `SystemExit("Total URLs: X, Successes: Y, Failures: Z")` when any URL handler
+  failure is detected, instead of exiting silently.
+- `rml_mapping.apply_mapping` now re-raises processing exceptions (YARRRML
+  parse errors, missing dataset URI) instead of swallowing them into
+  `MappingResult(graph=None)`, so mapping failures surface in
+  `KgImportResult.failures` alongside HTTP errors.
+
 ## 8.2.1 - 2026-05-19
 
 ### Changed
