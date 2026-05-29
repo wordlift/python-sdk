@@ -48,6 +48,8 @@ class KgImportWorkflow:
         self._concurrency = concurrency
 
     async def run(self) -> KgImportResult:
+        _t_start = time.perf_counter()
+
         await TtlLiquidGraphFactory(
             context=self._context, path=Path("data/templates")
         ).graphs()
@@ -56,7 +58,6 @@ class KgImportWorkflow:
 
         logger.info("Applying %d URL import request(s)" % len(url_list))
 
-        _t_start = time.perf_counter()
         delayed = create_delayed(self._url_handler, self._concurrency)
         await tqdm.gather(
             *[delayed(url) for url in list(url_list)],
