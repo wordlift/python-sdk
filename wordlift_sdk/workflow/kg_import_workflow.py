@@ -1,4 +1,5 @@
 import logging
+import time
 from dataclasses import dataclass, field
 from os import cpu_count
 from pathlib import Path
@@ -21,6 +22,7 @@ logger = logging.getLogger(__name__)
 class KgImportResult:
     url_count: int
     failures: list[FailedUrl] = field(default_factory=list)
+    elapsed_seconds: float = 0.0
 
     @property
     def ok(self) -> bool:
@@ -54,11 +56,17 @@ class KgImportWorkflow:
 
         logger.info("Applying %d URL import request(s)" % len(url_list))
 
+        _t_start = time.perf_counter()
         delayed = create_delayed(self._url_handler, self._concurrency)
         await tqdm.gather(
             *[delayed(url) for url in list(url_list)],
             total=len(url_list),
         )
+        elapsed = time.perf_counter() - _t_start
 
         failures: list[FailedUrl] = getattr(self._url_handler, "failures", None) or []
-        return KgImportResult(url_count=len(url_list), failures=failures)
+        return KgImportResult(
+            url_count=len(url_list),
+            failures=failures,
+            elapsed_seconds=elapsed,
+        )
