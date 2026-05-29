@@ -25,6 +25,23 @@ def _md_cell(value: str) -> str:
     return value.replace("\n", " ").replace("|", "\\|")
 
 
+def _format_duration(seconds: float) -> str:
+    s = int(seconds)
+    h, remainder = divmod(s, 3600)
+    m, sec = divmod(remainder, 60)
+    if h:
+        return f"{h}h {m}m {sec}s"
+    if m:
+        return f"{m}m {sec}s"
+    return f"{sec}s"
+
+
+def _format_success_rate(url_count: int, success_count: int) -> str:
+    if url_count == 0:
+        return "N/A"
+    return f"{success_count / url_count * 100:.1f}%"
+
+
 def _error_key(message: str) -> str:
     """Return a stable grouping key by stripping URL-specific segments."""
     stripped = _URL_RE.sub("", message).strip(": ")
@@ -37,9 +54,13 @@ def render_as_markdown(result: KgImportResult) -> str:
     lines = [
         "# Graph Sync Report",
         "",
-        f"Total URLs: **{result.url_count}**",
-        f"Successes: **{success_count}**",
-        f"Failures: **{len(result.failures)}**",
+        "| Metric | Value |",
+        "| --- | --- |",
+        f"| Total URLs | **{result.url_count}** |",
+        f"| Successes | **{success_count}** |",
+        f"| Failures | **{len(result.failures)}** |",
+        f"| Success rate | **{_format_success_rate(result.url_count, success_count)}** |",
+        f"| Execution time | **{_format_duration(result.elapsed_seconds)}** |",
     ]
     if result.failures:
         examples: dict[str, object] = {}

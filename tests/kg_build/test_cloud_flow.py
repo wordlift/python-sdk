@@ -20,7 +20,7 @@ from wordlift_sdk.kg_build.cloud_flow import (
 
 class _Workflow:
     async def run(self):
-        return SimpleNamespace(url_count=0, failures=[], ok=True)
+        return SimpleNamespace(url_count=0, failures=[], ok=True, elapsed_seconds=0.0)
 
 
 class _WorkflowWithFailures:
@@ -29,7 +29,10 @@ class _WorkflowWithFailures:
 
     async def run(self):
         return SimpleNamespace(
-            url_count=len(self._failures), failures=self._failures, ok=False
+            url_count=len(self._failures),
+            failures=self._failures,
+            ok=False,
+            elapsed_seconds=0.0,
         )
 
 
@@ -663,7 +666,7 @@ def test_get_output_dir_fallback_to_cwd(tmp_path: Path, monkeypatch) -> None:
 
 
 def test_report_execution_writes_md_always(tmp_path: Path) -> None:
-    result = SimpleNamespace(url_count=1, failures=[], ok=True)
+    result = SimpleNamespace(url_count=1, failures=[], ok=True, elapsed_seconds=0.0)
     _report_execution(result, tmp_path)
     assert (tmp_path / "graph_sync_report.md").exists()
     assert not (tmp_path / "graph_sync_failures.csv").exists()
@@ -678,7 +681,9 @@ def test_report_execution_writes_csv_only_on_failure(tmp_path: Path) -> None:
         handler_name="Handler",
         message="boom",
     )
-    result = SimpleNamespace(url_count=1, failures=[failure], ok=False)
+    result = SimpleNamespace(
+        url_count=1, failures=[failure], ok=False, elapsed_seconds=0.0
+    )
     _report_execution(result, tmp_path)
     assert (tmp_path / "graph_sync_report.md").exists()
     assert (tmp_path / "graph_sync_failures.csv").exists()

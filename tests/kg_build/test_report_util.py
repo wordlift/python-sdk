@@ -8,6 +8,8 @@ from types import SimpleNamespace
 
 from wordlift_sdk.kg_build.report_util import (
     _error_key,
+    _format_duration,
+    _format_success_rate,
     _format_timestamp,
     _md_cell,
     render_as_csv,
@@ -25,9 +27,11 @@ def _failure(url="https://example.com", handler="Handler", message="boom", ts=No
     )
 
 
-def _result(url_count=1, failures=None):
+def _result(url_count=1, failures=None, elapsed_seconds=0.0):
     return SimpleNamespace(
-        url_count=url_count, failures=failures if failures is not None else []
+        url_count=url_count,
+        failures=failures if failures is not None else [],
+        elapsed_seconds=elapsed_seconds,
     )
 
 
@@ -68,6 +72,40 @@ def test_format_timestamp_double_digit_day():
     assert _format_timestamp(dt) == "Apr 15, 14:05:09 UTC"
 
 
+# --- _format_duration ---
+
+
+def test_format_duration_seconds_only():
+    assert _format_duration(45.7) == "45s"
+
+
+def test_format_duration_minutes_and_seconds():
+    assert _format_duration(154.0) == "2m 34s"
+
+
+def test_format_duration_hours_minutes_seconds():
+    assert _format_duration(3922.0) == "1h 5m 22s"
+
+
+def test_format_duration_zero():
+    assert _format_duration(0.0) == "0s"
+
+
+# --- _format_success_rate ---
+
+
+def test_format_success_rate_full():
+    assert _format_success_rate(10, 10) == "100.0%"
+
+
+def test_format_success_rate_partial():
+    assert _format_success_rate(10, 9) == "90.0%"
+
+
+def test_format_success_rate_zero_urls():
+    assert _format_success_rate(0, 0) == "N/A"
+
+
 # --- _error_key ---
 
 
@@ -103,9 +141,15 @@ def test_error_key_truncates_to_prefix_len():
 def test_render_as_markdown_summary_counts():
     result = _result(url_count=10, failures=[_failure()])
     md = render_as_markdown(result)
-    assert "Total URLs: **10**" in md
-    assert "Successes: **9**" in md
-    assert "Failures: **1**" in md
+    assert "**10**" in md
+    assert "**9**" in md
+    assert "**1**" in md
+    assert "**90.0%**" in md
+
+
+def test_render_as_markdown_execution_time():
+    result = _result(url_count=1, elapsed_seconds=154.0)
+    assert "**2m 34s**" in render_as_markdown(result)
 
 
 def test_render_as_markdown_shows_top_errors_section():
@@ -175,7 +219,7 @@ def test_render_as_markdown_no_overflow_note_when_within_top_n():
 def test_render_as_markdown_zero_failures_no_top_errors_section():
     result = _result(url_count=5, failures=[])
     md = render_as_markdown(result)
-    assert "Failures: **0**" in md
+    assert "**0**" in md
     assert "## Top Errors" not in md
 
 
