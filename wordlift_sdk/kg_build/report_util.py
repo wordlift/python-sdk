@@ -4,7 +4,6 @@ import csv
 import io
 import re
 from collections import Counter
-from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -15,10 +14,6 @@ if TYPE_CHECKING:
 _URL_RE = re.compile(r"https?://\S*")
 _TOP_ERRORS = 10
 _ERROR_PREFIX_LEN = 80
-
-
-def _format_timestamp(dt: datetime) -> str:
-    return dt.strftime(f"%b {dt.day}, %H:%M:%S UTC")
 
 
 def _md_cell(value: str) -> str:
@@ -81,7 +76,7 @@ def render_as_markdown(result: KgImportResult) -> str:
             lines.append(
                 f"| {count}"
                 f" | `{_md_cell(key)}`"
-                f" | [{_md_cell(ex.url.value)}]({ex.url.value})"
+                f" | [{_md_cell(ex.url.value)}]({ex.url.value.replace('|', '%7C')})"
                 f" | `{_md_cell(ex.message)}` |"
             )
         remaining = len(counts) - _TOP_ERRORS

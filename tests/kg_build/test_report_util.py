@@ -10,7 +10,6 @@ from wordlift_sdk.kg_build.report_util import (
     _error_key,
     _format_duration,
     _format_success_rate,
-    _format_timestamp,
     _md_cell,
     render_as_csv,
     render_as_markdown,
@@ -52,24 +51,6 @@ def test_md_cell_escapes_both():
 
 def test_md_cell_plain_text_unchanged():
     assert _md_cell("no special chars") == "no special chars"
-
-
-# --- _format_timestamp ---
-
-
-def test_format_timestamp_no_zero_padding_on_day():
-    dt = datetime(2026, 4, 2, 14, 5, 9, tzinfo=timezone.utc)
-    assert _format_timestamp(dt) == "Apr 2, 14:05:09 UTC"
-
-
-def test_format_timestamp_midnight_hours_not_corrupted():
-    dt = datetime(2026, 4, 1, 0, 5, 9, tzinfo=timezone.utc)
-    assert _format_timestamp(dt) == "Apr 1, 00:05:09 UTC"
-
-
-def test_format_timestamp_double_digit_day():
-    dt = datetime(2026, 4, 15, 14, 5, 9, tzinfo=timezone.utc)
-    assert _format_timestamp(dt) == "Apr 15, 14:05:09 UTC"
 
 
 # --- _format_duration ---
@@ -166,6 +147,12 @@ def test_render_as_markdown_shows_example_url_and_full_error():
     md = render_as_markdown(result)
     assert "[https://ex.com/page](https://ex.com/page)" in md
     assert "Malformed YARRRML" in md
+
+
+def test_render_as_markdown_escapes_pipe_in_url_href():
+    result = _result(failures=[_failure(url="https://ex.com/path|q=1")])
+    md = render_as_markdown(result)
+    assert "(https://ex.com/path%7Cq=1)" in md
 
 
 def test_render_as_markdown_aggregates_same_error():
