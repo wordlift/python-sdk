@@ -81,7 +81,7 @@ def render_as_markdown(result: KgImportResult) -> str:
             lines.append(
                 f"| {count}"
                 f" | `{_md_cell(key)}`"
-                f" | `{_md_cell(ex.url.value)}`"
+                f" | [{_md_cell(ex.url.value)}]({ex.url.value})"
                 f" | `{_md_cell(ex.message)}` |"
             )
         remaining = len(counts) - _TOP_ERRORS

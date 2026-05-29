@@ -164,7 +164,7 @@ def test_render_as_markdown_shows_example_url_and_full_error():
         failures=[_failure(url="https://ex.com/page", message="Malformed YARRRML")]
     )
     md = render_as_markdown(result)
-    assert "https://ex.com/page" in md
+    assert "[https://ex.com/page](https://ex.com/page)" in md
     assert "Malformed YARRRML" in md
 
 
