@@ -4633,4 +4633,4 @@ workflow = ["advertools", "google-auth", "gql", "gspread", "lxml", "pandas", "pl
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10, <3.15"
-content-hash = "7880d67645b03b8d6fb2f4cea2f71a8178a88a1cd911c86a2a7a12555d75f0e9"
+content-hash = "12d0058a9028c0ff5df8484415029b7ad784aeaa14419b0bd00491ed502f1fea"
