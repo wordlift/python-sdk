@@ -1,5 +1,12 @@
 # Changelog
 
+## 8.3.1 - 2026-06-23
+
+### Added
+
+- Bump `wordlift-client` dependency to `>=1.182.0` to pick up fixes related
+  to API spec Security conflicts.
+
 ## 8.3.0 - 2026-05-29
 
 ### Added
