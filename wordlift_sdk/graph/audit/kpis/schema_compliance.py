@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from bisect import bisect_left
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from typing import Literal as TypingLiteral
 
@@ -169,8 +171,11 @@ class SchemaComplianceKpi:
         all_subjects = {
             subject for subject in normalized.subjects() if isinstance(subject, URIRef)
         }
+        subject_index = _build_subject_index(all_subjects)
         subgraphs = {
-            url: _build_subgraph(normalized, url, self._depth, all_subjects)
+            url: _build_subgraph(
+                normalized, url, self._depth, all_subjects, subject_index
+            )
             for url in webpage_urls
         }
         return self.collect_prebuilt(subgraphs)
@@ -182,58 +187,26 @@ class SchemaComplianceKpi:
         return run.schema_compliance
 
     def run_prebuilt(self, subgraphs_by_url: dict[str, Graph]) -> SchemaComplianceRun:
-        results: list[UrlComplianceResult] = []
         rich_entity_types: dict[str, set[str]] = {}
         rich_invalid_entities: set[str] = set()
 
-        for url, subgraph in sorted(subgraphs_by_url.items()):
-            main_validation = self._main_validator.validate_graph(
-                subgraph, normalize_schema_org=False
-            )
-            merchant_validation = self._merchant_validator.validate_graph(
-                subgraph, normalize_schema_org=False
-            )
+        items = sorted(subgraphs_by_url.items())
+        if self._max_workers == 1 or len(items) <= 1:
+            collected = [
+                self._validate_url_subgraph(url, graph) for url, graph in items
+            ]
+        else:
+            with ThreadPoolExecutor(max_workers=self._max_workers) as executor:
+                collected = list(
+                    executor.map(lambda item: self._validate_url_subgraph(*item), items)
+                )
 
-            main_issues = _extract_issues(
-                main_validation.report_graph,
-                self._main_validator.prepared_shapes.shape_source_map,
-                data_graph=subgraph,
-                shapes_graph=self._main_validator.prepared_shapes.shapes_graph,
-                issue_level=self._issue_level,
-                include_issue_details=self._include_issue_details,
-            )
-            merchant_issues = _extract_issues(
-                merchant_validation.report_graph,
-                self._merchant_validator.prepared_shapes.shape_source_map,
-                data_graph=subgraph,
-                shapes_graph=self._merchant_validator.prepared_shapes.shapes_graph,
-                issue_level=self._issue_level,
-                include_issue_details=self._include_issue_details,
-            )
-
-            rich_summary = build_rich_snippets_validation_summary(
-                subgraph,
-                main_validation.report_graph,
-                self._main_validator.prepared_shapes.shape_source_map,
-            )
+        results: list[UrlComplianceResult] = []
+        for result, rich_summary in collected:
+            results.append(result)
             for iri, types in rich_summary.entity_types.items():
                 rich_entity_types.setdefault(iri, set()).update(types)
             rich_invalid_entities.update(rich_summary.invalid_entities)
-
-            results.append(
-                UrlComplianceResult(
-                    url=url,
-                    errors=main_issues.errors,
-                    warnings=main_issues.warnings,
-                    error_count=main_issues.error_count,
-                    warning_count=main_issues.warning_count,
-                    google_merchant=MerchantResult(
-                        errors=merchant_issues.errors,
-                        warnings=merchant_issues.warnings,
-                        eligible=merchant_issues.error_count == 0,
-                    ),
-                )
-            )
 
         self._last_run = SchemaComplianceRun(
             schema_compliance=SchemaComplianceResult(by_url=results),
@@ -246,6 +219,56 @@ class SchemaComplianceKpi:
             ),
         )
         return self._last_run
+
+    def _validate_url_subgraph(
+        self,
+        url: str,
+        subgraph: Graph,
+    ) -> tuple[UrlComplianceResult, RichSnippetsValidationSummary]:
+        main_validation = self._main_validator.validate_graph(
+            subgraph, normalize_schema_org=False
+        )
+        merchant_validation = self._merchant_validator.validate_graph(
+            subgraph, normalize_schema_org=False
+        )
+
+        main_issues = _extract_issues(
+            main_validation.report_graph,
+            self._main_validator.prepared_shapes.shape_source_map,
+            data_graph=subgraph,
+            shapes_graph=self._main_validator.prepared_shapes.shapes_graph,
+            issue_level=self._issue_level,
+            include_issue_details=self._include_issue_details,
+        )
+        merchant_issues = _extract_issues(
+            merchant_validation.report_graph,
+            self._merchant_validator.prepared_shapes.shape_source_map,
+            data_graph=subgraph,
+            shapes_graph=self._merchant_validator.prepared_shapes.shapes_graph,
+            issue_level=self._issue_level,
+            include_issue_details=self._include_issue_details,
+        )
+
+        rich_summary = build_rich_snippets_validation_summary(
+            subgraph,
+            main_validation.report_graph,
+            self._main_validator.prepared_shapes.shape_source_map,
+        )
+        return (
+            UrlComplianceResult(
+                url=url,
+                errors=main_issues.errors,
+                warnings=main_issues.warnings,
+                error_count=main_issues.error_count,
+                warning_count=main_issues.warning_count,
+                google_merchant=MerchantResult(
+                    errors=merchant_issues.errors,
+                    warnings=merchant_issues.warnings,
+                    eligible=merchant_issues.error_count == 0,
+                ),
+            ),
+            rich_summary,
+        )
 
     @property
     def last_run(self) -> SchemaComplianceRun | None:
@@ -266,7 +289,9 @@ def _build_subgraph(
     webpage_url: str,
     depth: int,
     all_subjects: set[URIRef],
+    subject_index: tuple[list[str], dict[str, URIRef]] | None = None,
 ) -> Graph:
+    index = subject_index or _build_subject_index(all_subjects)
     root_iris: set[URIRef] = set()
     for predicate in (_SCHEMA_URL_HTTP, _SCHEMA_URL_HTTPS):
         for subject, _, obj in graph.triples((None, predicate, None)):
@@ -275,10 +300,7 @@ def _build_subgraph(
 
     child_iris: set[URIRef] = set()
     for root_iri in root_iris:
-        prefix = str(root_iri).rstrip("/") + "/"
-        for subject in all_subjects:
-            if str(subject).startswith(prefix):
-                child_iris.add(subject)
+        child_iris.update(_subjects_with_prefix(index, str(root_iri).rstrip("/") + "/"))
 
     entity_iris: set[URIRef] = root_iris | child_iris
     visited: set[URIRef] = set(entity_iris)
@@ -299,10 +321,7 @@ def _build_subgraph(
             break
 
     for iri in set(visited) - root_iris - child_iris:
-        prefix = str(iri).rstrip("/") + "/"
-        for subject in all_subjects:
-            if str(subject).startswith(prefix):
-                visited.add(subject)
+        visited.update(_subjects_with_prefix(index, str(iri).rstrip("/") + "/"))
 
     subgraph = Graph()
     for iri in visited:
@@ -310,6 +329,29 @@ def _build_subgraph(
             if not isinstance(subject, BNode) and not isinstance(obj, BNode):
                 subgraph.add((subject, predicate, obj))
     return subgraph
+
+
+def _build_subject_index(
+    all_subjects: set[URIRef],
+) -> tuple[list[str], dict[str, URIRef]]:
+    by_value = {str(subject): subject for subject in all_subjects}
+    return sorted(by_value), by_value
+
+
+def _subjects_with_prefix(
+    subject_index: tuple[list[str], dict[str, URIRef]],
+    prefix: str,
+) -> set[URIRef]:
+    ordered, by_value = subject_index
+    matched: set[URIRef] = set()
+    index = bisect_left(ordered, prefix)
+    while index < len(ordered):
+        value = ordered[index]
+        if not value.startswith(prefix):
+            break
+        matched.add(by_value[value])
+        index += 1
+    return matched
 
 
 def _extract_issues(
