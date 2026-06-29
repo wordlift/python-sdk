@@ -1,5 +1,17 @@
 # Changelog
 
+## 8.3.3 - 2026-06-29
+
+### Added
+
+- Graph audit KPI snapshot helpers for compact graph-health payloads suitable
+  for WordLift API uploads.
+
+### Changed
+
+- Graph audit schema-compliance subgraph assembly now indexes subject IRIs by
+  prefix, avoiding repeated full-subject scans on large exports.
+
 ## 8.3.1 - 2026-06-23
 
 ### Added

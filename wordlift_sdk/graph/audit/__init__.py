@@ -4,6 +4,11 @@ from __future__ import annotations
 
 from ._auditor import AuditOptions, GraphAuditor
 from ._entity_matrix import build_entity_matrix
+from ._kpi_snapshot import (
+    GraphKpiSnapshotOptions,
+    build_graph_kpi_api_payload,
+    calculate_graph_kpi_snapshot,
+)
 from ._loader import LoadError, LoadResult, load_graph
 from ._profile import shape_specs_for_profile
 from ._report import GraphAuditReport
@@ -52,6 +57,7 @@ __all__ = [
     "EntityTypesResult",
     "GraphAuditReport",
     "GraphAuditor",
+    "GraphKpiSnapshotOptions",
     "IsolatedGraphsKpi",
     "IsolatedGraphsResult",
     "IssueEntry",
@@ -72,7 +78,9 @@ __all__ = [
     "UniqueUrlsResult",
     "UrlComplianceResult",
     "build_entity_matrix",
+    "build_graph_kpi_api_payload",
     "build_subgraph",
+    "calculate_graph_kpi_snapshot",
     "load_graph",
     "shape_specs_for_profile",
 ]
