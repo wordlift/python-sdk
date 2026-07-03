@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "wordlift-sdk"
-version = "8.3.4"
+version = "8.3.5"
 description = "Python toolkit for orchestrating WordLift imports and structured data workflows."
 authors = ["David Riccitelli <david@wordlift.io>"]
 readme = "README.md"
@@ -35,6 +35,7 @@ jinja2 = { version = "^3.1.6", optional = true }
 morph-kgc = { version = "^2.10.0", optional = true }
 worph = { version = ">=0.1.11,<0.2.0", optional = true }
 pyshacl = { version = "^0.31.0", optional = true }
+pyoxigraph = { version = ">=0.3.22,<0.4.0", optional = true }
 playwright = { version = "^1.52.0", optional = true }
 trafilatura = { version = "^2.0.0", optional = true }
 lxml = { version = "^5.4.0", optional = true }
@@ -89,6 +90,7 @@ workflow = [
     "tqdm",
 ]
 graph = [
+    "pyoxigraph",
     "pyshacl",
     "python-liquid",
     "rdflib",
@@ -144,6 +146,7 @@ all = [
     "playwright",
     "pycountry",
     "pydantic-core",
+    "pyoxigraph",
     "pyshacl",
     "python-liquid",
     "rdflib",

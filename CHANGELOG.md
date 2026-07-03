@@ -1,5 +1,14 @@
 # Changelog
 
+## 8.3.5 - 2026-07-03
+
+### Changed
+
+- Graph KPI streaming mode now uses a tolerant N-Triples parser when available,
+  avoiding empty KPI snapshots for exports containing Unicode IRI characters.
+- The graph optional dependency set now includes `pyoxigraph` for
+  memory-bounded KPI parsing.
+
 ## 8.3.4 - 2026-07-03
 
 ### Changed
