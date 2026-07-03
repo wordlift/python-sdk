@@ -1,5 +1,12 @@
 # Changelog
 
+## 8.3.6 - 2026-07-03
+
+### Changed
+
+- Relaxed the optional `pyoxigraph` dependency bound so graph KPI streaming mode
+  can resolve on Python versions where newer compatible wheels are required.
+
 ## 8.3.5 - 2026-07-03
 
 ### Changed
