@@ -111,48 +111,122 @@ def build_graph_kpi_api_payload(
     topology = snapshot.get("topology") or {}
     compliance = snapshot.get("schema_compliance") or {}
 
+    all_total_entities = totals.get("total_entity_count", 0)
+    all_total_typed_entities = totals.get("total_typed_entity_count", 0)
+    all_total_properties = totals.get("total_property_count", 0)
+    all_total_triples = totals.get("total_triples", 0)
+    all_unique_properties_count = totals.get("unique_property_count", 0)
+    all_rdf_type_triples_count = totals.get("rdf_type_triples", 0)
+    all_internal_edges_count = edges.get("total_internal_edges", 0)
+    all_unique_urls_count = totals.get("unique_urls_within_website_scope", 0)
+    all_broken_links_count = integrity.get("broken_internal_edge_count", 0)
+    all_duplicates_count = integrity.get("duplicate_url_group_count", 0)
+    all_duplicate_extra_entities_count = integrity.get(
+        "duplicate_extra_entity_count", 0
+    )
+    schema_compliance_errors = compliance.get("errors", 0)
+    schema_compliance_warnings = compliance.get("warnings", 0)
+    schema_compliance_urls_checked = compliance.get("urls_checked", 0)
+    rich_snippets_valid_count = compliance.get("google_merchant_eligible", 0)
+    rich_snippets_invalid_count = compliance.get("google_merchant_not_eligible", 0)
+    rich_snippet_candidate_entities = (
+        snapshot.get("rich_snippet_candidate_entities") or {}
+    )
+
     payload: dict[str, Any] = {
         "snapshot_date": snapshot_date_value,
         "calculated_at": calculated_at_value,
         "snapshot_origin": snapshot_origin,
-        "total_triples": totals.get("total_triples", 0),
-        "total_entities": totals.get("total_entity_count", 0),
-        "total_typed_entities": totals.get("total_typed_entity_count", 0),
-        "total_properties": totals.get("total_property_count", 0),
-        "unique_properties": totals.get("unique_property_count", 0),
-        "rdf_type_triples": totals.get("rdf_type_triples", 0),
-        "unique_urls_within_website_scope": totals.get(
-            "unique_urls_within_website_scope", 0
+        "all_total_entities": all_total_entities,
+        "all_total_typed_entities": all_total_typed_entities,
+        "all_total_properties": all_total_properties,
+        "all_total_triples": all_total_triples,
+        "all_unique_properties_count": all_unique_properties_count,
+        "all_rdf_type_triples_count": all_rdf_type_triples_count,
+        "all_internal_nodes_count": connectivity.get("internal_node_count", 0),
+        "all_internal_edges_count": all_internal_edges_count,
+        "all_external_edges_count": 0,
+        "all_edges_count": all_internal_edges_count,
+        "all_edge_predicate_counts": edges.get("edge_predicate_counts") or {},
+        "all_edge_node_ratio": edges.get("edge_to_node_ratio", 0),
+        "all_unique_urls_count": all_unique_urls_count,
+        "all_orphans_count": connectivity.get("orphan_entity_count", 0),
+        "all_broken_links_count": all_broken_links_count,
+        "all_isolated_graphs_count": topology.get("isolated_graph_count", 0),
+        "all_largest_component_nodes_count": topology.get(
+            "largest_component_node_count", 0
         ),
-        "entity_type_counts": snapshot.get("entity_type_counts") or {},
-        "property_counts": snapshot.get("property_counts") or {},
-        "rich_snippet_candidate_entities": snapshot.get(
-            "rich_snippet_candidate_entities"
-        )
-        or {},
-        "internal_edges": edges.get("total_internal_edges", 0),
-        "edge_predicate_counts": edges.get("edge_predicate_counts") or {},
-        "edge_to_node_ratio": edges.get("edge_to_node_ratio", 0),
-        "internal_nodes": connectivity.get("internal_node_count", 0),
-        "orphan_entities": connectivity.get("orphan_entity_count", 0),
-        "broken_internal_edges": integrity.get("broken_internal_edge_count", 0),
-        "duplicate_url_groups": integrity.get("duplicate_url_group_count", 0),
-        "duplicate_extra_entities": integrity.get("duplicate_extra_entity_count", 0),
-        "isolated_graph_components": topology.get("isolated_graph_count", 0),
-        "largest_component_nodes": topology.get("largest_component_node_count", 0),
-        "schema_compliance": {
-            "urls_checked": compliance.get("urls_checked", 0),
-            "urls_with_errors": compliance.get("urls_with_errors", 0),
-            "urls_with_warnings": compliance.get("urls_with_warnings", 0),
-            "errors": compliance.get("errors", 0),
-            "warnings": compliance.get("warnings", 0),
-            "google_merchant_eligible": compliance.get("google_merchant_eligible", 0),
-            "google_merchant_not_eligible": compliance.get(
-                "google_merchant_not_eligible", 0
-            ),
-        },
+        "all_duplicates_count": all_duplicates_count,
+        "all_duplicate_extra_entities_count": all_duplicate_extra_entities_count,
+        "rich_snippets_candidate_count": rich_snippet_candidate_entities.get(
+            "total", 0
+        ),
+        "rich_snippets_valid_count": rich_snippets_valid_count,
+        "rich_snippets_invalid_count": rich_snippets_invalid_count,
+        "rich_snippets_by_type": rich_snippet_candidate_entities.get("by_type", {}),
+        "schema_compliance_errors": schema_compliance_errors,
+        "schema_compliance_warnings": schema_compliance_warnings,
+        "schema_compliance_urls_checked": schema_compliance_urls_checked,
+        "schema_compliance_urls_with_errors": compliance.get("urls_with_errors", 0),
+        "schema_compliance_urls_with_warnings": compliance.get("urls_with_warnings", 0),
+        "all_entity_types": snapshot.get("entity_type_counts") or {},
+        "all_properties_by_predicate": snapshot.get("property_counts") or {},
     }
+    payload["graph_health_score"] = _calculate_graph_health_score(payload)
     return _numeric_only(payload)
+
+
+def _calculate_graph_health_score(metrics: dict[str, Any]) -> int:
+    score_value = (
+        100
+        - _safe_rate(
+            metrics.get("schema_compliance_errors"),
+            metrics.get("schema_compliance_urls_checked"),
+        )
+        * 35
+        - _safe_rate(
+            metrics.get("schema_compliance_warnings"),
+            metrics.get("schema_compliance_urls_checked"),
+        )
+        * 10
+        - _safe_rate(
+            metrics.get("all_broken_links_count"),
+            metrics.get("all_internal_edges_count"),
+        )
+        * 25
+        - _safe_rate(
+            metrics.get("all_duplicates_count"),
+            metrics.get("all_unique_urls_count"),
+        )
+        * 20
+        + _rich_snippet_valid_rate(metrics) * 5
+    )
+    score = int(score_value + 0.5)
+    return max(0, min(100, score))
+
+
+def _rich_snippet_valid_rate(metrics: dict[str, Any]) -> float:
+    valid = _to_float(metrics.get("rich_snippets_valid_count"))
+    invalid = _to_float(metrics.get("rich_snippets_invalid_count"))
+    total = valid + invalid
+    if total <= 0:
+        return 0
+    return valid / total
+
+
+def _safe_rate(numerator: Any, denominator: Any) -> float:
+    denominator_value = _to_float(denominator)
+    if denominator_value <= 0:
+        return 0
+    return _to_float(numerator) / denominator_value
+
+
+def _to_float(value: Any) -> float:
+    if isinstance(value, bool):
+        return 0
+    if isinstance(value, (int, float)):
+        return float(value)
+    return 0
 
 
 def schema_term(uri: Any) -> str | None:

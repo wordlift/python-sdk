@@ -125,10 +125,46 @@ def test_build_graph_kpi_api_payload_is_numeric_except_snapshot_metadata(
     assert payload["snapshot_date"] == "2026-06-29"
     assert payload["calculated_at"] == "2026-06-29T10:00:00Z"
     assert payload["snapshot_origin"] == "worai_graph_kpis"
-    assert payload["schema_compliance"]["urls_checked"] == 2
-    assert payload["schema_compliance"]["errors"] == 2
+    assert payload["all_total_entities"] == 5
+    assert payload["all_total_typed_entities"] == 5
+    assert payload["all_total_triples"] == 13
+    assert payload["all_total_properties"] == 8
+    assert payload["all_unique_properties_count"] == 3
+    assert payload["all_rdf_type_triples_count"] == 5
+    assert payload["all_internal_nodes_count"] == 5
+    assert payload["all_internal_edges_count"] == 2
+    assert payload["all_edge_predicate_counts"]["schema:brand"] == 2
+    assert payload["all_unique_urls_count"] == 2
+    assert payload["all_orphans_count"] == 2
+    assert payload["all_broken_links_count"] == 1
+    assert payload["all_isolated_graphs_count"] == 4
+    assert payload["all_largest_component_nodes_count"] == 2
+    assert payload["all_duplicates_count"] == 1
+    assert payload["all_duplicate_extra_entities_count"] == 1
+    assert payload["rich_snippets_candidate_count"] == 3
+    assert payload["rich_snippets_by_type"]["Product"] == 3
+    assert payload["schema_compliance_errors"] == 2
+    assert payload["schema_compliance_urls_checked"] == 2
+    assert payload["schema_compliance_urls_with_errors"] == 1
+    assert payload["graph_health_score"] == 43
+    assert payload["all_entity_types"]["Product"] == 3
+    assert payload["all_properties_by_predicate"]["schema:url"] == 3
     assert "orphan_entity_examples" not in payload
     assert "broken_internal_edge_examples" not in payload
+    assert "total_entities" not in payload
+    assert "total_triples" not in payload
+    assert "internal_edges" not in payload
+    assert "unique_urls_within_website_scope" not in payload
+    assert "broken_internal_edges" not in payload
+    assert "duplicate_url_groups" not in payload
+    assert "schema_compliance" not in payload
+    assert "entity_type_counts" not in payload
+    assert "property_counts" not in payload
+    assert "rich_snippet_candidate_entities" not in payload
+    assert "public_total_entities" not in payload
+    assert "private_total_entities" not in payload
+    assert "public_internal_edges_count" not in payload
+    assert "private_internal_edges_count" not in payload
 
     def assert_numeric_kpis(value, path: str = "") -> None:
         if path in {"snapshot_date", "calculated_at", "snapshot_origin"}:
@@ -142,6 +178,83 @@ def test_build_graph_kpi_api_payload_is_numeric_except_snapshot_metadata(
         assert value >= 0
 
     assert_numeric_kpis(payload)
+
+
+def test_graph_health_score_is_normalized_by_metric_denominators() -> None:
+    small_payload = build_graph_kpi_api_payload(
+        {
+            "totals": {
+                "total_entity_count": 100,
+                "total_property_count": 300,
+                "total_triples": 1_000,
+                "unique_urls_within_website_scope": 10,
+            },
+            "edges": {"total_internal_edges": 20},
+            "integrity": {
+                "broken_internal_edge_count": 2,
+                "duplicate_url_group_count": 1,
+            },
+            "schema_compliance": {
+                "urls_checked": 10,
+                "errors": 1,
+                "warnings": 2,
+                "google_merchant_eligible": 8,
+                "google_merchant_not_eligible": 2,
+            },
+        },
+        snapshot_date="2026-06-29",
+    )
+    large_payload = build_graph_kpi_api_payload(
+        {
+            "totals": {
+                "total_entity_count": 1_000,
+                "total_property_count": 3_000,
+                "total_triples": 10_000,
+                "unique_urls_within_website_scope": 100,
+            },
+            "edges": {"total_internal_edges": 200},
+            "integrity": {
+                "broken_internal_edge_count": 20,
+                "duplicate_url_group_count": 10,
+            },
+            "schema_compliance": {
+                "urls_checked": 100,
+                "errors": 10,
+                "warnings": 20,
+                "google_merchant_eligible": 80,
+                "google_merchant_not_eligible": 20,
+            },
+        },
+        snapshot_date="2026-06-29",
+    )
+
+    assert small_payload["graph_health_score"] == large_payload["graph_health_score"]
+    assert small_payload["graph_health_score"] == 94
+
+
+def test_graph_health_score_uses_safe_defaults_for_missing_denominators() -> None:
+    payload = build_graph_kpi_api_payload(
+        {
+            "totals": {
+                "total_entity_count": 10,
+                "total_property_count": 20,
+                "total_triples": 30,
+            },
+            "edges": {"total_internal_edges": 0},
+            "integrity": {
+                "broken_internal_edge_count": 5,
+                "duplicate_url_group_count": 5,
+            },
+            "schema_compliance": {
+                "urls_checked": 0,
+                "errors": 5,
+                "warnings": 5,
+            },
+        },
+        snapshot_date="2026-06-29",
+    )
+
+    assert payload["graph_health_score"] == 100
 
 
 def test_build_graph_kpi_api_payload_rejects_non_numeric_kpi_values() -> None:
