@@ -1,5 +1,13 @@
 # Changelog
 
+## 8.3.4 - 2026-07-03
+
+### Changed
+
+- Graph KPI API payloads now emit canonical KPI field names, include a
+  normalized `graph_health_score`, and retain diagnostic counters without
+  legacy aliases.
+
 ## 8.3.3 - 2026-06-29
 
 ### Added
