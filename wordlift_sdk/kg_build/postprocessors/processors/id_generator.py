@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections import defaultdict
 import hashlib
 import re
+import unicodedata
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from rdflib import Graph, Literal, RDF, URIRef
@@ -14,8 +15,11 @@ SCHEMA = "http://schema.org/"
 
 
 def normalize_slug(value: str) -> str:
+    # Decompose diacritics: ç→c, ş→s, ğ→g, ü→u, ö→o, etc.
+    value = unicodedata.normalize("NFD", value)
+    value = "".join(c for c in value if unicodedata.category(c) != "Mn")
     lowered = value.strip().lower()
-    lowered = re.sub(r"[^\w\s-]", " ", lowered)
+    lowered = re.sub(r"[^\w\s-]", " ", lowered, flags=re.ASCII)  # ASCII-only \w
     lowered = re.sub(r"[_\s]+", "-", lowered)
     lowered = re.sub(r"-{2,}", "-", lowered).strip("-")
     return lowered or "thing"
