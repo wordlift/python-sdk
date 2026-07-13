@@ -13,6 +13,7 @@ __all__ = [
     "assign_stable_jsonld_ids",
     "extract_validation_issues",
     "filter_validation_issues",
+    "format_shacl_path",
     "list_shape_names",
     "resolve_shape_specs",
     "prepare_shapes",
@@ -43,6 +44,10 @@ _EXPORTS = {
     "extract_validation_issues": (
         "wordlift_sdk.validation.shacl",
         "extract_validation_issues",
+    ),
+    "format_shacl_path": (
+        "wordlift_sdk.validation.shacl",
+        "format_shacl_path",
     ),
     "filter_validation_issues": (
         "wordlift_sdk.validation.shacl",

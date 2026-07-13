@@ -47,7 +47,7 @@ def test_schemaorg_domain_rejects_is_part_of_on_service(tmp_path: Path) -> None:
     assert _MESSAGE in result.report_text
     assert issues[0].level == "warning"
     assert issues[0].focus_node == "https://example.org/items/1"
-    assert issues[0].result_path == "http://schema.org/isPartOf"
+    assert issues[0].result_path == "isPartOf"
     assert issues[0].rule_set == "schemaorg-grammar"
     assert issues[0].message == _MESSAGE
 

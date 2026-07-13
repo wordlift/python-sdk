@@ -782,6 +782,52 @@ def _severity_to_level(severity: Identifier | None) -> str:
     return "warning"
 
 
+def _local_name(term: Identifier | None) -> str | None:
+    """Local name of an IRI — the segment after the last ``#`` or ``/`` — for any
+    vocabulary. Returns ``None`` for non-IRI terms."""
+    if not isinstance(term, URIRef):
+        return None
+    text = str(term)
+    if "#" in text:
+        return text.rsplit("#", 1)[-1] or text
+    if "/" in text:
+        return text.rsplit("/", 1)[-1] or text
+    return text
+
+
+def format_shacl_path(
+    path_term: Identifier | None, shapes_graph: Graph | None = None
+) -> str | None:
+    """Render a SHACL ``sh:path`` value as a readable string.
+
+    Simple property paths become their local name (``"price"``); SHACL sequence
+    paths — encoded as RDF lists whose head is a blank node in the shapes graph —
+    become a dotted chain (``"address.addressCountry"``). Never returns a raw
+    blank-node label: an unresolvable blank node yields ``None``.
+    """
+    if path_term is None:
+        return None
+    if isinstance(path_term, URIRef):
+        return _local_name(path_term)
+    if isinstance(path_term, BNode) and shapes_graph is not None:
+        parts: list[str] = []
+        current: Identifier | None = path_term
+        seen: set[Identifier] = set()
+        while current is not None and current != RDF.nil and current not in seen:
+            seen.add(current)
+            first = shapes_graph.value(current, RDF.first)
+            if first is None:
+                break
+            name = _local_name(first)
+            if name is None:
+                return None
+            parts.append(name)
+            current = shapes_graph.value(current, RDF.rest)
+        if parts:
+            return ".".join(parts)
+    return None
+
+
 def extract_validation_issues(result: ValidationResult) -> list[ValidationIssue]:
     issues: list[ValidationIssue] = []
     for node in result.report_graph.subjects(SH.resultSeverity, None):
@@ -796,16 +842,14 @@ def extract_validation_issues(result: ValidationResult) -> list[ValidationIssue]
         severity = result.report_graph.value(node, SH.resultSeverity)
         source_shape = result.report_graph.value(node, SH.sourceShape)
         message = result.report_graph.value(node, SH.resultMessage)
+        focus_term = result.report_graph.value(node, SH.focusNode)
+        path_term = result.report_graph.value(node, SH.resultPath)
         issues.append(
             ValidationIssue(
                 level=_severity_to_level(severity),
                 severity=str(severity) if severity else str(SH.Violation),
-                focus_node=str(result.report_graph.value(node, SH.focusNode))
-                if result.report_graph.value(node, SH.focusNode) is not None
-                else None,
-                result_path=str(result.report_graph.value(node, SH.resultPath))
-                if result.report_graph.value(node, SH.resultPath) is not None
-                else None,
+                focus_node=str(focus_term) if focus_term is not None else None,
+                result_path=format_shacl_path(path_term, result.shapes_graph),
                 rule_id=str(source_shape) if source_shape is not None else None,
                 rule_set=result.shape_source_map.get(source_shape)
                 if source_shape is not None
