@@ -1,5 +1,21 @@
 # Changelog
 
+## 8.3.7 - 2026-07-13
+
+### Fixed
+
+- Schema.org grammar validation now warns when a known property is used on an
+  incompatible type, while respecting subclass closure and multi-type union
+  semantics.
+- Graph audits now surface the same Schema.org property-domain warnings as
+  direct structured-data validation.
+
+### Changed
+
+- Schema.org grammar and subclass ontology artifacts are generated from the
+  same official source graph so property-domain validation is preserved across
+  grammar refreshes.
+
 ## 8.3.6 - 2026-07-03
 
 ### Changed
