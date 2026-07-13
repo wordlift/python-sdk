@@ -436,11 +436,6 @@ def _schemaorg_domain_rules(shapes_graph: Graph) -> dict[URIRef, _SchemaOrgDomai
     return rules
 
 
-def _schemaorg_local_name(uri: URIRef) -> str:
-    value = str(uri)
-    return value[len(_SCHEMAORG_HTTP) :] if value.startswith(_SCHEMAORG_HTTP) else value
-
-
 def _rdf_term_sort_key(term: Identifier) -> tuple[str, str, str, str]:
     return (
         term.__class__.__name__,
@@ -483,8 +478,8 @@ def _append_schemaorg_domain_results(
             ):
                 continue
 
-            property_name = _schemaorg_local_name(rule.path)
-            type_name = _schemaorg_local_name(declared_types[0])
+            property_name = _local_name(rule.path)
+            type_name = _local_name(declared_types[0])
             message = (
                 f"The property {property_name} is not recognized by the schema "
                 f"(e.g. schema.org) for an object of type {type_name}."
