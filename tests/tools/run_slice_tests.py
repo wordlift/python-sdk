@@ -30,6 +30,7 @@ SLICE_TESTS: dict[str, list[str]] = {
         "tests/test_recommended_one_of_validation.py",
         "tests/test_merchant_listing_defined_region_validation.py",
         "tests/test_product_snippet_validation.py",
+        "tests/test_schemaorg_domain_validation.py",
         "tests/test_shacl_generator.py",
         "tests/test_validation_generator_more.py",
     ],

@@ -84,6 +84,9 @@
   bumping the range.
 - Schema.org grammar checks are deliberately permissive, accepting URL/text literals
   for all properties.
+- Schema.org grammar generation emits warning-level property-domain checks from
+  `domainIncludes`, with standard subclass closure and multi-type union semantics;
+  grammar and subclass ontology artifacts are refreshed from the same source graph.
 - Schema.org grammar issue extraction is subclass-aware for range checks:
   warnings like `Schema.org range check: priceSpecification.` are suppressed
   when the value node type is a valid schema.org subclass of the expected

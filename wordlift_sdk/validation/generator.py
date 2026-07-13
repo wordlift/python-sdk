@@ -1021,6 +1021,76 @@ def _collect_domain_ranges(
     return [(domain, ranges) for domain in domains]
 
 
+def _canonical_schema_uri(uri: URIRef) -> URIRef | None:
+    value = str(uri)
+    for namespace in (str(SCHEMA_VOCAB), str(SCHEMA_DATA)):
+        if value.startswith(namespace):
+            return URIRef(f"{SCHEMA_DATA}{value[len(namespace) :]}")
+    return None
+
+
+def _schema_subclass_edges(graph: Graph) -> set[tuple[URIRef, URIRef]]:
+    edges: set[tuple[URIRef, URIRef]] = set()
+    for child, parent in graph.subject_objects(RDFS.subClassOf):
+        if not isinstance(child, URIRef) or not isinstance(parent, URIRef):
+            continue
+        canonical_child = _canonical_schema_uri(child)
+        canonical_parent = _canonical_schema_uri(parent)
+        if canonical_child is not None and canonical_parent is not None:
+            edges.add((canonical_child, canonical_parent))
+    return edges
+
+
+def _render_domain_rule(
+    prop: URIRef,
+    domains: Iterable[URIRef],
+) -> list[str]:
+    short_prop = _short_name(prop)
+    domain_names = sorted(
+        {
+            _short_name(canonical)
+            for domain in domains
+            if (canonical := _canonical_schema_uri(domain)) is not None
+        }
+    )
+    if not domain_names:
+        return []
+
+    lines = [
+        f":schema_{short_prop}DomainRule",
+        "  a :PropertyDomainRule ;",
+        f"  :path schema:{short_prop} ;",
+    ]
+    for index, name in enumerate(domain_names):
+        suffix = "," if index < len(domain_names) - 1 else " ."
+        predicate = "  :domain" if index == 0 else "          "
+        lines.append(f"{predicate} schema:{name}{suffix}")
+    return lines
+
+
+def _load_schema_graph() -> Graph:
+    response = requests.get(SCHEMA_JSONLD_URL, timeout=60)
+    response.raise_for_status()
+    graph = Graph()
+    graph.parse(data=response.text, format="json-ld")
+    return graph
+
+
+def _write_subclass_ontology(
+    output_path: Path,
+    subclass_edges: set[tuple[URIRef, URIRef]],
+) -> None:
+    predicate = str(RDFS.subClassOf)
+    lines = [
+        f"<{child}> <{predicate}> <{parent}> ."
+        for child, parent in sorted(
+            subclass_edges, key=lambda edge: tuple(map(str, edge))
+        )
+    ]
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+
+
 def _render_property_shape(prop: URIRef, ranges: list[URIRef]) -> list[str]:
     lines: list[str] = []
     lines.append("  sh:property [")
@@ -1055,25 +1125,34 @@ def _render_property_shape(prop: URIRef, ranges: list[URIRef]) -> list[str]:
     return lines
 
 
-def generate_schema_shacls(output_file: Path, overwrite: bool) -> int:
+def generate_schema_shacls(
+    output_file: Path,
+    overwrite: bool,
+    ontology_output_file: Path | None = None,
+) -> int:
     output_path = output_file
+    ontology_output_path = ontology_output_file or output_path.with_name(
+        "schemaorg-subclass-ontology.nt"
+    )
     if output_path.exists() and not overwrite:
         print(f"Output exists: {output_path}")
         return 1
+    if ontology_output_path.exists() and not overwrite:
+        print(f"Output exists: {ontology_output_path}")
+        return 1
 
-    response = requests.get(SCHEMA_JSONLD_URL, timeout=60)
-    response.raise_for_status()
-
-    graph = Graph()
-    graph.parse(data=response.text, format="json-ld")
+    graph = _load_schema_graph()
 
     classes = _collect_classes(graph)
     props = _collect_properties(graph)
+    subclass_edges = _schema_subclass_edges(graph)
 
     class_props: dict[URIRef, list[PropertyRange]] = {cls: [] for cls in classes}
+    property_domains: dict[URIRef, set[URIRef]] = {}
 
     for prop in tqdm(props, desc="Collecting properties", unit="prop"):
         for domain, ranges in _collect_domain_ranges(graph, prop):
+            property_domains.setdefault(prop, set()).add(domain)
             if domain not in class_props:
                 class_props[domain] = []
             class_props[domain].append(PropertyRange(prop=prop, ranges=ranges))
@@ -1108,9 +1187,21 @@ def generate_schema_shacls(output_file: Path, overwrite: bool) -> int:
         lines.append(".")
         lines.append("")
 
+    for prop in tqdm(props, desc="Writing domain checks", unit="prop"):
+        domain_lines = _render_domain_rule(
+            prop,
+            property_domains.get(prop, set()),
+        )
+        if not domain_lines:
+            continue
+        lines.extend(domain_lines)
+        lines.append("")
+
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+    _write_subclass_ontology(ontology_output_path, subclass_edges)
     print(f"Wrote {output_path}")
+    print(f"Wrote {ontology_output_path}")
     return 0
 
 
@@ -1148,8 +1239,21 @@ def schema_main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--overwrite", action="store_true", help="Overwrite existing file."
     )
+    parser.add_argument(
+        "--ontology-output-file",
+        help=(
+            "Output Schema.org subclass ontology file. Defaults to "
+            "schemaorg-subclass-ontology.nt beside --output-file."
+        ),
+    )
     args = parser.parse_args(argv)
-    return generate_schema_shacls(Path(args.output_file), args.overwrite)
+    return generate_schema_shacls(
+        Path(args.output_file),
+        args.overwrite,
+        ontology_output_file=Path(args.ontology_output_file)
+        if args.ontology_output_file
+        else None,
+    )
 
 
 def _gs1_short_name(uri: URIRef) -> str:
