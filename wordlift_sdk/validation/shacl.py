@@ -37,6 +37,17 @@ _VALIDATOR_OPTIONS = {
     "allow_warnings": True,
 }
 
+# Prefix for synthetic @ids injected into @id-less JSON-LD nodes. The suffix is an
+# RFC 6901 JSON Pointer to the node, so a focus node like
+# ``urn:wl:node:/@graph/0/offers`` can be resolved against the *original*
+# (un-injected) document by walking that pointer.
+_SYNTHETIC_ID_PREFIX = "urn:wl:node:"
+
+
+def _json_pointer_escape(key: str) -> str:
+    """Escape a JSON object key for use in an RFC 6901 JSON Pointer segment."""
+    return key.replace("~", "~0").replace("/", "~1")
+
 
 @dataclass
 class ValidationResult:
@@ -128,9 +139,54 @@ def _detect_format_from_response(response: Response) -> str | None:
     return None
 
 
+def assign_stable_jsonld_ids(data: object) -> object:
+    """Return a copy of *data* with a deterministic ``@id`` on every ``@id``-less
+    JSON-LD node, where the id is ``urn:wl:node:`` followed by an RFC 6901 JSON
+    Pointer to the node (``urn:wl:node:/@graph/0/offers``).
+
+    Without this, rdflib assigns a fresh random blank-node label to each unnamed
+    node on every parse, so SHACL report focus nodes are unstable across runs and
+    cannot be matched back to the source document. Injecting these ids gives every
+    node a stable, resolvable handle without changing which constraints are
+    evaluated (``graph.skolemize()`` runs post-parse — too late — hence the
+    JSON-level injection).
+
+    This is a **transient validation aid**: validate the returned copy, but do NOT
+    persist it. Persist the original document and carry the reference on each
+    finding — ``focus_node`` is then a real ``@id`` (nodes that had one) or a
+    ``urn:wl:node:`` pointer (nodes that did not). Because injection only adds
+    ``@id`` keys and never reorders or restructures, those pointers resolve against
+    the original document, so consumers never need the mutated copy.
+    """
+
+    def walk(node: object, pointer: str) -> object:
+        if isinstance(node, list):
+            return [walk(item, f"{pointer}/{index}") for index, item in enumerate(node)]
+        if isinstance(node, dict):
+            if "@value" in node:  # literal value object, not a node
+                return node
+            result = dict(node)
+            is_node = "@type" in result or any(
+                not key.startswith("@") for key in result
+            )
+            if is_node and "@id" not in result:
+                result["@id"] = f"{_SYNTHETIC_ID_PREFIX}{pointer or '/'}"
+            for key, value in list(result.items()):
+                if key in ("@id", "@type", "@context"):
+                    continue
+                result[key] = walk(value, f"{pointer}/{_json_pointer_escape(key)}")
+            return result
+        return node
+
+    return walk(data, "")
+
+
 def _load_graph_from_text(data: str, fmt: str | None) -> Graph:
     graph = Graph()
     try:
+        if fmt == "json-ld":
+            parsed = assign_stable_jsonld_ids(json.loads(data))
+            data = json.dumps(parsed, ensure_ascii=False)
         graph.parse(data=data, format=fmt)
         return graph
     except Exception as exc:
@@ -164,6 +220,8 @@ def _load_graph(path_or_url: str) -> Graph:
         raise RuntimeError(f"Input file not found: {path}")
 
     fmt = _detect_format_from_path(path)
+    if fmt == "json-ld":
+        return _load_graph_from_text(path.read_text(encoding="utf-8"), "json-ld")
     graph = Graph()
     graph.parse(path.as_posix(), format=fmt)
     return graph

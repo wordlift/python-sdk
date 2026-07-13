@@ -10,6 +10,7 @@ __all__ = [
     "PreparedValidationResult",
     "ValidationIssue",
     "ValidationResult",
+    "assign_stable_jsonld_ids",
     "extract_validation_issues",
     "filter_validation_issues",
     "list_shape_names",
@@ -35,6 +36,10 @@ _EXPORTS = {
     ),
     "ValidationIssue": ("wordlift_sdk.validation.shacl", "ValidationIssue"),
     "ValidationResult": ("wordlift_sdk.validation.shacl", "ValidationResult"),
+    "assign_stable_jsonld_ids": (
+        "wordlift_sdk.validation.shacl",
+        "assign_stable_jsonld_ids",
+    ),
     "extract_validation_issues": (
         "wordlift_sdk.validation.shacl",
         "extract_validation_issues",
