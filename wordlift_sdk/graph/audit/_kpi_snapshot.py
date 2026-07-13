@@ -8,13 +8,15 @@ from collections import Counter, defaultdict, deque
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 from urllib.parse import urlsplit, urlunsplit
 
-from rdflib import Graph, Literal, RDF, URIRef
+from rdflib import BNode, Graph, RDF, URIRef
+from rdflib import Literal as RDFLiteral
 from rdflib.namespace import SH
+from rdflib.plugins.parsers.ntriples import W3CNTriplesParser
 
-from ._loader import load_graph
+from ._loader import LoadError, load_graph
 from ._profile import shape_specs_for_profile
 from wordlift_sdk.validation.shacl import resolve_shape_specs
 from wordlift_sdk.validation.shacl import (
@@ -63,6 +65,7 @@ class GraphKpiSnapshotOptions:
     subgraph_depth: int = 1
     issue_level: str = "warning"
     shacl_workers: int | None = None
+    memory_mode: Literal["full", "streaming"] = "full"
 
 
 def calculate_graph_kpi_snapshot(
@@ -70,6 +73,9 @@ def calculate_graph_kpi_snapshot(
     options: GraphKpiSnapshotOptions | None = None,
 ) -> dict[str, Any]:
     opts = options or GraphKpiSnapshotOptions()
+    if opts.memory_mode == "streaming":
+        return _calculate_streaming_graph_kpi_snapshot(Path(path), opts)
+
     load_result = load_graph(path)
     graph = load_result.graph
     detail = _build_fast_kpis(Path(path), graph, opts.website_host, opts.graph_hosts)
@@ -173,6 +179,13 @@ def build_graph_kpi_api_payload(
         "all_properties_by_predicate": snapshot.get("property_counts") or {},
     }
     payload["graph_health_score"] = _calculate_graph_health_score(payload)
+    payload["density_score"] = payload["all_edge_node_ratio"]
+    if compliance.get("skipped"):
+        payload["schema_compliance_skipped"] = 1
+        payload["graph_health_score_partial"] = 1
+    else:
+        payload["schema_compliance_skipped"] = 0
+        payload["graph_health_score_partial"] = 0
     return _numeric_only(payload)
 
 
@@ -202,6 +215,8 @@ def _calculate_graph_health_score(metrics: dict[str, Any]) -> int:
         + _rich_snippet_valid_rate(metrics) * 5
     )
     score = int(score_value + 0.5)
+    if _to_float(metrics.get("schema_compliance_skipped")) > 0:
+        score -= 20
     return max(0, min(100, score))
 
 
@@ -344,7 +359,7 @@ def _schema_urls(graph: Graph) -> set[str]:
         urls.update(
             str(obj)
             for obj in graph.objects(None, predicate)
-            if isinstance(obj, (Literal, URIRef))
+            if isinstance(obj, (RDFLiteral, URIRef))
         )
     return urls
 
@@ -504,6 +519,330 @@ def _build_fast_kpis(
     }
 
 
+def _calculate_streaming_graph_kpi_snapshot(
+    path: Path,
+    opts: GraphKpiSnapshotOptions,
+) -> dict[str, Any]:
+    if path.suffix.lower() != ".nt":
+        raise ValueError("Streaming graph KPI mode requires an N-Triples (.nt) file.")
+
+    load_errors: list[LoadError] = []
+    try:
+        detail = _build_streaming_fast_kpis(path, opts.website_host, opts.graph_hosts)
+    except Exception as exc:  # noqa: BLE001
+        load_errors.append(
+            LoadError(
+                code="parse_error",
+                severity="Violation",
+                message=str(exc),
+            )
+        )
+        detail = _empty_fast_kpis(path)
+
+    detail["load_errors"] = [error.to_dict() for error in load_errors]
+    detail["schema_compliance"] = _skipped_schema_compliance()
+    return detail
+
+
+class _StreamingTripleSink:
+    def __init__(self, handle):
+        self._handle = handle
+
+    def triple(self, subject, predicate, obj) -> None:
+        self._handle(subject, predicate, obj)
+
+
+def _parse_ntriples(path: Path, handle) -> None:
+    try:
+        from pyoxigraph import BlankNode as OxBlankNode
+        from pyoxigraph import Literal as OxLiteral
+        from pyoxigraph import NamedNode as OxNamedNode
+        from pyoxigraph import parse as ox_parse
+    except ImportError:
+        with path.open("rb") as stream:
+            W3CNTriplesParser(sink=_StreamingTripleSink(handle)).parse(stream)
+        return
+
+    def convert_term(term):
+        if isinstance(term, OxNamedNode):
+            return URIRef(term.value)
+        if isinstance(term, OxBlankNode):
+            return BNode(term.value)
+        if isinstance(term, OxLiteral):
+            datatype = str(term.datatype.value) if term.datatype else None
+            return RDFLiteral(
+                term.value,
+                lang=term.language,
+                datatype=URIRef(datatype) if datatype else None,
+            )
+        return term
+
+    with path.open("rb") as stream:
+        for triple in ox_parse(stream, "application/n-triples"):
+            handle(
+                convert_term(triple.subject),
+                convert_term(triple.predicate),
+                convert_term(triple.object),
+            )
+
+
+class _UnionFind:
+    def __init__(self, nodes: set[URIRef]) -> None:
+        self._parent = {node: node for node in nodes}
+        self._size = {node: 1 for node in nodes}
+
+    def union(self, left: URIRef, right: URIRef) -> None:
+        left_root = self.find(left)
+        right_root = self.find(right)
+        if left_root == right_root:
+            return
+        if self._size[left_root] < self._size[right_root]:
+            left_root, right_root = right_root, left_root
+        self._parent[right_root] = left_root
+        self._size[left_root] += self._size[right_root]
+
+    def find(self, node: URIRef) -> URIRef:
+        parent = self._parent[node]
+        if parent != node:
+            self._parent[node] = self.find(parent)
+        return self._parent[node]
+
+    def component_sizes(self) -> list[int]:
+        counts: Counter[URIRef] = Counter(self.find(node) for node in self._parent)
+        return sorted(counts.values(), reverse=True)
+
+
+def _build_streaming_fast_kpis(
+    path: Path,
+    website_host: str | None,
+    graph_hosts: set[str] | None,
+) -> dict[str, Any]:
+    uri_subjects: set[URIRef] = set()
+    all_schema_urls: set[str] = set()
+    entity_type_counts: Counter[str] = Counter()
+    typed_subjects: set[Any] = set()
+    types_by_subject: defaultdict[Any, set[str]] = defaultdict(set)
+    property_counts: Counter[str] = Counter()
+    predicates: set[Any] = set()
+    rdf_type_triples = 0
+    total_triples = 0
+    property_assertions = 0
+
+    def first_pass(subject, predicate, obj) -> None:
+        nonlocal rdf_type_triples, total_triples, property_assertions
+        total_triples += 1
+        predicates.add(predicate)
+        if isinstance(subject, URIRef):
+            uri_subjects.add(subject)
+        if predicate == RDF.type:
+            rdf_type_triples += 1
+            typed_subjects.add(subject)
+            term = schema_term(obj)
+            if term:
+                entity_type_counts[term] += 1
+                types_by_subject[subject].add(term)
+            return
+        property_assertions += 1
+        property_counts[compact_uri(predicate)] += 1
+        if predicate in {SCHEMA_URL_HTTP, SCHEMA_URL_HTTPS} and isinstance(
+            obj, (RDFLiteral, URIRef)
+        ):
+            all_schema_urls.add(str(obj))
+
+    _parse_ntriples(path, first_pass)
+
+    inferred_website_host = infer_website_host(all_schema_urls)
+    website_host = (website_host or inferred_website_host or "").lower() or None
+    graph_hosts = (
+        {host.lower() for host in graph_hosts}
+        if graph_hosts
+        else infer_graph_hosts(uri_subjects)
+    )
+
+    website_urls: defaultdict[str, set[str]] = defaultdict(set)
+    raw_website_urls: defaultdict[str, set[str]] = defaultdict(set)
+    rich_candidate_subjects: set[str] = set()
+    for subject, subject_types in types_by_subject.items():
+        if isinstance(subject, URIRef) and subject_types.intersection(
+            RICH_RESULT_TYPES
+        ):
+            rich_candidate_subjects.add(str(subject))
+    rich_candidate_by_type = {
+        entity_type: entity_type_counts[entity_type]
+        for entity_type in sorted(RICH_RESULT_TYPES)
+        if entity_type_counts.get(entity_type)
+    }
+
+    internal_nodes = {
+        node for node in uri_subjects if is_internal_resource(node, graph_hosts)
+    }
+    union_find = _UnionFind(internal_nodes)
+    internal_edges_count = 0
+    edge_predicates: Counter[str] = Counter()
+    dangling_internal_edges: list[tuple[str, str, str]] = []
+    degree: Counter[URIRef] = Counter()
+
+    def second_pass(subject, predicate, obj) -> None:
+        nonlocal internal_edges_count
+        if predicate in {SCHEMA_URL_HTTP, SCHEMA_URL_HTTPS}:
+            url = str(obj)
+            if is_website_url(url, website_host):
+                website_urls[normalize_url(url)].add(str(subject))
+                if not is_ignored_duplicate_url(url):
+                    raw_website_urls[url].add(str(subject))
+
+        if (
+            predicate == RDF.type
+            or not isinstance(subject, URIRef)
+            or not isinstance(obj, URIRef)
+            or isinstance(subject, BNode)
+            or isinstance(obj, BNode)
+            or not is_internal_resource(subject, graph_hosts)
+        ):
+            return
+
+        internal_edges_count += 1
+        edge_predicates[compact_uri(predicate)] += 1
+        degree[subject] += 1
+        if is_internal_resource(obj, graph_hosts):
+            degree[obj] += 1
+            if obj in internal_nodes:
+                union_find.union(subject, obj)
+            if obj not in uri_subjects:
+                dangling_internal_edges.append(
+                    (str(subject), compact_uri(predicate), str(obj))
+                )
+
+    _parse_ntriples(path, second_pass)
+
+    duplicate_url_groups = {
+        url: sorted(subjects_for_url)
+        for url, subjects_for_url in raw_website_urls.items()
+        if len(subjects_for_url) > 1
+        and not is_expected_homepage_identity_overlap(
+            url, subjects_for_url, types_by_subject
+        )
+    }
+    duplicate_extra_entities = sum(
+        len(subjects_for_url) - 1 for subjects_for_url in duplicate_url_groups.values()
+    )
+
+    orphan_entities = sorted(
+        str(node)
+        for node in internal_nodes
+        if node in typed_subjects and degree[node] == 0
+    )
+    component_sizes = union_find.component_sizes()
+
+    return {
+        "source_file": str(path),
+        "scope": {
+            "website_host": website_host,
+            "website_host_inferred": inferred_website_host,
+            "graph_hosts": sorted(graph_hosts),
+        },
+        "totals": {
+            "total_triples": total_triples,
+            "total_entity_count": len(uri_subjects),
+            "total_typed_entity_count": len(typed_subjects),
+            "total_property_count": property_assertions,
+            "unique_property_count": len(predicates - {RDF.type}),
+            "rdf_type_triples": rdf_type_triples,
+            "unique_urls_within_website_scope": len(website_urls),
+        },
+        "entity_type_counts": dict(entity_type_counts.most_common()),
+        "property_counts": dict(property_counts.most_common()),
+        "rich_snippet_candidate_entities": {
+            "total": len(rich_candidate_subjects),
+            "by_type": rich_candidate_by_type,
+        },
+        "edges": {
+            "total_internal_edges": internal_edges_count,
+            "edge_predicate_counts": dict(edge_predicates.most_common()),
+            "edge_to_node_ratio": round(internal_edges_count / len(internal_nodes), 4)
+            if internal_nodes
+            else 0,
+        },
+        "connectivity": {
+            "internal_node_count": len(internal_nodes),
+            "orphan_entity_count": len(orphan_entities),
+            "orphan_entity_examples": orphan_entities[:25],
+        },
+        "integrity": {
+            "broken_internal_edge_count": len(dangling_internal_edges),
+            "broken_internal_edge_examples": dangling_internal_edges[:25],
+            "duplicate_url_group_count": len(duplicate_url_groups),
+            "duplicate_extra_entity_count": duplicate_extra_entities,
+            "duplicate_url_examples": dict(list(duplicate_url_groups.items())[:25]),
+        },
+        "topology": {
+            "isolated_graph_count": len(component_sizes),
+            "largest_component_node_count": component_sizes[0]
+            if component_sizes
+            else 0,
+            "component_size_top_10": component_sizes[:10],
+        },
+    }
+
+
+def _empty_fast_kpis(path: Path) -> dict[str, Any]:
+    return {
+        "source_file": str(path),
+        "scope": {
+            "website_host": None,
+            "website_host_inferred": None,
+            "graph_hosts": [],
+        },
+        "totals": {
+            "total_triples": 0,
+            "total_entity_count": 0,
+            "total_typed_entity_count": 0,
+            "total_property_count": 0,
+            "unique_property_count": 0,
+            "rdf_type_triples": 0,
+            "unique_urls_within_website_scope": 0,
+        },
+        "entity_type_counts": {},
+        "property_counts": {},
+        "rich_snippet_candidate_entities": {"total": 0, "by_type": {}},
+        "edges": {
+            "total_internal_edges": 0,
+            "edge_predicate_counts": {},
+            "edge_to_node_ratio": 0,
+        },
+        "connectivity": {
+            "internal_node_count": 0,
+            "orphan_entity_count": 0,
+            "orphan_entity_examples": [],
+        },
+        "integrity": {
+            "broken_internal_edge_count": 0,
+            "broken_internal_edge_examples": [],
+            "duplicate_url_group_count": 0,
+            "duplicate_extra_entity_count": 0,
+            "duplicate_url_examples": {},
+        },
+        "topology": {
+            "isolated_graph_count": 0,
+            "largest_component_node_count": 0,
+            "component_size_top_10": [],
+        },
+    }
+
+
+def _skipped_schema_compliance() -> dict[str, int]:
+    return {
+        "urls_checked": 0,
+        "urls_with_errors": 0,
+        "urls_with_warnings": 0,
+        "errors": 0,
+        "warnings": 0,
+        "google_merchant_eligible": 0,
+        "google_merchant_not_eligible": 0,
+        "skipped": 1,
+    }
+
+
 def _build_schema_compliance(
     graph: Graph, opts: GraphKpiSnapshotOptions
 ) -> dict[str, int]:
@@ -574,7 +913,7 @@ def _url_memberships(graph: Graph, depth: int) -> dict[str, set[str]]:
     roots_by_url: defaultdict[str, set[URIRef]] = defaultdict(set)
     for predicate in (SCHEMA_URL_HTTP, SCHEMA_URL_HTTPS):
         for subject, _, obj in graph.triples((None, predicate, None)):
-            if isinstance(subject, URIRef) and isinstance(obj, (Literal, URIRef)):
+            if isinstance(subject, URIRef) and isinstance(obj, (RDFLiteral, URIRef)):
                 roots_by_url[str(obj)].add(subject)
 
     memberships: dict[str, set[str]] = {}

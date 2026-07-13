@@ -64,6 +64,30 @@ def _write_shape(path: Path) -> None:
     )
 
 
+def _write_ntriples_graph(path: Path) -> None:
+    path.write_text(
+        "\n".join(
+            [
+                "<https://data.example.com/dataset/page-a> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://schema.org/Product> .",
+                '<https://data.example.com/dataset/page-a> <http://schema.org/url> "https://www.example.com/a" .',
+                '<https://data.example.com/dataset/page-a> <http://schema.org/name> "A" .',
+                "<https://data.example.com/dataset/page-a> <http://schema.org/brand> <https://data.example.com/dataset/brand-a> .",
+                "<https://data.example.com/dataset/brand-a> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://schema.org/Brand> .",
+                '<https://data.example.com/dataset/brand-a> <http://schema.org/name> "Brand A" .',
+                "<https://data.example.com/dataset/page-b> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://schema.org/Product> .",
+                '<https://data.example.com/dataset/page-b> <http://schema.org/url> "https://www.example.com/b" .',
+                "<https://data.example.com/dataset/page-b> <http://schema.org/brand> <https://data.example.com/dataset/brand-missing> .",
+                "<https://data.example.com/dataset/page-b-duplicate> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://schema.org/Product> .",
+                '<https://data.example.com/dataset/page-b-duplicate> <http://schema.org/url> "https://www.example.com/b" .',
+                "<https://data.example.com/dataset/orphan> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://schema.org/Thing> .",
+                '<https://data.example.com/dataset/orphan> <http://schema.org/name> "Orphan" .',
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+
 def test_calculate_graph_kpi_snapshot_includes_fast_counts_and_compliance(
     tmp_path: Path,
 ) -> None:
@@ -96,6 +120,77 @@ def test_calculate_graph_kpi_snapshot_includes_fast_counts_and_compliance(
     assert compliance["urls_checked"] == 2
     assert compliance["urls_with_errors"] == 1
     assert compliance["errors"] == 2
+
+
+def test_streaming_graph_kpi_snapshot_matches_full_structural_counts(
+    tmp_path: Path,
+) -> None:
+    graph_path = tmp_path / "graph.nt"
+    _write_ntriples_graph(graph_path)
+
+    options = GraphKpiSnapshotOptions(
+        website_host="www.example.com",
+        graph_hosts={"data.example.com"},
+        memory_mode="streaming",
+    )
+    snapshot = calculate_graph_kpi_snapshot(graph_path, options)
+
+    assert snapshot["totals"]["total_entity_count"] == 5
+    assert snapshot["totals"]["total_typed_entity_count"] == 5
+    assert snapshot["totals"]["total_triples"] == 13
+    assert snapshot["totals"]["total_property_count"] == 8
+    assert snapshot["totals"]["unique_property_count"] == 3
+    assert snapshot["totals"]["rdf_type_triples"] == 5
+    assert snapshot["totals"]["unique_urls_within_website_scope"] == 2
+    assert snapshot["entity_type_counts"]["Product"] == 3
+    assert snapshot["property_counts"]["schema:url"] == 3
+    assert snapshot["rich_snippet_candidate_entities"]["by_type"]["Product"] == 3
+    assert snapshot["edges"]["total_internal_edges"] == 2
+    assert snapshot["edges"]["edge_predicate_counts"]["schema:brand"] == 2
+    assert snapshot["connectivity"]["orphan_entity_count"] == 2
+    assert snapshot["integrity"]["broken_internal_edge_count"] == 1
+    assert snapshot["integrity"]["duplicate_url_group_count"] == 1
+    assert snapshot["integrity"]["duplicate_extra_entity_count"] == 1
+    assert snapshot["topology"]["isolated_graph_count"] == 4
+    assert snapshot["topology"]["largest_component_node_count"] == 2
+    assert snapshot["schema_compliance"]["skipped"] == 1
+
+
+def test_streaming_graph_kpi_snapshot_rejects_non_ntriples_input(
+    tmp_path: Path,
+) -> None:
+    graph_path = tmp_path / "graph.ttl"
+    _write_graph(graph_path)
+
+    with pytest.raises(ValueError, match=r"N-Triples \(\.nt\)"):
+        calculate_graph_kpi_snapshot(
+            graph_path,
+            GraphKpiSnapshotOptions(memory_mode="streaming"),
+        )
+
+
+def test_streaming_graph_kpi_payload_marks_partial_snapshot(tmp_path: Path) -> None:
+    graph_path = tmp_path / "graph.nt"
+    _write_ntriples_graph(graph_path)
+    snapshot = calculate_graph_kpi_snapshot(
+        graph_path,
+        GraphKpiSnapshotOptions(
+            website_host="www.example.com",
+            graph_hosts={"data.example.com"},
+            memory_mode="streaming",
+        ),
+    )
+
+    payload = build_graph_kpi_api_payload(snapshot, snapshot_date="2026-06-29")
+
+    assert payload["all_total_entities"] == 5
+    assert payload["all_unique_urls_count"] == 2
+    assert payload["density_score"] == payload["all_edge_node_ratio"]
+    assert payload["schema_compliance_skipped"] == 1
+    assert payload["graph_health_score_partial"] == 1
+    assert payload["schema_compliance_urls_checked"] == 0
+    assert payload["rich_snippets_valid_count"] == 0
+    assert payload["graph_health_score"] == 78
 
 
 def test_build_graph_kpi_api_payload_is_numeric_except_snapshot_metadata(
