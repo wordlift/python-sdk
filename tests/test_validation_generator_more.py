@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 from rdflib import Graph, RDF, RDFS, URIRef
 
 import wordlift_sdk.validation.generator as generator
+from wordlift_sdk.validation import shacl
 from wordlift_sdk.validation.generator import FeatureData
 
 
@@ -417,6 +419,7 @@ def test_generate_google_shacls_and_entrypoint(monkeypatch, tmp_path: Path):
 
 def test_generate_schema_shacls_and_schema_main(monkeypatch, tmp_path: Path):
     out = tmp_path / "schemaorg-grammar.ttl"
+    ontology_out = tmp_path / "schemaorg-subclass-ontology.nt"
 
     monkeypatch.setattr(
         generator.requests,
@@ -427,24 +430,109 @@ def test_generate_schema_shacls_and_schema_main(monkeypatch, tmp_path: Path):
     )
     monkeypatch.setattr(generator, "tqdm", lambda seq, **kwargs: seq)
 
-    cls = URIRef("http://schema.org/Thing")
-    prop = URIRef("http://schema.org/name")
-    monkeypatch.setattr(generator, "_collect_classes", lambda graph: [cls])
+    cls = URIRef("http://schema.org/CreativeWork")
+    child_cls = URIRef("http://schema.org/Article")
+    unrelated_cls = URIRef("http://schema.org/Service")
+    prop = URIRef("http://schema.org/isPartOf")
+    monkeypatch.setattr(
+        generator, "_collect_classes", lambda graph: [child_cls, cls, unrelated_cls]
+    )
     monkeypatch.setattr(generator, "_collect_properties", lambda graph: [prop])
     monkeypatch.setattr(
         generator,
         "_collect_domain_ranges",
-        lambda graph, p: [(cls, [URIRef("http://schema.org/Text")])],
+        lambda graph, p: [(cls, [URIRef("http://schema.org/CreativeWork")])],
     )
 
-    rc = generator.generate_schema_shacls(out, overwrite=True)
+    graph = Graph()
+    graph.add((child_cls, RDFS.subClassOf, cls))
+    monkeypatch.setattr(generator, "_load_schema_graph", lambda: graph)
+
+    rc = generator.generate_schema_shacls(
+        out,
+        overwrite=True,
+        ontology_output_file=ontology_out,
+    )
     assert rc == 0
     content = out.read_text(encoding="utf-8")
-    assert "sh:targetClass schema:Thing" in content
-    assert "sh:path schema:name" in content
+    assert "sh:targetClass schema:CreativeWork" in content
+    assert "sh:path schema:isPartOf" in content
+    assert ":schema_isPartOfDomainRule" in content
+    assert "a :PropertyDomainRule" in content
+    assert ":path schema:isPartOf" in content
+    assert ":domain schema:CreativeWork" in content
+    assert ontology_out.exists()
+    ontology = Graph().parse(ontology_out, format="nt")
+    assert (child_cls, RDFS.subClassOf, cls) in ontology
 
-    rc_main = generator.schema_main(["--output-file", str(out), "--overwrite"])
+    invalid_path = tmp_path / "invalid.jsonld"
+    invalid_path.write_text(
+        json.dumps(
+            {
+                "@context": {"@vocab": "http://schema.org/"},
+                "@type": "Service",
+                "isPartOf": "https://example.org/site",
+            }
+        ),
+        encoding="utf-8",
+    )
+    invalid = shacl.validate_file(invalid_path.as_posix(), shape_specs=[str(out)])
+    issues = shacl.extract_validation_issues(invalid)
+    assert len(issues) == 1
+    assert issues[0].result_path == "http://schema.org/isPartOf"
+    assert issues[0].message.endswith("object of type Service.")
+
+    valid_path = tmp_path / "valid.jsonld"
+    valid_path.write_text(
+        json.dumps(
+            {
+                "@context": {"@vocab": "http://schema.org/"},
+                "@type": "Article",
+                "isPartOf": "https://example.org/site",
+            }
+        ),
+        encoding="utf-8",
+    )
+    valid = shacl.validate_file(valid_path.as_posix(), shape_specs=[str(out)])
+    assert shacl.extract_validation_issues(valid) == []
+
+    rc_main = generator.schema_main(
+        [
+            "--output-file",
+            str(out),
+            "--ontology-output-file",
+            str(ontology_out),
+            "--overwrite",
+        ]
+    )
     assert rc_main == 0
+
+
+def test_schema_domain_rule_is_deterministic() -> None:
+    creative_work = URIRef("https://schema.org/CreativeWork")
+    thing = URIRef("https://schema.org/Thing")
+    external = URIRef("https://example.org/ExternalType")
+
+    assert generator._canonical_schema_uri(external) is None
+    assert (
+        generator._render_domain_rule(
+            URIRef("https://schema.org/about"),
+            [external],
+        )
+        == []
+    )
+
+    lines = generator._render_domain_rule(
+        URIRef("https://schema.org/about"),
+        [thing, creative_work],
+    )
+    assert lines == [
+        ":schema_aboutDomainRule",
+        "  a :PropertyDomainRule ;",
+        "  :path schema:about ;",
+        "  :domain schema:CreativeWork,",
+        "           schema:Thing .",
+    ]
 
 
 def test_write_feature_respects_overwrite(tmp_path: Path):

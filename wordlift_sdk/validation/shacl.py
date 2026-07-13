@@ -14,7 +14,7 @@ from html.parser import HTMLParser
 import json
 
 from rdflib.collection import Collection
-from rdflib import Graph, URIRef
+from rdflib import BNode, Graph, Literal, Namespace, URIRef
 from rdflib.namespace import RDF, SH
 from rdflib.term import Identifier
 from requests import Response, get
@@ -24,6 +24,12 @@ from wordlift_sdk.render import RenderOptions, render_html
 DEFAULT_OPT_IN_EXCLUDED_SHAPES = {"google-image-license-metadata.ttl"}
 _SCHEMAORG_GRAMMAR_SHAPE = "schemaorg-grammar.ttl"
 _SCHEMAORG_SUBCLASS_ONTOLOGY_RESOURCE = "schemaorg-subclass-ontology.nt"
+_SCHEMAORG_HTTP = "http://schema.org/"
+_SCHEMAORG_GRAMMAR = Namespace("https://wordlift.io/shacl/schemaorg-grammar/")
+_DOMAIN_RULE_CLASS = _SCHEMAORG_GRAMMAR.PropertyDomainRule
+_DOMAIN_RULE_PATH = _SCHEMAORG_GRAMMAR.path
+_DOMAIN_RULE_DOMAIN = _SCHEMAORG_GRAMMAR.domain
+_DOMAIN_CONSTRAINT_COMPONENT = _SCHEMAORG_GRAMMAR.PropertyDomainConstraintComponent
 _VALIDATOR_OPTIONS = {
     "inference": "rdfs",
     "abort_on_first": False,
@@ -68,6 +74,13 @@ class PreparedValidationResult:
     report_text: str
     data_graph: Graph
     warning_count: int
+
+
+@dataclass(frozen=True)
+class _SchemaOrgDomainRule:
+    source_shape: Identifier
+    path: URIRef
+    domains: frozenset[URIRef]
 
 
 class _JsonLdScriptExtractor(HTMLParser):
@@ -330,7 +343,8 @@ def _schemaorg_subclass_map() -> dict[URIRef, set[URIRef]]:
     return subclass_map
 
 
-def _schemaorg_superclasses(class_iri: URIRef) -> set[URIRef]:
+@lru_cache(maxsize=None)
+def _schemaorg_superclasses(class_iri: URIRef) -> frozenset[URIRef]:
     subclass_map = _schemaorg_subclass_map()
     seen: set[URIRef] = set()
     stack = [class_iri]
@@ -341,7 +355,106 @@ def _schemaorg_superclasses(class_iri: URIRef) -> set[URIRef]:
                 continue
             seen.add(parent)
             stack.append(parent)
-    return seen
+    return frozenset(seen)
+
+
+def _schemaorg_domain_rules(shapes_graph: Graph) -> dict[URIRef, _SchemaOrgDomainRule]:
+    rules: dict[URIRef, _SchemaOrgDomainRule] = {}
+    for source_shape in shapes_graph.subjects(RDF.type, _DOMAIN_RULE_CLASS):
+        path = shapes_graph.value(source_shape, _DOMAIN_RULE_PATH)
+        if not isinstance(path, URIRef):
+            continue
+        domains = frozenset(
+            domain
+            for domain in shapes_graph.objects(source_shape, _DOMAIN_RULE_DOMAIN)
+            if isinstance(domain, URIRef)
+        )
+        if domains:
+            rules[path] = _SchemaOrgDomainRule(
+                source_shape=source_shape,
+                path=path,
+                domains=domains,
+            )
+    return rules
+
+
+def _schemaorg_local_name(uri: URIRef) -> str:
+    value = str(uri)
+    return value[len(_SCHEMAORG_HTTP) :] if value.startswith(_SCHEMAORG_HTTP) else value
+
+
+def _rdf_term_sort_key(term: Identifier) -> tuple[str, str, str, str]:
+    return (
+        term.__class__.__name__,
+        str(term),
+        str(getattr(term, "datatype", "") or ""),
+        str(getattr(term, "language", "") or ""),
+    )
+
+
+def _append_schemaorg_domain_results(
+    *,
+    data_graph: Graph,
+    report_graph: Graph,
+    rules: dict[URIRef, _SchemaOrgDomainRule],
+) -> list[str]:
+    messages: list[str] = []
+    report_node = next(report_graph.subjects(RDF.type, SH.ValidationReport), None)
+    for focus_node in sorted(set(data_graph.subjects()), key=str):
+        declared_types = sorted(
+            {
+                type_iri
+                for type_iri in data_graph.objects(focus_node, RDF.type)
+                if isinstance(type_iri, URIRef)
+                and str(type_iri).startswith(_SCHEMAORG_HTTP)
+            },
+            key=str,
+        )
+        if not declared_types:
+            continue
+        for path in sorted(set(data_graph.predicates(focus_node)), key=str):
+            rule = rules.get(path) if isinstance(path, URIRef) else None
+            if rule is None:
+                continue
+            if any(
+                declared_type in rule.domains
+                or bool(
+                    rule.domains.intersection(_schemaorg_superclasses(declared_type))
+                )
+                for declared_type in declared_types
+            ):
+                continue
+
+            property_name = _schemaorg_local_name(rule.path)
+            type_name = _schemaorg_local_name(declared_types[0])
+            message = (
+                f"The property {property_name} is not recognized by the schema "
+                f"(e.g. schema.org) for an object of type {type_name}."
+            )
+            result_node = BNode()
+            report_graph.add((result_node, RDF.type, SH.ValidationResult))
+            report_graph.add((result_node, SH.resultSeverity, SH.Warning))
+            report_graph.add((result_node, SH.focusNode, focus_node))
+            report_graph.add((result_node, SH.resultPath, rule.path))
+            report_graph.add((result_node, SH.sourceShape, rule.source_shape))
+            report_graph.add(
+                (
+                    result_node,
+                    SH.sourceConstraintComponent,
+                    _DOMAIN_CONSTRAINT_COMPONENT,
+                )
+            )
+            report_graph.add((result_node, SH.resultMessage, Literal(message)))
+            values = sorted(
+                data_graph.objects(focus_node, path),
+                key=_rdf_term_sort_key,
+            )
+            if values:
+                report_graph.add((result_node, SH.value, values[0]))
+            if report_node is not None:
+                report_graph.add((report_node, SH.result, result_node))
+            messages.append(message)
+    return messages
 
 
 def _shape_expected_classes(
@@ -498,6 +611,9 @@ class PreparedShaclValidator:
         from pyshacl import Validator
 
         self._prepared_shapes = prepared_shapes
+        self._schemaorg_domain_rules = _schemaorg_domain_rules(
+            prepared_shapes.shapes_graph
+        )
         self._validator = Validator(
             Graph(),
             shacl_graph=prepared_shapes.shapes_graph,
@@ -529,6 +645,18 @@ class PreparedShaclValidator:
         self._validator._target_graph = None
 
         conforms, report_graph, report_text = self._validator.run()
+        domain_messages = _append_schemaorg_domain_results(
+            data_graph=data_graph,
+            report_graph=report_graph,
+            rules=self._schemaorg_domain_rules,
+        )
+        if domain_messages:
+            report_text = "\n".join(
+                [
+                    report_text.rstrip(),
+                    *(f"Domain warning: {m}" for m in domain_messages),
+                ]
+            )
         warning_count = sum(
             1 for _ in report_graph.subjects(SH.resultSeverity, SH.Warning)
         )

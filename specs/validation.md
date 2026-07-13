@@ -48,6 +48,14 @@ Search Gallery quality gates:
 Schema.org grammar checks intentionally allow URL and text literals for every
 property (in addition to the documented range types).
 
+Schema.org properties with documented `domainIncludes` values emit warning-level
+domain constraints. A property is accepted when any declared Schema.org type is
+the documented domain or one of its standard subclasses. Multi-typed nodes use
+union semantics, untyped nodes and external predicates are not domain-checked,
+and each incompatible subject/property pair produces one deterministic warning.
+The grammar and normalized direct-subclass ontology must be regenerated from the
+same downloaded Schema.org graph so they remain version-aligned.
+
 ## JSON-LD validation from URLs
 
 The validation module can render a URL with Playwright, extract all

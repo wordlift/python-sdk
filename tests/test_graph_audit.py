@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import textwrap
 from pathlib import Path
 
@@ -34,6 +35,10 @@ from wordlift_sdk.graph.audit.kpis import (
 # ---------------------------------------------------------------------------
 
 _SCHEMA = "http://schema.org/"
+_DOMAIN_MESSAGE = (
+    "The property isPartOf is not recognized by the schema (e.g. schema.org) "
+    "for an object of type Service."
+)
 
 
 def _g(*triples) -> Graph:
@@ -700,3 +705,104 @@ def test_build_entity_matrix_columns_sorted(tmp_path: Path) -> None:
     cols = list(rows[0].keys())
     type_cols = cols[1:]  # skip "url"
     assert type_cols == sorted(type_cols)
+
+
+def test_graph_auditor_reports_service_is_part_of(tmp_path: Path) -> None:
+    path = tmp_path / "zurich-regression.jsonld"
+    site_a = "https://data.wordlift.io/example/web-sites/site-a"
+    site_b = "https://data.wordlift.io/example/web-sites/site-b"
+    path.write_text(
+        json.dumps(
+            {
+                "@graph": [
+                    {
+                        "@id": "https://data.wordlift.io/example/services/life-insurance",
+                        "@type": "schema:Service",
+                        "schema:isPartOf": [{"@id": site_b}, {"@id": site_a}],
+                        "schema:name": "Life insurance",
+                        "schema:url": "https://example.org/life-insurance",
+                    },
+                    {
+                        "@id": site_a,
+                        "@type": "schema:WebSite",
+                        "schema:url": "https://example.org/",
+                    },
+                ],
+                "@context": {"schema": "http://schema.org/"},
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    report = GraphAuditor().audit(
+        path,
+        AuditOptions(builtin_shapes=["schemaorg-grammar"], max_workers=1),
+    )
+    by_url = {entry.url: entry for entry in report.schema_compliance.by_url}
+    result = by_url["https://example.org/life-insurance"]
+
+    assert result.warning_count == 1
+    assert len(result.warnings) == 1
+    warning = result.warnings[0]
+    assert warning.path == "http://schema.org/isPartOf"
+    assert warning.shape_source == "schemaorg-grammar"
+    assert warning.message == _DOMAIN_MESSAGE
+    assert warning.value == site_a
+
+    error_only = GraphAuditor().audit(
+        path,
+        AuditOptions(
+            builtin_shapes=["schemaorg-grammar"],
+            issue_level="error",
+            max_workers=1,
+        ),
+    )
+    error_by_url = {entry.url: entry for entry in error_only.schema_compliance.by_url}
+    assert error_by_url["https://example.org/life-insurance"].warning_count == 0
+
+
+def test_graph_auditor_domain_results_are_stable_with_workers(tmp_path: Path) -> None:
+    path = tmp_path / "concurrent-domain.jsonld"
+    path.write_text(
+        json.dumps(
+            {
+                "@context": {"@vocab": "http://schema.org/"},
+                "@graph": [
+                    {
+                        "@id": "https://example.org/services/invalid",
+                        "@type": "Service",
+                        "isPartOf": {"@id": "https://example.org/site"},
+                        "url": "https://example.org/invalid",
+                    },
+                    {
+                        "@id": "https://example.org/articles/valid",
+                        "@type": "Article",
+                        "isPartOf": {"@id": "https://example.org/site"},
+                        "url": "https://example.org/valid",
+                    },
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    def collect(max_workers: int) -> dict[str, list[str]]:
+        report = GraphAuditor().audit(
+            path,
+            AuditOptions(
+                builtin_shapes=["schemaorg-grammar"],
+                max_workers=max_workers,
+            ),
+        )
+        return {
+            entry.url: [issue.message for issue in entry.warnings]
+            for entry in report.schema_compliance.by_url
+        }
+
+    expected = collect(1)
+    assert expected == {
+        "https://example.org/invalid": [_DOMAIN_MESSAGE],
+        "https://example.org/valid": [],
+    }
+    for _ in range(3):
+        assert collect(2) == expected

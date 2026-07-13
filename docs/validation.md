@@ -135,6 +135,12 @@ lists.
 
 `wordlift_sdk.validation.generator` contains the helper scripts used to generate the bundled
 SHACL files from the schema.org grammar and Google Search Gallery feature pages.
+Schema.org grammar generation also emits property-domain warnings from
+`domainIncludes`; core validation combines that metadata with the bundled
+standard subclass hierarchy.
+The schema generator writes the grammar and sorted direct-subclass ontology from
+the same official source graph; `--ontology-output-file` can override the default
+bundled-resource refresh path beside `--output-file`.
 Google-table parsing supports both property-level "one of" alternatives and explicit
 option branches (`Option A` / `Option B`) where each branch can require multiple properties.
 Required rows that explicitly document a supported fallback (for example, `url` when
