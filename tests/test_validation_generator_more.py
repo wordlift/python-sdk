@@ -479,7 +479,7 @@ def test_generate_schema_shacls_and_schema_main(monkeypatch, tmp_path: Path):
     invalid = shacl.validate_file(invalid_path.as_posix(), shape_specs=[str(out)])
     issues = shacl.extract_validation_issues(invalid)
     assert len(issues) == 1
-    assert issues[0].result_path == "http://schema.org/isPartOf"
+    assert issues[0].result_path == "isPartOf"
     assert issues[0].message.endswith("object of type Service.")
 
     valid_path = tmp_path / "valid.jsonld"
