@@ -1,5 +1,13 @@
 # Changelog
 
+## 8.3.8 - 2026-07-15
+
+### Changed
+
+- Removed the `Referer: https://wordlift.io` header from browser-like fetch
+  requests (`simple` / `playwright` loaders and sitemap discovery), so client
+  sites no longer see `wordlift.io` referral traffic in their analytics.
+
 ## 8.3.7 - 2026-07-13
 
 ### Fixed
