@@ -18,7 +18,6 @@ DEFAULT_PLAYWRIGHT_WAIT_UNTIL = "domcontentloaded"
 DEFAULT_BROWSER_REQUEST_HEADERS = {
     "Accept": DEFAULT_ACCEPT_HEADER,
     "Accept-Language": DEFAULT_ACCEPT_LANGUAGE_HEADER,
-    "Referer": "https://wordlift.io",
     "Upgrade-Insecure-Requests": "1",
     "Sec-CH-UA": '"Not A(Brand";v="99", "Chromium";v="120", "Google Chrome";v="120"',
     "Sec-CH-UA-Mobile": "?0",

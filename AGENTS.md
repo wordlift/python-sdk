@@ -137,7 +137,7 @@
   implicit source auto-priority are intentionally removed.
 - Sitemap ingestion source discovery (`SitemapSourceAdapter`) sets
   browser-like request headers for `advertools.sitemaps.sitemap_to_df`
-  (`User-Agent`, `Accept`, `Accept-Language`, `Referer`,
+  (`User-Agent`, `Accept`, `Accept-Language`,
   `Upgrade-Insecure-Requests`, `Sec-CH-*`) so sitemap fetch identity is closer
   to Playwright/browser ingestion defaults.
 - `wordlift_sdk.kg_build` callback patch preparation annotates first-level
