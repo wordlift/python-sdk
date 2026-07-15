@@ -6,7 +6,7 @@ Current release: see `CHANGELOG.md`.
 
 ## Features
 - URL sources: XML sitemaps, Google Sheets (`url` column), or Python lists, with global optional `URL_REGEX` filtering (also enforced in graph-sync source selection before `new_or_changed` GraphQL lookup).
-- Sitemap discovery requests use a browser-like header bundle aligned with Playwright defaults (including `User-Agent`, `Accept`, `Accept-Language`, `Referer`, and `Sec-CH-*` headers).
+- Sitemap discovery requests use a browser-like header bundle aligned with Playwright defaults (including `User-Agent`, `Accept`, `Accept-Language`, and `Sec-CH-*` headers).
 - Change detection: skips URLs that are already imported unless `OVERWRITE` is enabled; re-imports when `lastmod` is newer.
 - Web page imports: sends URLs to WordLift with embedding requests, output types, retry logic, and pluggable callbacks.
 - Python 3.14 compatibility: retry filters use `pydantic_core.ValidationError` via the public API.
