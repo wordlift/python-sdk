@@ -130,6 +130,44 @@ def test_simple_loader_adapter(monkeypatch: pytest.MonkeyPatch) -> None:
     }
 
 
+def test_simple_loader_sends_no_referer(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Regression: a real fetch must not carry a wordlift.io Referer.
+
+    The equality check above only proves the loader forwards the builder's
+    headers; it would still pass if the referer were re-added to the builder.
+    This asserts absence on the actual outgoing request.
+    """
+    loader = SimpleLoaderAdapter()
+    observed: dict[str, str] = {}
+
+    class _Resp(BytesIO):
+        status = 200
+
+        def __init__(self) -> None:
+            super().__init__(b"<html>ok</html>")
+
+        def geturl(self) -> str:
+            return "https://example.com/final"
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+    def _urlopen(request, timeout):
+        observed.update(
+            {key.lower(): value for key, value in dict(request.header_items()).items()}
+        )
+        return _Resp()
+
+    monkeypatch.setattr("urllib.request.urlopen", _urlopen)
+    loader.load(SourceItem(id="1", url="https://example.com"), _config())
+
+    assert "referer" not in observed
+    assert "https://wordlift.io" not in observed.values()
+
+
 def test_simple_loader_adapter_wraps_url_errors(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
