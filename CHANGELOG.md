@@ -1,5 +1,24 @@
 # Changelog
 
+## 8.4.0 - 2026-07-31
+
+### Added
+
+- SHACL validation issues now carry a `node_pointer` (JSON Pointer to the
+  offending JSON-LD node) alongside `value` and `constraint_component`, so
+  hosts can point at the exact node that failed instead of a graph identifier.
+- `assign_stable_jsonld_ids` and `format_shacl_path` are exported from
+  `wordlift_sdk.validation` for callers rendering their own issue output.
+
+### Changed
+
+- JSON-LD input is given deterministic `@id`s before validation, so report
+  focus nodes stay stable across runs instead of varying with randomly
+  generated blank-node labels.
+- `ValidationIssue.result_path` is now a readable property name (`price`,
+  `address.addressCountry`) rather than a raw IRI, and `focus_node` is `None`
+  for nodes without an `@id` instead of an internal blank-node label.
+
 ## 8.3.8 - 2026-07-15
 
 ### Changed
