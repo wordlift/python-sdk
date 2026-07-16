@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from copy import deepcopy
 from dataclasses import dataclass, replace
 from functools import lru_cache
 from importlib import resources
@@ -69,6 +70,11 @@ class ValidationIssue:
     rule_id: str | None
     rule_set: str | None
     message: str
+    # node_pointer/value/message are resolved and urn-free — the raw report_graph
+    # keeps the internal urn:wl:node: ids, a ValidationIssue never does.
+    node_pointer: str | None = None
+    value: str | None = None
+    constraint_component: str | None = None
 
 
 @dataclass(frozen=True)
@@ -139,46 +145,104 @@ def _detect_format_from_response(response: Response) -> str | None:
     return None
 
 
+def _is_jsonld_node(node: dict) -> bool:
+    return "@type" in node or any(not key.startswith("@") for key in node)
+
+
+def _iter_jsonld_nodes(data: object):
+    """Yield ``(pointer, node)`` for every JSON-LD node object in *data*, in
+    document order, where *pointer* is the RFC 6901 JSON Pointer to that node
+    (``""`` for the document root). Literal ``@value`` objects are skipped.
+
+    This is the single traversal that defines how nodes are addressed;
+    :func:`assign_stable_jsonld_ids` and :func:`_build_node_pointer_map` both walk
+    through it, so the synthetic ids one injects and the pointers the other maps
+    cannot drift apart.
+    """
+
+    def walk(node: object, pointer: str):
+        if isinstance(node, list):
+            for index, item in enumerate(node):
+                yield from walk(item, f"{pointer}/{index}")
+        elif isinstance(node, dict):
+            if "@value" in node:  # literal value object, not a node
+                return
+            yield pointer, node
+            for key, value in node.items():
+                if key in ("@id", "@type", "@context"):
+                    continue
+                yield from walk(value, f"{pointer}/{_json_pointer_escape(key)}")
+
+    yield from walk(data, "")
+
+
 def assign_stable_jsonld_ids(data: object) -> object:
     """Return a copy of *data* with a deterministic ``@id`` on every ``@id``-less
     JSON-LD node, where the id is ``urn:wl:node:`` followed by an RFC 6901 JSON
-    Pointer to the node (``urn:wl:node:/@graph/0/offers``).
+    Pointer to the node.
 
     Without this, rdflib assigns a fresh random blank-node label to each unnamed
     node on every parse, so SHACL report focus nodes are unstable across runs and
-    cannot be matched back to the source document. Injecting these ids gives every
-    node a stable, resolvable handle without changing which constraints are
-    evaluated (``graph.skolemize()`` runs post-parse — too late — hence the
-    JSON-level injection).
-
-    This is a **transient validation aid**: validate the returned copy, but do NOT
-    persist it. Persist the original document and carry the reference on each
-    finding — ``focus_node`` is then a real ``@id`` (nodes that had one) or a
-    ``urn:wl:node:`` pointer (nodes that did not). Because injection only adds
-    ``@id`` keys and never reorders or restructures, those pointers resolve against
-    the original document, so consumers never need the mutated copy.
+    cannot be matched back to the source document
     """
+    result = deepcopy(data)
+    for pointer, node in _iter_jsonld_nodes(result):
+        if _is_jsonld_node(node) and "@id" not in node:
+            node["@id"] = f"{_SYNTHETIC_ID_PREFIX}{pointer or '/'}"
+    return result
 
-    def walk(node: object, pointer: str) -> object:
-        if isinstance(node, list):
-            return [walk(item, f"{pointer}/{index}") for index, item in enumerate(node)]
-        if isinstance(node, dict):
-            if "@value" in node:  # literal value object, not a node
-                return node
-            result = dict(node)
-            is_node = "@type" in result or any(
-                not key.startswith("@") for key in result
-            )
-            if is_node and "@id" not in result:
-                result["@id"] = f"{_SYNTHETIC_ID_PREFIX}{pointer or '/'}"
-            for key, value in list(result.items()):
-                if key in ("@id", "@type", "@context"):
-                    continue
-                result[key] = walk(value, f"{pointer}/{_json_pointer_escape(key)}")
-            return result
-        return node
 
-    return walk(data, "")
+def _build_node_pointer_map(data: object) -> dict[str, str]:
+    """Map each JSON-LD node's SHACL *focus-node identity* to an RFC 6901 JSON
+    Pointer into *data*.
+
+    When the same ``@id`` appears at more than one position (e.g. a reference stub
+    plus a full definition elsewhere) pyshacl sees a single merged resource. We map
+    it to its richest occurrence
+    """
+    mapping: dict[str, str] = {}
+    richness: dict[str, int] = {}
+    for pointer, node in _iter_jsonld_nodes(data):
+        real_id = node.get("@id")
+        if real_id is not None:
+            key = real_id
+        elif _is_jsonld_node(node):
+            key = f"{_SYNTHETIC_ID_PREFIX}{pointer or '/'}"
+        else:
+            continue
+        props = sum(1 for name in node if not name.startswith("@"))
+        if key not in mapping or props > richness[key]:
+            mapping[key] = pointer or "/"
+            richness[key] = props
+    return mapping
+
+
+def _public_focus_node(focus_node: str | None) -> str | None:
+    if focus_node is None or focus_node.startswith(_SYNTHETIC_ID_PREFIX):
+        return None
+    return focus_node
+
+
+def _scrub_synthetic_ids(text: str | None) -> str | None:
+    if text is None:
+        return None
+    return text.replace(_SYNTHETIC_ID_PREFIX, "")
+
+
+def _resolve_focus_node(
+    focus_node: str | None, pointer_map: dict[str, str]
+) -> tuple[str | None, str | None]:
+    """Resolve a report ``sh:focusNode`` to ``(public_id, node_pointer)``.
+
+    *public_id* is the node's real ``@id`` — the identifier a consumer can show and
+    trust — or ``None`` when the node had no ``@id`` and only carries the synthetic
+    id :func:`assign_stable_jsonld_ids` injects. *node_pointer* is the RFC 6901 JSON
+    Pointer into the original document, looked up in *pointer_map* (from
+    :func:`_build_node_pointer_map`), or ``None`` if the focus node is absent from it.
+    """
+    if focus_node is None:
+        return None, None
+    return _public_focus_node(focus_node), pointer_map.get(focus_node)
 
 
 def _load_graph_from_text(data: str, fmt: str | None) -> Graph:
@@ -717,7 +781,9 @@ class PreparedShaclValidator:
         return PreparedValidationResult(
             conforms=conforms,
             report_graph=report_graph,
-            report_text=report_text,
+            # report_graph keeps the urn:wl:node: focus nodes (the SDK resolves
+            # pointers from them internally); the human-readable text is output.
+            report_text=_scrub_synthetic_ids(report_text),
             data_graph=data_graph,
             warning_count=warning_count,
         )
@@ -823,7 +889,12 @@ def format_shacl_path(
     return None
 
 
-def extract_validation_issues(result: ValidationResult) -> list[ValidationIssue]:
+def extract_validation_issues(
+    result: ValidationResult, source_jsonld: object = None
+) -> list[ValidationIssue]:
+    pointer_map = (
+        _build_node_pointer_map(source_jsonld) if source_jsonld is not None else {}
+    )
     issues: list[ValidationIssue] = []
     for node in result.report_graph.subjects(SH.resultSeverity, None):
         if _should_skip_schemaorg_subclass_range_warning(
@@ -839,17 +910,30 @@ def extract_validation_issues(result: ValidationResult) -> list[ValidationIssue]
         message = result.report_graph.value(node, SH.resultMessage)
         focus_term = result.report_graph.value(node, SH.focusNode)
         path_term = result.report_graph.value(node, SH.resultPath)
+        value_term = result.report_graph.value(node, SH.value)
+        constraint = result.report_graph.value(node, SH.sourceConstraintComponent)
+        focus = str(focus_term) if focus_term is not None else None
+        public_id, node_pointer = _resolve_focus_node(focus, pointer_map)
         issues.append(
             ValidationIssue(
                 level=_severity_to_level(severity),
                 severity=str(severity) if severity else str(SH.Violation),
-                focus_node=str(focus_term) if focus_term is not None else None,
+                focus_node=public_id,
+                node_pointer=node_pointer,
                 result_path=format_shacl_path(path_term, result.shapes_graph),
                 rule_id=str(source_shape) if source_shape is not None else None,
                 rule_set=result.shape_source_map.get(source_shape)
                 if source_shape is not None
                 else None,
-                message=str(message) if message is not None else "",
+                constraint_component=str(constraint)
+                if constraint is not None
+                else None,
+                value=_scrub_synthetic_ids(str(value_term))
+                if value_term is not None
+                else None,
+                message=_scrub_synthetic_ids(str(message))
+                if message is not None
+                else "",
             )
         )
     return issues
