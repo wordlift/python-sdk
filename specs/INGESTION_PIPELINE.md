@@ -71,6 +71,10 @@ If item includes embedded HTML and `INGEST_PASSTHROUGH_WHEN_HTML=true`, orchestr
 - Playwright loader execution must be async-loop-safe: when called while an event loop is already
   running in the caller thread, rendering is offloaded away from that loop thread before invoking
   Sync Playwright APIs.
+- Every Playwright browser context must block service workers and abort direct requests to the
+  standard Google Analytics measurement host families enumerated in the render documentation
+  before network egress. Google Tag Manager and advertising endpoints remain available; this
+  policy is mandatory and is not configurable.
 - Playwright default wait policy is `domcontentloaded`; explicit `PLAYWRIGHT_WAIT_UNTIL` still overrides.
 - On Playwright navigation timeout, loader should continue with available page DOM content instead of
   failing immediately, and only raise browser errors for non-timeout navigation failures.

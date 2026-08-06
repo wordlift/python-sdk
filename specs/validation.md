@@ -65,6 +65,12 @@ nodes, and pass them through the SHACL validation pipeline.
 Playwright is a required dependency for URL rendering. Install browser binaries
 with `playwright install` after the Python dependencies are installed.
 
+All Playwright URL rendering disables service workers and aborts direct requests
+to the standard Google Analytics measurement host families enumerated in the
+render documentation before navigation traffic can leave the browser. Google
+Tag Manager and advertising endpoints remain available. The policy also applies
+to frames and popup pages.
+
 ## Validation API composition contract
 
 Host tooling can validate one or more file/URL inputs via SDK APIs with

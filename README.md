@@ -9,6 +9,7 @@ Current release: see `CHANGELOG.md`.
 - Sitemap discovery requests use a browser-like header bundle aligned with Playwright defaults (including `User-Agent`, `Accept`, `Accept-Language`, and `Sec-CH-*` headers).
 - Change detection: skips URLs that are already imported unless `OVERWRITE` is enabled; re-imports when `lastmod` is newer.
 - Web page imports: sends URLs to WordLift with embedding requests, output types, retry logic, and pluggable callbacks.
+- Playwright rendering blocks service workers and direct Google Analytics measurement traffic before network egress while keeping Google Tag Manager available.
 - Python 3.14 compatibility: retry filters use `pydantic_core.ValidationError` via the public API.
 - Search Console refresh: triggers analytics imports when top queries are stale.
 - GSC canonical clustering helper: builds `url,title,canonical` CSV outputs from Search Console impressions with exact-title clustering, interval parsing (`XX[d|w|m]`), optional URL regex filtering, and fixed/auto adaptive concurrency controls.
