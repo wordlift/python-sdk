@@ -6,6 +6,7 @@ from contextlib import AbstractContextManager
 from dataclasses import dataclass
 from time import perf_counter
 
+from .network_policy import GOOGLE_ANALYTICS_URL_PATTERN
 from .render_options import DEFAULT_BROWSER_REQUEST_HEADERS
 
 try:
@@ -77,7 +78,12 @@ class Browser(AbstractContextManager):
             context_kwargs["viewport"] = viewport
             context_kwargs["ignore_https_errors"] = self.ignore_https_errors
             context_kwargs["extra_http_headers"] = dict(DEFAULT_BROWSER_REQUEST_HEADERS)
+            context_kwargs["service_workers"] = "block"
             self._context = self._browser.new_context(**context_kwargs)
+            self._context.route(
+                GOOGLE_ANALYTICS_URL_PATTERN,
+                lambda route: route.abort("blockedbyclient"),
+            )
             self._context.add_init_script(
                 """
                 Object.defineProperty(navigator, 'webdriver', { get: () => undefined });

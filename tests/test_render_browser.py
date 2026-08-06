@@ -37,11 +37,20 @@ class _FakeContext:
         self.closed = False
         self.script = None
         self.page = _FakePage()
+        self.route_matcher = None
+        self.route_handler = None
+        self.events = []
+
+    def route(self, matcher, handler):
+        self.route_matcher = matcher
+        self.route_handler = handler
+        self.events.append("route")
 
     def add_init_script(self, script):
         self.script = script
 
     def new_page(self):
+        self.events.append("new_page")
         return self.page
 
     def close(self):
@@ -112,6 +121,21 @@ def test_browser_enter_exit_and_open(monkeypatch: pytest.MonkeyPatch):
         assert pw.browser.kwargs["user_agent"] == "UA"
         assert pw.browser.kwargs["viewport"]["width"] == 1200
         assert pw.browser.kwargs["ignore_https_errors"] is True
+        assert pw.browser.kwargs["service_workers"] == "block"
+        assert pw.browser.context.events == ["route", "new_page"]
+        assert pw.browser.context.route_matcher.search(
+            "https://region1.google-analytics.com/g/collect"
+        )
+
+        class _FakeRoute:
+            aborted_with = None
+
+            def abort(self, error_code):
+                self.aborted_with = error_code
+
+        route = _FakeRoute()
+        pw.browser.context.route_handler(route)
+        assert route.aborted_with == "blockedbyclient"
 
     assert pw.browser.context.closed is True
     assert pw.browser.closed is True

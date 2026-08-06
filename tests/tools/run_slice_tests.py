@@ -21,6 +21,7 @@ SLICE_TESTS: dict[str, list[str]] = {
     "render": [
         "tests/test_render_browser.py",
         "tests/test_render_html_renderer.py",
+        "tests/test_render_network_policy.py",
         "tests/test_xhtml_cleaner.py",
     ],
     "validation": [
