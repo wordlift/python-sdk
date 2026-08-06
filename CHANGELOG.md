@@ -1,5 +1,15 @@
 # Changelog
 
+## 8.4.1 - 2026-08-06
+
+### Changed
+
+- Playwright rendering now blocks requests to direct Google Analytics
+  measurement hosts while leaving Google Tag Manager and advertising endpoints
+  available.
+- Service workers are blocked for rendered browser contexts so background
+  activity cannot bypass the analytics request guard.
+
 ## 8.4.0 - 2026-07-31
 
 ### Added
