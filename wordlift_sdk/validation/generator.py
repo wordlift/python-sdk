@@ -704,6 +704,29 @@ def _emit_one_of_option_groups(
         lines.append(f"{sp}) ;")
 
 
+def _emit_listitem_name_or_item_name(lines: list[str], indent: int) -> None:
+    sp = " " * indent
+    lines.append(f"{sp}sh:or (")
+    lines.append(f"{sp}  [")
+    lines.append(f"{sp}    sh:property [")
+    lines.append(f"{sp}      sh:path schema:name ;")
+    lines.append(f"{sp}      sh:minCount 1 ;")
+    lines.append(f"{sp}    ] ;")
+    lines.append(f"{sp}  ]")
+    lines.append(f"{sp}  [")
+    lines.append(f"{sp}    sh:property [")
+    lines.append(f"{sp}      sh:path schema:item ;")
+    lines.append(f"{sp}      sh:node [")
+    lines.append(f"{sp}        sh:property [")
+    lines.append(f"{sp}          sh:path schema:name ;")
+    lines.append(f"{sp}          sh:minCount 1 ;")
+    lines.append(f"{sp}        ] ;")
+    lines.append(f"{sp}      ] ;")
+    lines.append(f"{sp}    ] ;")
+    lines.append(f"{sp}  ]")
+    lines.append(f"{sp}) ;")
+
+
 def _emit_node(
     lines: list[str],
     type_name: str,
@@ -722,6 +745,11 @@ def _emit_node(
 
     child_rules = _SCOPED_CHILD_RULES.get(type_name, {})
     for prop in sorted(bucket["required"]):
+        if type_name == "ListItem" and prop == "name":
+            # Google: ListItem.name is only required when `item` is a bare URL;
+            # if `item` is a Thing that itself carries a name, name may be omitted.
+            # https://developers.google.com/search/docs/appearance/structured-data/breadcrumb
+            continue
         child_types = child_rules.get(prop)
         _emit_property(
             lines,
@@ -734,6 +762,8 @@ def _emit_node(
             one_of_map=one_of_map,
             one_of_option_map=one_of_option_map,
         )
+    if type_name == "ListItem" and "name" in bucket["required"]:
+        _emit_listitem_name_or_item_name(lines, indent)
 
     for prop in sorted(bucket["recommended"]):
         child_types = child_rules.get(prop)
@@ -812,6 +842,11 @@ def _write_feature(feature: FeatureData, output_path: Path, overwrite: bool) -> 
             lines.append(f"  sh:targetClass schema:{type_name} ;")
 
             for prop in sorted(bucket["required"]):
+                if type_name == "ListItem" and prop == "name":
+                    # Google: ListItem.name is only required when `item` is a bare
+                    # URL; if `item` is a Thing that itself carries a name, name
+                    # may be omitted. See _emit_listitem_name_or_item_name below.
+                    continue
                 child_types = _SCOPED_CHILD_RULES.get(type_name, {}).get(prop)
                 _emit_property(
                     lines,
@@ -824,6 +859,8 @@ def _write_feature(feature: FeatureData, output_path: Path, overwrite: bool) -> 
                     one_of_map=feature.one_of,
                     one_of_option_map=feature.one_of_option_groups,
                 )
+            if type_name == "ListItem" and "name" in bucket["required"]:
+                _emit_listitem_name_or_item_name(lines, 2)
 
             for prop in sorted(bucket["recommended"]):
                 child_types = _SCOPED_CHILD_RULES.get(type_name, {}).get(prop)

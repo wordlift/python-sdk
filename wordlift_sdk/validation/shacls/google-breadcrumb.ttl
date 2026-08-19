@@ -3,7 +3,7 @@
 @prefix schema: <http://schema.org/> .
 
 # Source: https://developers.google.com/search/docs/appearance/structured-data/breadcrumb
-# Generated: 2026-02-26T15:41:54Z
+# Generated: 2026-08-19T07:09:28Z
 # Notes: required properties => errors; recommended properties => warnings.
 
 :google_BreadcrumbListShape
@@ -20,13 +20,28 @@
         sh:minCount 1 ;
       ] ;
       sh:property [
-        sh:path schema:name ;
-        sh:minCount 1 ;
-      ] ;
-      sh:property [
         sh:path schema:position ;
         sh:minCount 1 ;
       ] ;
+      sh:or (
+        [
+          sh:property [
+            sh:path schema:name ;
+            sh:minCount 1 ;
+          ] ;
+        ]
+        [
+          sh:property [
+            sh:path schema:item ;
+            sh:node [
+              sh:property [
+                sh:path schema:name ;
+                sh:minCount 1 ;
+              ] ;
+            ] ;
+          ] ;
+        ]
+      ) ;
     ] ;
   ] ;
 .
