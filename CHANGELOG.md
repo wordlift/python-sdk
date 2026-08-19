@@ -1,5 +1,14 @@
 # Changelog
 
+## 8.4.2 - 2026-08-19
+
+### Fixed
+
+- Breadcrumb SHACL validation no longer flags `ListItem.name` as missing when
+  `item` is a `Thing` that itself carries a `name`, matching Google's
+  documented requirement that `name` is only mandatory when `item` is a bare
+  URL.
+
 ## 8.4.1 - 2026-08-06
 
 ### Changed
