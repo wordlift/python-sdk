@@ -1,5 +1,14 @@
 # Changelog
 
+## 8.4.3 - 2026-08-19
+
+### Fixed
+
+- Schema.org range validation no longer warns when a property expecting a
+  `Thing` (e.g. breadcrumb `ListItem.item`, `Review.itemReviewed`) references
+  a node without an explicit `@type`, since `Thing` is schema.org's universal
+  base class and any referenced resource already satisfies it.
+
 ## 8.4.2 - 2026-08-19
 
 ### Fixed
