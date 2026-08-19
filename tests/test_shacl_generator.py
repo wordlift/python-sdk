@@ -328,6 +328,18 @@ def test_schemaorg_range_allows_literals(tmp_path: Path) -> None:
     )
 
 
+def test_schemaorg_range_accepts_untyped_thing_references(tmp_path: Path) -> None:
+    from wordlift_sdk.validation.generator import _render_property_shape
+
+    lines = _render_property_shape(
+        URIRef("http://schema.org/item"), [URIRef("http://schema.org/Thing")]
+    )
+    content = "\n".join(lines)
+
+    assert "sh:nodeKind sh:BlankNodeOrIRI" in content
+    assert "sh:class schema:Thing" not in content
+
+
 def test_keeps_listitem_shape_without_itemlist(tmp_path: Path) -> None:
     feature = FeatureData(
         url="https://example.com",

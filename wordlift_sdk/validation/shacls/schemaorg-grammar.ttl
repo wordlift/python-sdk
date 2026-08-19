@@ -3,7 +3,7 @@
 @prefix schema: <http://schema.org/> .
 
 # Source: https://schema.org/version/latest/schemaorg-current-https.jsonld
-# Generated: 2026-07-13T13:16:37Z
+# Generated: 2026-08-19T08:24:09Z
 # Notes: schema.org grammar checks only; all constraints are warnings.
 
 :schema_3DModelShape
@@ -335,7 +335,7 @@
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#anyURI> ]
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ]
       [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ]
-      [ sh:class schema:Thing ]
+      [ sh:nodeKind sh:BlankNodeOrIRI ]
     ) ;
     sh:message "Schema.org range check: error." ;
   ] ;
@@ -346,7 +346,7 @@
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#anyURI> ]
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ]
       [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ]
-      [ sh:class schema:Thing ]
+      [ sh:nodeKind sh:BlankNodeOrIRI ]
     ) ;
     sh:message "Schema.org range check: instrument." ;
   ] ;
@@ -370,7 +370,7 @@
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#anyURI> ]
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ]
       [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ]
-      [ sh:class schema:Thing ]
+      [ sh:nodeKind sh:BlankNodeOrIRI ]
     ) ;
     sh:message "Schema.org range check: object." ;
   ] ;
@@ -405,7 +405,7 @@
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#anyURI> ]
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ]
       [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ]
-      [ sh:class schema:Thing ]
+      [ sh:nodeKind sh:BlankNodeOrIRI ]
     ) ;
     sh:message "Schema.org range check: result." ;
   ] ;
@@ -472,7 +472,7 @@
       [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ]
       [ sh:class schema:CategoryCode ]
       [ sh:class schema:PhysicalActivityCategory ]
-      [ sh:class schema:Thing ]
+      [ sh:nodeKind sh:BlankNodeOrIRI ]
     ) ;
     sh:message "Schema.org range check: category." ;
   ] ;
@@ -589,7 +589,7 @@
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#anyURI> ]
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ]
       [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ]
-      [ sh:class schema:Thing ]
+      [ sh:nodeKind sh:BlankNodeOrIRI ]
     ) ;
     sh:message "Schema.org range check: itemReviewed." ;
   ] ;
@@ -2425,7 +2425,7 @@
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#anyURI> ]
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ]
       [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ]
-      [ sh:class schema:Thing ]
+      [ sh:nodeKind sh:BlankNodeOrIRI ]
     ) ;
     sh:message "Schema.org range check: about." ;
   ] ;
@@ -2640,7 +2640,7 @@
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#anyURI> ]
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ]
       [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ]
-      [ sh:class schema:Thing ]
+      [ sh:nodeKind sh:BlankNodeOrIRI ]
     ) ;
     sh:message "Schema.org range check: actionOption." ;
   ] ;
@@ -2651,7 +2651,7 @@
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#anyURI> ]
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ]
       [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ]
-      [ sh:class schema:Thing ]
+      [ sh:nodeKind sh:BlankNodeOrIRI ]
     ) ;
     sh:message "Schema.org range check: option." ;
   ] ;
@@ -3100,7 +3100,7 @@
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#anyURI> ]
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ]
       [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ]
-      [ sh:class schema:Thing ]
+      [ sh:nodeKind sh:BlankNodeOrIRI ]
     ) ;
     sh:message "Schema.org range check: about." ;
   ] ;
@@ -3565,7 +3565,7 @@
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#anyURI> ]
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ]
       [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ]
-      [ sh:class schema:Thing ]
+      [ sh:nodeKind sh:BlankNodeOrIRI ]
     ) ;
     sh:message "Schema.org range check: about." ;
   ] ;
@@ -4364,7 +4364,7 @@
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#anyURI> ]
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ]
       [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ]
-      [ sh:class schema:Thing ]
+      [ sh:nodeKind sh:BlankNodeOrIRI ]
     ) ;
     sh:message "Schema.org range check: mainEntity." ;
   ] ;
@@ -4409,7 +4409,7 @@
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#anyURI> ]
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ]
       [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ]
-      [ sh:class schema:Thing ]
+      [ sh:nodeKind sh:BlankNodeOrIRI ]
     ) ;
     sh:message "Schema.org range check: mentions." ;
   ] ;
@@ -5165,7 +5165,7 @@
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ]
       [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ]
       [ sh:class schema:DataFeedItem ]
-      [ sh:class schema:Thing ]
+      [ sh:nodeKind sh:BlankNodeOrIRI ]
     ) ;
     sh:message "Schema.org range check: dataFeedElement." ;
   ] ;
@@ -5217,7 +5217,7 @@
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#anyURI> ]
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ]
       [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ]
-      [ sh:class schema:Thing ]
+      [ sh:nodeKind sh:BlankNodeOrIRI ]
     ) ;
     sh:message "Schema.org range check: item." ;
   ] ;
@@ -5451,7 +5451,7 @@
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#anyURI> ]
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ]
       [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ]
-      [ sh:class schema:Thing ]
+      [ sh:nodeKind sh:BlankNodeOrIRI ]
     ) ;
     sh:message "Schema.org range check: about." ;
   ] ;
@@ -5488,7 +5488,7 @@
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#anyURI> ]
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ]
       [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ]
-      [ sh:class schema:Thing ]
+      [ sh:nodeKind sh:BlankNodeOrIRI ]
     ) ;
     sh:message "Schema.org range check: about." ;
   ] ;
@@ -7577,7 +7577,7 @@
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#anyURI> ]
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ]
       [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ]
-      [ sh:class schema:Thing ]
+      [ sh:nodeKind sh:BlankNodeOrIRI ]
     ) ;
     sh:message "Schema.org range check: about." ;
   ] ;
@@ -9057,7 +9057,7 @@
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#anyURI> ]
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ]
       [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ]
-      [ sh:class schema:Thing ]
+      [ sh:nodeKind sh:BlankNodeOrIRI ]
     ) ;
     sh:message "Schema.org range check: characterAttribute." ;
   ] ;
@@ -9068,7 +9068,7 @@
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#anyURI> ]
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ]
       [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ]
-      [ sh:class schema:Thing ]
+      [ sh:nodeKind sh:BlankNodeOrIRI ]
     ) ;
     sh:message "Schema.org range check: gameItem." ;
   ] ;
@@ -9102,7 +9102,7 @@
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#anyURI> ]
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ]
       [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ]
-      [ sh:class schema:Thing ]
+      [ sh:nodeKind sh:BlankNodeOrIRI ]
     ) ;
     sh:message "Schema.org range check: quest." ;
   ] ;
@@ -9622,7 +9622,7 @@
       [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ]
       [ sh:class schema:CategoryCode ]
       [ sh:class schema:PhysicalActivityCategory ]
-      [ sh:class schema:Thing ]
+      [ sh:nodeKind sh:BlankNodeOrIRI ]
     ) ;
     sh:message "Schema.org range check: category." ;
   ] ;
@@ -10464,7 +10464,7 @@
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#anyURI> ]
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ]
       [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ]
-      [ sh:class schema:Thing ]
+      [ sh:nodeKind sh:BlankNodeOrIRI ]
     ) ;
     sh:message "Schema.org range check: data." ;
   ] ;
@@ -10475,7 +10475,7 @@
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#anyURI> ]
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ]
       [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ]
-      [ sh:class schema:Thing ]
+      [ sh:nodeKind sh:BlankNodeOrIRI ]
     ) ;
     sh:message "Schema.org range check: source." ;
   ] ;
@@ -10648,7 +10648,7 @@
       [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ]
       [ sh:class schema:CategoryCode ]
       [ sh:class schema:PhysicalActivityCategory ]
-      [ sh:class schema:Thing ]
+      [ sh:nodeKind sh:BlankNodeOrIRI ]
     ) ;
     sh:message "Schema.org range check: category." ;
   ] ;
@@ -10799,7 +10799,7 @@
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#anyURI> ]
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ]
       [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ]
-      [ sh:class schema:Thing ]
+      [ sh:nodeKind sh:BlankNodeOrIRI ]
     ) ;
     sh:message "Schema.org range check: aggregateElement." ;
   ] ;
@@ -10811,7 +10811,7 @@
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ]
       [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ]
       [ sh:class schema:ListItem ]
-      [ sh:class schema:Thing ]
+      [ sh:nodeKind sh:BlankNodeOrIRI ]
     ) ;
     sh:message "Schema.org range check: itemListElement." ;
   ] ;
@@ -11705,7 +11705,7 @@
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#anyURI> ]
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ]
       [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ]
-      [ sh:class schema:Thing ]
+      [ sh:nodeKind sh:BlankNodeOrIRI ]
     ) ;
     sh:message "Schema.org range check: item." ;
   ] ;
@@ -11881,7 +11881,7 @@
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#anyURI> ]
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ]
       [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ]
-      [ sh:class schema:Thing ]
+      [ sh:nodeKind sh:BlankNodeOrIRI ]
     ) ;
     sh:message "Schema.org range check: requiredCollateral." ;
   ] ;
@@ -15682,7 +15682,7 @@
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ]
       [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ]
       [ sh:class schema:Place ]
-      [ sh:class schema:Thing ]
+      [ sh:nodeKind sh:BlankNodeOrIRI ]
     ) ;
     sh:message "Schema.org range check: observationAbout." ;
   ] ;
@@ -15998,7 +15998,7 @@
       [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ]
       [ sh:class schema:CategoryCode ]
       [ sh:class schema:PhysicalActivityCategory ]
-      [ sh:class schema:Thing ]
+      [ sh:nodeKind sh:BlankNodeOrIRI ]
     ) ;
     sh:message "Schema.org range check: category." ;
   ] ;
@@ -17505,7 +17505,7 @@
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#anyURI> ]
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ]
       [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ]
-      [ sh:class schema:Thing ]
+      [ sh:nodeKind sh:BlankNodeOrIRI ]
     ) ;
     sh:message "Schema.org range check: knowsAbout." ;
   ] ;
@@ -17685,7 +17685,7 @@
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#anyURI> ]
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ]
       [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ]
-      [ sh:class schema:Thing ]
+      [ sh:nodeKind sh:BlankNodeOrIRI ]
     ) ;
     sh:message "Schema.org range check: owns." ;
   ] ;
@@ -18926,7 +18926,7 @@
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#anyURI> ]
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ]
       [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ]
-      [ sh:class schema:Thing ]
+      [ sh:nodeKind sh:BlankNodeOrIRI ]
     ) ;
     sh:message "Schema.org range check: knowsAbout." ;
   ] ;
@@ -19016,7 +19016,7 @@
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#anyURI> ]
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ]
       [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ]
-      [ sh:class schema:Thing ]
+      [ sh:nodeKind sh:BlankNodeOrIRI ]
     ) ;
     sh:message "Schema.org range check: owns." ;
   ] ;
@@ -19246,7 +19246,7 @@
       [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ]
       [ sh:class schema:CategoryCode ]
       [ sh:class schema:PhysicalActivityCategory ]
-      [ sh:class schema:Thing ]
+      [ sh:nodeKind sh:BlankNodeOrIRI ]
     ) ;
     sh:message "Schema.org range check: category." ;
   ] ;
@@ -20275,7 +20275,7 @@
       [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ]
       [ sh:class schema:CategoryCode ]
       [ sh:class schema:PhysicalActivityCategory ]
-      [ sh:class schema:Thing ]
+      [ sh:nodeKind sh:BlankNodeOrIRI ]
     ) ;
     sh:message "Schema.org range check: category." ;
   ] ;
@@ -21241,7 +21241,7 @@
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#anyURI> ]
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ]
       [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ]
-      [ sh:class schema:Thing ]
+      [ sh:nodeKind sh:BlankNodeOrIRI ]
     ) ;
     sh:message "Schema.org range check: defaultValue." ;
   ] ;
@@ -22291,7 +22291,7 @@
       [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ]
       [ sh:class schema:CategoryCode ]
       [ sh:class schema:PhysicalActivityCategory ]
-      [ sh:class schema:Thing ]
+      [ sh:nodeKind sh:BlankNodeOrIRI ]
     ) ;
     sh:message "Schema.org range check: category." ;
   ] ;
@@ -22451,7 +22451,7 @@
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#anyURI> ]
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ]
       [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ]
-      [ sh:class schema:Thing ]
+      [ sh:nodeKind sh:BlankNodeOrIRI ]
     ) ;
     sh:message "Schema.org range check: replacee." ;
   ] ;
@@ -22462,7 +22462,7 @@
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#anyURI> ]
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ]
       [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ]
-      [ sh:class schema:Thing ]
+      [ sh:nodeKind sh:BlankNodeOrIRI ]
     ) ;
     sh:message "Schema.org range check: replacer." ;
   ] ;
@@ -22588,7 +22588,7 @@
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#anyURI> ]
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ]
       [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ]
-      [ sh:class schema:Thing ]
+      [ sh:nodeKind sh:BlankNodeOrIRI ]
     ) ;
     sh:message "Schema.org range check: reservationFor." ;
   ] ;
@@ -22756,7 +22756,7 @@
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#anyURI> ]
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ]
       [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ]
-      [ sh:class schema:Thing ]
+      [ sh:nodeKind sh:BlankNodeOrIRI ]
     ) ;
     sh:message "Schema.org range check: itemReviewed." ;
   ] ;
@@ -23345,7 +23345,7 @@
       [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ]
       [ sh:class schema:CategoryCode ]
       [ sh:class schema:PhysicalActivityCategory ]
-      [ sh:class schema:Thing ]
+      [ sh:nodeKind sh:BlankNodeOrIRI ]
     ) ;
     sh:message "Schema.org range check: category." ;
   ] ;
@@ -23436,7 +23436,7 @@
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#anyURI> ]
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ]
       [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ]
-      [ sh:class schema:Thing ]
+      [ sh:nodeKind sh:BlankNodeOrIRI ]
     ) ;
     sh:message "Schema.org range check: produces." ;
   ] ;
@@ -23504,7 +23504,7 @@
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#anyURI> ]
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ]
       [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ]
-      [ sh:class schema:Thing ]
+      [ sh:nodeKind sh:BlankNodeOrIRI ]
     ) ;
     sh:message "Schema.org range check: serviceOutput." ;
   ] ;
@@ -24545,7 +24545,7 @@
       [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ]
       [ sh:class schema:CategoryCode ]
       [ sh:class schema:PhysicalActivityCategory ]
-      [ sh:class schema:Thing ]
+      [ sh:nodeKind sh:BlankNodeOrIRI ]
     ) ;
     sh:message "Schema.org range check: category." ;
   ] ;
@@ -26227,7 +26227,7 @@
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#anyURI> ]
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ]
       [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ]
-      [ sh:class schema:Thing ]
+      [ sh:nodeKind sh:BlankNodeOrIRI ]
     ) ;
     sh:message "Schema.org range check: collection." ;
   ] ;
@@ -26238,7 +26238,7 @@
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#anyURI> ]
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ]
       [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ]
-      [ sh:class schema:Thing ]
+      [ sh:nodeKind sh:BlankNodeOrIRI ]
     ) ;
     sh:message "Schema.org range check: targetCollection." ;
   ] ;
@@ -26869,7 +26869,7 @@
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#anyURI> ]
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ]
       [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ]
-      [ sh:class schema:Thing ]
+      [ sh:nodeKind sh:BlankNodeOrIRI ]
     ) ;
     sh:message "Schema.org range check: gamePlatform." ;
   ] ;
@@ -26964,7 +26964,7 @@
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#anyURI> ]
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ]
       [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ]
-      [ sh:class schema:Thing ]
+      [ sh:nodeKind sh:BlankNodeOrIRI ]
     ) ;
     sh:message "Schema.org range check: characterAttribute." ;
   ] ;
@@ -27041,7 +27041,7 @@
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#anyURI> ]
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ]
       [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ]
-      [ sh:class schema:Thing ]
+      [ sh:nodeKind sh:BlankNodeOrIRI ]
     ) ;
     sh:message "Schema.org range check: gameItem." ;
   ] ;
@@ -27064,7 +27064,7 @@
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#anyURI> ]
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ]
       [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ]
-      [ sh:class schema:Thing ]
+      [ sh:nodeKind sh:BlankNodeOrIRI ]
     ) ;
     sh:message "Schema.org range check: gamePlatform." ;
   ] ;
@@ -27142,7 +27142,7 @@
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#anyURI> ]
       [ sh:datatype <http://www.w3.org/2001/XMLSchema#string> ]
       [ sh:datatype <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> ]
-      [ sh:class schema:Thing ]
+      [ sh:nodeKind sh:BlankNodeOrIRI ]
     ) ;
     sh:message "Schema.org range check: quest." ;
   ] ;

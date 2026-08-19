@@ -1144,6 +1144,11 @@ def _render_property_shape(prop: URIRef, ranges: list[URIRef]) -> list[str]:
         if datatype_shapes:
             for shape in datatype_shapes:
                 range_constraints.append(f"[ sh:datatype <{shape['datatype']}> ]")
+        elif name == "Thing":
+            # schema:Thing is schema.org's universal base class, so any
+            # referenced resource is a valid Thing even without an explicit
+            # @type (sh:class would otherwise require an asserted rdf:type).
+            range_constraints.append("[ sh:nodeKind sh:BlankNodeOrIRI ]")
         else:
             range_constraints.append(f"[ sh:class schema:{name} ]")
 
