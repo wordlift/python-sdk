@@ -409,21 +409,10 @@ class CanonicalIdGenerator:
             return subject != candidate
         text = str(subject)
         prefix = f"{dataset_uri}/"
-        if not text.startswith(prefix):
-            return True
-
-        relative = text[len(prefix) :].strip("/")
-        if not relative:
-            return True
-        segments = [segment for segment in relative.split("/") if segment]
-        if len(segments) < 2:
-            return True
-
-        first = segments[0]
-        if first not in self._canonical_root_prefixes():
-            return True
-
-        return "://" in relative or "%3a%2f%2f" in relative.lower()
+        if text.startswith(prefix):
+            relative = text[len(prefix) :]
+            return True if not relative else False
+        return True
 
     def _canonical_root_prefixes(self) -> set[str]:
         prefixes = {"01"}

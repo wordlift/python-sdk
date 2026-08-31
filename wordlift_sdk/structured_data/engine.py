@@ -2014,15 +2014,10 @@ def _build_id_map(
     id_map: dict[str, str] = {}
     for idx, node in enumerate(nodes):
         old_id = node.get("@id") or f"_:b{idx}"
-        type_name = _extract_type(node) or "Thing"
-        name = _extract_name_any(node) or _dash_type(type_name)
-        node_url = _extract_url_any(node)
-        if isinstance(old_id, str) and old_id.startswith(dataset_uri):
-            new_id = old_id
-        else:
-            new_id = build_id(dataset_uri, type_name, name, node_url, idx + 1)
-        if old_id in id_map:
-            new_id = f"{new_id}-{idx}"
+        # type_name = _extract_type(node) or "Thing"
+        # name = _extract_name_any(node) or _dash_type(type_name)
+        # node_url = _extract_url_any(node)
+        new_id = old_id
         id_map[str(old_id)] = new_id
     return id_map
 
