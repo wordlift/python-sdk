@@ -533,6 +533,7 @@ def _emit_property(
     visited: set[str],
     one_of_map: dict[str, list[set[str]]],
     one_of_option_map: dict[str, list[list[set[str]]]],
+    parent_type: str | None = None,
 ) -> None:
     sp = " " * indent
     path = _prop_path(prop)
@@ -565,6 +566,7 @@ def _emit_property(
                 one_of_map,
                 one_of_option_map.get(child_type, []),
                 one_of_option_map,
+                parent_type,
             )
             lines.append(f"{node_sp}] ;")
         elif len(valid_children) > 1:
@@ -585,6 +587,7 @@ def _emit_property(
                     one_of_map,
                     one_of_option_map.get(child_type, []),
                     one_of_option_map,
+                    parent_type,
                 )
                 lines.append(f"{or_sp}  ]")
             lines.append(f"{or_sp}) ;")
@@ -637,6 +640,7 @@ def _emit_one_of_groups(
                         one_of_map,
                         one_of_option_map.get(child_type, []),
                         one_of_option_map,
+                        parent_type,
                     )
                     lines.append(f"{node_sp}] ;")
                 elif len(valid_children) > 1:
@@ -657,6 +661,7 @@ def _emit_one_of_groups(
                             one_of_map,
                             one_of_option_map.get(child_type, []),
                             one_of_option_map,
+                            parent_type,
                         )
                         lines.append(f"{or_sp}  ]")
                     lines.append(f"{or_sp}) ;")
@@ -699,6 +704,7 @@ def _emit_one_of_option_groups(
                     visited=visited,
                     one_of_map=one_of_map,
                     one_of_option_map=one_of_option_map,
+                    parent_type=parent_type,
                 )
             lines.append(f"{sp}  ]")
         lines.append(f"{sp}) ;")
@@ -727,6 +733,26 @@ def _emit_listitem_name_or_item_name(lines: list[str], indent: int) -> None:
     lines.append(f"{sp}) ;")
 
 
+def _emit_breadcrumb_item_exemption(lines: list[str], indent: int) -> None:
+    sp = " " * indent
+    lines.append(f"{sp}sh:property [")
+    lines.append(f"{sp}  sh:path schema:itemListElement ;")
+    lines.append(f"{sp}  sh:qualifiedValueShape [")
+    lines.append(f"{sp}    sh:not [")
+    lines.append(f"{sp}      sh:property [")
+    lines.append(f"{sp}        sh:path schema:item ;")
+    lines.append(f"{sp}        sh:minCount 1 ;")
+    lines.append(f"{sp}      ] ;")
+    lines.append(f"{sp}    ] ;")
+    lines.append(f"{sp}  ] ;")
+    lines.append(f"{sp}  sh:qualifiedMaxCount 1 ;")
+    lines.append(
+        f'{sp}  sh:message "Required by Google: item on every ListItem '
+        'except the final one." ;'
+    )
+    lines.append(f"{sp}] ;")
+
+
 def _emit_node(
     lines: list[str],
     type_name: str,
@@ -738,6 +764,7 @@ def _emit_node(
     one_of_map: dict[str, list[set[str]]],
     one_of_option_groups: list[list[set[str]]] | None,
     one_of_option_map: dict[str, list[list[set[str]]]],
+    parent_type: str | None = None,
 ) -> None:
     sp = " " * indent
     lines.append(f"{sp}a sh:NodeShape ;")
@@ -745,6 +772,13 @@ def _emit_node(
 
     child_rules = _SCOPED_CHILD_RULES.get(type_name, {})
     for prop in sorted(bucket["required"]):
+        if (
+            parent_type == "BreadcrumbList"
+            and type_name == "ListItem"
+            and prop == "item"
+        ):
+            # Google: the final breadcrumb entry may omit `item`.
+            continue
         if type_name == "ListItem" and prop == "name":
             # Google: ListItem.name is only required when `item` is a bare URL;
             # if `item` is a Thing that itself carries a name, name may be omitted.
@@ -761,9 +795,14 @@ def _emit_node(
             visited=visited,
             one_of_map=one_of_map,
             one_of_option_map=one_of_option_map,
+            parent_type=type_name,
         )
     if type_name == "ListItem" and "name" in bucket["required"]:
         _emit_listitem_name_or_item_name(lines, indent)
+    if type_name == "BreadcrumbList" and "item" in buckets.get("ListItem", {}).get(
+        "required", set()
+    ):
+        _emit_breadcrumb_item_exemption(lines, indent)
 
     for prop in sorted(bucket["recommended"]):
         child_types = child_rules.get(prop)
@@ -777,6 +816,7 @@ def _emit_node(
             visited=visited,
             one_of_map=one_of_map,
             one_of_option_map=one_of_option_map,
+            parent_type=type_name,
         )
 
     _emit_one_of_groups(
@@ -858,9 +898,14 @@ def _write_feature(feature: FeatureData, output_path: Path, overwrite: bool) -> 
                     visited={type_name},
                     one_of_map=feature.one_of,
                     one_of_option_map=feature.one_of_option_groups,
+                    parent_type=type_name,
                 )
             if type_name == "ListItem" and "name" in bucket["required"]:
                 _emit_listitem_name_or_item_name(lines, 2)
+            if type_name == "BreadcrumbList" and "item" in feature.types.get(
+                "ListItem", {}
+            ).get("required", set()):
+                _emit_breadcrumb_item_exemption(lines, 2)
 
             for prop in sorted(bucket["recommended"]):
                 child_types = _SCOPED_CHILD_RULES.get(type_name, {}).get(prop)
@@ -874,6 +919,7 @@ def _write_feature(feature: FeatureData, output_path: Path, overwrite: bool) -> 
                     visited={type_name},
                     one_of_map=feature.one_of,
                     one_of_option_map=feature.one_of_option_groups,
+                    parent_type=type_name,
                 )
 
             _emit_one_of_groups(
