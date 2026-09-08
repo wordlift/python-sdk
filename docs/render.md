@@ -13,11 +13,17 @@ Renders a URL using `Browser` and converts HTML to XHTML with `HtmlConverter`.
 Thin wrapper around Playwright that opens a page and returns the page, response, elapsed time, and resource list.
 
 Each browser context blocks service workers and installs a mandatory context-wide
-route that aborts direct traffic to the standard Google Analytics measurement
-hosts: `*.google-analytics.com` and `*.analytics.google.com`. Google Tag Manager
-and advertising endpoints remain available. Blocked URLs and payloads are not
+route that aborts traffic to Google Analytics measurement endpoints: any path on
+`*.google-analytics.com` and `*.analytics.google.com`, plus the measurement paths
+`/g/collect`, `/j/collect`, `/mp/collect`, `/r/collect` and
+`/batch/collect` on any host. The path rule is needed
+because the Google tag sends the same GA4 payload (same `tid=G-...`) to other
+hosts, notably `www.google.com/g/collect`, when the measurement hosts are
+unreachable. Google Tag Manager and advertising conversion endpoints
+(`/ccm/collect`) remain available. Blocked URLs and payloads are not
 logged or added to the response-resource list. Customer-specific first-party or
-server-side tagging gateways are outside this hostname policy.
+server-side tagging gateways that route measurement through their own path are
+outside this policy.
 Disabling service workers intentionally trades PWA offline caching and
 background-sync fidelity for complete context-route coverage.
 
