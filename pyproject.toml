@@ -29,6 +29,7 @@ gspread = { version = "^6.1.2", optional = true }
 google-auth = { version = "^2.35.0", optional = true }
 tqdm = { version = "^4.67.1", optional = true }
 advertools = { version = "^0.17.1", optional = true }
+pyicu = { version = "2.16.2", optional = true }
 pycountry = { version = "^26.0.0", optional = true }
 python-liquid = { version = "^2.0.1", optional = true }
 jinja2 = { version = "^3.1.6", optional = true }
@@ -117,6 +118,7 @@ kg-build = [
     "tomli",
     "tqdm",
     "trafilatura",
+    "pyicu",
 ]
 legacy = [
     "gql",
@@ -155,6 +157,7 @@ all = [
     "tqdm",
     "trafilatura",
     "twisted",
+    "pyicu",
 ]
 
 [tool.poetry.group.dev.dependencies]

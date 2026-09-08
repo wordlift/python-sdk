@@ -71,7 +71,7 @@ distribution model:
   - Modules: `wordlift_sdk.kg_build.*`
   - Dependencies: `advertools`, `gql`, `google-auth`, `gspread`, `jinja2`,
     `lxml`, `morph-kgc`, `worph`, `pandas`, `playwright`, `pydantic-core`, `pyshacl`,
-    `python-liquid`, `rdflib`, `requests`, `tomli`, `tqdm`, `trafilatura`
+    `PyICU`, `python-liquid`, `rdflib`, `requests`, `tomli`, `tqdm`, `trafilatura`
   - Notes: this is intentionally broad because `kg_build` composes multiple
     subsystems.
 
@@ -81,6 +81,47 @@ distribution model:
 
 - `all`
   - Installs every optional dependency declared above.
+
+## Native ICU for kg-build
+
+Only `kg-build` and `all` install `PyICU==2.16.2`. PyICU builds from source and
+requires ICU development headers/libraries, `pkg-config`, and a C++ compiler.
+The canonical transliteration baseline is ICU **74.2**. Pin the native ICU
+version as well as PyICU in deployment images: ICU data changes can otherwise
+change generated IDs. Non-ASCII canonicalization rejects a different linked
+ICU version with an actionable error; ASCII-only normalization is unchanged.
+CI uses Ubuntu 24.04 and checks this version explicitly.
+
+On Ubuntu 24.04:
+
+```bash
+sudo apt-get update
+sudo apt-get install -y libicu-dev pkg-config g++
+test "$(pkg-config --modversion icu-i18n)" = "74.2"
+uv pip install "wordlift-sdk[kg-build]"
+```
+
+On other platforms, provision ICU 74.2 and set `PKG_CONFIG_PATH` to its
+`lib/pkgconfig` directory before installing the extra. A newer system ICU is
+not an equivalent replacement for reproducible canonical IDs. For example,
+with an existing ICU 74.2 installation under `/opt/local` on macOS:
+
+```bash
+export PKG_CONFIG_PATH="/opt/local/lib/pkgconfig"
+test "$(pkg-config --modversion icu-i18n)" = "74.2"
+uv pip install "wordlift-sdk[kg-build]"
+```
+
+If PyICU was already compiled against another ICU, rebuild it after selecting
+the 74.2 `PKG_CONFIG_PATH` (`uv pip install --reinstall --no-cache pyicu==2.16.2`).
+
+Postprocessor interpreters configured separately must install the same extra
+and native ICU version. Check the linked runtime after installation:
+
+```bash
+python -c 'import icu; print(icu.VERSION, icu.ICU_VERSION)'
+# 2.16.2 74.2
+```
 
 ## Boundary Rules
 

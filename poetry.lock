@@ -3041,6 +3041,18 @@ files = [
 windows-terminal = ["colorama (>=0.4.6)"]
 
 [[package]]
+name = "pyicu"
+version = "2.16.2"
+description = "Python extension wrapping the ICU C++ API"
+optional = true
+python-versions = "*"
+groups = ["main"]
+markers = "extra == \"kg-build\" or extra == \"all\""
+files = [
+    {file = "pyicu-2.16.2.tar.gz", hash = "sha256:006d51e24b5ec76df6ec2130f3dde269c51db8b8cfebb7d45a427dde0d10aa52"},
+]
+
+[[package]]
 name = "pyopenssl"
 version = "26.0.0"
 description = "Python wrapper module around the OpenSSL library"
@@ -4617,13 +4629,13 @@ test = ["coverage[toml]", "zope.event", "zope.testing"]
 testing = ["coverage[toml]", "zope.event", "zope.testing"]
 
 [extras]
-all = ["advertools", "google-auth", "gql", "gspread", "jinja2", "lxml", "morph-kgc", "pandas", "playwright", "pycountry", "pydantic-core", "pyoxigraph", "pyshacl", "python-liquid", "rdflib", "requests", "tomli", "tqdm", "trafilatura", "twisted", "worph"]
+all = ["advertools", "google-auth", "gql", "gspread", "jinja2", "lxml", "morph-kgc", "pandas", "playwright", "pycountry", "pydantic-core", "pyicu", "pyoxigraph", "pyshacl", "python-liquid", "rdflib", "requests", "tomli", "tqdm", "trafilatura", "twisted", "worph"]
 core = []
 google-search-console = ["google-auth", "pandas", "pycountry", "tqdm", "twisted"]
 google-sheets = ["google-auth", "gspread", "pandas"]
 graph = ["pyoxigraph", "pyshacl", "python-liquid", "rdflib", "requests", "tomli", "tqdm"]
 ingestion = ["advertools", "google-auth", "gspread", "lxml", "morph-kgc", "pandas", "playwright", "pyshacl", "rdflib", "requests", "tqdm", "trafilatura", "worph"]
-kg-build = ["advertools", "google-auth", "gql", "gspread", "jinja2", "lxml", "morph-kgc", "pandas", "playwright", "pydantic-core", "pyshacl", "python-liquid", "rdflib", "requests", "tomli", "tqdm", "trafilatura", "worph"]
+kg-build = ["advertools", "google-auth", "gql", "gspread", "jinja2", "lxml", "morph-kgc", "pandas", "playwright", "pydantic-core", "pyicu", "pyshacl", "python-liquid", "rdflib", "requests", "tomli", "tqdm", "trafilatura", "worph"]
 legacy = ["google-auth", "gql", "gspread", "lxml", "pandas", "playwright", "pycountry", "pydantic-core", "python-liquid", "rdflib", "requests", "tqdm", "twisted"]
 render = ["lxml", "playwright"]
 structured-data = ["advertools", "lxml", "morph-kgc", "playwright", "pyshacl", "rdflib", "requests", "tqdm", "worph"]
@@ -4633,4 +4645,4 @@ workflow = ["advertools", "google-auth", "gql", "gspread", "lxml", "pandas", "pl
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10, <3.15"
-content-hash = "731b2f505018d535f52f10fef303b9530f5957abe1f2f3700dad81a606d55b70"
+content-hash = "0cece997bf0124753b675c8b32f1dcc0a26b8ba6f4fddb9ada32042cfc2215f5"

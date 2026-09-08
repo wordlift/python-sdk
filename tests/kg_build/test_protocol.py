@@ -811,6 +811,26 @@ def test_build_pp_context_exposes_resolved_profile_and_account_key() -> None:
     assert context.profile["settings"]["api_url"] == "https://profile-api.example.com"
 
 
+@pytest.mark.parametrize(
+    "language,prefix", [("de", "mueller-"), ("tr", "muller-"), (None, "muller-")]
+)
+def test_build_pp_context_uses_account_language_for_ids(language, prefix) -> None:
+    host_context = _make_context()
+    host_context.account.language = language
+    protocol = ProfileImportProtocol(
+        context=host_context, profile=_make_profile(), root_dir=Path.cwd()
+    )
+    context = protocol._build_pp_context(
+        "https://example.com/page",
+        WebPageScrapeResponse(web_page=WebPage(url="https://example.com/page")),
+        existing_web_page_id=None,
+        existing_import_hash=None,
+    )
+    assert context.account is host_context.account
+    iri = context.ids.new_independent(Graph(), type_name="Thing", base_value="Müller")
+    assert str(iri).startswith(f"https://data.example.com/dataset/things/{prefix}")
+
+
 def test_build_pp_context_preserves_custom_profile_settings() -> None:
     protocol = ProfileImportProtocol(
         context=_make_context(),

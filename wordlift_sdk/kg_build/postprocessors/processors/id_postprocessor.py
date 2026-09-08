@@ -61,7 +61,12 @@ class CanonicalIdsPostprocessor:
         if not dataset_uri:
             return graph
         iri_lookup = self._iri_lookup or self._lookup_from_context(context)
-        return self._generator.apply(graph, dataset_uri, iri_lookup=iri_lookup)
+        return self._generator.apply(
+            graph,
+            dataset_uri,
+            iri_lookup=iri_lookup,
+            language=getattr(context.account, "language", None),
+        )
 
     def _lookup_from_context(self, context) -> IriLookup | None:
         extensions = getattr(context, "extensions", None)

@@ -32,6 +32,7 @@ def _build_runner_payload(context: PostprocessorContext) -> dict[str, Any]:
         "url": context.url,
         "dataset_uri": dataset_uri,
         "country_code": country_code,
+        "language": getattr(account, "language", None),
         "account_key": account_key or None,
         "exports": context.exports,
         "existing_web_page_id": context.existing_web_page_id,

@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- KG build canonical IDs use language-aware ASCII transliteration from
+  `account.language`, with stable source hashes for non-ASCII names without URLs.
+  German umlauts use `ae`/`oe`/`ue`; unsupported readings use a hashed fallback.
+  Generated IDs can change; existing root lookup mappings remain authoritative.
+- The `kg-build` and `all` extras require PyICU 2.16.2 and native ICU 74.2 for
+  reproducible transliteration. See `docs/packaging_slices_v7.md` for setup.
+
 ## 8.4.3 - 2026-08-19
 
 ### Fixed

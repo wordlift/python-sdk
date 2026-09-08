@@ -500,7 +500,13 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         existing_import_hash: str | None,
     ) -> PostprocessorContext:
         dataset_uri = self._dataset_uri
-        ids = IdAllocator(dataset_uri) if dataset_uri else None
+        ids = (
+            IdAllocator(
+                dataset_uri, language=getattr(self.context.account, "language", None)
+            )
+            if dataset_uri
+            else None
+        )
         profile_payload = asdict(self.profile)
         profile_settings = dict(profile_payload.get("settings", {}) or {})
         profile_settings.setdefault("api_url", "https://api.wordlift.io")

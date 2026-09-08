@@ -28,6 +28,7 @@ def _build_context(payload: dict[str, Any]) -> PostprocessorContext:
     account = SimpleNamespace(
         dataset_uri=dataset_uri,
         country_code=str(payload.get("country_code", "")).strip().lower(),
+        language=payload.get("language"),
     )
     response_payload = payload.get("response", {}) or {}
     web_page_payload = response_payload.get("web_page", {}) or {}
@@ -51,7 +52,9 @@ def _build_context(payload: dict[str, Any]) -> PostprocessorContext:
             if payload.get("existing_web_page_id")
             else None
         ),
-        ids=IdAllocator(dataset_uri) if dataset_uri else None,
+        ids=(
+            IdAllocator(dataset_uri, language=account.language) if dataset_uri else None
+        ),
     )
 
 
