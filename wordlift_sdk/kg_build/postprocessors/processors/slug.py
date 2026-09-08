@@ -33,9 +33,14 @@ def _transform(language: str | None) -> str:
     primary = parts[0]
     # Han readings are Mandarin only. Do not apply them to Cantonese (including
     # zh-yue), other Chinese extlangs, Japanese kanji, or an unknown language.
-    mandarin = primary in {"zh", "cmn"} and all(
-        len(part) != 3 or not part.isalpha() or part == "cmn" for part in parts[1:]
-    )
+    mandarin = primary in {"zh", "cmn"}
+    for part in parts[1:]:
+        # Extlangs precede script/region/extension/private-use subtags.
+        if len(part) != 3 or not part.isalpha():
+            break
+        if part != "cmn":
+            mandarin = False
+            break
     route = "Han-Latin" if mandarin else _TRANSFORMS.get(primary)
     return f"{route}; Latin-ASCII" if route else "Latin-ASCII"
 

@@ -27,6 +27,8 @@ from wordlift_sdk.kg_build.postprocessors.processors.slug import (
         ("مرحبا", "ar", "mrhba"),
         ("שלום", "he", "slwm"),
         ("東京", "zh-Hant-TW", "dong-jing"),
+        ("東京", "zh-Hant-x-foo", "dong-jing"),
+        ("東京", "zh-u-co-pinyin", "dong-jing"),
         ("東京", "cmn-Hans-CN", "dong-jing"),
         ("東京", "ja", "thing"),
         ("東京", "yue", "thing"),
