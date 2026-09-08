@@ -354,3 +354,38 @@ def test_keeps_listitem_shape_without_itemlist(tmp_path: Path) -> None:
     content = _read_output(tmp_path, feature)
 
     assert "sh:targetClass schema:ListItem" in content
+
+
+def test_breadcrumb_listitem_item_is_exempted_for_one_entry(tmp_path: Path) -> None:
+    feature = FeatureData(
+        url="https://example.com",
+        types={
+            "BreadcrumbList": {"required": {"itemListElement"}, "recommended": set()},
+            "ListItem": {
+                "required": {"position", "name", "item"},
+                "recommended": set(),
+            },
+        },
+    )
+
+    content = _read_output(tmp_path, feature)
+
+    assert "sh:qualifiedMaxCount 1 ;" in content
+    assert "sh:not [" in content
+    node_shape = content.split("sh:qualifiedValueShape")[0]
+    assert "sh:path schema:item ;\n        sh:minCount 1 ;" not in node_shape
+
+
+def test_itemlist_listitem_item_stays_unconditional(tmp_path: Path) -> None:
+    feature = FeatureData(
+        url="https://example.com",
+        types={
+            "ItemList": {"required": {"itemListElement"}, "recommended": set()},
+            "ListItem": {"required": {"position", "item"}, "recommended": set()},
+        },
+    )
+
+    content = _read_output(tmp_path, feature)
+
+    assert "sh:qualifiedMaxCount" not in content
+    assert "sh:path schema:item ;\n        sh:minCount 1 ;" in content

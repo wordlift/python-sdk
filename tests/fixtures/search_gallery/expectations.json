@@ -8,12 +8,6 @@
       "017-library-system-feed-01"
     ]
   },
-  "breadcrumb": {
-    "known_nonconforming_sample_ids": [
-      "001-json-ld-bredacrumb-01",
-      "005-json-ld-multiple-breadcrumbs-01"
-    ]
-  },
   "carousel": {
     "known_nonconforming_sample_ids": [
       "001-summary-page-01",
