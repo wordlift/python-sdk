@@ -13,17 +13,24 @@ Renders a URL using `Browser` and converts HTML to XHTML with `HtmlConverter`.
 Thin wrapper around Playwright that opens a page and returns the page, response, elapsed time, and resource list.
 
 Each browser context blocks service workers and installs a mandatory context-wide
-route that aborts traffic to Google Analytics measurement endpoints: any path on
-`*.google-analytics.com` and `*.analytics.google.com`, plus the measurement paths
-`/g/collect`, `/j/collect`, `/mp/collect`, `/r/collect` and
-`/batch/collect` on any host. The path rule is needed
-because the Google tag sends the same GA4 payload (same `tid=G-...`) to other
-hosts, notably `www.google.com/g/collect`, when the measurement hosts are
-unreachable. Google Tag Manager and advertising conversion endpoints
-(`/ccm/collect`) remain available. Blocked URLs and payloads are not
-logged or added to the response-resource list. Customer-specific first-party or
-server-side tagging gateways that route measurement through their own path are
-outside this policy.
+route that aborts Google Analytics measurement traffic. Two host groups are
+treated differently:
+
+- `*.google-analytics.com` and `*.analytics.google.com` exist only to collect,
+  so every path on them is blocked.
+- `*.google.com` and `*.stats.g.doubleclick.net` also serve traffic that must
+  stay reachable, so only the measurement paths are blocked there:
+  `/g/collect`, `/j/collect`, `/mp/collect`, `/r/collect` and `/batch/collect`.
+  The path rule is needed because the Google tag sends the same GA4 payload to
+  `www.google.com/g/collect` when the measurement hosts are unreachable.
+
+Hosts are enumerated deliberately. A path rule applied to any host cannot be
+bounded, because third-party endpoint names are unpredictable, so third-party
+hosts are out of scope whatever they call their paths. Google Tag Manager and
+advertising conversion endpoints (`/ccm/collect`, `/rmkt/collect/<id>/`) remain
+available. Blocked URLs and payloads are not logged or added to the
+response-resource list. Customer-specific first-party or server-side tagging
+gateways that route measurement through their own path are outside this policy.
 Disabling service workers intentionally trades PWA offline caching and
 background-sync fidelity for complete context-route coverage.
 
