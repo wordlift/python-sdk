@@ -1,5 +1,13 @@
 # Changelog
 
+## 8.4.4 - 2026-09-08
+
+### Fixed
+
+- Broadened the GA4 block policy in render.py. Beyond the known analytics
+  hosts, we now also block observed alternate hosts with known collection 
+  paths `/{g,j,r,mp,batch}/collect`.
+
 ## 8.4.3 - 2026-08-19
 
 ### Fixed
