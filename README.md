@@ -31,6 +31,12 @@ pip install "wordlift-sdk[all]"
 
 Requires Python 3.10–3.14.
 
+The `kg-build` and `all` extras also require native ICU 74.2 development
+libraries and a C++ compiler to build PyICU. See the
+[installation instructions](docs/packaging_slices_v7.md#native-icu-for-kg-build).
+Canonical IDs use account-language-aware ASCII transliteration; see the
+[ID policy and migration notes](docs/canonical_id_policy.md#language-aware-ascii-identifiers).
+
 `wordlift-sdk` v7 uses a lean base package plus optional extras. The import
 namespace remains `wordlift_sdk.*`; feature packages load lazily and raise an
 install hint if you access an export without the matching extra installed.

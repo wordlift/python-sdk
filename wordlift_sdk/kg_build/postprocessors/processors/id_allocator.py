@@ -1,30 +1,29 @@
 from __future__ import annotations
 
 import hashlib
-import re
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from rdflib import Graph, Literal, RDF, URIRef
 
 from ...id_policy import DEFAULT_ID_POLICY, IdPolicy
+from .slug import identity_slug, normalize_slug as normalize_slug, source_digest
 
 SCHEMA = "http://schema.org/"
-
-
-def normalize_slug(value: str) -> str:
-    lowered = value.strip().lower()
-    lowered = re.sub(r"[^\w\s-]", " ", lowered)
-    lowered = re.sub(r"[_\s]+", "-", lowered)
-    lowered = re.sub(r"-{2,}", "-", lowered).strip("-")
-    return lowered or "thing"
 
 
 class IdAllocator:
     """Allocate canonical IRIs for postprocessors using shared ID policy."""
 
-    def __init__(self, dataset_uri: str, policy: IdPolicy | None = None) -> None:
+    def __init__(
+        self,
+        dataset_uri: str,
+        policy: IdPolicy | None = None,
+        *,
+        language: str | None = None,
+    ) -> None:
         self.dataset_uri = dataset_uri.rstrip("/")
         self.policy = policy or DEFAULT_ID_POLICY
+        self._language = language
 
     def assign(
         self,
@@ -54,7 +53,9 @@ class IdAllocator:
 
         gtin = self._first_value(graph, subject, "gtin")
         if gtin:
-            new_iri = URIRef(f"{self.dataset_uri}/01/{normalize_slug(gtin)}")
+            new_iri = URIRef(
+                f"{self.dataset_uri}/01/{identity_slug(gtin, self._language)}"
+            )
             if rewrite:
                 self._swap_iri(graph, subject, new_iri)
             return new_iri
@@ -242,11 +243,11 @@ class IdAllocator:
             or self.policy.normalize_type_name(type_name)
             or "Thing"
         )
-        base_slug = normalize_slug(raw_base)
         resolved_url = url_value or self._first_value(graph, subject, "url")
+        base_slug = identity_slug(raw_base, self._language, has_url=bool(resolved_url))
         if resolved_url:
             return f"{base_slug}-{self._url_hash(resolved_url)}"
-        if force_index and index is not None:
+        if force_index and index is not None and source_digest(raw_base) is None:
             return f"{base_slug}-{index}"
 
         candidate = base_slug
