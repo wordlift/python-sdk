@@ -133,6 +133,70 @@ def test_build_context_accepts_missing_account_key() -> None:
     assert context.profile["settings"]["api_url"] == "https://profile.example.com"
 
 
+@pytest.mark.parametrize("runtime", ["oneshot", "persistent"])
+def test_account_language_reaches_allocator_and_generator_per_job(
+    tmp_path: Path, runtime: str
+) -> None:
+    _write(
+        tmp_path / "language_pp.py",
+        """
+        from rdflib import URIRef
+        from wordlift_sdk.kg_build.postprocessors.processors.id_postprocessor import (
+            CanonicalIdsPostprocessor,
+        )
+
+        class LanguagePostprocessor:
+            def __init__(self):
+                self.canonical = CanonicalIdsPostprocessor()
+
+            def process_graph(self, graph, context):
+                expected = context.ids.new_independent(
+                    graph, type_name="Thing", base_value="Müller"
+                )
+                result = self.canonical.process_graph(graph, context)
+                assert expected in set(result.subjects())
+                return result
+        """,
+    )
+    spec = PostprocessorSpec(
+        class_path="language_pp:LanguagePostprocessor",
+        python=sys.executable,
+        timeout_seconds=30,
+        enabled=True,
+        keep_temp_on_error=False,
+    )
+    cls = (
+        PersistentSubprocessPostprocessor
+        if runtime == "persistent"
+        else OneshotSubprocessPostprocessor
+    )
+    processor = cls(spec=spec, root_dir=tmp_path)
+    try:
+        for language, prefix in [
+            ("de-DE", "mueller-"),
+            ("tr", "muller-"),
+            (None, "muller-"),
+        ]:
+            context = _sample_context()
+            context.account.language = language
+            graph = Graph()
+            graph.add(
+                (
+                    URIRef("https://example.com/person"),
+                    URIRef("http://schema.org/name"),
+                    Literal("Müller"),
+                )
+            )
+            output = processor.process_graph(graph, context)
+            assert output is not None
+            assert len(set(output.subjects())) == 1
+            assert str(next(output.subjects())).startswith(
+                f"https://data.example.com/things/{prefix}"
+            )
+    finally:
+        processor.close()
+
+
 def test_manifest_precedence_prefers_selected_profile_file(tmp_path: Path) -> None:
     root = tmp_path
     _write(

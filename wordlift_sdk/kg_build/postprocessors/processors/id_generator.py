@@ -9,16 +9,9 @@ from rdflib import Graph, Literal, RDF, URIRef
 
 from ...id_policy import DEFAULT_ID_POLICY, IdPolicy
 from ...iri_lookup import IriLookup
+from .slug import identity_slug, normalize_slug as normalize_slug, source_digest
 
 SCHEMA = "http://schema.org/"
-
-
-def normalize_slug(value: str) -> str:
-    lowered = value.strip().lower()
-    lowered = re.sub(r"[^\w\s-]", " ", lowered)
-    lowered = re.sub(r"[_\s]+", "-", lowered)
-    lowered = re.sub(r"-{2,}", "-", lowered).strip("-")
-    return lowered or "thing"
 
 
 class CanonicalIdGenerator:
@@ -37,13 +30,17 @@ class CanonicalIdGenerator:
         graph: Graph,
         dataset_uri: str,
         iri_lookup: IriLookup | None = None,
+        *,
+        language: str | None = None,
     ) -> Graph:
         dataset_uri = dataset_uri.rstrip("/")
         if not dataset_uri:
             return graph
 
         if self._strategy == "dependency_graph":
-            return self._apply_dependency_graph_strategy(graph, dataset_uri, iri_lookup)
+            return self._apply_dependency_graph_strategy(
+                graph, dataset_uri, iri_lookup, language=language
+            )
 
         root_subjects = self._root_subjects(graph)
         # Lookup-mapped IRIs are treated as authoritative and must not be
@@ -57,6 +54,7 @@ class CanonicalIdGenerator:
             root_subjects,
             locked_subjects,
             rewritten_subjects,
+            language=language,
         )
         self._rewrite_entity_roots(
             graph,
@@ -65,6 +63,7 @@ class CanonicalIdGenerator:
             root_subjects,
             locked_subjects,
             rewritten_subjects,
+            language=language,
         )
         self._rewrite_remaining_subjects(
             graph,
@@ -73,8 +72,9 @@ class CanonicalIdGenerator:
             root_subjects,
             locked_subjects,
             rewritten_subjects,
+            language=language,
         )
-        self._rewrite_actions_as_dependents(graph)
+        self._rewrite_actions_as_dependents(graph, language=language)
         return graph
 
     # ------------------------------------------------------------------
@@ -86,6 +86,8 @@ class CanonicalIdGenerator:
         graph: Graph,
         dataset_uri: str,
         iri_lookup: IriLookup | None,
+        *,
+        language: str | None = None,
     ) -> Graph:
         """Rewrite root IRIs first, then reparent dependents generically via
         IdPolicy.dependent_rules — no hard-coded root-type branches."""
@@ -110,6 +112,7 @@ class CanonicalIdGenerator:
                     old_page,
                     default_base="web-page",
                     url_value=str(url) if isinstance(url, (Literal, URIRef)) else None,
+                    language=language,
                 )
                 new_page = URIRef(
                     f"{dataset_uri}"
@@ -133,7 +136,9 @@ class CanonicalIdGenerator:
             else:
                 gtin = self._first_value(graph, entity, "gtin")
                 if gtin:
-                    entity_iri = URIRef(f"{dataset_uri}/01/{normalize_slug(gtin)}")
+                    entity_iri = URIRef(
+                        f"{dataset_uri}/01/{identity_slug(gtin, language)}"
+                    )
                 else:
                     entity_url = self._first_value(graph, entity, "url")
                     subject_type = self._preferred_type_name(graph, entity)
@@ -142,6 +147,7 @@ class CanonicalIdGenerator:
                         entity,
                         default_base=subject_type,
                         url_value=entity_url,
+                        language=language,
                     )
                     seen[entity_slug] += 1
                     if not entity_url and seen[entity_slug] > 1:
@@ -174,7 +180,9 @@ class CanonicalIdGenerator:
                 else:
                     gtin = self._first_value(graph, subject, "gtin")
                     if gtin:
-                        candidate = URIRef(f"{dataset_uri}/01/{normalize_slug(gtin)}")
+                        candidate = URIRef(
+                            f"{dataset_uri}/01/{identity_slug(gtin, language)}"
+                        )
                     else:
                         preferred_type = self._preferred_type_name(graph, subject)
                         normalized_type = self._policy.normalize_type_name(
@@ -186,6 +194,7 @@ class CanonicalIdGenerator:
                             subject,
                             default_base=normalized_type,
                             url_value=self._first_value(graph, subject, "url"),
+                            language=language,
                         )
                         candidate = URIRef(f"{dataset_uri}/{container}/{slug}")
 
@@ -197,7 +206,7 @@ class CanonicalIdGenerator:
             self._record_rewrite(rewritten_subjects, subject, new_iri)
 
         # Actions are still reparented as in legacy mode
-        self._rewrite_actions_as_dependents(graph)
+        self._rewrite_actions_as_dependents(graph, language=language)
 
         # Phase 4: generic dependent reparenting driven entirely by IdPolicy rules
         visited: set[URIRef] = set()
@@ -209,7 +218,7 @@ class CanonicalIdGenerator:
             },
             key=str,
         ):
-            self._rewrite_dependents_by_policy(graph, iri, visited)
+            self._rewrite_dependents_by_policy(graph, iri, visited, language=language)
 
         return graph
 
@@ -218,6 +227,8 @@ class CanonicalIdGenerator:
         graph: Graph,
         parent_iri: URIRef,
         visited: set[URIRef],
+        *,
+        language: str | None = None,
     ) -> None:
         """Recursively reparent dependent nodes under *parent_iri* by walking
         every rule in IdPolicy.dependent_rules whose parent_predicates lead to
@@ -246,12 +257,14 @@ class CanonicalIdGenerator:
                 count = len(children)
                 for idx, child in enumerate(children, start=1):
                     slug = self._dependent_slug(
-                        graph, child, rule.child_type, idx, count
+                        graph, child, rule.child_type, idx, count, language=language
                     )
                     new_child = URIRef(f"{parent_iri}/{container}/{slug}")
                     new_child = self._ensure_unique_subject_iri(graph, child, new_child)
                     self._swap_iri(graph, child, new_child)
-                    self._rewrite_dependents_by_policy(graph, new_child, visited)
+                    self._rewrite_dependents_by_policy(
+                        graph, new_child, visited, language=language
+                    )
 
     def _dependent_slug(
         self,
@@ -260,6 +273,8 @@ class CanonicalIdGenerator:
         child_type: str,
         index: int,
         count: int,
+        *,
+        language: str | None = None,
     ) -> str:
         """Slug for a policy-dependent child node.
 
@@ -273,10 +288,10 @@ class CanonicalIdGenerator:
             if isinstance(value, (Literal, URIRef)):
                 text = str(value).strip()
                 if text:
-                    base = normalize_slug(text) or "thing"
+                    base = identity_slug(text, language, has_url=bool(url_value))
                     if url_value:
                         return f"{base}-{self._url_hash(url_value)}"
-                    if count > 1:
+                    if count > 1 and source_digest(text) is None:
                         return f"{base}-{index}"
                     return base
 
@@ -301,6 +316,8 @@ class CanonicalIdGenerator:
         root_subjects: set[URIRef],
         locked_subjects: set[URIRef],
         rewritten_subjects: dict[URIRef, URIRef],
+        *,
+        language: str | None = None,
     ) -> None:
         subjects = sorted(
             {s for s in graph.subjects() if isinstance(s, URIRef)}, key=str
@@ -328,7 +345,9 @@ class CanonicalIdGenerator:
                 else:
                     gtin = self._first_value(graph, subject, "gtin")
                     if gtin:
-                        candidate = URIRef(f"{dataset_uri}/01/{normalize_slug(gtin)}")
+                        candidate = URIRef(
+                            f"{dataset_uri}/01/{identity_slug(gtin, language)}"
+                        )
                     else:
                         preferred_type = self._preferred_type_name(graph, subject)
                         normalized_type = self._policy.normalize_type_name(
@@ -340,6 +359,7 @@ class CanonicalIdGenerator:
                             subject,
                             default_base=normalized_type,
                             url_value=self._first_value(graph, subject, "url"),
+                            language=language,
                         )
                         candidate = URIRef(f"{dataset_uri}/{container}/{slug}")
 
@@ -352,10 +372,12 @@ class CanonicalIdGenerator:
             # Rewrite FAQPage/Question/Answer nodes linked via subjectOf and
             # Rating nodes linked via reviewRating as nested dependents.
             self._rewrite_entity_linked_faq_and_rating(
-                graph, new_iri, already_processed
+                graph, new_iri, already_processed, language=language
             )
 
-    def _rewrite_actions_as_dependents(self, graph: Graph) -> None:
+    def _rewrite_actions_as_dependents(
+        self, graph: Graph, *, language: str | None = None
+    ) -> None:
         action_type = URIRef(f"{SCHEMA}Action")
         actions = sorted(
             {
@@ -380,6 +402,7 @@ class CanonicalIdGenerator:
                 action,
                 default_base="action",
                 url_value=self._first_value(graph, action, "url"),
+                language=language,
             )
             candidate = URIRef(f"{prefix}{slug}")
             new_iri = self._ensure_unique_subject_iri(graph, action, candidate)
@@ -457,6 +480,8 @@ class CanonicalIdGenerator:
         root_subjects: set[URIRef],
         locked_subjects: set[URIRef],
         rewritten_subjects: dict[URIRef, URIRef],
+        *,
+        language: str | None = None,
     ) -> None:
         page_nodes = {
             subject
@@ -477,18 +502,21 @@ class CanonicalIdGenerator:
                     old_page,
                     default_base="web-page",
                     url_value=str(url) if isinstance(url, (Literal, URIRef)) else None,
+                    language=language,
                 )
                 new_page = URIRef(
                     f"{dataset_uri}/{self._policy.container_for_type('WebPage')}/{page_slug}"
                 )
             self._swap_iri(graph, old_page, new_page)
             self._record_rewrite(rewritten_subjects, old_page, new_page)
-            self._rewrite_faq(graph, new_page)
-            self._rewrite_videos(graph, new_page)
-            self._rewrite_images(graph, new_page)
+            self._rewrite_faq(graph, new_page, language=language)
+            self._rewrite_videos(graph, new_page, language=language)
+            self._rewrite_images(graph, new_page, language=language)
             self._rewrite_howto(graph, new_page)
 
-    def _rewrite_faq(self, graph: Graph, page_iri: URIRef) -> None:
+    def _rewrite_faq(
+        self, graph: Graph, page_iri: URIRef, *, language: str | None = None
+    ) -> None:
         faq_nodes: set[URIRef] = set()
         for obj in graph.objects(page_iri, URIRef(f"{SCHEMA}hasPart")):
             if isinstance(obj, URIRef) and self._is_typed_as(graph, obj, "FAQPage"):
@@ -515,9 +543,13 @@ class CanonicalIdGenerator:
                     url_value=None,
                     index=q_idx,
                     force_index=len(questions) > 1,
+                    language=language,
                 )
                 q_container = self._policy.container_for_type("Question")
                 new_question = URIRef(f"{new_faq}/{q_container}/{question_slug}")
+                new_question = self._ensure_unique_subject_iri(
+                    graph, question, new_question
+                )
                 self._swap_iri(graph, question, new_question)
 
                 answer = graph.value(new_question, URIRef(f"{SCHEMA}acceptedAnswer"))
@@ -531,6 +563,8 @@ class CanonicalIdGenerator:
         graph: Graph,
         entity_iri: URIRef,
         already_processed: set[URIRef],
+        *,
+        language: str | None = None,
     ) -> None:
         """Rewrite FAQPage/Question/Answer and Rating nodes that are dependents
         of a non-page entity (e.g. Review, Article) via:
@@ -572,9 +606,13 @@ class CanonicalIdGenerator:
                     url_value=None,
                     index=q_idx,
                     force_index=len(questions) > 1,
+                    language=language,
                 )
                 q_container = self._policy.container_for_type("Question")
                 new_question = URIRef(f"{new_faq}/{q_container}/{question_slug}")
+                new_question = self._ensure_unique_subject_iri(
+                    graph, question, new_question
+                )
                 self._swap_iri(graph, question, new_question)
                 already_processed.add(original_q)
 
@@ -602,7 +640,9 @@ class CanonicalIdGenerator:
             self._swap_iri(graph, rating, new_rating)
             already_processed.add(original_r)
 
-    def _rewrite_videos(self, graph: Graph, page_iri: URIRef) -> None:
+    def _rewrite_videos(
+        self, graph: Graph, page_iri: URIRef, *, language: str | None = None
+    ) -> None:
         videos: set[URIRef] = set()
         for obj in graph.objects(page_iri, URIRef(f"{SCHEMA}video")):
             if isinstance(obj, URIRef) and (
@@ -622,12 +662,16 @@ class CanonicalIdGenerator:
                 url_value=self._first_value(graph, video, "embedUrl", "contentUrl"),
                 index=idx,
                 force_index=len(videos) > 1,
+                language=language,
             )
             video_container = self._policy.container_for_type("VideoObject")
             new_video = URIRef(f"{page_iri}/{video_container}/{video_slug}")
+            new_video = self._ensure_unique_subject_iri(graph, video, new_video)
             self._swap_iri(graph, video, new_video)
 
-    def _rewrite_images(self, graph: Graph, page_iri: URIRef) -> None:
+    def _rewrite_images(
+        self, graph: Graph, page_iri: URIRef, *, language: str | None = None
+    ) -> None:
         images: set[URIRef] = set()
         for obj in graph.objects(page_iri, URIRef(f"{SCHEMA}image")):
             if isinstance(obj, URIRef) and (
@@ -647,9 +691,11 @@ class CanonicalIdGenerator:
                 url_value=self._first_value(graph, image, "contentUrl"),
                 index=idx,
                 force_index=len(images) > 1,
+                language=language,
             )
             image_container = self._policy.container_for_type("ImageObject")
             new_image = URIRef(f"{page_iri}/{image_container}/{image_slug}")
+            new_image = self._ensure_unique_subject_iri(graph, image, new_image)
             self._swap_iri(graph, image, new_image)
 
     def _rewrite_howto(self, graph: Graph, page_iri: URIRef) -> None:
@@ -687,6 +733,8 @@ class CanonicalIdGenerator:
         root_subjects: set[URIRef],
         locked_subjects: set[URIRef],
         rewritten_subjects: dict[URIRef, URIRef],
+        *,
+        language: str | None = None,
     ) -> None:
         products = {
             subject
@@ -703,7 +751,9 @@ class CanonicalIdGenerator:
             else:
                 gtin = self._first_value(graph, product, "gtin")
                 if gtin:
-                    product_iri = URIRef(f"{dataset_uri}/01/{normalize_slug(gtin)}")
+                    product_iri = URIRef(
+                        f"{dataset_uri}/01/{identity_slug(gtin, language)}"
+                    )
                 else:
                     product_url = self._first_value(graph, product, "url")
                     subject_type = self._preferred_type_name(graph, product)
@@ -712,6 +762,7 @@ class CanonicalIdGenerator:
                         product,
                         default_base=subject_type,
                         url_value=product_url,
+                        language=language,
                     )
                     seen[product_slug] += 1
                     if not product_url and seen[product_slug] > 1:
@@ -781,12 +832,13 @@ class CanonicalIdGenerator:
         url_value: str | None,
         index: int | None = None,
         force_index: bool = False,
+        language: str | None = None,
     ) -> str:
         base = self._base_from_priority(graph, subject) or default_base
-        slug = normalize_slug(base) or "thing"
+        slug = identity_slug(base, language, has_url=bool(url_value))
         if url_value:
             return f"{slug}-{self._url_hash(url_value)}"
-        if force_index and index is not None:
+        if force_index and index is not None and source_digest(base) is None:
             return f"{slug}-{index}"
         return slug
 
