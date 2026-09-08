@@ -87,3 +87,45 @@ Behavior:
 - duplicate URL rows in dataframe lookup resolve to the shortest IRI path depth
   (tie-break: shorter full IRI, then first row order)
 - lookup misses fall back to normal canonical ID generation
+
+## Language-aware ASCII Identifiers
+
+The canonical generator and `IdAllocator` share ASCII slug normalization.
+Cloud callbacks and both postprocessor worker modes derive language from
+`context.account.language`; direct callers can pass the optional `language`
+argument. Language tags are case-insensitive and accept regional forms such
+as `de-DE` or `de_DE`. Missing language uses Latin accent transliteration only.
+
+- German applies `ä → ae`, `ö → oe`, `ü → ue`, `ß → ss` (including capitals).
+  Other languages retain the generic Latin behavior, such as `ü → u`.
+- Russian, Ukrainian, Greek, Arabic, Hebrew, Korean Hangul, and Hindi use
+  explicit ICU romanization routes. Mandarin Chinese uses `Han-Latin`.
+- Japanese transliterates hiragana and katakana. Kanji, Cantonese, unknown
+  scripts, and scripts outside the selected language route do not receive a
+  guessed pronunciation. Unsupported characters are omitted from the readable
+  slug; an empty result uses `thing`.
+- Inputs are normalized to NFC, so canonically equivalent composed and
+  decomposed text generates the same identifier. Existing punctuation,
+  separators, ASCII-only behavior, and parent nesting conventions remain.
+
+For non-ASCII names without a URL, the readable slug is suffixed with the full
+SHA-256 digest of the NFC-normalized, stripped, lowercase original name
+(before transliteration), even when romanization succeeds. This prevents distinct
+names with the same romanization from merging
+across separate callback graphs. Unsupported names use `thing-<digest>`.
+Names with a URL keep the existing URL-hash suffix. Identical names without
+another identity signal retain their existing ambiguity.
+Source-hash identities do not acquire positional sibling suffixes; graph-local
+collision suffixes still keep repeated identical names separate. This prevents
+sorting newly generated IRIs from changing distinct sibling IDs on a later pass.
+
+Existing authoritative root IRI lookups take precedence over generation.
+The fallback pass preserves already canonical dataset IRIs, but explicitly
+handled roots and dependents can be regenerated. Changing account language or
+regenerating an older non-ASCII identifier can create a new entity, including
+when the URL hash is unchanged. This change does not migrate or delete existing
+entities automatically: retain lookup mappings when existing root identity
+must be preserved.
+
+Transliteration uses PyICU 2.16.2 and native ICU 74.2; installation details are
+in [Packaging Slices](packaging_slices_v7.md#native-icu-for-kg-build).

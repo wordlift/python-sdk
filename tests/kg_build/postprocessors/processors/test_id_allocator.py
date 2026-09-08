@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import hashlib
+import pytest
+
 from rdflib import Graph, Literal, RDF, URIRef
 
 import wordlift_sdk.kg_build.postprocessors.processors.id_allocator as id_allocator_module
@@ -107,3 +110,55 @@ def test_swap_iri_and_helpers() -> None:
 
     assert IdAllocator._first_value(g, new, "name") == "A"
     assert IdAllocator._base_from_priority(g, new) == "A"
+
+
+@pytest.mark.parametrize(
+    "name,language,slug",
+    [("Müller", "de", "mueller"), ("Müller", "tr", "muller"), ("東京", "ja", "thing")],
+)
+def test_multilingual_allocator_identity_and_url_hash(name, language, slug) -> None:
+    allocator = IdAllocator("https://data.example.com/dataset", language=language)
+    graph = Graph()
+    digest = hashlib.sha256(name.lower().encode("utf-8")).hexdigest()
+    expected = URIRef(f"https://data.example.com/dataset/things/{slug}-{digest}")
+    assert allocator.new_independent(graph, base_value=name) == expected
+    subject = URIRef("https://example.com/source")
+    graph.add((subject, URIRef("http://schema.org/name"), Literal(name)))
+    assert allocator.assign(graph, subject) == expected
+    assert allocator.assign(graph, expected) == expected
+    url = "https://example.com/page?b=2&a=1#fragment"
+    result = allocator.new_independent(Graph(), base_value=name, url_value=url)
+    assert str(result).endswith(f"/{slug}-{allocator._url_hash(url)}")
+    child = allocator.new_child(Graph(), parent=expected, base_value=name)
+    assert str(child) == f"{expected}/things/{slug}-{digest}"
+    assert (
+        allocator.new_child(
+            Graph(), parent=expected, base_value=name, force_index=True, index=7
+        )
+        == child
+    )
+
+
+@pytest.mark.parametrize("force_index", [False, True])
+def test_duplicate_unicode_assignments_reuse_their_existing_suffix(force_index):
+    allocator = IdAllocator("https://data.example.com/dataset", language="ja")
+    graph = Graph()
+    originals = [URIRef(f"https://example.com/{index}") for index in range(3)]
+    for index, subject in enumerate(originals):
+        graph.add((subject, URIRef("http://schema.org/name"), Literal("東京")))
+        graph.add(
+            (subject, URIRef("http://schema.org/description"), Literal(str(index)))
+        )
+    allocated = [
+        allocator.assign(graph, subject, force_index=force_index, index=index)
+        for index, subject in enumerate(originals, start=1)
+    ]
+    assert len(set(allocated)) == 3
+    before = set(graph)
+    for _ in range(2):
+        for index, subject in reversed(list(enumerate(allocated, start=1))):
+            assert (
+                allocator.assign(graph, subject, force_index=force_index, index=index)
+                == subject
+            )
+        assert set(graph) == before

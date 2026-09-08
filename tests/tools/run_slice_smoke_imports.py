@@ -172,6 +172,13 @@ def _smoke_ingestion() -> None:
 
 def _smoke_kg_build() -> None:
     kg_build = importlib.import_module("wordlift_sdk.kg_build")
+    icu = importlib.import_module("icu")
+    assert icu.ICU_VERSION == "74.2"
+    slug = importlib.import_module(
+        "wordlift_sdk.kg_build.postprocessors.processors.slug"
+    )
+    assert slug.normalize_slug("Müller", "de") == "mueller"
+    assert slug.normalize_slug("Москва", "ru") == "moskva"
     with tempfile.TemporaryDirectory() as tmpdir:
         config_path = Path(tmpdir) / "worai.toml"
         config_path.write_text(
@@ -188,7 +195,7 @@ api_url = "https://api.wordlift.io"
         assert (
             profile.resolve_mapping("https://example.com/article") == "default.yarrrml"
         )
-    print("call ok: kg_build.load_profile_config")
+    print("call ok: kg_build.load_profile_config/language-aware slugs")
 
 
 SLICE_CALLS = {
