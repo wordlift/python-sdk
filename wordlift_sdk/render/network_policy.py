@@ -5,23 +5,42 @@ from __future__ import annotations
 import re
 
 
-_BLOCKED_GOOGLE_ANALYTICS_HOST_SUFFIXES = (
+# Hosts that exist only to collect Analytics measurement: block every path.
+_MEASUREMENT_ONLY_HOST_SUFFIXES = (
     "google-analytics.com",
     "analytics.google.com",
 )
-_BLOCKED_MEASUREMENT_PATHS = (r"/(?:g|j|mp|r|batch)/collect",)
 
-_HOST_ALTERNATION = "|".join(
-    re.escape(host) for host in _BLOCKED_GOOGLE_ANALYTICS_HOST_SUFFIXES
+# Google hosts that also serve traffic which must stay reachable (advertising
+# conversions, remarketing, search). Only the measurement paths below are
+# blocked on these:
+#   google.com               observed sending GA4 page_view to /g/collect
+#   stats.g.doubleclick.net  documented GA4/Signals endpoint, not observed here
+_MIXED_GOOGLE_HOST_SUFFIXES = (
+    "google.com",
+    "stats.g.doubleclick.net",
 )
-_PATH_ALTERNATION = "|".join(_BLOCKED_MEASUREMENT_PATHS)
+
+# The prefix before `collect` denotes the request type: `g` (GA4 browser),
+# `j` (Universal Analytics JS), `mp` (Measurement Protocol), `r` (raw) and
+# `batch` (batched). Advertising paths on the mixed hosts -- `/ccm/collect`,
+# `/rmkt/collect/<id>/` -- are deliberately absent so they stay reachable.
+#
+# Hosts are enumerated rather than matched openly: a path rule applied to any
+# host cannot be bounded, since third-party endpoint names are unpredictable.
+_MEASUREMENT_PATHS = r"/(?:g|j|mp|r|batch)/collect"
+
+_SUBDOMAINS = r"(?:[^./?#:@]+\.)*"
+_HOST_TAIL = r"\.?(?::\d+)?"
+_TERMINATOR = r"(?:[/?#]|$)"
+
+_ONLY = "|".join(re.escape(host) for host in _MEASUREMENT_ONLY_HOST_SUFFIXES)
+_MIXED = "|".join(re.escape(host) for host in _MIXED_GOOGLE_HOST_SUFFIXES)
 
 GOOGLE_ANALYTICS_URL_PATTERN = re.compile(
     r"^https?://(?:[^/?#@]*@)?(?:"
-    # the Analytics measurement hosts themselves, whatever the path
-    rf"(?:[^./?#:@]+\.)*(?:{_HOST_ALTERNATION})\.?(?::\d+)?(?:[/?#]|$)"
-    # or any host, when the path is a GA measurement endpoint
-    rf"|[^/?#]+(?:{_PATH_ALTERNATION})(?:[/?#]|$)"
+    rf"{_SUBDOMAINS}(?:{_ONLY}){_HOST_TAIL}{_TERMINATOR}"
+    rf"|{_SUBDOMAINS}(?:{_MIXED}){_HOST_TAIL}{_MEASUREMENT_PATHS}{_TERMINATOR}"
     r")",
     re.IGNORECASE,
 )

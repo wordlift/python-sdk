@@ -243,9 +243,10 @@
   already runs an asyncio event loop, rendering is offloaded away from that thread
   before Sync Playwright APIs are invoked.
 - All Playwright rendering contexts disable service workers and apply the mandatory
-  context-wide Google Analytics measurement policy before creating pages: the
-  Analytics measurement hosts, plus `/{g,j,mp,r,batch}/collect` on any host; Google Tag Manager and advertising conversion endpoints remain
-  available.
+  context-wide Google Analytics measurement policy before creating pages: every
+  path on the Analytics measurement hosts, plus `/{g,j,mp,r,batch}/collect` on
+  enumerated mixed-purpose Google hosts; Google Tag Manager, advertising and
+  third-party hosts remain available.
 - Playwright ingestion default `wait_until` is `domcontentloaded` (override with
   `PLAYWRIGHT_WAIT_UNTIL`), and navigation timeout now falls back to partial DOM
   extraction instead of immediate loader failure.
