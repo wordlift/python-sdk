@@ -255,7 +255,7 @@ class IdAllocator:
             return candidate
         if any(str(s) == f"{path_prefix}{candidate}" for s in graph.subjects()):
             next_index = 2
-            while any(
+            while URIRef(f"{path_prefix}{base_slug}-{next_index}") != subject and any(
                 str(s) == f"{path_prefix}{base_slug}-{next_index}"
                 for s in graph.subjects()
             ):

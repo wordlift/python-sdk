@@ -137,3 +137,28 @@ def test_multilingual_allocator_identity_and_url_hash(name, language, slug) -> N
         )
         == child
     )
+
+
+@pytest.mark.parametrize("force_index", [False, True])
+def test_duplicate_unicode_assignments_reuse_their_existing_suffix(force_index):
+    allocator = IdAllocator("https://data.example.com/dataset", language="ja")
+    graph = Graph()
+    originals = [URIRef(f"https://example.com/{index}") for index in range(3)]
+    for index, subject in enumerate(originals):
+        graph.add((subject, URIRef("http://schema.org/name"), Literal("東京")))
+        graph.add(
+            (subject, URIRef("http://schema.org/description"), Literal(str(index)))
+        )
+    allocated = [
+        allocator.assign(graph, subject, force_index=force_index, index=index)
+        for index, subject in enumerate(originals, start=1)
+    ]
+    assert len(set(allocated)) == 3
+    before = set(graph)
+    for _ in range(2):
+        for index, subject in reversed(list(enumerate(allocated, start=1))):
+            assert (
+                allocator.assign(graph, subject, force_index=force_index, index=index)
+                == subject
+            )
+        assert set(graph) == before
