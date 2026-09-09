@@ -1,5 +1,14 @@
 # Changelog
 
+## 8.4.5 - 2026-09-09
+
+### Fixed
+
+- Breadcrumb SHACL validation no longer requires `item` on every `ListItem`,
+  matching Google's documented rule that the final entry in a
+  `BreadcrumbList` may omit it. The shape now permits at most one entry
+  without `item` and still reports a violation when two or more are missing.
+
 ## 8.4.4 - 2026-09-08
 
 ### Fixed
