@@ -4,64 +4,106 @@ import pytest
 
 from wordlift_sdk.render.network_policy import (
     GOOGLE_ANALYTICS_URL_PATTERN,
+    build_blocked_url_patterns,
 )
 
+# Blocked by both strategies.
+MEASUREMENT_URLS = [
+    "https://www.google-analytics.com/collect?v=1&tid=UA-1",
+    "https://www.google-analytics.com/batch",
+    "https://www.google-analytics.com/analytics.js",
+    "https://www.google-analytics.com/__utm.gif?utmac=UA-1",
+    "https://google-analytics.com/g/collect?v=2",
+    "https://region1.google-analytics.com/g/collect?v=2&tid=G-XYZ",
+    "https://analytics.google.com/mp/collect?api_secret=secret",
+    "https://www.google.com/g/collect?v=2&tid=G-XYZ",
+    "https://google.com/j/collect?t=pageview",
+    "https://stats.g.doubleclick.net/j/collect?t=dc",
+    "https://stats.g.doubleclick.net/batch/collect",
+    "https://user:pass@google-analytics.com/g/collect?v=2",
+    "https://google-analytics.com:8443/g/collect?v=2",
+]
 
-@pytest.mark.parametrize(
-    "url",
-    [
-        # Measurement-only hosts: every path is blocked.
-        "https://www.google-analytics.com/g/collect",
-        "https://www.google-analytics.com/collect?v=1",
-        "https://www.google-analytics.com/batch",
-        "https://user:pass@www.google-analytics.com/g/collect",
-        "https://region1.google-analytics.com/mp/collect",
-        "https://ANALYTICS.GOOGLE.COM./g/collect",
-        # Mixed Google hosts: only the measurement paths.
-        "https://www.google.com/g/collect?v=2&tid=G-39JJ9JH4VW",
-        "https://www.google.com/j/collect",
-        "https://www.google.com/mp/collect",
-        "https://www.google.com/r/collect",
-        "https://www.google.com/batch/collect",
-        "https://stats.g.doubleclick.net/g/collect?tid=G-1",
-    ],
-)
-def test_measurement_endpoints_are_blocked(url: str) -> None:
-    assert GOOGLE_ANALYTICS_URL_PATTERN.search(url)
+# Reachable under both strategies.
+REACHABLE_URLS = [
+    "https://www.google.com/collections",
+    "https://www.google.com/search?q=wordlift",
+    "https://www.google.com/ccm/collect?en=conversion",
+    "https://stats.g.doubleclick.net/rmkt/collect/12345/",
+    "https://www.googletagmanager.com/gtag/js?id=G-XYZ",
+    "https://example.com/g/collect?v=2",
+]
+
+# The globs are https-only; the regex also covers http.
+ROUTE_ONLY_URLS = [
+    "http://www.google-analytics.com/g/collect?v=2",
+]
+
+# The globs match anywhere in the URL, so they have no path terminator and fire
+# on an unrelated host that merely quotes a measurement URL.
+CDP_ONLY_URLS = [
+    "https://www.google.com/g/collectData123",
+    "https://example.com/redirect?to=user@google-analytics.com/g/collect",
+]
 
 
-@pytest.mark.parametrize(
-    "url",
-    [
-        # Advertising and remarketing on the mixed hosts stay reachable.
-        "https://www.google.com/ccm/collect?en=page_view",
-        "https://www.google.com/rmkt/collect/1072206699/",
-        "https://pagead2.googlesyndication.com/ccm/collect?en=page_view",
-        "https://ad.doubleclick.net/ccm/s/collect",
-        "https://pagead2.googlesyndication.com/pagead/gen_204",
-        # Google Tag Manager stays reachable: some sites inject tags through it
-        # that the rendered markup depends on.
-        "https://www.googletagmanager.com/gtm.js?id=GTM-123",
-        "https://www.googletagmanager.com/gtag/js?id=G-123",
-        "https://tagmanager.google.com/",
-        # Third-party hosts are out of scope, whatever they call their paths.
-        "https://acme.com/g/collect",
-        "https://acme.com/batch/collect",
-        "https://sgtm.example.com/g/collect",
-        "https://px.ads.linkedin.com/collect?pid=1",
-        "https://r.clarity.ms/collect",
-        "https://example.com/assets/analytics.js",
-        # Hosts that merely look like the real ones.
-        "https://notgoogle.com/g/collect",
-        "https://evilgoogle-analytics.com/collect",
-        "https://google.com.evil.org/g/collect",
-        "https://google-analytics.com.example.org/collect",
-        "https://user@google-analytics.com.example.org/collect",
-        "https://google.com/",
-        "https://" + "a." * 64 + "example.com/",
-        "not a url",
-        "https://[invalid",
-    ],
-)
-def test_unrelated_and_malformed_urls_are_allowed(url: str) -> None:
-    assert not GOOGLE_ANALYTICS_URL_PATTERN.search(url)
+def _cdp_blocks(url: str) -> bool:
+    for pattern in build_blocked_url_patterns():
+        position = 0
+        for literal in pattern.split("*"):
+            if not literal:
+                continue
+            found = url.find(literal, position)
+            if found == -1:
+                break
+            position = found + len(literal)
+        else:
+            return True
+    return False
+
+
+def _route_blocks(url: str) -> bool:
+    return GOOGLE_ANALYTICS_URL_PATTERN.match(url) is not None
+
+
+@pytest.mark.parametrize("url", MEASUREMENT_URLS)
+def test_measurement_urls_are_blocked_by_both(url: str) -> None:
+    assert _cdp_blocks(url)
+    assert _route_blocks(url)
+
+
+@pytest.mark.parametrize("url", REACHABLE_URLS)
+def test_other_traffic_stays_reachable_under_both(url: str) -> None:
+    assert not _cdp_blocks(url)
+    assert not _route_blocks(url)
+
+
+@pytest.mark.parametrize("url", ROUTE_ONLY_URLS)
+def test_route_covers_what_the_globs_cannot(url: str) -> None:
+    assert _route_blocks(url)
+    assert not _cdp_blocks(url)
+
+
+@pytest.mark.parametrize("url", CDP_ONLY_URLS)
+def test_globs_match_path_prefixes_the_route_terminates(url: str) -> None:
+    assert _cdp_blocks(url)
+    assert not _route_blocks(url)
+
+
+def test_advertising_endpoints_stay_reachable() -> None:
+    patterns = build_blocked_url_patterns()
+    assert not any("/ccm/" in pattern or "/rmkt/" in pattern for pattern in patterns)
+    assert not any("googletagmanager.com" in pattern for pattern in patterns)
+    assert not GOOGLE_ANALYTICS_URL_PATTERN.match(
+        "https://www.google.com/ccm/collect?en=conversion"
+    )
+
+
+def test_the_glob_scheme_is_literal() -> None:
+    # A wildcard scheme would swallow the "//" and match look-alike hosts such
+    # as https://evilgoogle-analytics.com/g/collect.
+    patterns = build_blocked_url_patterns()
+    assert patterns
+    assert all(pattern.startswith("https://") for pattern in patterns)
+    assert not _cdp_blocks("https://evilgoogle-analytics.com/g/collect")
+    assert not _route_blocks("https://evilgoogle-analytics.com/g/collect")

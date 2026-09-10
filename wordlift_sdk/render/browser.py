@@ -6,7 +6,7 @@ from contextlib import AbstractContextManager
 from dataclasses import dataclass
 from time import perf_counter
 
-from .network_policy import GOOGLE_ANALYTICS_URL_PATTERN
+from .network_policy import GOOGLE_ANALYTICS_URL_PATTERN, build_blocked_url_patterns
 from .render_options import DEFAULT_BROWSER_REQUEST_HEADERS
 
 try:
@@ -80,10 +80,7 @@ class Browser(AbstractContextManager):
             context_kwargs["extra_http_headers"] = dict(DEFAULT_BROWSER_REQUEST_HEADERS)
             context_kwargs["service_workers"] = "block"
             self._context = self._browser.new_context(**context_kwargs)
-            self._context.route(
-                GOOGLE_ANALYTICS_URL_PATTERN,
-                lambda route: route.abort("blockedbyclient"),
-            )
+            self._context.on("page", self._block_measurement_endpoints)
             self._context.add_init_script(
                 """
                 Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
@@ -111,6 +108,35 @@ class Browser(AbstractContextManager):
             self._browser.close()
         if self._playwright is not None:
             self._playwright.stop()
+
+    def _block_measurement_endpoints(self, page: object) -> None:
+        """Apply the measurement policy to a page, the strongest way the engine allows.
+
+        Chromium blocks inside its own network stack, which needs no callback
+        and so cannot be raced. Interception can: Playwright stops resolving
+        routes the moment ``page.close()`` is called, and Chromium then releases
+        every still-undecided request to the network. Other engines have no
+        equivalent, so they fall back to the route and inherit that weakness.
+        """
+        if self._engine_name() == "chromium":
+            try:
+                session = self._context.new_cdp_session(page)
+                session.send("Network.enable")
+                session.send(
+                    "Network.setBlockedURLs", {"urls": build_blocked_url_patterns()}
+                )
+            except Exception:  # pragma: no cover - page closed before we attached
+                pass
+            return
+        page.route(
+            GOOGLE_ANALYTICS_URL_PATTERN, lambda route: route.abort("blockedbyclient")
+        )
+
+    def _engine_name(self) -> str:
+        try:
+            return self._browser.browser_type.name
+        except Exception:  # pragma: no cover - defensive
+            return "unknown"
 
     def open(self, url: str) -> tuple[object | None, object | None, float, list[dict]]:
         if self._context is None:

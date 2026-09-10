@@ -242,10 +242,13 @@
 - Playwright ingestion is async-loop-safe in cloud workflows: when a caller thread
   already runs an asyncio event loop, rendering is offloaded away from that thread
   before Sync Playwright APIs are invoked.
-- All Playwright rendering contexts disable service workers and apply the mandatory
-  context-wide Google Analytics measurement policy before creating pages: every
-  path on the Analytics measurement hosts, plus `/{g,j,mp,r,batch}/collect` on
-  enumerated mixed-purpose Google hosts; Google Tag Manager, advertising and
+- All Playwright rendering contexts disable service workers, and every page applies
+  the mandatory Google Analytics measurement policy: every path on the Analytics
+  measurement hosts, and the measurement paths (`/{batch,g,j,mp,r}/collect`) on
+  `google.com` and `stats.g.doubleclick.net`. The same hosts and paths are rendered
+  as URL globs for Chromium's `Network.setBlockedURLs` and as a regex for the
+  Playwright route other engines fall back to; only Chromium is launched today, so
+  that route is not currently reached. Google Tag Manager, advertising and
   third-party hosts remain available.
 - Playwright ingestion default `wait_until` is `domcontentloaded` (override with
   `PLAYWRIGHT_WAIT_UNTIL`), and navigation timeout now falls back to partial DOM

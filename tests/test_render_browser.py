@@ -4,6 +4,10 @@ import pytest
 
 import wordlift_sdk.render.browser as browser_module
 from wordlift_sdk.render.browser import Browser, BrowserOperationError
+from wordlift_sdk.render.network_policy import (
+    GOOGLE_ANALYTICS_URL_PATTERN,
+    build_blocked_url_patterns,
+)
 
 
 class _FakePage:
@@ -11,9 +15,13 @@ class _FakePage:
         self._handlers = {}
         self._should_raise = should_raise
         self._error_message = error_message
+        self.routes = []
 
     def on(self, name, handler):
         self._handlers[name] = handler
+
+    def route(self, pattern, handler):
+        self.routes.append((pattern, handler))
 
     def goto(self, url, wait_until, timeout):
         if self._should_raise:
@@ -32,25 +40,37 @@ class _FakePage:
         return response
 
 
+class _FakeCdpSession:
+    def __init__(self):
+        self.sent = []
+
+    def send(self, method, params=None):
+        self.sent.append((method, params))
+
+
 class _FakeContext:
     def __init__(self):
         self.closed = False
         self.script = None
         self.page = _FakePage()
-        self.route_matcher = None
-        self.route_handler = None
+        self.cdp = _FakeCdpSession()
         self.events = []
+        self._page_handlers = []
 
-    def route(self, matcher, handler):
-        self.route_matcher = matcher
-        self.route_handler = handler
-        self.events.append("route")
+    def on(self, event, handler):
+        if event == "page":
+            self._page_handlers.append(handler)
+
+    def new_cdp_session(self, page):
+        return self.cdp
 
     def add_init_script(self, script):
         self.script = script
 
     def new_page(self):
         self.events.append("new_page")
+        for handler in self._page_handlers:
+            handler(self.page)
         return self.page
 
     def close(self):
@@ -58,10 +78,11 @@ class _FakeContext:
 
 
 class _FakeBrowser:
-    def __init__(self):
+    def __init__(self, engine="chromium"):
         self.closed = False
         self.kwargs = None
         self.context = _FakeContext()
+        self.browser_type = type("_Type", (), {"name": engine})()
 
     def new_context(self, **kwargs):
         self.kwargs = kwargs
@@ -72,9 +93,9 @@ class _FakeBrowser:
 
 
 class _FakePlaywright:
-    def __init__(self):
+    def __init__(self, engine="chromium"):
         self.chromium = self
-        self.browser = _FakeBrowser()
+        self.browser = _FakeBrowser(engine)
         self.stopped = False
 
     def launch(self, headless):
@@ -122,20 +143,10 @@ def test_browser_enter_exit_and_open(monkeypatch: pytest.MonkeyPatch):
         assert pw.browser.kwargs["viewport"]["width"] == 1200
         assert pw.browser.kwargs["ignore_https_errors"] is True
         assert pw.browser.kwargs["service_workers"] == "block"
-        assert pw.browser.context.events == ["route", "new_page"]
-        assert pw.browser.context.route_matcher.search(
-            "https://region1.google-analytics.com/g/collect"
+        assert pw.browser.context.events == ["new_page"]
+        assert ("Network.setBlockedURLs", {"urls": build_blocked_url_patterns()}) in (
+            pw.browser.context.cdp.sent
         )
-
-        class _FakeRoute:
-            aborted_with = None
-
-            def abort(self, error_code):
-                self.aborted_with = error_code
-
-        route = _FakeRoute()
-        pw.browser.context.route_handler(route)
-        assert route.aborted_with == "blockedbyclient"
 
     assert pw.browser.context.closed is True
     assert pw.browser.closed is True
@@ -174,3 +185,34 @@ def test_browser_open_requires_initialized_context():
     browser = Browser(headless=True, timeout_ms=50, wait_until="load")
     with pytest.raises(RuntimeError, match="not initialized"):
         browser.open("https://example.org")
+
+
+def test_pages_the_site_opens_are_covered(monkeypatch: pytest.MonkeyPatch):
+    # A popup the page opens itself is a new page in the same context, and the
+    # policy has to reach it too -- not just the page `open()` creates.
+    pw = _FakePlaywright()
+    monkeypatch.setattr(browser_module, "sync_playwright", lambda: _Manager(pw))
+
+    with Browser(headless=True, timeout_ms=100, wait_until="load"):
+        context = pw.browser.context
+        context.cdp.sent.clear()
+        for handler in context._page_handlers:
+            handler(_FakePage())
+
+    assert ("Network.setBlockedURLs", {"urls": build_blocked_url_patterns()}) in (
+        context.cdp.sent
+    )
+
+
+def test_non_chromium_engines_use_the_route_fallback(monkeypatch: pytest.MonkeyPatch):
+    pw = _FakePlaywright(engine="firefox")
+    monkeypatch.setattr(browser_module, "sync_playwright", lambda: _Manager(pw))
+
+    with Browser(headless=True, timeout_ms=100, wait_until="load") as browser:
+        browser.open("https://example.org")
+
+    context = pw.browser.context
+    assert [pattern for pattern, _ in context.page.routes] == [
+        GOOGLE_ANALYTICS_URL_PATTERN
+    ]
+    assert context.cdp.sent == []
