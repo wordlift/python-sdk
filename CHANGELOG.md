@@ -1,5 +1,15 @@
 # Changelog
 
+## 8.4.6 - 2026-09-11
+
+### Fixed
+
+- Google Analytics measurement traffic is now blocked inside Chromium's network
+  stack with `Network.setBlockedURLs` instead of Playwright route interception,
+  which stopped answering once a page closed and let undecided requests through.
+  The policy applies to every page a context opens, and covers credentialed and
+  non-default-port URLs.
+
 ## 8.4.5 - 2026-09-09
 
 ### Fixed
