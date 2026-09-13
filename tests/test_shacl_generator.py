@@ -1,8 +1,13 @@
+import re
 from pathlib import Path
 
 from rdflib import URIRef
 
-from wordlift_sdk.validation.generator import FeatureData, _write_feature
+from wordlift_sdk.validation.generator import (
+    _SCOPED_CHILD_RULES,
+    FeatureData,
+    _write_feature,
+)
 
 
 def _read_output(tmp_path: Path, feature: FeatureData) -> str:
@@ -356,7 +361,9 @@ def test_keeps_listitem_shape_without_itemlist(tmp_path: Path) -> None:
     assert "sh:targetClass schema:ListItem" in content
 
 
-def test_breadcrumb_listitem_item_is_exempted_for_one_entry(tmp_path: Path) -> None:
+def test_breadcrumb_listitem_item_is_not_unconditionally_required(
+    tmp_path: Path,
+) -> None:
     feature = FeatureData(
         url="https://example.com",
         types={
@@ -370,10 +377,11 @@ def test_breadcrumb_listitem_item_is_exempted_for_one_entry(tmp_path: Path) -> N
 
     content = _read_output(tmp_path, feature)
 
-    assert "sh:qualifiedMaxCount 1 ;" in content
-    assert "sh:not [" in content
-    node_shape = content.split("sh:qualifiedValueShape")[0]
+    # The nested ListItem shape must not require `item` outright — the SPARQL
+    # constraint decides, so that the last entry may omit it.
+    node_shape = content.split("sh:sparql")[0]
     assert "sh:path schema:item ;\n        sh:minCount 1 ;" not in node_shape
+    assert "sh:sparql :google_BreadcrumbListItemOrderConstraint ;" in content
 
 
 def test_itemlist_listitem_item_stays_unconditional(tmp_path: Path) -> None:
@@ -389,3 +397,89 @@ def test_itemlist_listitem_item_stays_unconditional(tmp_path: Path) -> None:
 
     assert "sh:qualifiedMaxCount" not in content
     assert "sh:path schema:item ;\n        sh:minCount 1 ;" in content
+
+
+def test_breadcrumb_item_order_is_checked_with_sparql(tmp_path: Path) -> None:
+    feature = FeatureData(
+        url="https://example.com",
+        types={
+            "BreadcrumbList": {"required": {"itemListElement"}, "recommended": set()},
+            "ListItem": {
+                "required": {"position", "name", "item"},
+                "recommended": set(),
+            },
+        },
+    )
+
+    content = _read_output(tmp_path, feature)
+
+    # A named constraint, not an inline blank node: pyshacl stringifies the
+    # source constraint into every result, and a blank node drags the whole
+    # query along with it.
+    assert "sh:sparql :google_BreadcrumbListItemOrderConstraint ;" in content
+    assert ":google_BreadcrumbListItemOrderConstraint\n  a sh:SPARQLConstraint ;" in (
+        content
+    )
+    # The ordering half of the rule needs sibling positions, not just a count.
+    assert "<http://schema.org/position>" in content
+    assert "<http://www.w3.org/2001/XMLSchema#double>" in content
+
+
+def test_itemlist_gets_no_breadcrumb_sparql_exemption(tmp_path: Path) -> None:
+    feature = FeatureData(
+        url="https://example.com",
+        types={
+            "ItemList": {"required": {"itemListElement"}, "recommended": set()},
+            "ListItem": {"required": {"position", "item"}, "recommended": set()},
+        },
+    )
+
+    content = _read_output(tmp_path, feature)
+
+    assert "sh:sparql" not in content
+
+
+def test_checked_in_breadcrumb_shape_matches_generator_output(tmp_path: Path) -> None:
+    """The shipped .ttl is regenerated from Google's docs, so a hand edit would be
+    silently dropped on the next run. Comparing the whole file — not just the
+    breadcrumb block — catches an edit anywhere in it, in either direction: a
+    generator change that was never written out, and a .ttl change the generator
+    would not produce.
+
+    The ``# Generated:`` header is stamped with the wall clock on every run, so
+    it is the one line that cannot match.
+    """
+    feature = FeatureData(
+        url="https://developers.google.com/search/docs/appearance/structured-data/breadcrumb",
+        types={
+            "BreadcrumbList": {"required": {"itemListElement"}, "recommended": set()},
+            "ListItem": {
+                "required": {"position", "name", "item"},
+                "recommended": set(),
+            },
+        },
+    )
+    output_path = tmp_path / "google-breadcrumb.ttl"
+    assert _write_feature(feature, output_path, overwrite=True)
+
+    def _without_timestamp(text: str) -> str:
+        return re.sub(r"^# Generated: .*$", "# Generated: -", text, flags=re.M)
+
+    shipped = Path("wordlift_sdk/validation/shacls/google-breadcrumb.ttl").read_text(
+        encoding="utf-8"
+    )
+    assert _without_timestamp(output_path.read_text(encoding="utf-8")) == (
+        _without_timestamp(shipped)
+    )
+
+
+def test_breadcrumb_list_is_not_yet_a_scoped_child_type() -> None:
+    """Tripwire. The order constraint is wired up only from _write_feature's
+    top-level BreadcrumbList branch, so nesting BreadcrumbList here would leave
+    nested trails with no `item` enforcement. Emit it from _emit_node before
+    updating this assertion."""
+    for parent_type, rules in _SCOPED_CHILD_RULES.items():
+        for prop, child_types in rules.items():
+            assert "BreadcrumbList" not in child_types, (
+                f"{parent_type}.{prop} now nests BreadcrumbList"
+            )

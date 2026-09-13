@@ -3,7 +3,7 @@
 @prefix schema: <http://schema.org/> .
 
 # Source: https://developers.google.com/search/docs/appearance/structured-data/breadcrumb
-# Generated: 2026-09-09T08:57:24Z
+# Generated: 2026-09-16T12:45:54Z
 # Notes: required properties => errors; recommended properties => warnings.
 
 :google_BreadcrumbListShape
@@ -40,17 +40,42 @@
       ) ;
     ] ;
   ] ;
-  sh:property [
-    sh:path schema:itemListElement ;
-    sh:qualifiedValueShape [
-      sh:not [
-        sh:property [
-          sh:path schema:item ;
-          sh:minCount 1 ;
-        ] ;
-      ] ;
-    ] ;
-    sh:qualifiedMaxCount 1 ;
-    sh:message "Required by Google: item on every ListItem except the final one." ;
-  ] ;
+  sh:sparql :google_BreadcrumbListItemOrderConstraint ;
+  sh:sparql :google_BreadcrumbListPositionConstraint ;
+.
+
+:google_BreadcrumbListItemOrderConstraint
+  a sh:SPARQLConstraint ;
+  sh:message "Required by Google: item on every ListItem except the last (highest position) one." ;
+  sh:select """
+  SELECT $this ?value ?path
+  WHERE {
+    BIND(<http://schema.org/itemListElement> AS ?path)
+    $this <http://schema.org/itemListElement> ?value .
+    FILTER NOT EXISTS { ?value <http://schema.org/item> ?item }
+    FILTER EXISTS {
+      ?value <http://schema.org/position> ?position .
+      $this <http://schema.org/itemListElement> ?other .
+      FILTER (!sameTerm(?other, ?value))
+      ?other <http://schema.org/position> ?otherPosition .
+      FILTER (<http://www.w3.org/2001/XMLSchema#double>(str(?otherPosition)) >= <http://www.w3.org/2001/XMLSchema#double>(str(?position)))
+    }
+  }
+  """ ;
+.
+
+:google_BreadcrumbListPositionConstraint
+  a sh:SPARQLConstraint ;
+  sh:message "Required by Google: position must be a number on every ListItem." ;
+  sh:select """
+  SELECT $this ?value ?path
+  WHERE {
+    BIND(<http://schema.org/itemListElement> AS ?path)
+    $this <http://schema.org/itemListElement> ?value .
+    ?value <http://schema.org/position> ?position .
+    FILTER NOT EXISTS {
+      FILTER (<http://www.w3.org/2001/XMLSchema#double>(str(?position)) = <http://www.w3.org/2001/XMLSchema#double>(str(?position)))
+    }
+  }
+  """ ;
 .

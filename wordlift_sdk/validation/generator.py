@@ -733,24 +733,72 @@ def _emit_listitem_name_or_item_name(lines: list[str], indent: int) -> None:
     lines.append(f"{sp}) ;")
 
 
-def _emit_breadcrumb_item_exemption(lines: list[str], indent: int) -> None:
-    sp = " " * indent
-    lines.append(f"{sp}sh:property [")
-    lines.append(f"{sp}  sh:path schema:itemListElement ;")
-    lines.append(f"{sp}  sh:qualifiedValueShape [")
-    lines.append(f"{sp}    sh:not [")
-    lines.append(f"{sp}      sh:property [")
-    lines.append(f"{sp}        sh:path schema:item ;")
-    lines.append(f"{sp}        sh:minCount 1 ;")
-    lines.append(f"{sp}      ] ;")
-    lines.append(f"{sp}    ] ;")
-    lines.append(f"{sp}  ] ;")
-    lines.append(f"{sp}  sh:qualifiedMaxCount 1 ;")
-    lines.append(
-        f'{sp}  sh:message "Required by Google: item on every ListItem '
-        'except the final one." ;'
-    )
-    lines.append(f"{sp}] ;")
+_XSD_DOUBLE = f"<{XSD.double}>"
+
+# Google types ListItem.position as Integer; nothing else asserts it, because
+# FeatureData keeps which properties are required, never the Type column. Self
+# equality holds only for a position that ranks: a form the cast rejects errors the
+# filter and drops the row, and NaN fails against itself.
+_BREADCRUMB_POSITION_SELECT = f"""SELECT $this ?value ?path
+WHERE {{
+  BIND(<http://schema.org/itemListElement> AS ?path)
+  $this <http://schema.org/itemListElement> ?value .
+  ?value <http://schema.org/position> ?position .
+  FILTER NOT EXISTS {{
+    FILTER ({_XSD_DOUBLE}(str(?position)) = {_XSD_DOUBLE}(str(?position)))
+  }}
+}}"""
+
+# Google lets the *last* breadcrumb entry omit `item`. RDF has no array order, so
+# "last" means "uniquely highest schema:position", which core SHACL cannot express.
+# ?path is bound because sh:resultPath runs from the BreadcrumbList, not the entry.
+# `>=` makes ties rank, so a trail with no unique highest reports every item-less
+# entry; sameTerm keeps a literal entry from raising a type error. Positions that
+# would not rank are reported by _BREADCRUMB_POSITION_SELECT instead.
+_BREADCRUMB_ITEM_ORDER_SELECT = f"""SELECT $this ?value ?path
+WHERE {{
+  BIND(<http://schema.org/itemListElement> AS ?path)
+  $this <http://schema.org/itemListElement> ?value .
+  FILTER NOT EXISTS {{ ?value <http://schema.org/item> ?item }}
+  FILTER EXISTS {{
+    ?value <http://schema.org/position> ?position .
+    $this <http://schema.org/itemListElement> ?other .
+    FILTER (!sameTerm(?other, ?value))
+    ?other <http://schema.org/position> ?otherPosition .
+    FILTER ({_XSD_DOUBLE}(str(?otherPosition)) >= {_XSD_DOUBLE}(str(?position)))
+  }}
+}}"""
+
+
+# Named constraints, not inline blank nodes: pyshacl stringifies the source
+# constraint into every result, and a blank node expands to its whole property
+# list — the query included.
+_BREADCRUMB_CONSTRAINTS = (
+    (
+        ":google_BreadcrumbListItemOrderConstraint",
+        "Required by Google: item on every ListItem except the last "
+        "(highest position) one.",
+        _BREADCRUMB_ITEM_ORDER_SELECT,
+    ),
+    (
+        ":google_BreadcrumbListPositionConstraint",
+        "Required by Google: position must be a number on every ListItem.",
+        _BREADCRUMB_POSITION_SELECT,
+    ),
+)
+
+
+def _emit_breadcrumb_constraints(lines: list[str]) -> None:
+    """Emit the named SPARQLConstraints the BreadcrumbList shape points at."""
+    for name, message, select in _BREADCRUMB_CONSTRAINTS:
+        lines.append(name)
+        lines.append("  a sh:SPARQLConstraint ;")
+        lines.append(f'  sh:message "{message}" ;')
+        lines.append('  sh:select """')
+        lines.extend(f"  {line}" for line in select.split("\n"))
+        lines.append('  """ ;')
+        lines.append(".")
+        lines.append("")
 
 
 def _emit_node(
@@ -777,7 +825,9 @@ def _emit_node(
             and type_name == "ListItem"
             and prop == "item"
         ):
-            # Google: the final breadcrumb entry may omit `item`.
+            # Google: the final breadcrumb entry may omit `item`. The order
+            # constraint stands in for this minCount, emitted only from
+            # _write_feature's top-level BreadcrumbList branch.
             continue
         if type_name == "ListItem" and prop == "name":
             # Google: ListItem.name is only required when `item` is a bare URL;
@@ -799,10 +849,6 @@ def _emit_node(
         )
     if type_name == "ListItem" and "name" in bucket["required"]:
         _emit_listitem_name_or_item_name(lines, indent)
-    if type_name == "BreadcrumbList" and "item" in buckets.get("ListItem", {}).get(
-        "required", set()
-    ):
-        _emit_breadcrumb_item_exemption(lines, indent)
 
     for prop in sorted(bucket["recommended"]):
         child_types = child_rules.get(prop)
@@ -902,10 +948,12 @@ def _write_feature(feature: FeatureData, output_path: Path, overwrite: bool) -> 
                 )
             if type_name == "ListItem" and "name" in bucket["required"]:
                 _emit_listitem_name_or_item_name(lines, 2)
-            if type_name == "BreadcrumbList" and "item" in feature.types.get(
-                "ListItem", {}
-            ).get("required", set()):
-                _emit_breadcrumb_item_exemption(lines, 2)
+            emit_breadcrumb_constraints = type_name == "BreadcrumbList" and (
+                "item" in feature.types.get("ListItem", {}).get("required", set())
+            )
+            if emit_breadcrumb_constraints:
+                for name, _, _ in _BREADCRUMB_CONSTRAINTS:
+                    lines.append(f"  sh:sparql {name} ;")
 
             for prop in sorted(bucket["recommended"]):
                 child_types = _SCOPED_CHILD_RULES.get(type_name, {}).get(prop)
@@ -945,6 +993,9 @@ def _write_feature(feature: FeatureData, output_path: Path, overwrite: bool) -> 
 
             lines.append(".")
             lines.append("")
+
+            if emit_breadcrumb_constraints:
+                _emit_breadcrumb_constraints(lines)
 
         recommended_one_of_groups = feature.one_of_recommended.get(type_name, [])
         for idx, group in enumerate(recommended_one_of_groups, start=1):

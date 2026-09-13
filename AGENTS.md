@@ -55,6 +55,36 @@
   lists when building property alternatives, and downgrades conditional
   required prose ("required when/if", "only required if") to warning-level
   constraints to avoid unconditional errors for context-dependent sections.
+- The SHACL generator special-cases Google's breadcrumb rule that the *last*
+  trail entry may omit `item`. Instead of a plain `sh:minCount 1` on
+  `ListItem.item`, `BreadcrumbList` gets a `sh:sparql` order constraint
+  (`:google_BreadcrumbListItemOrderConstraint`): an entry may omit `item` only if
+  it holds the highest `schema:position` *uniquely*. Google never states a limit on
+  how many entries may omit `item`, so no count rule stands in for the real rule.
+  `ItemList` (carousels) is untouched and still requires `item` on every entry.
+- Ranking is only as good as the positions, so a second constraint
+  (`_BREADCRUMB_POSITION_SELECT`) reports any `ListItem.position` that would not
+  rank: a lexical form `xsd:double` rejects, and `NaN`, which fails a self-equality
+  test. Its guard is the cast the order constraint uses, so the reported set is
+  exactly the unrankable set — a regex would be narrower and wrongly flag `INF` or
+  non-ASCII digits, which do rank. Google types `position` as `Integer`, but
+  `FeatureData` keeps only which properties are required, never the Type column the
+  Google page states, and no `google-*.ttl` shape holds a datatype constraint —
+  value typing otherwise lives in the schema.org grammar, permissive by design.
+  Generating it from the Type column for every feature is the wider fix.
+- `_emit_node` skips `sh:minCount 1` on `ListItem.item` under a `BreadcrumbList`
+  parent, but both breadcrumb constraints are emitted only from the top-level
+  `BreadcrumbList` branch in `_write_feature`, so a nested breadcrumb would lose
+  `item` enforcement entirely. `BreadcrumbList` is never a child type in
+  `_SCOPED_CHILD_RULES` today, guarded by
+  `test_breadcrumb_list_is_not_yet_a_scoped_child_type`.
+- SPARQL constraints are emitted as *named* top-level resources (for example
+  `:google_BreadcrumbListItemOrderConstraint`) that `sh:sparql` points at, never
+  as inline blank nodes. pyshacl stringifies the source constraint into every
+  result it produces, and a blank node expands to its whole property list — the
+  `sh:select` body included — so an inline constraint repeats the whole query
+  once per offending entry in `report_text`, which is surfaced to users and fed
+  to the quality agent. A named node prints as a single token.
 - Google SHACL type-context parsing is now constrained to explicit type
   definitions (`must be based on one of the following schema.org types`,
   `full definition of ... is available/provided`) and scoped plain headings
