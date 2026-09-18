@@ -1,5 +1,15 @@
 # Changelog
 
+## 8.4.7 - 2026-09-18
+
+### Fixed
+
+- Breadcrumb SHACL validation now requires `item` on every `ListItem` except
+  the one with the highest `position`, matching Google's rule that only the
+  last entry may omit it. A trail missing `item` on a first or middle entry
+  used to validate clean. A `position` that cannot be ranked numerically is
+  reported too.
+
 ## 8.4.6 - 2026-09-11
 
 ### Fixed
