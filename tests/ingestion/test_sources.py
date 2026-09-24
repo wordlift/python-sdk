@@ -87,6 +87,35 @@ def test_sitemap_source_adapter(monkeypatch: pytest.MonkeyPatch) -> None:
     ]
 
 
+def test_sitemap_source_adapter_normalizes_mixed_w3c_lastmod(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    adapter = SitemapSourceAdapter()
+    monkeypatch.setattr(
+        "wordlift_sdk.ingestion.sources.adv.sitemaps.sitemap_to_df",
+        lambda *, sitemap_url, request_headers: pd.DataFrame(
+            {
+                "loc": [
+                    "https://example.com/date-only",
+                    "https://example.com/full-timestamp",
+                ],
+                "lastmod": ["2026-09-22", "2024-10-24T12:20:57+00:00"],
+            }
+        ),
+    )
+
+    items = list(
+        adapter.iter_items(
+            _config(source_config={"sitemap_url": "https://example.com/sitemap.xml"})
+        )
+    )
+
+    assert [item.metadata["date_modified"] for item in items] == [
+        "2026-09-22T00:00:00+00:00",
+        "2024-10-24T12:20:57+00:00",
+    ]
+
+
 def test_sitemap_source_adapter_handles_missing_lastmod_and_failures(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
