@@ -26,7 +26,7 @@ class SitemapUrlSource(UrlSource):
         if "lastmod" not in sitemap_df.columns:
             sitemap_df["lastmod"] = None
         sitemap_df["lastmod_as_datetime"] = pd.to_datetime(
-            sitemap_df["lastmod"], errors="coerce"
+            sitemap_df["lastmod"], errors="coerce", format="mixed", utc=True
         )
 
         for _, row in sitemap_df.iterrows():
