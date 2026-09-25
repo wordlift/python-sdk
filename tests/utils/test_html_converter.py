@@ -118,6 +118,37 @@ class TestHtmlConverter:
         assert "<p>ok</p>" in xhtml_output
         ET.fromstring(xhtml_output)
 
+    def test_convert_removes_script_and_style_tags(self, converter):
+        """Script/style elements (and their text) are removed so XPath text
+        extraction over a container never picks up embedded JSON-LD or CSS."""
+        if lxml_html is None:
+            pytest.skip("lxml not installed")
+
+        html_input = """
+<html><body>
+  <div class="article-body">
+    <p>Real content before.</p>
+    <script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList"}</script>
+    <style>.foo { color: red; }</style>
+    <p>Real content after.</p>
+  </div>
+</body></html>
+"""
+        xhtml_output = converter.convert(html_input)
+
+        assert "<script" not in xhtml_output
+        assert "<style" not in xhtml_output
+        assert "@context" not in xhtml_output
+        assert "color: red" not in xhtml_output
+        assert "Real content before." in xhtml_output
+        assert "Real content after." in xhtml_output
+
+        root = ET.fromstring(xhtml_output)
+        container = root.find(".//div")
+        full_text = "".join(container.itertext())
+        assert "@context" not in full_text
+        assert "color: red" not in full_text
+
     def test_convert_removes_default_xmlns_for_xpath_compat(self, converter):
         """Default XHTML namespace is removed so unprefixed XPath matches work."""
         if lxml_html is None:
