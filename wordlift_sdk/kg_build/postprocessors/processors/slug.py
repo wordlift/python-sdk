@@ -2,23 +2,34 @@
 
 from __future__ import annotations
 
+import functools
 import hashlib
 import re
 import unicodedata
 
-from icu import ICU_VERSION, Transliterator
+import regex
+from anyascii import __version__ as ANYASCII_VERSION, anyascii
 
+# Slugs are part of canonical IRIs, so the transliteration backend is pinned:
+# a different anyascii release can romanize differently and mint new IRIs.
+# Upgrading it is an ID migration (impact check and cleanup), not a bump.
+_EXPECTED_ANYASCII_VERSION = "0.3.3"
 
-_TRANSFORMS = {
-    "ru": "Russian-Latin/BGN",
-    "uk": "Ukrainian-Latin/BGN",
-    "el": "Greek-Latin",
-    "ar": "Arabic-Latin",
-    "he": "Hebrew-Latin",
-    "ja": "Hiragana-Latin; Katakana-Latin",
-    "ko": "Hangul-Latin",
-    "hi": "Devanagari-Latin",
+# Scripts transliterated only for the languages below, as Unicode script
+# properties; elsewhere they are dropped rather than given a guessed reading.
+_SCRIPTS = {
+    "ru": r"\p{Cyrillic}",
+    "uk": r"\p{Cyrillic}",
+    "el": r"\p{Greek}",
+    "ar": r"\p{Arabic}",
+    "he": r"\p{Hebrew}",
+    # Kana only, not kanji; the prolonged sound mark (ー, ｰ) is Common script.
+    "ja": r"\p{Hiragana}\p{Katakana}\u30fc\uff70",
+    "ko": r"\p{Hangul}",
+    "hi": r"\p{Devanagari}",
 }
+_HAN = r"\p{Han}"
+_HAN_CHAR = regex.compile(_HAN)
 _GERMAN_REPLACEMENTS = str.maketrans(
     {"ä": "ae", "ö": "oe", "ü": "ue", "Ä": "Ae", "Ö": "Oe", "Ü": "Ue"}
 )
@@ -28,7 +39,7 @@ def _language_parts(language: str | None) -> list[str]:
     return (language or "").strip().lower().replace("_", "-").split("-")
 
 
-def _transform(language: str | None) -> str:
+def _script(language: str | None) -> str:
     parts = _language_parts(language)
     primary = parts[0]
     # Han readings are Mandarin only. Do not apply them to Cantonese (including
@@ -41,8 +52,42 @@ def _transform(language: str | None) -> str:
         if part != "cmn":
             mandarin = False
             break
-    route = "Han-Latin" if mandarin else _TRANSFORMS.get(primary)
-    return f"{route}; Latin-ASCII" if route else "Latin-ASCII"
+    return _HAN if mandarin else _SCRIPTS.get(primary, "")
+
+
+def _letters(char: str) -> str:
+    # anyascii spells some letters with punctuation (Arabic ain as a backtick,
+    # the Cyrillic soft sign as an apostrophe); keep a letter within its word.
+    return re.sub(r"[^A-Za-z0-9]", "", anyascii(char))
+
+
+@functools.lru_cache(maxsize=None)
+def _transliterable(script: str) -> regex.Pattern[str]:
+    # Latin letters in every language, the language's own script (letters and
+    # its own signs, such as Devanagari vowel signs), and digits.
+    return regex.compile(
+        rf"[[\p{{Latin}}{script}]&&[\p{{L}}\p{{Mn}}\p{{Mc}}]]|\p{{Nd}}", regex.V1
+    )
+
+
+def _transliterate(value: str, language: str | None) -> str:
+    script = _script(language)
+    transliterable = _transliterable(script)
+    parts = []
+    for char in value:
+        if char.isascii():
+            parts.append(char)
+        elif regex.match(r"\p{Inherited}", char):
+            # Combining accents are removed without splitting the word.
+            continue
+        elif transliterable.match(char):
+            # One syllable per Han character: keep syllables apart.
+            text = _letters(char)
+            parts.append(f" {text} " if _HAN_CHAR.match(char) else text)
+        else:
+            # Symbols, emoji and unsupported scripts become separators.
+            parts.append(" ")
+    return "".join(parts)
 
 
 def normalize_slug(value: str, language: str | None = None) -> str:
@@ -52,18 +97,17 @@ def normalize_slug(value: str, language: str | None = None) -> str:
     is lossy, and unsupported text alone yields the readable fallback ``thing``.
     """
     value = unicodedata.normalize("NFC", value)
-    if not value.isascii() and ICU_VERSION != "74.2":
+    if not value.isascii() and ANYASCII_VERSION != _EXPECTED_ANYASCII_VERSION:
         raise RuntimeError(
-            "Canonical ID transliteration requires ICU 74.2 for stable output; "
-            f"found ICU {ICU_VERSION}. Install ICU 74.2 and rebuild PyICU against it."
+            "Canonical ID transliteration requires anyascii "
+            f"{_EXPECTED_ANYASCII_VERSION} for stable output; found "
+            f"{ANYASCII_VERSION}. Install "
+            f'"anyascii=={_EXPECTED_ANYASCII_VERSION}" (the kg-build extra pins it).'
         )
     if _language_parts(language)[0] == "de":
         value = value.translate(_GERMAN_REPLACEMENTS)
     if not value.isascii():
-        # ICU objects are mutable: each call owns its transform, including when
-        # ingestion workers normalize slugs concurrently.
-        transform = Transliterator.createInstance(_transform(language))
-        value = transform.transliterate(value)
+        value = _transliterate(value, language)
     lowered = value.strip().lower()
     lowered = re.sub(r"[^\w\s-]", " ", lowered, flags=re.ASCII)
     lowered = re.sub(r"[_\s]+", "-", lowered)
