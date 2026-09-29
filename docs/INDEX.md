@@ -18,5 +18,5 @@ Release sync: see `CHANGELOG.md` for the current version.
 - `docs/google_sheets_lookup.md`: Google Sheets lookup utility.
 - `docs/google_search_console_canonical_selection.md`: Canonical URL election from `url,title` CSV using GSC impressions, interval parsing, regex filtering, and fixed/auto adaptive concurrency.
 - `docs/html_converter.md`: HTML conversion helper behavior.
-- `docs/canonical_id_policy.md`: Canonical ID scope policy, type precedence, and URL/media rewrite guarantees.
+- `docs/canonical_id_policy.md`: Canonical ID scope policy, type precedence, URL/media rewrite guarantees, and language-aware ASCII transliteration (pinned `anyascii` backend).
 - `docs/CUSTOMER_PROJECT_CONTRACT.md`: Profile repository contract for `kg_build`, including `_base`/profile override semantics for postprocessors, runtime settings, and exports manifests.
