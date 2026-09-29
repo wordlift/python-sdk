@@ -96,14 +96,28 @@ Cloud callbacks and both postprocessor worker modes derive language from
 argument. Language tags are case-insensitive and accept regional forms such
 as `de-DE` or `de_DE`. Missing language uses Latin accent transliteration only.
 
-- German applies `ä → ae`, `ö → oe`, `ü → ue`, `ß → ss` (including capitals).
-  Other languages retain the generic Latin behavior, such as `ü → u`.
-- Russian, Ukrainian, Greek, Arabic, Hebrew, Korean Hangul, and Hindi use
-  explicit ICU romanization routes. Mandarin Chinese uses `Han-Latin`.
-- Japanese transliterates hiragana and katakana. Kanji, Cantonese, unknown
-  scripts, and scripts outside the selected language route do not receive a
-  guessed pronunciation. Unsupported characters are omitted from the readable
-  slug; an empty result uses `thing`.
+- Latin letters are folded to ASCII in every language: accents are removed
+  and letters such as `ø`, `ł`, `æ`, `œ`, `ß`, `đ`, and `ı` become `o`, `l`,
+  `ae`, `oe`, `ss`, `d`, and `i`; full-width Latin letters and digits become
+  ASCII. The folded set is the letters of the Unicode Latin script (via
+  `regex` script properties); symbols such as `×` and `÷` are omitted.
+- German applies `ä → ae`, `ö → oe`, `ü → ue` (including capitals) before
+  folding. Other languages retain the generic Latin behavior, such as `ü → u`.
+- Russian and Ukrainian (Cyrillic), Greek, Arabic, Hebrew, Korean Hangul, and
+  Hindi (Devanagari) transliterate their script. Letters that the backend
+  spells with punctuation stay within their word (`Ильич` becomes `ilich`,
+  `سعيد` becomes `syd`), and Devanagari omits the inherent vowel
+  (`नमस्ते` becomes `nmste`). Mandarin Chinese (`zh` or
+  `cmn`, including script, region, and extension subtags, but not other
+  Chinese extlangs such as `zh-yue`) romanizes Han characters one syllable
+  each, so `北京大学` becomes `bei-jing-da-xue`. Each character takes a single
+  reading, which can differ from the one its context calls for (`重庆` becomes
+  `zhong-qing`).
+- Japanese transliterates hiragana and katakana one character at a time.
+  Kanji, Cantonese, unknown scripts, and scripts outside the selected language
+  do not receive a guessed pronunciation. Unsupported characters, symbols
+  (including `©`, `®`, and `™`), and emoji are omitted from the readable slug;
+  an empty result uses `thing`.
 - Inputs are normalized to NFC, so canonically equivalent composed and
   decomposed text generates the same identifier. Existing punctuation,
   separators, ASCII-only behavior, and parent nesting conventions remain.
@@ -127,5 +141,10 @@ when the URL hash is unchanged. This change does not migrate or delete existing
 entities automatically: retain lookup mappings when existing root identity
 must be preserved.
 
-Transliteration uses PyICU 2.16.2 and native ICU 74.2; installation details are
-in [Packaging Slices](packaging_slices_v7.md#native-icu-for-kg-build).
+Transliteration uses `anyascii` 0.3.3, a pure-Python package with no native
+dependencies, so the same name and language produce the same identifier on
+every platform, independent of system libraries and locale. Non-ASCII canonicalization
+rejects another `anyascii` version with an actionable error. Upgrading it can
+change generated identifiers and needs the same impact check and cleanup as
+this change; see
+[Packaging Slices](packaging_slices_v7.md#transliteration-backend-for-kg-build).
