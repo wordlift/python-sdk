@@ -172,13 +172,15 @@ def _smoke_ingestion() -> None:
 
 def _smoke_kg_build() -> None:
     kg_build = importlib.import_module("wordlift_sdk.kg_build")
-    icu = importlib.import_module("icu")
-    assert icu.ICU_VERSION == "74.2"
+    anyascii = importlib.import_module("anyascii")
+    assert anyascii.__version__ == "0.3.3"
     slug = importlib.import_module(
         "wordlift_sdk.kg_build.postprocessors.processors.slug"
     )
     assert slug.normalize_slug("Müller", "de") == "mueller"
     assert slug.normalize_slug("Москва", "ru") == "moskva"
+    assert slug.normalize_slug("北京大学", "zh") == "bei-jing-da-xue"
+    assert slug.normalize_slug("Coca-Cola®") == "coca-cola"
     with tempfile.TemporaryDirectory() as tmpdir:
         config_path = Path(tmpdir) / "worai.toml"
         config_path.write_text(
