@@ -220,6 +220,19 @@ files = [
 ]
 
 [[package]]
+name = "anyascii"
+version = "0.3.3"
+description = "Unicode to ASCII transliteration"
+optional = true
+python-versions = ">=3.3"
+groups = ["main"]
+markers = "extra == \"kg-build\" or extra == \"all\""
+files = [
+    {file = "anyascii-0.3.3-py3-none-any.whl", hash = "sha256:f5ab5e53c8781a36b5a40e1296a0eeda2f48c649ef10c3921c1381b1d00dee7a"},
+    {file = "anyascii-0.3.3.tar.gz", hash = "sha256:c94e9dd9d47b3d9494eca305fef9447d00b4bf1a32aff85aa746fa3ec7fb95c3"},
+]
+
+[[package]]
 name = "anyio"
 version = "4.13.0"
 description = "High-level concurrency and networking framework on top of asyncio or Trio"
@@ -3469,7 +3482,7 @@ description = "Alternative regular expression module, to replace re."
 optional = true
 python-versions = ">=3.10"
 groups = ["main"]
-markers = "extra == \"ingestion\" or extra == \"kg-build\" or extra == \"all\""
+markers = "extra == \"kg-build\" or extra == \"all\" or extra == \"ingestion\""
 files = [
     {file = "regex-2026.4.4-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:74fa82dcc8143386c7c0392e18032009d1db715c25f4ba22d23dc2e04d02a20f"},
     {file = "regex-2026.4.4-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:a85b620a388d6c9caa12189233109e236b3da3deffe4ff11b84ae84e218a274f"},
@@ -4629,13 +4642,13 @@ test = ["coverage[toml]", "zope.event", "zope.testing"]
 testing = ["coverage[toml]", "zope.event", "zope.testing"]
 
 [extras]
-all = ["advertools", "google-auth", "gql", "gspread", "jinja2", "lxml", "morph-kgc", "pandas", "playwright", "pycountry", "pydantic-core", "pyicu", "pyoxigraph", "pyshacl", "python-liquid", "rdflib", "requests", "tomli", "tqdm", "trafilatura", "twisted", "worph"]
+all = ["advertools", "anyascii", "google-auth", "gql", "gspread", "jinja2", "lxml", "morph-kgc", "pandas", "playwright", "pycountry", "pydantic-core", "pyicu", "pyoxigraph", "pyshacl", "python-liquid", "rdflib", "regex", "requests", "tomli", "tqdm", "trafilatura", "twisted", "worph"]
 core = []
 google-search-console = ["google-auth", "pandas", "pycountry", "tqdm", "twisted"]
 google-sheets = ["google-auth", "gspread", "pandas"]
 graph = ["pyoxigraph", "pyshacl", "python-liquid", "rdflib", "requests", "tomli", "tqdm"]
 ingestion = ["advertools", "google-auth", "gspread", "lxml", "morph-kgc", "pandas", "playwright", "pyshacl", "rdflib", "requests", "tqdm", "trafilatura", "worph"]
-kg-build = ["advertools", "google-auth", "gql", "gspread", "jinja2", "lxml", "morph-kgc", "pandas", "playwright", "pydantic-core", "pyicu", "pyshacl", "python-liquid", "rdflib", "requests", "tomli", "tqdm", "trafilatura", "worph"]
+kg-build = ["advertools", "anyascii", "google-auth", "gql", "gspread", "jinja2", "lxml", "morph-kgc", "pandas", "playwright", "pydantic-core", "pyicu", "pyshacl", "python-liquid", "rdflib", "regex", "requests", "tomli", "tqdm", "trafilatura", "worph"]
 legacy = ["google-auth", "gql", "gspread", "lxml", "pandas", "playwright", "pycountry", "pydantic-core", "python-liquid", "rdflib", "requests", "tqdm", "twisted"]
 render = ["lxml", "playwright"]
 structured-data = ["advertools", "lxml", "morph-kgc", "playwright", "pyshacl", "rdflib", "requests", "tqdm", "worph"]
@@ -4645,4 +4658,4 @@ workflow = ["advertools", "google-auth", "gql", "gspread", "lxml", "pandas", "pl
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10, <3.15"
-content-hash = "0cece997bf0124753b675c8b32f1dcc0a26b8ba6f4fddb9ada32042cfc2215f5"
+content-hash = "1d6c528a2350d9736f62388b2e9d04e4b2840bdebad86b2a0f1e4053b031eacd"
