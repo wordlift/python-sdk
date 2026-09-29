@@ -9,6 +9,7 @@ CHECKS: list[tuple[str, str, str]] = [
     ("wordlift_sdk.structured_data", "CreateRequest", "structured-data"),
     ("wordlift_sdk", "run_kg_import_workflow", "workflow"),
     ("wordlift_sdk.kg_build", "run_cloud_workflow", "kg-build"),
+    ("wordlift_sdk.kg_build", "IdAllocator", "kg-build"),
 ]
 
 
