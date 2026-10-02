@@ -1,18 +1,17 @@
 # Changelog
 
-## Unreleased
+## 8.5.0 - 2026-10-02
 
 ### Changed
 
-- KG build canonical IDs use language-aware ASCII transliteration from
-  `account.language`, with stable source hashes for non-ASCII names without URLs.
-  German umlauts use `ae`/`oe`/`ue`; unsupported readings use a hashed fallback.
-  Generated IDs can change; existing root lookup mappings remain authoritative.
-- Transliteration uses the pure-Python `anyascii` package, pinned to 0.3.3 in
-  the `kg-build` and `all` extras; no native ICU, compiler, or system library
-  is needed. Symbols and emoji are dropped, and Han characters are romanized
-  one syllable each (`北京大学` → `bei-jing-da-xue`). Upgrading `anyascii` can
-  change generated IDs. See `docs/packaging_slices_v7.md`.
+- KG build canonical IDs are ASCII, transliterated with `anyascii` using
+  `account.language`; non-ASCII names without a URL get a stable hash suffix.
+  Generated IDs can change for those entities.
+
+### Fixed
+
+- Sitemap `lastmod` values in mixed formats or time zones are parsed instead
+  of being dropped.
 
 ## 8.4.7 - 2026-09-18
 
