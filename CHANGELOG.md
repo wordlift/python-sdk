@@ -32,7 +32,6 @@
   traceback and HTTP body. Each retry logs one warning line
   (`<call> failed (<error summary>); attempt n of 5, retrying in <s>s`), and
   the final error is reported once as a failed URL.
-
 - KG build `patch` writes: when one entity patch fails, `patch_all` now
   cancels and awaits its sibling patches before raising, instead of leaving
   them running unawaited.
