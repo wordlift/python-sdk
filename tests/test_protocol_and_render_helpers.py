@@ -79,6 +79,70 @@ async def test_graph_queue_put_reraises_create_error(monkeypatch):
         await queue.put(graph)
 
 
+def _service_error() -> Exception:
+    import wordlift_client
+
+    return wordlift_client.exceptions.ServiceException(
+        status=500, reason="Internal Server Error"
+    )
+
+
+@pytest.mark.asyncio
+async def test_graph_queue_retries_put_after_server_error(monkeypatch):
+    import tenacity
+    import wordlift_sdk.protocol.graph.graph_queue as graph_queue_module
+
+    class _FlakyApi(_FakeEntitiesApi):
+        async def create_or_update_entities(self, payload, _content_type=None):
+            self.calls.append((payload, _content_type))
+            if len(self.calls) == 1:
+                raise _service_error()
+
+    api = _FlakyApi(None)
+    monkeypatch.setattr(graph_queue_module.wordlift_client, "ApiClient", _FakeApiClient)
+    monkeypatch.setattr(
+        graph_queue_module.wordlift_client, "EntitiesApi", lambda client: api
+    )
+    monkeypatch.setattr(GraphQueue.put.retry, "wait", tenacity.wait_none())
+
+    queue = GraphQueue(client_configuration=SimpleNamespace())
+    graph = Graph()
+    graph.add((URIRef("urn:s"), URIRef("urn:p"), URIRef("urn:o")))
+
+    await queue.put(graph)
+
+    assert len(api.calls) == 2
+
+
+@pytest.mark.asyncio
+async def test_graph_queue_raises_when_server_errors_persist(monkeypatch):
+    import tenacity
+    import wordlift_client
+    import wordlift_sdk.protocol.graph.graph_queue as graph_queue_module
+
+    class _DownApi(_FakeEntitiesApi):
+        async def create_or_update_entities(self, payload, _content_type=None):
+            self.calls.append((payload, _content_type))
+            raise _service_error()
+
+    api = _DownApi(None)
+    monkeypatch.setattr(graph_queue_module.wordlift_client, "ApiClient", _FakeApiClient)
+    monkeypatch.setattr(
+        graph_queue_module.wordlift_client, "EntitiesApi", lambda client: api
+    )
+    monkeypatch.setattr(GraphQueue.put.retry, "wait", tenacity.wait_none())
+
+    queue = GraphQueue(client_configuration=SimpleNamespace())
+    graph = Graph()
+    graph.add((URIRef("urn:s"), URIRef("urn:p"), URIRef("urn:o")))
+
+    with pytest.raises(wordlift_client.exceptions.ServiceException):
+        await queue.put(graph)
+
+    assert len(api.calls) == 5
+    assert queue.hashes == set()
+
+
 def test_graph_queue_hash_graph_is_stable():
     graph1 = Graph()
     graph2 = Graph()

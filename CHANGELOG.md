@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- `GraphQueue.put` now retries a failed `PUT /entities`. It used to record the
+  graph as written before sending it, so the retry after an HTTP 500 skipped
+  the write and returned success. The failure was logged once, the URL was
+  not counted as failed, and graph sync exited 0. A write that still fails
+  after all retries now raises, so the URL is reported as failed.
+
 ## 8.5.0 - 2026-10-02
 
 ### Changed

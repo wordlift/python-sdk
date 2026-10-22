@@ -75,20 +75,24 @@ class GraphQueue:
     async def put(self, graph: Graph) -> None:
         loop = asyncio.get_event_loop()
         hash = await loop.run_in_executor(None, GraphQueue.hash_graph, graph)
-        if hash not in self.hashes:
-            self.hashes.add(hash)
+        if hash in self.hashes:
+            return
 
-            api_client = await self._get_api_client()
-            api_instance = wordlift_client.EntitiesApi(api_client)
+        api_client = await self._get_api_client()
+        api_instance = wordlift_client.EntitiesApi(api_client)
 
-            try:
-                await api_instance.create_or_update_entities(
-                    graph.serialize(format="turtle"),
-                    _content_type="text/turtle",
-                )
-            except Exception as e:
-                logger.error(f"Failed to create entities: {e}", exc_info=e)
-                raise e
+        try:
+            await api_instance.create_or_update_entities(
+                graph.serialize(format="turtle"),
+                _content_type="text/turtle",
+            )
+        except Exception as e:
+            logger.error(f"Failed to create entities: {e}", exc_info=e)
+            raise e
+
+        # Record the hash only after a successful write, so a retry after a
+        # failed PUT sends the graph again instead of skipping it.
+        self.hashes.add(hash)
 
     @staticmethod
     def hash_graph(graph: Graph) -> str:
