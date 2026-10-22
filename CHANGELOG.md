@@ -33,6 +33,19 @@
   (`<call> failed (<error summary>); attempt n of 5, retrying in <s>s`), and
   the final error is reported once as a failed URL.
 
+- KG build `patch` writes: when one entity patch fails, `patch_all` now
+  cancels and awaits its sibling patches before raising, instead of leaving
+  them running unawaited.
+- The adaptive patch concurrency limit no longer drifts upward when it steps
+  down or up while patches are in flight. It is now an `anyio.CapacityLimiter`
+  resized in place, so permits already held are returned to the same limiter.
+- A patch concurrency limit stepped down to 1 now steps back up on sustained
+  success. It used to switch `patch_all` to a sequential path that never
+  stepped up again.
+- A transient error on an entity patch, once `EntityPatchQueue` has used its 5
+  attempts, steps the patch concurrency down and fails the URL. `patch_all`
+  used to retry a 429 or 5xx once more on top of the queue's retries.
+
 ### Changed
 
 - One retry decorator, `retry_transient` in `wordlift_sdk.protocol.retry_policy`,
@@ -47,6 +60,8 @@
 - `wordlift_sdk.protocol.errors.summarize_error` gives a one-line error
   description without HTTP headers or body.
 - `GraphQueue` hashes a graph once per `put`, not once per retry attempt.
+- The `kg-build` extra declares `anyio` directly (it was already installed
+  through `gql`).
 
 ## 8.5.0 - 2026-10-02
 

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 from types import SimpleNamespace
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 import pytest
 from rdflib import Graph, Literal, URIRef
@@ -11,6 +11,7 @@ from wordlift_client.exceptions import ApiException
 from wordlift_sdk.kg_build.entity_patcher import (
     EntityPatcher,
     SEOVOC_IMPORT_HASH,
+    _AdaptiveConcurrency,
 )
 
 
@@ -322,108 +323,191 @@ async def test_patch_all_concurrency_is_respected() -> None:
     assert concurrent_peak <= concurrency
 
 
-@pytest.mark.asyncio
-async def test_patch_all_step_down_on_rate_limit_error() -> None:
-    """Semaphore is halved when a 429 error is raised."""
-    context = _ctx("https://data.example.com", patch_concurrency=8)
-    patcher = EntityPatcher(context)
-    initial_limit = patcher._semaphore.limit
+_NAME = URIRef("https://schema.org/name")
 
-    call_count = 0
 
-    async def failing_then_ok(entity_patch):
-        nonlocal call_count
-        call_count += 1
-        if call_count == 1:
-            exc = ApiException(status=429, reason="Too Many Requests")
-            raise exc
-
-    context.entity_patch_queue.put = failing_then_ok
-
-    p = URIRef("https://schema.org/name")
+def _graph(*iris: str) -> Graph:
     g = Graph()
-    iri = URIRef("https://data.example.com/a")
-    g.add((iri, p, Literal("A")))
-
-    # Patch single IRI so step-down occurs on first call, retry succeeds.
-    with patch("wordlift_sdk.kg_build.entity_patcher._STEP_DOWN_BACKOFF", 0):
-        await patcher.patch_all(g)
-
-    assert patcher._semaphore.limit == max(1, initial_limit // 2)
+    for iri in iris:
+        g.add((URIRef(iri), _NAME, Literal(iri)))
+    return g
 
 
 @pytest.mark.asyncio
-async def test_patch_all_step_down_on_server_error() -> None:
-    """Semaphore is halved when a 500 error is raised."""
+@pytest.mark.parametrize(
+    "error",
+    [
+        ApiException(status=429, reason="Too Many Requests"),
+        ApiException(status=503, reason="Service Unavailable"),
+        asyncio.TimeoutError(),
+    ],
+    ids=["429", "503", "timeout"],
+)
+async def test_patch_all_transient_error_steps_down_without_extra_retry(
+    error: BaseException,
+) -> None:
+    """A transient error halves the limit and propagates: the queue retried it."""
     context = _ctx("https://data.example.com", patch_concurrency=8)
+    context.entity_patch_queue.put = AsyncMock(side_effect=error)
     patcher = EntityPatcher(context)
-    initial_limit = patcher._semaphore.limit
 
-    call_count = 0
+    with pytest.raises(type(error)):
+        await patcher.patch_all(_graph("https://data.example.com/a"))
 
-    async def failing_then_ok(entity_patch):
-        nonlocal call_count
-        call_count += 1
-        if call_count == 1:
-            raise ApiException(status=503, reason="Service Unavailable")
+    assert patcher._concurrency.limit == 4
+    assert patcher._concurrency.in_flight == 0
+    assert context.entity_patch_queue.put.await_count == 1
 
-    context.entity_patch_queue.put = failing_then_ok
 
-    p = URIRef("https://schema.org/name")
-    g = Graph()
-    g.add((URIRef("https://data.example.com/a"), p, Literal("A")))
+@pytest.mark.asyncio
+async def test_patch_all_failure_cancels_and_awaits_sibling_patches() -> None:
+    """No sibling patch is left running once patch_all raises."""
+    context = _ctx("https://data.example.com", patch_concurrency=5)
+    patcher = EntityPatcher(context)
+    failing = "https://data.example.com/fail"
+    siblings = [f"https://data.example.com/{i}" for i in range(4)]
+    started: list[str] = []
+    cancelled: list[str] = []
+    all_started = asyncio.Event()
 
-    with patch("wordlift_sdk.kg_build.entity_patcher._STEP_DOWN_BACKOFF", 0):
-        await patcher.patch_all(g)
+    async def put(entity_patch):
+        iri = str(entity_patch.iri)
+        if iri == failing:
+            await all_started.wait()
+            raise ApiException(status=400, reason="Bad Request")
+        started.append(iri)
+        if len(started) == len(siblings):
+            all_started.set()
+        try:
+            await asyncio.Event().wait()
+        except asyncio.CancelledError:
+            cancelled.append(iri)
+            raise
 
-    assert patcher._semaphore.limit == max(1, initial_limit // 2)
+    context.entity_patch_queue.put = put
+
+    with pytest.raises(ApiException):
+        await asyncio.wait_for(patcher.patch_all(_graph(failing, *siblings)), 1)
+
+    assert sorted(cancelled) == sorted(siblings)
+    assert patcher._concurrency.in_flight == 0
+    assert patcher._concurrency.limit == 5  # a 400 is not an overload
+
+
+async def _hold(concurrency: _AdaptiveConcurrency, release: asyncio.Event) -> None:
+    await concurrency.limited(release.wait)()
+
+
+@pytest.mark.asyncio
+async def test_adaptive_concurrency_step_down_while_held_does_not_drift() -> None:
+    """Permits held across a step-down are returned without raising the limit."""
+    concurrency = _AdaptiveConcurrency(initial=4, maximum=4)
+    first_wave = asyncio.Event()
+    holders = [asyncio.ensure_future(_hold(concurrency, first_wave)) for _ in range(4)]
+    await asyncio.sleep(0)
+    assert concurrency.in_flight == 4
+
+    concurrency.step_down()
+    first_wave.set()
+    await asyncio.gather(*holders)
+    assert concurrency.limit == 2
+    assert concurrency.in_flight == 0
+
+    second_wave = asyncio.Event()
+    holders = [asyncio.ensure_future(_hold(concurrency, second_wave)) for _ in range(3)]
+    await asyncio.sleep(0)
+    assert concurrency.in_flight == 2
+
+    second_wave.set()
+    await asyncio.wait_for(asyncio.gather(*holders), 1)
+
+
+@pytest.mark.asyncio
+async def test_adaptive_concurrency_step_up_wakes_waiter() -> None:
+    concurrency = _AdaptiveConcurrency(initial=1, maximum=2, step_up_after=1)
+    release = asyncio.Event()
+    holders = [asyncio.ensure_future(_hold(concurrency, release)) for _ in range(2)]
+    await asyncio.sleep(0)
+    assert concurrency.in_flight == 1
+
+    concurrency.record_batch_success()
+    await asyncio.sleep(0)
+
+    assert concurrency.limit == 2
+    assert concurrency.in_flight == 2
+    release.set()
+    await asyncio.wait_for(asyncio.gather(*holders), 1)
+
+
+@pytest.mark.asyncio
+async def test_adaptive_concurrency_cancelled_waiter_takes_no_permit() -> None:
+    concurrency = _AdaptiveConcurrency(initial=1, maximum=1)
+    release = asyncio.Event()
+    holder = asyncio.ensure_future(_hold(concurrency, release))
+    waiter = asyncio.ensure_future(_hold(concurrency, release))
+    await asyncio.sleep(0)
+
+    waiter.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await waiter
+    release.set()
+    await holder
+
+    assert concurrency.in_flight == 0
 
 
 @pytest.mark.asyncio
 async def test_patch_all_step_up_after_sustained_success() -> None:
-    """Semaphore steps up after the configured number of successful batches."""
+    """The limit steps up after the configured number of successful batches."""
     context = _ctx(
         "https://data.example.com",
         patch_concurrency=5,
         patch_concurrency_max=10,
     )
     patcher = EntityPatcher(context)
-    initial_limit = patcher._semaphore.limit
-    step_up_after = patcher._semaphore._step_up_after
+    step_up_after = patcher._concurrency._step_up_after
 
-    p = URIRef("https://schema.org/name")
-
-    # Run step_up_after successful patch_all batches.
     for i in range(step_up_after):
-        g = Graph()
-        g.add((URIRef(f"https://data.example.com/{i}"), p, Literal(str(i))))
-        await patcher.patch_all(g)
+        await patcher.patch_all(_graph(f"https://data.example.com/{i}"))
 
-    assert patcher._semaphore.limit == initial_limit + 1
+    assert patcher._concurrency.limit == 6
+
+
+@pytest.mark.asyncio
+async def test_patch_all_recovers_after_stepping_down_to_one() -> None:
+    """A limit stepped down to 1 still steps back up on sustained success."""
+    context = _ctx("https://data.example.com", patch_concurrency=2)
+    patcher = EntityPatcher(context)
+    patcher._concurrency.step_down()
+    patcher._concurrency.step_down()  # already at the floor
+    assert patcher._concurrency.limit == 1
+
+    for i in range(patcher._concurrency._step_up_after):
+        await patcher.patch_all(_graph(f"https://data.example.com/{i}"))
+
+    assert patcher._concurrency.limit == 2
 
 
 @pytest.mark.asyncio
 async def test_patch_all_concurrency_1_is_sequential() -> None:
-    """When concurrency=1, behaviour is identical to the original sequential loop."""
+    """With concurrency=1 every IRI is patched once, one at a time."""
     context = _ctx("https://data.example.com", patch_concurrency=1)
     patcher = EntityPatcher(context)
-
     call_order: list[str] = []
+    current = peak = 0
 
     async def recording_put(entity_patch):
+        nonlocal current, peak
+        current += 1
+        peak = max(peak, current)
         call_order.append(str(entity_patch.iri))
+        await asyncio.sleep(0)
+        current -= 1
 
     context.entity_patch_queue.put = recording_put
+    iris = [f"https://data.example.com/{i}" for i in range(5)]
 
-    p = URIRef("https://schema.org/name")
-    iris = [URIRef(f"https://data.example.com/{i}") for i in range(5)]
-    g = Graph()
-    for iri in iris:
-        g.add((iri, p, Literal(str(iri))))
+    await patcher.patch_all(_graph(*iris))
 
-    await patcher.patch_all(g)
-
-    # All IRIs patched exactly once; order is determined by set iteration
-    # (same as the old sequential loop).
-    assert sorted(call_order) == sorted(str(iri) for iri in iris)
-    assert len(call_order) == len(iris)
+    assert sorted(call_order) == sorted(iris)
+    assert peak == 1
