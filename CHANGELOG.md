@@ -5,10 +5,13 @@
 ### Fixed
 
 - `GraphQueue.put` now retries a failed `PUT /entities`. It used to record the
-  graph as written before sending it, so the retry after an HTTP 500 skipped
-  the write and returned success. The failure was logged once, the URL was
-  not counted as failed, and graph sync exited 0. A write that still fails
-  after all retries now raises, so the URL is reported as failed.
+  graph as written before sending it, so any retried failure (5xx, 400,
+  timeout, dropped connection) was logged once, the retry skipped the write
+  and returned success, the URL was not counted as failed, and graph sync
+  exited 0. A write that still fails after all retries now raises, so the URL
+  is reported as failed. Runs that were silently losing writes will now fail.
+  Custom `web_page_import_protocol.py` overrides that push to `graph_queue`
+  will see these exceptions too.
 - `EntityPatchQueue.put` stops after 5 attempts. It used to retry a failing
   patch forever, which hung `patch`-strategy runs until the job timed out.
 - A static-template write that fails is no longer retried by every later URL
