@@ -1716,3 +1716,70 @@ def test_protocol_validation_mode_normalization_and_deprecation(
         )
     assert unknown_hash_mode._import_hash_mode == "on"
     assert "Unsupported import hash mode" in caplog.text
+
+
+@pytest.mark.asyncio
+async def test_put_write_failure_is_reported_as_url_failure() -> None:
+    import wordlift_client
+    from wordlift_sdk.url_source.url_source import Url
+    from wordlift_sdk.workflow.url_handler.default_url_handler import (
+        DefaultUrlHandler,
+    )
+    from wordlift_sdk.workflow.url_handler.url_handler import UrlHandler
+
+    context = _make_context()
+    context.graph_queue.put = AsyncMock(
+        side_effect=wordlift_client.exceptions.ServiceException(
+            status=500, reason="Internal Server Error"
+        )
+    )
+    protocol = ProfileImportProtocol(
+        context=context,
+        profile=_make_profile(),
+        root_dir=Path.cwd(),
+        graph_write_strategy="put",
+    )
+    protocol._patch_static_templates_once = AsyncMock()
+    protocol._resolve_mapping_path = MagicMock(return_value=Path("mapping.yarrrml"))
+    protocol._get_mapping_content = MagicMock(return_value="mapping")
+    protocol._run_mapping_stage = AsyncMock(
+        return_value=_make_mapping_result(_make_dataset_scoped_graph())
+    )
+    protocol._run_postprocessing_stage = _passthrough_pp()
+
+    class _ScrapeHandler(UrlHandler):
+        async def __call__(self, url: Url) -> None:
+            await protocol.callback(
+                WebPageScrapeResponse(
+                    web_page=WebPage(url=url.value, html="<html></html>")
+                )
+            )
+
+    handler = DefaultUrlHandler([_ScrapeHandler()])
+
+    await handler(Url(value="https://example.com/page"))
+
+    assert len(handler.failures) == 1
+    assert handler.failures[0].url.value == "https://example.com/page"
+    assert "500" in handler.failures[0].message
+
+
+@pytest.mark.asyncio
+async def test_static_templates_failure_fails_later_callbacks_fast() -> None:
+    protocol = ProfileImportProtocol(
+        context=_make_context(),
+        profile=_make_profile(),
+        root_dir=Path.cwd(),
+    )
+    protocol._template_graph = _make_dataset_scoped_graph()
+    protocol._template_exports = {}
+    protocol._shacl_validator.validate = AsyncMock(return_value=None)
+    protocol.patcher.patch_all = AsyncMock(side_effect=RuntimeError("api down"))
+
+    with pytest.raises(RuntimeError, match="api down"):
+        await protocol._patch_static_templates_once()
+    with pytest.raises(RuntimeError, match="Static templates were not written"):
+        await protocol._patch_static_templates_once()
+
+    protocol.patcher.patch_all.assert_awaited_once()
+    assert protocol._static_templates_patched is False

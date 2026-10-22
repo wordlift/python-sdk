@@ -1,20 +1,13 @@
 import hashlib
 import logging
-import aiohttp
 import asyncio
 
-import pydantic_core
 import wordlift_client
 from rdflib import Graph
 from rdflib.compare import to_isomorphic
 from wordlift_client import Configuration
-from tenacity import (
-    retry,
-    retry_if_exception_type,
-    wait_fixed,
-    after_log,
-    stop_after_attempt,
-)
+
+from ..write_retry import retry_write
 
 logger = logging.getLogger(__name__)
 
@@ -55,23 +48,7 @@ class GraphQueue:
                 pass
             self._api_client = None
 
-    @retry(
-        stop=stop_after_attempt(5),
-        retry=retry_if_exception_type(
-            asyncio.TimeoutError
-            | aiohttp.client_exceptions.ServerDisconnectedError
-            | aiohttp.client_exceptions.ClientConnectorError
-            | aiohttp.client_exceptions.ClientPayloadError
-            | aiohttp.client_exceptions.ClientConnectorDNSError
-            | pydantic_core.ValidationError
-            | wordlift_client.exceptions.ServiceException
-            | wordlift_client.exceptions.BadRequestException
-            | aiohttp.client_exceptions.ClientOSError
-        ),
-        wait=wait_fixed(2),  # Wait 2 seconds between retries
-        after=after_log(logger, logging.WARNING),
-        reraise=True,
-    )
+    @retry_write(logger)
     async def put(self, graph: Graph) -> None:
         loop = asyncio.get_event_loop()
         hash = await loop.run_in_executor(None, GraphQueue.hash_graph, graph)

@@ -9,6 +9,21 @@
   the write and returned success. The failure was logged once, the URL was
   not counted as failed, and graph sync exited 0. A write that still fails
   after all retries now raises, so the URL is reported as failed.
+- `EntityPatchQueue.put` stops after 5 attempts. It used to retry a failing
+  patch forever, which hung `patch`-strategy runs until the job timed out.
+- A static-template write that fails is no longer retried by every later URL
+  callback in turn. Later callbacks fail at once with
+  `Static templates were not written`, so the run ends quickly when the API is
+  down.
+- A `data/templates/*.ttl.liquid` template that cannot be loaded or written
+  now fails the run. It used to be logged and ignored.
+
+### Changed
+
+- Both entity write queues share one retry policy (`wordlift_sdk.protocol.write_retry`):
+  5 attempts with exponential backoff and jitter (2s up to 30s) on timeouts,
+  disconnects and 5xx responses. A `400 Bad Request` is no longer retried, so
+  it fails the URL on the first attempt.
 
 ## 8.5.0 - 2026-10-02
 

@@ -40,4 +40,6 @@ class TtlLiquidGraphFactory:
 
                 await self.context.graph_queue.put(graph)
             except Exception as e:
-                logger.error(f"Error loading contact points graph: {e}")
+                # A template that cannot be loaded or written fails the run.
+                logger.error(f"Error loading {template} graph: {e}")
+                raise
