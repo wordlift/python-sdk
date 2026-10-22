@@ -27,14 +27,24 @@
   the callback too, so a failing graph write was multiplied by both retry
   layers (up to 25 writes per URL) and the page was re-imported or re-scraped
   on every attempt.
+- A failing write is logged once instead of once per attempt with a full
+  traceback and HTTP body. Each retry logs one warning line
+  (`<call> failed (<error summary>); attempt n of 5, retrying in <s>s`), and
+  the final error is reported once as a failed URL.
 
 ### Changed
 
-- Both entity write queues share one retry policy (`wordlift_sdk.protocol.write_retry`):
-  5 attempts with exponential backoff and jitter (about 30s of waiting in
-  total) on timeouts, disconnects and 5xx responses. An entity write that gets
-  `400 Bad Request` or a response validation error is no longer retried, so it
+- One retry decorator, `retry_transient` in `wordlift_sdk.protocol.retry_policy`,
+  now covers the entity write queues and the import and scrape requests of
+  `WebPageImportUrlHandler` and `WebPageScrapeUrlHandler`. It makes 5 attempts
+  with exponential backoff and jitter (about 30s of waiting in total).
+- Only transient errors are retried, as decided by
+  `wordlift_sdk.protocol.errors.is_transient_error`: transport errors, `429`
+  (newly retried) and `5xx`. A `400 Bad Request` or a response validation error
+  is no longer retried, on writes or on import and scrape requests, so it
   fails the URL on the first attempt.
+- `wordlift_sdk.protocol.errors.summarize_error` gives a one-line error
+  description without HTTP headers or body.
 - `GraphQueue` hashes a graph once per `put`, not once per retry attempt.
 
 ## 8.5.0 - 2026-10-02

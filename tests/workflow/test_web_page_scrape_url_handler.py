@@ -85,3 +85,36 @@ async def test_web_page_scrape_handler_does_not_retry_failing_callback():
 
             mock_api_instance.create_web_page_scrape.assert_awaited_once()
             callback.callback.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_web_page_scrape_handler_retries_transient_request_error(no_retry_wait):
+    import wordlift_client
+
+    no_retry_wait(WebPageScrapeUrlHandler._scrape)
+    callback = AsyncMock()
+    handler = WebPageScrapeUrlHandler(
+        context=MagicMock(), web_page_scrape_callback=callback
+    )
+    response = MagicMock()
+
+    with patch(
+        "wordlift_sdk.workflow.url_handler.web_page_scrape_url_handler.ApiClient"
+    ) as mock_api_client_class:
+        mock_api_client_class.return_value.__aenter__.return_value = AsyncMock()
+        with patch(
+            "wordlift_sdk.workflow.url_handler.web_page_scrape_url_handler.WebPageScrapeApi"
+        ) as mock_api_instance_class:
+            mock_api_instance = AsyncMock()
+            mock_api_instance_class.return_value = mock_api_instance
+            mock_api_instance.create_web_page_scrape.side_effect = [
+                wordlift_client.exceptions.ServiceException(status=503),
+                response,
+            ]
+
+            await handler(Url(value="https://example.com/page"))
+
+            assert mock_api_instance.create_web_page_scrape.await_count == 2
+            callback.callback.assert_awaited_once_with(
+                response, existing_web_page_id=None, existing_import_hash=None
+            )

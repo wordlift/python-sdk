@@ -15,6 +15,7 @@ import pandas as pd
 from rdflib import Graph, URIRef
 from wordlift_client.models.web_page_scrape_response import WebPageScrapeResponse
 from wordlift_sdk.protocol import Context
+from wordlift_sdk.protocol.errors import summarize_error
 from wordlift_sdk.protocol.web_page_import_protocol import (
     WebPageImportProtocolInterface,
 )
@@ -153,16 +154,6 @@ def _resolve_materialization_backend(settings: dict[str, Any]) -> str:
         value,
     )
     return "morph"
-
-
-def _summarize_error(exc: Exception) -> str:
-    """One-line description of an error, without HTTP headers or body."""
-    status = getattr(exc, "status", None)
-    if status is not None:
-        reason = getattr(exc, "reason", None) or ""
-        return f"{type(exc).__name__} ({status} {reason})".replace(" )", ")")
-    lines = str(exc).strip().splitlines()
-    return f"{type(exc).__name__}: {lines[0]}" if lines else type(exc).__name__
 
 
 class ProfileImportProtocol(WebPageImportProtocolInterface):
@@ -576,7 +567,7 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             if self._static_templates_error is not None:
                 raise RuntimeError(
                     "Static templates were not written: "
-                    f"{_summarize_error(self._static_templates_error)}"
+                    f"{summarize_error(self._static_templates_error)}"
                 ) from self._static_templates_error
             try:
                 await self._patch_static_templates()

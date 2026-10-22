@@ -5,6 +5,7 @@ from liquid import Environment, CachingFileSystemLoader
 from rdflib import Graph
 
 from ...protocol import Context
+from ...protocol.errors import summarize_error
 
 logger = logging.getLogger(__name__)
 
@@ -41,5 +42,6 @@ class TtlLiquidGraphFactory:
                 await self.context.graph_queue.put(graph)
             except Exception as e:
                 # A template that cannot be loaded or written fails the run.
-                logger.error(f"Error loading {path} graph: {e}")
-                raise
+                raise RuntimeError(
+                    f"Template {path} could not be loaded: {summarize_error(e)}"
+                ) from e

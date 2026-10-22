@@ -7,7 +7,7 @@ from rdflib import Graph
 from rdflib.compare import to_isomorphic
 from wordlift_client import Configuration
 
-from ..write_retry import retry_write
+from ..retry_policy import retry_transient
 
 logger = logging.getLogger(__name__)
 
@@ -59,19 +59,14 @@ class GraphQueue:
         # write failed is sent again the next time it is put.
         self.hashes.add(hash)
 
-    @retry_write(logger)
+    @retry_transient(logger)
     async def _send(self, graph: Graph) -> None:
         api_client = await self._get_api_client()
         api_instance = wordlift_client.EntitiesApi(api_client)
-
-        try:
-            await api_instance.create_or_update_entities(
-                graph.serialize(format="turtle"),
-                _content_type="text/turtle",
-            )
-        except Exception as e:
-            logger.error(f"Failed to create entities: {e}", exc_info=e)
-            raise e
+        await api_instance.create_or_update_entities(
+            graph.serialize(format="turtle"),
+            _content_type="text/turtle",
+        )
 
     @staticmethod
     def hash_graph(graph: Graph) -> str:
