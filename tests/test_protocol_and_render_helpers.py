@@ -9,6 +9,7 @@ from wordlift_sdk.protocol.entity_patch.entity_patch import EntityPatch
 from wordlift_sdk.protocol.entity_patch.entity_patch_queue import EntityPatchQueue
 from wordlift_sdk.protocol.graph.graph_queue import GraphQueue
 from wordlift_sdk.protocol.load_override_class import load_override_class
+from wordlift_sdk.protocol.retry_policy import RETRY_ATTEMPTS
 from wordlift_sdk.render.render_options import RenderOptions
 from wordlift_sdk.structured_data.agent import AgentGenerator as AgentWrapper
 
@@ -117,13 +118,13 @@ async def test_graph_queue_retries_put_after_server_error(entities_api, monkeypa
 async def test_graph_queue_raises_when_server_errors_persist(entities_api):
     import wordlift_client
 
-    api = entities_api(*[_server_error()] * 5)
+    api = entities_api(*[_server_error()] * RETRY_ATTEMPTS)
     queue = GraphQueue(client_configuration=SimpleNamespace())
 
     with pytest.raises(wordlift_client.exceptions.ServiceException):
         await queue.put(_graph())
 
-    assert len(api.calls) == 5
+    assert len(api.calls) == RETRY_ATTEMPTS
     assert queue.hashes == set()
 
 
@@ -160,13 +161,13 @@ async def test_entity_patch_queue_put(entities_api):
 async def test_entity_patch_queue_stops_retrying_server_errors(entities_api):
     import wordlift_client
 
-    api = entities_api(*[_server_error()] * 6)
+    api = entities_api(*[_server_error()] * RETRY_ATTEMPTS)
     queue = EntityPatchQueue(client_configuration=SimpleNamespace())
 
     with pytest.raises(wordlift_client.exceptions.ServiceException):
         await queue.put(EntityPatch(iri="urn:entity", requests=[]))
 
-    assert len(api.calls) == 5
+    assert len(api.calls) == RETRY_ATTEMPTS
 
 
 @pytest.mark.asyncio

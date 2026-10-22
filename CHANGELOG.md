@@ -26,7 +26,8 @@
   import or scrape request, then call the callback once. They used to retry
   the callback too, so a failing graph write was multiplied by both retry
   layers (up to 25 writes per URL) and the page was re-imported or re-scraped
-  on every attempt.
+  on every attempt. When retries run out they now raise the real error instead
+  of `tenacity.RetryError`, so failed-URL messages name the cause.
 - A failing write is logged once instead of once per attempt with a full
   traceback and HTTP body. Each retry logs one warning line
   (`<call> failed (<error summary>); attempt n of 5, retrying in <s>s`), and

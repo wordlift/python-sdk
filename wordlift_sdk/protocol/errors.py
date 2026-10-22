@@ -8,7 +8,6 @@ import aiohttp
 TRANSPORT_ERRORS = (
     asyncio.TimeoutError,
     aiohttp.client_exceptions.ServerDisconnectedError,
-    aiohttp.client_exceptions.ClientConnectorError,
     aiohttp.client_exceptions.ClientPayloadError,
     aiohttp.client_exceptions.ClientOSError,
 )
