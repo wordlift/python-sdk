@@ -85,7 +85,7 @@ class WebPageImportUrlHandler(UrlHandler):
         after=after_log(logger, logging.WARNING),
         stop=stop_after_attempt(5),
     )
-    async def __call__(self, url: Url) -> None:
+    async def _import(self, url: Url):
         async with ApiClient(self._context.client_configuration) as client:
             api_instance = WebPagesImportsApi(client)
 
@@ -100,10 +100,16 @@ class WebPageImportUrlHandler(UrlHandler):
             )
 
             try:
-                response = await api_instance.create_web_page_imports(
+                return await api_instance.create_web_page_imports(
                     web_page_import_request=request, _request_timeout=120.0
                 )
-                await self._web_page_import_callback.callback(response)
             except Exception as e:
                 logger.error("Error importing Web Page %s" % url.value, exc_info=e)
                 raise e
+
+    async def __call__(self, url: Url) -> None:
+        # Only the import request is retried here. The callback writes the
+        # graph through queues that retry on their own, so retrying it again
+        # would multiply the writes.
+        response = await self._import(url)
+        await self._web_page_import_callback.callback(response)

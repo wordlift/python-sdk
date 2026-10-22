@@ -58,7 +58,7 @@ class WebPageScrapeUrlHandler(UrlHandler):
         after=after_log(logger, logging.WARNING),
         stop=stop_after_attempt(5),
     )
-    async def __call__(self, url: Url) -> None:
+    async def _scrape(self, url: Url):
         async with ApiClient(self._context.client_configuration) as client:
             api_instance = WebPageScrapeApi(client)
 
@@ -68,14 +68,20 @@ class WebPageScrapeUrlHandler(UrlHandler):
             )
 
             try:
-                response = await api_instance.create_web_page_scrape(
+                return await api_instance.create_web_page_scrape(
                     web_page_scrape_request=request, _request_timeout=120.0
-                )
-                await self._web_page_scrape_callback.callback(
-                    response,
-                    existing_web_page_id=url.iri,
-                    existing_import_hash=url.import_hash,
                 )
             except Exception as e:
                 logger.error("Error scraping Web Page %s", url.value, exc_info=e)
                 raise e
+
+    async def __call__(self, url: Url) -> None:
+        # Only the scrape request is retried here. The callback writes the
+        # graph through queues that retry on their own, so retrying it again
+        # would multiply the writes.
+        response = await self._scrape(url)
+        await self._web_page_scrape_callback.callback(
+            response,
+            existing_web_page_id=url.iri,
+            existing_import_hash=url.import_hash,
+        )

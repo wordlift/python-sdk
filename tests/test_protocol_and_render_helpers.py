@@ -103,15 +103,24 @@ async def test_graph_queue_retries_put_after_server_error(monkeypatch):
     monkeypatch.setattr(
         graph_queue_module.wordlift_client, "EntitiesApi", lambda client: api
     )
-    monkeypatch.setattr(GraphQueue.put.retry, "wait", tenacity.wait_none())
+    monkeypatch.setattr(GraphQueue._send.retry, "wait", tenacity.wait_none())
 
     queue = GraphQueue(client_configuration=SimpleNamespace())
     graph = Graph()
     graph.add((URIRef("urn:s"), URIRef("urn:p"), URIRef("urn:o")))
 
+    hash_calls = []
+    original_hash_graph = GraphQueue.hash_graph
+    monkeypatch.setattr(
+        GraphQueue,
+        "hash_graph",
+        staticmethod(lambda g: hash_calls.append(g) or original_hash_graph(g)),
+    )
+
     await queue.put(graph)
 
     assert len(api.calls) == 2
+    assert len(hash_calls) == 1
 
 
 @pytest.mark.asyncio
@@ -130,7 +139,7 @@ async def test_graph_queue_raises_when_server_errors_persist(monkeypatch):
     monkeypatch.setattr(
         graph_queue_module.wordlift_client, "EntitiesApi", lambda client: api
     )
-    monkeypatch.setattr(GraphQueue.put.retry, "wait", tenacity.wait_none())
+    monkeypatch.setattr(GraphQueue._send.retry, "wait", tenacity.wait_none())
 
     queue = GraphQueue(client_configuration=SimpleNamespace())
     graph = Graph()

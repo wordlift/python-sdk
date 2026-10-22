@@ -155,6 +155,16 @@ def _resolve_materialization_backend(settings: dict[str, Any]) -> str:
     return "morph"
 
 
+def _summarize_error(exc: Exception) -> str:
+    """One-line description of an error, without HTTP headers or body."""
+    status = getattr(exc, "status", None)
+    if status is not None:
+        reason = getattr(exc, "reason", None) or ""
+        return f"{type(exc).__name__} ({status} {reason})".replace(" )", ")")
+    lines = str(exc).strip().splitlines()
+    return f"{type(exc).__name__}: {lines[0]}" if lines else type(exc).__name__
+
+
 class ProfileImportProtocol(WebPageImportProtocolInterface):
     """Generic cloud callback protocol driven by profile mappings and templates."""
 
@@ -565,7 +575,8 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             # already failed, one callback after another.
             if self._static_templates_error is not None:
                 raise RuntimeError(
-                    f"Static templates were not written: {self._static_templates_error}"
+                    "Static templates were not written: "
+                    f"{_summarize_error(self._static_templates_error)}"
                 ) from self._static_templates_error
             try:
                 await self._patch_static_templates()

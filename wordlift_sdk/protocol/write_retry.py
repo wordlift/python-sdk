@@ -4,7 +4,6 @@ import asyncio
 import logging
 
 import aiohttp
-import pydantic_core
 import wordlift_client
 from tenacity import (
     after_log,
@@ -14,14 +13,14 @@ from tenacity import (
     wait_exponential_jitter,
 )
 
-# Transient failures only. A 400 is deterministic, so it is not retried.
+# Transient failures only. A 400 or a response validation error is
+# deterministic, so it is not retried.
 RETRYABLE_WRITE_ERRORS = (
     asyncio.TimeoutError
     | aiohttp.client_exceptions.ServerDisconnectedError
     | aiohttp.client_exceptions.ClientConnectorError
     | aiohttp.client_exceptions.ClientPayloadError
     | aiohttp.client_exceptions.ClientConnectorDNSError
-    | pydantic_core.ValidationError
     | wordlift_client.exceptions.ServiceException
     | aiohttp.client_exceptions.ClientOSError
 )

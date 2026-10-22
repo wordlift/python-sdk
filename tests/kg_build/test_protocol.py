@@ -1783,3 +1783,20 @@ async def test_static_templates_failure_fails_later_callbacks_fast() -> None:
 
     protocol.patcher.patch_all.assert_awaited_once()
     assert protocol._static_templates_patched is False
+
+
+def test_summarize_error_drops_http_details() -> None:
+    import wordlift_client
+
+    api_error = wordlift_client.exceptions.ServiceException(
+        status=500, reason="Internal Server Error"
+    )
+
+    assert (
+        protocol_module._summarize_error(api_error)
+        == "ServiceException (500 Internal Server Error)"
+    )
+    assert (
+        protocol_module._summarize_error(RuntimeError("first\nsecond"))
+        == "RuntimeError: first"
+    )

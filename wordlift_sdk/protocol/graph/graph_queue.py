@@ -48,13 +48,19 @@ class GraphQueue:
                 pass
             self._api_client = None
 
-    @retry_write(logger)
     async def put(self, graph: Graph) -> None:
         loop = asyncio.get_event_loop()
         hash = await loop.run_in_executor(None, GraphQueue.hash_graph, graph)
         if hash in self.hashes:
             return
 
+        await self._send(graph)
+        # Record the hash only after a successful write, so a graph whose
+        # write failed is sent again the next time it is put.
+        self.hashes.add(hash)
+
+    @retry_write(logger)
+    async def _send(self, graph: Graph) -> None:
         api_client = await self._get_api_client()
         api_instance = wordlift_client.EntitiesApi(api_client)
 
@@ -66,10 +72,6 @@ class GraphQueue:
         except Exception as e:
             logger.error(f"Failed to create entities: {e}", exc_info=e)
             raise e
-
-        # Record the hash only after a successful write, so a retry after a
-        # failed PUT sends the graph again instead of skipping it.
-        self.hashes.add(hash)
 
     @staticmethod
     def hash_graph(graph: Graph) -> str:

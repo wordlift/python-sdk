@@ -15,18 +15,27 @@
 - `EntityPatchQueue.put` stops after 5 attempts. It used to retry a failing
   patch forever, which hung `patch`-strategy runs until the job timed out.
 - A static-template write that fails is no longer retried by every later URL
-  callback in turn. Later callbacks fail at once with
-  `Static templates were not written`, so the run ends quickly when the API is
-  down.
-- A `data/templates/*.ttl.liquid` template that cannot be loaded or written
-  now fails the run. It used to be logged and ignored.
+  callback in turn. Later callbacks fail at once with a one-line
+  `Static templates were not written: …` message (error type and HTTP status,
+  without headers or body), so the run ends quickly when the API is down.
+- A `data/templates/*.ttl.liquid` template whose Turtle cannot be parsed or
+  whose graph cannot be written now fails the run. It used to be logged and
+  ignored. (Liquid rendering errors already failed the run.) Logs name the
+  template file instead of printing its source.
+- `WebPageImportUrlHandler` and `WebPageScrapeUrlHandler` retry only the
+  import or scrape request, then call the callback once. They used to retry
+  the callback too, so a failing graph write was multiplied by both retry
+  layers (up to 25 writes per URL) and the page was re-imported or re-scraped
+  on every attempt.
 
 ### Changed
 
 - Both entity write queues share one retry policy (`wordlift_sdk.protocol.write_retry`):
-  5 attempts with exponential backoff and jitter (2s up to 30s) on timeouts,
-  disconnects and 5xx responses. A `400 Bad Request` is no longer retried, so
-  it fails the URL on the first attempt.
+  5 attempts with exponential backoff and jitter (about 30s of waiting in
+  total) on timeouts, disconnects and 5xx responses. An entity write that gets
+  `400 Bad Request` or a response validation error is no longer retried, so it
+  fails the URL on the first attempt.
+- `GraphQueue` hashes a graph once per `put`, not once per retry attempt.
 
 ## 8.5.0 - 2026-10-02
 

@@ -87,3 +87,34 @@ async def test_application_container_initializes_fetch_options():
         assert handler._fetch_options.render_js is True
         assert handler._fetch_options.wait_for == "#main"
         assert handler._fetch_options.timeout == 5000
+
+
+@pytest.mark.asyncio
+async def test_web_page_import_url_handler_does_not_retry_failing_callback():
+    import wordlift_client
+
+    handler = handler_module.WebPageImportUrlHandler(
+        context=MagicMock(),
+        embedding_properties=["prop1"],
+        web_page_types=["Type1"],
+        web_page_import_callback=AsyncMock(),
+    )
+    handler._web_page_import_callback.callback.side_effect = (
+        wordlift_client.exceptions.ServiceException(
+            status=500, reason="Internal Server Error"
+        )
+    )
+
+    with patch.object(handler_module, "ApiClient") as mock_api_client_class:
+        mock_api_client_class.return_value.__aenter__.return_value = AsyncMock()
+        with patch.object(
+            handler_module, "WebPagesImportsApi"
+        ) as mock_api_instance_class:
+            mock_api_instance = AsyncMock()
+            mock_api_instance_class.return_value = mock_api_instance
+
+            with pytest.raises(wordlift_client.exceptions.ServiceException):
+                await handler(Url(value="https://example.com"))
+
+            mock_api_instance.create_web_page_imports.assert_awaited_once()
+            handler._web_page_import_callback.callback.assert_awaited_once()
