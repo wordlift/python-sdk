@@ -15,6 +15,7 @@ import pandas as pd
 from rdflib import Graph, URIRef
 from wordlift_client.models.web_page_scrape_response import WebPageScrapeResponse
 from wordlift_sdk.protocol import Context
+from wordlift_sdk.protocol.errors import summarize_error
 from wordlift_sdk.protocol.web_page_import_protocol import (
     WebPageImportProtocolInterface,
 )
@@ -283,6 +284,7 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         self._template_exports: dict[str, Any] | None = None
         self._mapping_cache: dict[Path, str] = {}
         self._static_templates_patched = False
+        self._static_templates_error: Exception | None = None
         self._static_templates_lock = asyncio.Lock()
         materialization_backend = _resolve_materialization_backend(settings)
         self.rml_service = RmlMappingService(
@@ -560,47 +562,58 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         async with self._static_templates_lock:
             if self._static_templates_patched:
                 return
+            # Fail later callbacks at once instead of retrying a write that
+            # already failed, one callback after another.
+            if self._static_templates_error is not None:
+                raise RuntimeError(
+                    "Static templates were not written: "
+                    f"{summarize_error(self._static_templates_error)}"
+                ) from self._static_templates_error
+            try:
+                await self._patch_static_templates()
+            except Exception as exc:
+                self._static_templates_error = exc
+                raise
 
-            self._ensure_templates_loaded()
-            if self._template_graph and len(self._template_graph) > 0:
-                outcome = await self._shacl_validator.validate(self._template_graph)
-                if outcome is not None:
-                    logger.info(
-                        "SHACL validation for static_templates: pass=%s warnings=%d errors=%d",
-                        outcome.passed,
-                        outcome.warning_count,
-                        outcome.error_count,
-                    )
-                    self._kpi.record_validation(outcome)
-                self._emit_progress(
-                    {
-                        "kind": "static_templates",
-                        "profile": self.profile.name,
-                        "graph": self._kpi.graph_metrics(self._template_graph),
-                        "validation": outcome.to_dict() if outcome else None,
-                    }
-                )
-                self._kpi.record_graph(self._template_graph)
-                if (
-                    outcome is not None
-                    and self._shacl_validator.mode == ValidationMode.FAIL
-                    and outcome.failed
-                ):
-                    raise RuntimeError(
-                        "SHACL validation failed for static templates in fail mode."
-                    )
-                await self._write_graph(self._template_graph)
-                if self.debug_dir:
-                    static_debug = self.debug_dir / "static_templates.ttl"
-                    static_debug.parent.mkdir(parents=True, exist_ok=True)
-                    self._template_graph.serialize(
-                        destination=static_debug, format="turtle"
-                    )
+    async def _patch_static_templates(self) -> None:
+        self._ensure_templates_loaded()
+        if self._template_graph and len(self._template_graph) > 0:
+            outcome = await self._shacl_validator.validate(self._template_graph)
+            if outcome is not None:
                 logger.info(
-                    "Wrote %s static template triples", len(self._template_graph)
+                    "SHACL validation for static_templates: pass=%s warnings=%d errors=%d",
+                    outcome.passed,
+                    outcome.warning_count,
+                    outcome.error_count,
                 )
+                self._kpi.record_validation(outcome)
+            self._emit_progress(
+                {
+                    "kind": "static_templates",
+                    "profile": self.profile.name,
+                    "graph": self._kpi.graph_metrics(self._template_graph),
+                    "validation": outcome.to_dict() if outcome else None,
+                }
+            )
+            self._kpi.record_graph(self._template_graph)
+            if (
+                outcome is not None
+                and self._shacl_validator.mode == ValidationMode.FAIL
+                and outcome.failed
+            ):
+                raise RuntimeError(
+                    "SHACL validation failed for static templates in fail mode."
+                )
+            await self._write_graph(self._template_graph)
+            if self.debug_dir:
+                static_debug = self.debug_dir / "static_templates.ttl"
+                static_debug.parent.mkdir(parents=True, exist_ok=True)
+                self._template_graph.serialize(
+                    destination=static_debug, format="turtle"
+                )
+            logger.info("Wrote %s static template triples", len(self._template_graph))
 
-            self._static_templates_patched = True
+        self._static_templates_patched = True
 
     def _ensure_templates_loaded(self) -> None:
         if self._template_graph is not None and self._template_exports is not None:

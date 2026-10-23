@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from types import SimpleNamespace
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -56,3 +57,29 @@ async def test_kg_import_workflow_fails_after_urls_when_handlers_error(monkeypat
     assert failure.handler_name == "_FailingHandler"
     assert "boom" in failure.message
     assert failure.timestamp.tzinfo is not None
+
+
+@pytest.mark.asyncio
+async def test_kg_import_workflow_fails_when_liquid_template_write_fails(
+    monkeypatch, tmp_path
+):
+    templates = tmp_path / "data" / "templates"
+    templates.mkdir(parents=True)
+    (templates / "org.ttl.liquid").write_text(
+        "<https://data.example.com/org> a <https://schema.org/Organization> ."
+    )
+    monkeypatch.chdir(tmp_path)
+
+    context = SimpleNamespace(
+        account=SimpleNamespace(),
+        graph_queue=SimpleNamespace(put=AsyncMock(side_effect=RuntimeError("500"))),
+    )
+    workflow = KgImportWorkflow(
+        context=context,
+        url_source=_ListUrlSource([]),
+        url_handler=DefaultUrlHandler([_OkHandler()]),
+        concurrency=1,
+    )
+
+    with pytest.raises(RuntimeError, match="500"):
+        await workflow.run()

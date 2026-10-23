@@ -63,5 +63,15 @@ WEB_PAGE_IMPORT_BLOCK_ADS = True
 
 ## Retry Behavior
 
-Import/scrape/search-console URL handlers and protocol queues include retries for transport errors and WordLift service errors.
-For Pydantic validation failures, retries use `pydantic_core.ValidationError` from the public API path for Python 3.14 compatibility.
+`wordlift_sdk.protocol.retry_policy.retry_transient` is the retry decorator for WordLift API calls. It is applied to:
+
+- the entity write queues (`GraphQueue`, `EntityPatchQueue`);
+- the import request in `WebPageImportUrlHandler` and the scrape request in `WebPageScrapeUrlHandler`.
+
+It makes up to 5 attempts with exponential backoff and jitter (2s, growing to at most 30s; about 30s of waiting in total). Only transient errors are retried, as decided by `wordlift_sdk.protocol.errors.is_transient_error`: transport errors (timeouts, disconnects), `429` and `5xx` responses. Any other status, such as `400`, and response validation errors fail on the first attempt.
+
+Each retry logs one warning line with the call, a one-line error summary, the attempt number and the wait. The final error is raised to the caller and reported once, as a failed URL.
+
+The URL handlers retry only the import or scrape request. They call the callback once, because the callback writes through the queues, which retry on their own.
+
+The search-console URL handler still has its own retry configuration. For Pydantic validation failures, it uses `pydantic_core.ValidationError` from the public API path for Python 3.14 compatibility.

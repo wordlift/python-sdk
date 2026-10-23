@@ -4,6 +4,7 @@ from typing import Optional
 
 import pytest
 import requests
+import tenacity
 from docker.models.containers import Container
 from requests.adapters import HTTPAdapter
 from urllib3 import Retry
@@ -61,3 +62,14 @@ def wiremock_url(wiremock_server: Optional[Container]) -> Optional[str]:
         "HostPort"
     ]
     return f"http://localhost:{port}"
+
+
+@pytest.fixture
+def no_retry_wait(monkeypatch):
+    """Remove the backoff wait from tenacity-decorated callables in a test."""
+
+    def _apply(*decorated) -> None:
+        for fn in decorated:
+            monkeypatch.setattr(fn.retry, "wait", tenacity.wait_none())
+
+    return _apply

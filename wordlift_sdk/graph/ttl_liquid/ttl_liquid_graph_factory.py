@@ -5,6 +5,7 @@ from liquid import Environment, CachingFileSystemLoader
 from rdflib import Graph
 
 from ...protocol import Context
+from ...protocol.errors import summarize_error
 
 logger = logging.getLogger(__name__)
 
@@ -23,8 +24,8 @@ class TtlLiquidGraphFactory:
             loader=CachingFileSystemLoader(self.path),
         )
 
-        for template in templates:
-            template = env.get_template(str(template.absolute()))
+        for path in templates:
+            template = env.get_template(str(path.absolute()))
             turtle = template.render(account=self.context.account.__dict__)
 
             try:
@@ -35,9 +36,12 @@ class TtlLiquidGraphFactory:
                 graph.parse(data=turtle, format="turtle")
 
                 logger.info(
-                    f"Successfully loaded {template} graph with {len(graph)} triples"
+                    f"Successfully loaded {path} graph with {len(graph)} triples"
                 )
 
                 await self.context.graph_queue.put(graph)
             except Exception as e:
-                logger.error(f"Error loading contact points graph: {e}")
+                # A template that cannot be loaded or written fails the run.
+                raise RuntimeError(
+                    f"Template {path} could not be loaded: {summarize_error(e)}"
+                ) from e

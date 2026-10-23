@@ -235,8 +235,12 @@
   profile config via `context.profile`; API base URL must be read from
   `context.profile["settings"]["api_url"]` (default `https://api.wordlift.io`).
   Debug payload copies redact key fields.
-- Retry handlers reference `pydantic_core.ValidationError` via the public API
-  (not `pydantic_core._pydantic_core.ValidationError`) for Python 3.14
+- Retries for WordLift API calls use the `retry_transient` decorator in
+  `wordlift_sdk.protocol.retry_policy`; whether an error is transient (transport
+  errors, 429, 5xx) is decided by `wordlift_sdk.protocol.errors.is_transient_error`.
+  Reuse them instead of writing new tenacity configurations. Remaining inline
+  retry configurations reference `pydantic_core.ValidationError` via the public
+  API (not `pydantic_core._pydantic_core.ValidationError`) for Python 3.14
   compatibility.
 - SDK ingestion now supports a 2-axis adapter model (`source` + `loader`) with
   registry-based resolution, deterministic auto rules, and legacy compatibility

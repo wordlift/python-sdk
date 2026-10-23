@@ -1,5 +1,67 @@
 # Changelog
 
+## 8.5.1 - 2026-10-23
+
+### Fixed
+
+- `GraphQueue.put` now retries a failed `PUT /entities`. It used to record the
+  graph as written before sending it, so any retried failure (5xx, 400,
+  timeout, dropped connection) was logged once, the retry skipped the write
+  and returned success, the URL was not counted as failed, and graph sync
+  exited 0. A write that still fails after all retries now raises, so the URL
+  is reported as failed. Runs that were silently losing writes will now fail.
+  Custom `web_page_import_protocol.py` overrides that push to `graph_queue`
+  will see these exceptions too.
+- `EntityPatchQueue.put` stops after 5 attempts. It used to retry a failing
+  patch forever, which hung `patch`-strategy runs until the job timed out.
+- A static-template write that fails is no longer retried by every later URL
+  callback in turn. Later callbacks fail at once with a one-line
+  `Static templates were not written: …` message (error type and HTTP status,
+  without headers or body), so the run ends quickly when the API is down.
+- A `data/templates/*.ttl.liquid` template whose Turtle cannot be parsed or
+  whose graph cannot be written now fails the run. It used to be logged and
+  ignored. (Liquid rendering errors already failed the run.) Logs name the
+  template file instead of printing its source.
+- `WebPageImportUrlHandler` and `WebPageScrapeUrlHandler` retry only the
+  import or scrape request, then call the callback once. They used to retry
+  the callback too, so a failing graph write was multiplied by both retry
+  layers (up to 25 writes per URL) and the page was re-imported or re-scraped
+  on every attempt. When retries run out they now raise the real error instead
+  of `tenacity.RetryError`, so failed-URL messages name the cause.
+- A failing write is logged once instead of once per attempt with a full
+  traceback and HTTP body. Each retry logs one warning line
+  (`<call> failed (<error summary>); attempt n of 5, retrying in <s>s`), and
+  the final error is reported once as a failed URL.
+- KG build `patch` writes: when one entity patch fails, `patch_all` now
+  cancels and awaits its sibling patches before raising, instead of leaving
+  them running unawaited.
+- The adaptive patch concurrency limit no longer drifts upward when it steps
+  down or up while patches are in flight. It is now an `anyio.CapacityLimiter`
+  resized in place, so permits already held are returned to the same limiter.
+- A patch concurrency limit stepped down to 1 now steps back up on sustained
+  success. It used to switch `patch_all` to a sequential path that never
+  stepped up again.
+- A transient error on an entity patch, once `EntityPatchQueue` has used its 5
+  attempts, steps the patch concurrency down and fails the URL. `patch_all`
+  used to retry a 429 or 5xx once more on top of the queue's retries.
+
+### Changed
+
+- One retry decorator, `retry_transient` in `wordlift_sdk.protocol.retry_policy`,
+  now covers the entity write queues and the import and scrape requests of
+  `WebPageImportUrlHandler` and `WebPageScrapeUrlHandler`. It makes 5 attempts
+  with exponential backoff and jitter (about 30s of waiting in total).
+- Only transient errors are retried, as decided by
+  `wordlift_sdk.protocol.errors.is_transient_error`: transport errors, `429`
+  (newly retried) and `5xx`. A `400 Bad Request` or a response validation error
+  is no longer retried, on writes or on import and scrape requests, so it
+  fails the URL on the first attempt.
+- `wordlift_sdk.protocol.errors.summarize_error` gives a one-line error
+  description without HTTP headers or body.
+- `GraphQueue` hashes a graph once per `put`, not once per retry attempt.
+- The `kg-build` extra declares `anyio` directly (it was already installed
+  through `gql`).
+
 ## 8.5.0 - 2026-10-02
 
 ### Changed

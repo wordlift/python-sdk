@@ -9,6 +9,7 @@ from wordlift_sdk.protocol.entity_patch.entity_patch import EntityPatch
 from wordlift_sdk.protocol.entity_patch.entity_patch_queue import EntityPatchQueue
 from wordlift_sdk.protocol.graph.graph_queue import GraphQueue
 from wordlift_sdk.protocol.load_override_class import load_override_class
+from wordlift_sdk.protocol.retry_policy import RETRY_ATTEMPTS
 from wordlift_sdk.render.render_options import RenderOptions
 from wordlift_sdk.structured_data.agent import AgentGenerator as AgentWrapper
 
@@ -25,107 +26,157 @@ class _FakeApiClient:
 
 
 class _FakeEntitiesApi:
-    def __init__(self, api_client):
-        self.api_client = api_client
+    """Records each call and raises the scripted errors, one per call."""
+
+    def __init__(self, errors=()):
         self.calls = []
+        self._errors = list(errors)
+
+    def _record(self, call):
+        self.calls.append(call)
+        if self._errors:
+            error = self._errors.pop(0)
+            if error is not None:
+                raise error
 
     async def create_or_update_entities(self, payload, _content_type=None):
-        self.calls.append((payload, _content_type))
+        self._record((payload, _content_type))
 
     async def patch_entities(self, id, entity_patch_request):
-        self.calls.append((id, entity_patch_request))
+        self._record((id, entity_patch_request))
+
+
+@pytest.fixture
+def entities_api(monkeypatch, no_retry_wait):
+    """Install a fake EntitiesApi for both queues and remove retry waits."""
+    import wordlift_client
+
+    no_retry_wait(GraphQueue._send, EntityPatchQueue.put)
+
+    def _install(*errors):
+        api = _FakeEntitiesApi(errors)
+        monkeypatch.setattr(wordlift_client, "ApiClient", _FakeApiClient)
+        monkeypatch.setattr(wordlift_client, "EntitiesApi", lambda client: api)
+        return api
+
+    return _install
+
+
+def _graph() -> Graph:
+    graph = Graph()
+    graph.add((URIRef("urn:s"), URIRef("urn:p"), URIRef("urn:o")))
+    return graph
+
+
+def _server_error() -> Exception:
+    import wordlift_client
+
+    return wordlift_client.exceptions.ServiceException(
+        status=500, reason="Internal Server Error"
+    )
 
 
 @pytest.mark.asyncio
-async def test_graph_queue_put_deduplicates(monkeypatch):
-    import wordlift_sdk.protocol.graph.graph_queue as graph_queue_module
-
-    api = _FakeEntitiesApi(None)
-    monkeypatch.setattr(graph_queue_module.wordlift_client, "ApiClient", _FakeApiClient)
-    monkeypatch.setattr(
-        graph_queue_module.wordlift_client, "EntitiesApi", lambda client: api
-    )
-
+async def test_graph_queue_put_deduplicates(entities_api):
+    api = entities_api()
     queue = GraphQueue(client_configuration=SimpleNamespace())
-    graph = Graph()
-    graph.add((URIRef("urn:s"), URIRef("urn:p"), URIRef("urn:o")))
 
-    await queue.put(graph)
-    await queue.put(graph)
+    await queue.put(_graph())
+    await queue.put(_graph())
 
     assert len(api.calls) == 1
 
 
 @pytest.mark.asyncio
-async def test_graph_queue_put_reraises_create_error(monkeypatch):
-    import wordlift_sdk.protocol.graph.graph_queue as graph_queue_module
-
-    class _FailingApi(_FakeEntitiesApi):
-        async def create_or_update_entities(self, payload, _content_type=None):
-            raise RuntimeError("boom")
-
-    monkeypatch.setattr(graph_queue_module.wordlift_client, "ApiClient", _FakeApiClient)
-    monkeypatch.setattr(
-        graph_queue_module.wordlift_client,
-        "EntitiesApi",
-        lambda client: _FailingApi(client),
-    )
-
+async def test_graph_queue_put_reraises_create_error(entities_api):
+    entities_api(RuntimeError("boom"))
     queue = GraphQueue(client_configuration=SimpleNamespace())
-    graph = Graph()
-    graph.add((URIRef("urn:s"), URIRef("urn:p"), URIRef("urn:o")))
 
     with pytest.raises(RuntimeError, match="boom"):
-        await queue.put(graph)
-
-
-def test_graph_queue_hash_graph_is_stable():
-    graph1 = Graph()
-    graph2 = Graph()
-    triple = (URIRef("urn:s"), URIRef("urn:p"), URIRef("urn:o"))
-    graph1.add(triple)
-    graph2.add(triple)
-
-    assert GraphQueue.hash_graph(graph1) == GraphQueue.hash_graph(graph2)
+        await queue.put(_graph())
 
 
 @pytest.mark.asyncio
-async def test_entity_patch_queue_put(monkeypatch):
-    import wordlift_sdk.protocol.entity_patch.entity_patch_queue as patch_queue_module
-
-    api = _FakeEntitiesApi(None)
-    monkeypatch.setattr(patch_queue_module.wordlift_client, "ApiClient", _FakeApiClient)
+async def test_graph_queue_retries_put_after_server_error(entities_api, monkeypatch):
+    api = entities_api(_server_error())
+    queue = GraphQueue(client_configuration=SimpleNamespace())
+    hash_calls = []
+    original_hash_graph = GraphQueue.hash_graph
     monkeypatch.setattr(
-        patch_queue_module.wordlift_client, "EntitiesApi", lambda client: api
+        GraphQueue,
+        "hash_graph",
+        staticmethod(lambda g: hash_calls.append(g) or original_hash_graph(g)),
     )
 
+    await queue.put(_graph())
+
+    assert len(api.calls) == 2
+    assert len(hash_calls) == 1
+
+
+@pytest.mark.asyncio
+async def test_graph_queue_raises_when_server_errors_persist(entities_api):
+    import wordlift_client
+
+    api = entities_api(*[_server_error()] * RETRY_ATTEMPTS)
+    queue = GraphQueue(client_configuration=SimpleNamespace())
+
+    with pytest.raises(wordlift_client.exceptions.ServiceException):
+        await queue.put(_graph())
+
+    assert len(api.calls) == RETRY_ATTEMPTS
+    assert queue.hashes == set()
+
+
+@pytest.mark.asyncio
+async def test_graph_queue_does_not_retry_bad_request(entities_api):
+    import wordlift_client
+
+    api = entities_api(
+        wordlift_client.exceptions.BadRequestException(status=400, reason="Bad")
+    )
+    queue = GraphQueue(client_configuration=SimpleNamespace())
+
+    with pytest.raises(wordlift_client.exceptions.BadRequestException):
+        await queue.put(_graph())
+
+    assert len(api.calls) == 1
+
+
+def test_graph_queue_hash_graph_is_stable():
+    assert GraphQueue.hash_graph(_graph()) == GraphQueue.hash_graph(_graph())
+
+
+@pytest.mark.asyncio
+async def test_entity_patch_queue_put(entities_api):
+    api = entities_api()
     queue = EntityPatchQueue(client_configuration=SimpleNamespace())
-    patch = EntityPatch(iri="urn:entity", requests=[])
-    await queue.put(patch)
+
+    await queue.put(EntityPatch(iri="urn:entity", requests=[]))
 
     assert api.calls == [("urn:entity", [])]
 
 
 @pytest.mark.asyncio
-async def test_entity_patch_queue_reraises_errors(monkeypatch):
-    import wordlift_sdk.protocol.entity_patch.entity_patch_queue as patch_queue_module
+async def test_entity_patch_queue_stops_retrying_server_errors(entities_api):
+    import wordlift_client
 
-    class _FailingApi(_FakeEntitiesApi):
-        async def patch_entities(self, id, entity_patch_request):
-            raise RuntimeError("patch-failed")
-
-    monkeypatch.setattr(patch_queue_module.wordlift_client, "ApiClient", _FakeApiClient)
-    monkeypatch.setattr(
-        patch_queue_module.wordlift_client,
-        "EntitiesApi",
-        lambda client: _FailingApi(client),
-    )
-
+    api = entities_api(*[_server_error()] * RETRY_ATTEMPTS)
     queue = EntityPatchQueue(client_configuration=SimpleNamespace())
-    patch = EntityPatch(iri="urn:entity", requests=[])
+
+    with pytest.raises(wordlift_client.exceptions.ServiceException):
+        await queue.put(EntityPatch(iri="urn:entity", requests=[]))
+
+    assert len(api.calls) == RETRY_ATTEMPTS
+
+
+@pytest.mark.asyncio
+async def test_entity_patch_queue_reraises_errors(entities_api):
+    entities_api(RuntimeError("patch-failed"))
+    queue = EntityPatchQueue(client_configuration=SimpleNamespace())
 
     with pytest.raises(RuntimeError, match="patch-failed"):
-        await queue.put(patch)
+        await queue.put(EntityPatch(iri="urn:entity", requests=[]))
 
 
 def test_load_override_class_uses_default_and_override(tmp_path: Path, monkeypatch):

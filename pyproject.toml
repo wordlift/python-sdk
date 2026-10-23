@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "wordlift-sdk"
-version = "8.5.0"
+version = "8.5.1"
 description = "Python toolkit for orchestrating WordLift imports and structured data workflows."
 authors = ["David Riccitelli <david@wordlift.io>"]
 readme = "README.md"
@@ -22,6 +22,7 @@ aiohttp = "^3.10.5"
 wordlift-client = "^1.182.0"
 certifi = "*"
 gql = { extras = ["aiohttp"], version = "^3.5.2", optional = true }
+anyio = { version = "^4.0.0", optional = true }
 # Google Colab requires pandas 2.1.4
 pandas = { version = ">=2.1.4, <2.3.0", optional = true }
 rdflib = { version = "^7.0.0", optional = true }
@@ -101,6 +102,7 @@ graph = [
     "tqdm",
 ]
 kg-build = [
+    "anyio",
     "advertools",
     "gql",
     "google-auth",
@@ -138,6 +140,7 @@ legacy = [
     "twisted",
 ]
 all = [
+    "anyio",
     "advertools",
     "gql",
     "google-auth",
