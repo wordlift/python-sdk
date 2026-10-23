@@ -1,24 +1,13 @@
-import asyncio
 import logging
 
-import aiohttp
-import pydantic_core
-from tenacity import (
-    retry,
-    retry_if_exception_type,
-    wait_fixed,
-    after_log,
-    stop_after_attempt,
-)
 from wordlift_client import (
     ApiClient,
     WebPagesImportsApi,
     WebPageImportRequest,
+    WebPageImportResponse,
     EmbeddingRequest,
     WebPageImportFetchOptions,
 )
-import wordlift_client
-import gql.transport.exceptions
 
 from .url_handler import UrlHandler
 from ...protocol import (
@@ -27,6 +16,7 @@ from ...protocol import (
     load_override_class,
     DefaultWebPageImportProtocol,
 )
+from ...protocol.retry_policy import retry_transient
 from ...url_source import Url
 
 logger = logging.getLogger(__name__)
@@ -68,24 +58,8 @@ class WebPageImportUrlHandler(UrlHandler):
         self._write_strategy = write_strategy
         self._fetch_options = fetch_options
 
-    @retry(
-        retry=retry_if_exception_type(
-            asyncio.TimeoutError
-            | aiohttp.client_exceptions.ServerDisconnectedError
-            | aiohttp.client_exceptions.ClientConnectorError
-            | aiohttp.client_exceptions.ClientPayloadError
-            | aiohttp.client_exceptions.ClientConnectorDNSError
-            | pydantic_core.ValidationError
-            | wordlift_client.exceptions.ServiceException
-            | gql.transport.exceptions.TransportServerError
-            | wordlift_client.exceptions.BadRequestException
-            | aiohttp.client_exceptions.ClientOSError
-        ),
-        wait=wait_fixed(2),  # Wait 2 seconds between retries
-        after=after_log(logger, logging.WARNING),
-        stop=stop_after_attempt(5),
-    )
-    async def __call__(self, url: Url) -> None:
+    @retry_transient(logger)
+    async def _import(self, url: Url) -> WebPageImportResponse:
         async with ApiClient(self._context.client_configuration) as client:
             api_instance = WebPagesImportsApi(client)
 
@@ -99,11 +73,13 @@ class WebPageImportUrlHandler(UrlHandler):
                 fetch_options=self._fetch_options,
             )
 
-            try:
-                response = await api_instance.create_web_page_imports(
-                    web_page_import_request=request, _request_timeout=120.0
-                )
-                await self._web_page_import_callback.callback(response)
-            except Exception as e:
-                logger.error("Error importing Web Page %s" % url.value, exc_info=e)
-                raise e
+            return await api_instance.create_web_page_imports(
+                web_page_import_request=request, _request_timeout=120.0
+            )
+
+    async def __call__(self, url: Url) -> None:
+        # Only the import request is retried here. The callback writes the
+        # graph through queues that retry on their own, so retrying it again
+        # would multiply the writes.
+        response = await self._import(url)
+        await self._web_page_import_callback.callback(response)
