@@ -1783,3 +1783,202 @@ async def test_static_templates_failure_fails_later_callbacks_fast() -> None:
 
     protocol.patcher.patch_all.assert_awaited_once()
     assert protocol._static_templates_patched is False
+
+
+SEOVOC_DATE_IMPORTED = URIRef("https://w3id.org/seovoc/dateImported")
+SEOVOC_IMPORT_HASH = URIRef("https://w3id.org/seovoc/importHash")
+_STATIC_SUBJECTS = (
+    "https://data.example.com/dataset/web-pages/1",
+    "https://data.example.com/dataset/entities/article-1",
+)
+
+
+def _static_protocol(
+    lookup: object | None, import_hash_mode: str = "on"
+) -> ProfileImportProtocol:
+    context = _make_context()
+    if lookup is not None:
+        context.extensions = {"kg_build.import_hash_lookup": lookup}
+    protocol = ProfileImportProtocol(
+        context=context,
+        profile=_make_profile_with_overrides(
+            settings={"import_hash_mode": import_hash_mode}
+        ),
+        root_dir=Path.cwd(),
+        graph_write_strategy="put",
+    )
+    protocol._template_graph = _make_dataset_scoped_graph()
+    protocol._template_exports = {}
+    protocol._shacl_validator.validate = AsyncMock(return_value=None)
+    protocol._emit_progress = MagicMock()
+    protocol._kpi.record_graph = MagicMock()
+    return protocol
+
+
+def _static_hash(protocol: ProfileImportProtocol) -> str:
+    return protocol.patcher._compute_import_hash(
+        URIRef(_STATIC_SUBJECTS[0]),
+        protocol._template_graph,
+        "https://data.example.com/dataset",
+    )
+
+
+@pytest.mark.asyncio
+async def test_put_strategy_stamps_date_imported_on_written_page_subjects() -> None:
+    context = _make_context()
+    protocol = ProfileImportProtocol(
+        context=context,
+        profile=_make_profile(),
+        root_dir=Path.cwd(),
+        graph_write_strategy="put",
+    )
+    protocol._patch_static_templates_once = AsyncMock()
+    protocol._resolve_mapping_path = MagicMock(return_value=Path("mapping.yarrrml"))
+    protocol._get_mapping_content = MagicMock(return_value="mapping")
+    protocol._run_postprocessing_stage = _passthrough_pp()
+    graph = _make_dataset_scoped_graph()
+    child = URIRef("https://data.example.com/dataset/entities/article-1/faq/1")
+    graph.add((child, RDF.type, URIRef("https://schema.org/Question")))
+    protocol._run_mapping_stage = AsyncMock(return_value=_make_mapping_result(graph))
+
+    await protocol.callback(
+        WebPageScrapeResponse(
+            web_page=WebPage(url="https://example.com/page", html="<html></html>")
+        )
+    )
+
+    queued_graph = context.graph_queue.put.await_args.args[0]
+    for subject in _STATIC_SUBJECTS:
+        assert (
+            len(list(queued_graph.objects(URIRef(subject), SEOVOC_DATE_IMPORTED))) == 1
+        )
+    assert not list(queued_graph.objects(child, SEOVOC_DATE_IMPORTED))
+
+
+@pytest.mark.parametrize("import_hash_mode", ["on", "off"])
+def test_prepare_graph_for_put_date_follows_the_write_decision(
+    import_hash_mode: str,
+) -> None:
+    protocol = ProfileImportProtocol(
+        context=_make_context(),
+        profile=_make_profile_with_overrides(
+            settings={"import_hash_mode": import_hash_mode}
+        ),
+        root_dir=Path.cwd(),
+        graph_write_strategy="put",
+    )
+    graph = _make_dataset_scoped_graph()
+    unchanged = _make_dataset_scoped_graph()
+    stored = protocol.patcher._compute_import_hash(
+        URIRef(_STATIC_SUBJECTS[0]), unchanged, "https://data.example.com/dataset"
+    )
+    for subject in _STATIC_SUBJECTS:
+        graph.add((URIRef(subject), SEOVOC_IMPORT_HASH, Literal(stored)))
+
+    written = protocol._prepare_graph_for_put(graph)
+
+    assert written is (import_hash_mode == "off")
+    assert bool(list(graph.objects(None, SEOVOC_DATE_IMPORTED))) is written
+
+
+@pytest.mark.asyncio
+async def test_static_templates_skip_put_when_stored_hash_matches() -> None:
+    lookup = SimpleNamespace(import_hashes=AsyncMock())
+    protocol = _static_protocol(lookup)
+    lookup.import_hashes.return_value = {
+        subject: _static_hash(protocol) for subject in _STATIC_SUBJECTS
+    }
+
+    await protocol._patch_static_templates_once()
+
+    assert sorted(lookup.import_hashes.await_args.args[0]) == sorted(_STATIC_SUBJECTS)
+    protocol.context.graph_queue.put.assert_not_awaited()
+    assert not list(protocol._template_graph.objects(None, SEOVOC_DATE_IMPORTED))
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "stored",
+    [
+        {},
+        {_STATIC_SUBJECTS[0]: "same", _STATIC_SUBJECTS[1]: "same"},
+        {_STATIC_SUBJECTS[0]: "one", _STATIC_SUBJECTS[1]: "other"},
+        {_STATIC_SUBJECTS[0]: "only-one"},
+    ],
+)
+async def test_static_templates_written_when_stored_hash_differs(
+    stored: dict[str, str],
+) -> None:
+    protocol = _static_protocol(
+        SimpleNamespace(import_hashes=AsyncMock(return_value=stored))
+    )
+
+    await protocol._patch_static_templates_once()
+
+    protocol.context.graph_queue.put.assert_awaited_once_with(protocol._template_graph)
+    for subject in _STATIC_SUBJECTS:
+        assert list(
+            protocol._template_graph.objects(URIRef(subject), SEOVOC_IMPORT_HASH)
+        ) == [Literal(_static_hash(protocol))]
+        assert list(
+            protocol._template_graph.objects(URIRef(subject), SEOVOC_DATE_IMPORTED)
+        )
+
+
+@pytest.mark.asyncio
+async def test_static_templates_written_when_stored_hash_lookup_fails(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    protocol = _static_protocol(
+        SimpleNamespace(import_hashes=AsyncMock(side_effect=RuntimeError("boom")))
+    )
+
+    await protocol._patch_static_templates_once()
+
+    protocol.context.graph_queue.put.assert_awaited_once_with(protocol._template_graph)
+    assert "Stored import hash lookup failed" in caplog.text
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("import_hash_mode", ["write", "off"])
+async def test_static_templates_do_not_look_up_hash_unless_mode_on(
+    import_hash_mode: str,
+) -> None:
+    lookup = SimpleNamespace(import_hashes=AsyncMock(return_value={}))
+    protocol = _static_protocol(lookup, import_hash_mode=import_hash_mode)
+
+    await protocol._patch_static_templates_once()
+
+    lookup.import_hashes.assert_not_awaited()
+    protocol.context.graph_queue.put.assert_awaited_once()
+
+
+def test_import_hash_lookup_requires_an_account_key() -> None:
+    protocol = _static_protocol(lookup=None)
+
+    assert protocol._import_hash_lookup() is None
+
+
+def test_import_hash_lookup_prefers_context_extension() -> None:
+    lookup = SimpleNamespace(import_hashes=AsyncMock())
+
+    assert _static_protocol(lookup)._import_hash_lookup() is lookup
+
+
+def test_import_hash_lookup_uses_graphql_with_account_key() -> None:
+    protocol = ProfileImportProtocol(
+        context=_make_context(),
+        profile=_make_profile_with_overrides(
+            api_key="key-123",
+            settings={"api_url": "https://api.example.com/"},
+        ),
+        root_dir=Path.cwd(),
+        graph_write_strategy="put",
+    )
+
+    lookup = protocol._import_hash_lookup()
+
+    assert isinstance(lookup, protocol_module.GraphQlImportHashLookup)
+    provider = lookup._client_provider
+    assert provider._api_url == "https://api.example.com/graphql"
+    assert provider._key == "key-123"

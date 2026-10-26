@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+from datetime import datetime, timezone
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
@@ -10,9 +11,12 @@ from wordlift_client.exceptions import ApiException
 
 from wordlift_sdk.kg_build.entity_patcher import (
     EntityPatcher,
+    SEOVOC_DATE_IMPORTED,
     SEOVOC_IMPORT_HASH,
     _AdaptiveConcurrency,
 )
+
+_NOW = datetime(2026, 10, 26, 12, 30, 45, 123456, tzinfo=timezone.utc)
 
 
 def _ctx(
@@ -511,3 +515,111 @@ async def test_patch_all_concurrency_1_is_sequential() -> None:
 
     assert sorted(call_order) == sorted(iris)
     assert peak == 1
+
+
+def _page_graph() -> tuple[Graph, URIRef, URIRef, URIRef]:
+    page = URIRef("https://data.example.com/dataset/web-pages/1")
+    article = URIRef("https://data.example.com/dataset/entities/article-1")
+    child = URIRef("https://data.example.com/dataset/entities/article-1/faq/1")
+    g = Graph()
+    g.add((page, URIRef("https://schema.org/mainEntity"), article))
+    g.add((page, URIRef("https://schema.org/name"), Literal("Page 1")))
+    g.add((article, URIRef("https://schema.org/headline"), Literal("Hello")))
+    g.add((article, URIRef("https://schema.org/hasPart"), child))
+    g.add((child, URIRef("https://schema.org/name"), Literal("Child FAQ")))
+    return g, page, article, child
+
+
+def _patched_paths(context, iri: URIRef) -> set[str]:
+    return {
+        request.path
+        for call in context.entity_patch_queue.put.await_args_list
+        if str(call.args[0].iri) == str(iri)
+        for request in call.args[0].requests
+    }
+
+
+def test_compute_import_hash_ignores_date_imported() -> None:
+    patcher = EntityPatcher(_ctx("https://data.example.com/dataset"))
+    g, page, _, _ = _page_graph()
+    before = patcher._compute_import_hash(page, g, "https://data.example.com/dataset")
+
+    g.add((page, SEOVOC_DATE_IMPORTED, Literal(_NOW)))
+
+    assert (
+        patcher._compute_import_hash(page, g, "https://data.example.com/dataset")
+        == before
+    )
+
+
+@pytest.mark.asyncio
+async def test_patch_skips_subject_with_only_import_metadata() -> None:
+    context = _ctx("https://data.example.com")
+    patcher = EntityPatcher(context)
+    iri = URIRef("https://data.example.com/a")
+    g = Graph()
+    g.add((iri, SEOVOC_IMPORT_HASH, Literal("hash")))
+    g.add((iri, SEOVOC_DATE_IMPORTED, Literal(_NOW)))
+
+    await patcher.patch(iri, g)
+
+    context.entity_patch_queue.put.assert_not_called()
+
+
+def test_stamp_date_imported_writes_utc_seconds_and_replaces_previous() -> None:
+    patcher = EntityPatcher(_ctx("https://data.example.com"), clock=lambda: _NOW)
+    iri = URIRef("https://data.example.com/a")
+    g = Graph()
+    g.add(
+        (iri, SEOVOC_DATE_IMPORTED, Literal(datetime(2020, 1, 1, tzinfo=timezone.utc)))
+    )
+
+    patcher.stamp_date_imported([iri], g)
+
+    (value,) = list(g.objects(iri, SEOVOC_DATE_IMPORTED))
+    assert value.toPython() == _NOW.replace(microsecond=0)
+    assert str(value.datatype) == "http://www.w3.org/2001/XMLSchema#dateTime"
+
+
+@pytest.mark.asyncio
+async def test_patch_all_stamps_date_imported_on_first_level_subjects() -> None:
+    context = _ctx("https://data.example.com/dataset")
+    patcher = EntityPatcher(context, clock=lambda: _NOW)
+    g, page, article, child = _page_graph()
+
+    await patcher.patch_all(g)
+
+    for subject in (page, article):
+        assert list(g.objects(subject, SEOVOC_DATE_IMPORTED)) == [
+            Literal(_NOW.replace(microsecond=0))
+        ]
+        assert f"/{SEOVOC_DATE_IMPORTED}" in _patched_paths(context, subject)
+    assert not list(g.objects(child, SEOVOC_DATE_IMPORTED))
+    assert f"/{SEOVOC_DATE_IMPORTED}" not in _patched_paths(context, child)
+
+
+@pytest.mark.asyncio
+async def test_patch_all_keeps_date_imported_unset_when_hash_matches() -> None:
+    context = _ctx("https://data.example.com/dataset")
+    patcher = EntityPatcher(context, clock=lambda: _NOW)
+    g, page, article, _ = _page_graph()
+    expected = patcher._compute_import_hash(page, g, "https://data.example.com/dataset")
+    g.add((page, SEOVOC_IMPORT_HASH, Literal(expected)))
+    g.add((article, SEOVOC_IMPORT_HASH, Literal(expected)))
+
+    await patcher.patch_all(g)
+
+    context.entity_patch_queue.put.assert_not_called()
+    assert not list(g.objects(None, SEOVOC_DATE_IMPORTED))
+
+
+@pytest.mark.asyncio
+async def test_patch_all_off_mode_still_stamps_date_imported() -> None:
+    context = _ctx("https://data.example.com/dataset")
+    patcher = EntityPatcher(context, clock=lambda: _NOW)
+    g, page, _, _ = _page_graph()
+
+    await patcher.patch_all(g, import_hash_mode="off")
+
+    assert f"/{SEOVOC_DATE_IMPORTED}" in _patched_paths(context, page)
+    assert f"/{SEOVOC_IMPORT_HASH}" not in _patched_paths(context, page)

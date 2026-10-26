@@ -1,5 +1,26 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Graph writes now stamp `seovoc:dateImported` (UTC `xsd:dateTime`) on the
+  first-level subjects they write, with both the `put` and `patch` strategies.
+  It is set only when a write happens: a page skipped because its import hash
+  is unchanged keeps its stored date, so the date tells when the content last
+  changed. The date is not part of the import hash, so hashes stored by
+  earlier versions still match and nothing is rewritten on upgrade.
+
+### Fixed
+
+- Static templates are no longer rewritten on every run. Before writing them,
+  the SDK reads the `seovoc:importHash` stored on their first-level subjects
+  (GraphQL `resource(iri:)`, with private properties) and skips the write when
+  every subject stores the hash the templates produce now. Only with
+  `import_hash_mode = "on"`; a missing or mixed hash, or a failed lookup,
+  writes the templates as before. The lookup can be replaced through
+  `Context.extensions["kg_build.import_hash_lookup"]`.
+
 ## 8.5.1 - 2026-10-23
 
 ### Fixed

@@ -10,15 +10,18 @@ from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
 
-from jinja2 import UndefinedError
 import pandas as pd
+from jinja2 import UndefinedError
 from rdflib import Graph, URIRef
 from wordlift_client.models.web_page_scrape_response import WebPageScrapeResponse
+
+from wordlift_sdk.graphql.client import GqlClientProvider
 from wordlift_sdk.protocol import Context
 from wordlift_sdk.protocol.errors import summarize_error
 from wordlift_sdk.protocol.web_page_import_protocol import (
     WebPageImportProtocolInterface,
 )
+from wordlift_sdk.structured_data.engine import init_materialization_pool
 from wordlift_sdk.validation.shacl import resolve_shape_specs
 from wordlift_sdk.validation.shacl_validation_service import (
     ShaclValidationService,
@@ -29,6 +32,12 @@ from wordlift_sdk.validation.shacl_validation_service import (
 from .cloud_flow import run_cloud_workflow as run_cloud_workflow  # noqa: F401
 from .config import ProfileDefinition
 from .entity_patcher import EntityPatcher
+from .graph_utils import first_level_subjects
+from .import_hash_lookup import (
+    IMPORT_HASH_LOOKUP_EXTENSION,
+    GraphQlImportHashLookup,
+    ImportHashLookup,
+)
 from .iri_lookup import DataFrameUrlIriLookup
 from .kpi import KgBuildKpiCollector
 from .postprocessors import (
@@ -38,7 +47,6 @@ from .postprocessors import (
     load_postprocessors_for_profile,
 )
 from .postprocessors.processors.graph_annotation import ImportAnnotationPostprocessor
-from .graph_utils import first_level_subjects
 from .postprocessors.processors.id_allocator import IdAllocator
 from .postprocessors.processors.id_postprocessor import (
     CanonicalIdsPostprocessor,
@@ -47,7 +55,6 @@ from .postprocessors.processors.id_postprocessor import (
 from .postprocessors.service import PostprocessorService
 from .rml_mapping import MappingResult, RmlMappingService
 from .templates import JinjaRdfTemplateReifier, TemplateTextRenderer
-from wordlift_sdk.structured_data.engine import init_materialization_pool
 
 logger = logging.getLogger(__name__)
 
@@ -604,6 +611,7 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
                 raise RuntimeError(
                     "SHACL validation failed for static templates in fail mode."
                 )
+            await self._restore_stored_import_hash(self._template_graph)
             await self._write_graph(self._template_graph)
             if self.debug_dir:
                 static_debug = self.debug_dir / "static_templates.ttl"
@@ -715,6 +723,53 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             return
         await self.patcher.patch_all(graph, import_hash_mode=self._import_hash_mode)
 
+    async def _restore_stored_import_hash(self, graph: Graph) -> None:
+        """Put the graph's stored import hash back on *graph* before it is written.
+
+        Page graphs get theirs from the URL source. Static templates have no URL,
+        so their first-level subjects are looked up here. The hash is restored
+        only when every one of them stores the same hash, the hash a previous
+        write stamped on all of them; otherwise the templates are written.
+        """
+        if self._import_hash_mode != "on":
+            return
+        subjects = first_level_subjects(graph, self._dataset_uri)
+        lookup = self._import_hash_lookup()
+        if not subjects or lookup is None:
+            return
+        try:
+            stored = await lookup.import_hashes([str(s) for s in subjects])
+        except Exception as exc:
+            logger.warning(
+                "Stored import hash lookup failed, writing static templates: %s",
+                summarize_error(exc),
+            )
+            return
+        hashes = {stored.get(str(subject)) for subject in subjects}
+        if len(hashes) != 1 or None in hashes:
+            return
+        (stored_hash,) = hashes
+        for subject in subjects:
+            self.patcher._set_import_hash(subject, graph, stored_hash)
+
+    def _import_hash_lookup(self) -> ImportHashLookup | None:
+        extensions = getattr(self.context, "extensions", None) or {}
+        if (lookup := extensions.get(IMPORT_HASH_LOOKUP_EXTENSION)) is not None:
+            return lookup
+        if not self._account_key:
+            return None
+        api_url = str(
+            _setting(
+                dict(self.profile.settings),
+                "api_url",
+                "API_URL",
+                "https://api.wordlift.io",
+            )
+        ).rstrip("/")
+        return GraphQlImportHashLookup(
+            GqlClientProvider(key=self._account_key, api_url=f"{api_url}/graphql")
+        )
+
     def _prepare_graph_for_put(self, graph: Graph) -> bool:
         dataset_uri = self._dataset_uri
         if not dataset_uri:
@@ -737,6 +792,7 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             return False
 
         if self._import_hash_mode == "off":
+            self.patcher.stamp_date_imported(page_subjects, graph)
             return True
 
         representative = next(iter(page_subjects))
@@ -747,11 +803,14 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         for subject in page_subjects:
             self.patcher._set_import_hash(subject, graph, import_hash)
 
-        return not (
+        if (
             self._import_hash_mode == "on"
             and existing_hash
             and existing_hash == import_hash
-        )
+        ):
+            return False
+        self.patcher.stamp_date_imported(page_subjects, graph)
+        return True
 
     def _write_debug_graph(self, graph: Graph, url: str) -> None:
         assert self.debug_dir is not None
