@@ -81,6 +81,7 @@ def _make_context() -> SimpleNamespace:
         configuration_provider=SimpleNamespace(
             get_value=lambda *_args, **_kwargs: None
         ),
+        extensions={},
     )
 
 
@@ -92,6 +93,7 @@ def _make_context_without_dataset() -> SimpleNamespace:
         configuration_provider=SimpleNamespace(
             get_value=lambda *_args, **_kwargs: None
         ),
+        extensions={},
     )
 
 

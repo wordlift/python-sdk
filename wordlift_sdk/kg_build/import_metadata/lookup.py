@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import logging
 from collections.abc import Collection
 from typing import Any, Protocol
@@ -19,6 +20,9 @@ logger = logging.getLogger(__name__)
 IMPORT_HASH_LOOKUP_EXTENSION = "kg_build.import_hash_lookup"
 
 _BATCH_SIZE = 100
+# The lookup only saves a write and holds the static-templates lock: keep it short.
+_TIMEOUT_SECONDS = 30
+_ATTEMPTS = 2
 
 
 class ImportHashLookup(Protocol):
@@ -40,11 +44,14 @@ class GraphQlImportHashLookup:
     def __init__(self, client_provider: GqlClientProvider) -> None:
         self._client_provider = client_provider
 
-    @retry_transient(logger)
+    @retry_transient(logger, attempts=_ATTEMPTS)
     async def import_hashes(self, iris: Collection[str]) -> dict[str, str]:
         ordered = sorted(set(iris))
         if not ordered:
             return {}
+        return await asyncio.wait_for(self._fetch(ordered), _TIMEOUT_SECONDS)
+
+    async def _fetch(self, ordered: list[str]) -> dict[str, str]:
         hashes: dict[str, str] = {}
         async with self._client_provider.create() as session:
             for start in range(0, len(ordered), _BATCH_SIZE):

@@ -91,6 +91,30 @@ async def test_import_hashes_retries_transient_failures() -> None:
 
 
 @pytest.mark.asyncio
+async def test_import_hashes_gives_up_after_two_attempts() -> None:
+    provider = _Provider(_Session({ORG: "h"}, fail_first=5))
+
+    with pytest.raises(asyncio.TimeoutError):
+        await GraphQlImportHashLookup(provider).import_hashes([ORG])
+    assert provider.opened == 2
+
+
+@pytest.mark.asyncio
+async def test_import_hashes_times_out_a_slow_api(monkeypatch) -> None:
+    monkeypatch.setattr(lookup_module, "_TIMEOUT_SECONDS", 0.01)
+
+    class _SlowSession(_Session):
+        async def execute(self, query, variable_values):
+            await asyncio.sleep(1)
+
+    provider = _Provider(_SlowSession({}))
+
+    with pytest.raises(asyncio.TimeoutError):
+        await GraphQlImportHashLookup(provider).import_hashes([ORG])
+    assert provider.opened == 2
+
+
+@pytest.mark.asyncio
 async def test_import_hashes_without_iris_opens_no_session() -> None:
     provider = _Provider(_Session({}))
 

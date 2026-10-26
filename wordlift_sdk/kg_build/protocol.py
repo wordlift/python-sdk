@@ -724,8 +724,7 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
     async def _restore_static_templates_hash(self) -> None:
         # Page graphs get their stored hash from the URL source; static
         # templates have no URL, so it is looked up by their IRIs.
-        extensions = getattr(self.context, "extensions", None) or {}
-        lookup = extensions.get(IMPORT_HASH_LOOKUP_EXTENSION)
+        lookup = self.context.extensions.get(IMPORT_HASH_LOOKUP_EXTENSION)
         if self._import_hash_mode == "on" and lookup is not None:
             await restore_stored_import_hash(
                 self._template_graph, self._dataset_uri, lookup
