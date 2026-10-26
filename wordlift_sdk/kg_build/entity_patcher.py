@@ -119,6 +119,8 @@ class EntityPatcher:
         if not non_hash_predicates:
             return
 
+        # Kept for callers of patch() alone; patch_all() leaves hashing to the
+        # ImportWritePlanner and patches every subject with mode "off".
         if import_hash_mode != "off":
             existing_hash = stored_import_hash(graph, iri)
             import_hash = compute_import_hash(graph, iri, dataset_uri)

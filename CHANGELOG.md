@@ -10,6 +10,9 @@
   unchanged. `entity_patcher.SEOVOC_IMPORT_HASH` is still importable.
 - With the `put` strategy, nested dataset subjects no longer keep the previous
   run's `seovoc:importHash`; only first-level subjects carry it, as with `patch`.
+- With the `put` strategy, a graph whose only unreferenced subject was outside
+  the dataset (no `<dataset>/<type>/<id>` IDs) is now written; it used to be
+  dropped silently.
 
 ## 8.5.1 - 2026-10-23
 

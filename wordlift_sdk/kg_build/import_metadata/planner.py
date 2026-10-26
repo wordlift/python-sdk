@@ -18,7 +18,7 @@ class ImportWritePlanner:
     def plan(
         self, graph: Graph, dataset_uri: str, import_hash_mode: str = "on"
     ) -> frozenset[URIRef]:
-        """Return the dataset subjects to write; empty when there is nothing to write."""
+        """Stamp import metadata on *graph*; return the subjects to write, if any."""
         subjects = dataset_subjects(graph, dataset_uri) if dataset_uri else set()
         if not subjects or import_hash_mode == "off":
             return frozenset(subjects)
