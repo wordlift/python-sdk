@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+from datetime import datetime, timedelta, timezone
+
 import pytest
-from rdflib import Graph, Literal, URIRef
+from rdflib import XSD, Graph, Literal, URIRef
 
 from wordlift_sdk.kg_build.import_metadata import (
+    SEOVOC_DATE_IMPORTED,
     SEOVOC_IMPORT_HASH,
     ImportWritePlanner,
     compute_import_hash,
@@ -18,6 +21,7 @@ PAGE = URIRef(f"{DATASET}/web-pages/1")
 ARTICLE = URIRef(f"{DATASET}/articles/1")
 CHILD = URIRef(f"{DATASET}/articles/1/faq/1")
 EXTERNAL = URIRef("https://external.example.com/things/1")
+NOW = datetime(2026, 10, 26, 14, 30, 45, 123456, tzinfo=timezone(timedelta(hours=2)))
 
 
 def _graph() -> Graph:
@@ -105,3 +109,49 @@ def test_compute_import_hash_covers_dataset_siblings() -> None:
     graph.set((CHILD, NAME, Literal("Changed child")))
 
     assert compute_import_hash(graph, PAGE, DATASET) != before
+
+
+def _dates(graph: Graph) -> dict[URIRef, Literal]:
+    return dict(graph.subject_objects(SEOVOC_DATE_IMPORTED))
+
+
+@pytest.mark.parametrize("mode", ["on", "write", "off"])
+def test_plan_stamps_utc_date_imported_on_import_subjects_when_writing(
+    mode: str,
+) -> None:
+    graph = _graph()
+    graph.add((PAGE, SEOVOC_DATE_IMPORTED, Literal(datetime(2020, 1, 1))))
+
+    ImportWritePlanner(clock=lambda: NOW).plan(graph, DATASET, mode)
+
+    stamp = Literal(datetime(2026, 10, 26, 12, 30, 45, tzinfo=timezone.utc))
+    assert _dates(graph) == {PAGE: stamp, ARTICLE: stamp}
+    assert stamp.datatype == XSD.dateTime
+
+
+def test_plan_keeps_stored_date_when_skipping_unchanged_graph() -> None:
+    graph = _graph()
+    stored = compute_import_hash(graph, PAGE, DATASET)
+    for root in (PAGE, ARTICLE):
+        set_import_hash(graph, root, stored)
+
+    assert ImportWritePlanner(clock=lambda: NOW).plan(graph, DATASET) == frozenset()
+    assert _dates(graph) == {}
+
+
+def test_compute_import_hash_ignores_date_imported() -> None:
+    graph = _graph()
+    before = compute_import_hash(graph, PAGE, DATASET)
+
+    graph.add((PAGE, SEOVOC_DATE_IMPORTED, Literal(NOW)))
+
+    assert compute_import_hash(graph, PAGE, DATASET) == before
+
+
+def test_put_payload_carries_typed_date_imported() -> None:
+    graph = _graph()
+    ImportWritePlanner(clock=lambda: NOW).plan(graph, DATASET)
+
+    turtle = graph.serialize(format="turtle")
+
+    assert '"2026-10-26T12:30:45+00:00"^^xsd:dateTime' in turtle

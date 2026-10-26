@@ -2,6 +2,22 @@
 
 ## Unreleased
 
+### Added
+
+- Graph writes (`patch_all` and the `put` strategy) stamp `seovoc:dateImported`
+  (UTC `xsd:dateTime`) on the first-level subjects they write. It is set only
+  when the write goes ahead: a graph skipped because its import hash is
+  unchanged keeps its stored date, so the date tells when the content last
+  changed. The date is not part of the import hash, so stored hashes still
+  match and nothing is rewritten on upgrade.
+
+### Fixed
+
+- `NewOrChangedUrlSource` (`overwrite = false`) keeps URLs that have no sitemap
+  `lastmod`. Once `seovoc:dateImported` exists it used to drop them for good;
+  now the import hash decides whether they are written. A URL whose `lastmod`
+  moves without a content change is still fetched on each run until it changes.
+
 ### Changed
 
 - Import-hash handling moved to `wordlift_sdk.kg_build.import_metadata`

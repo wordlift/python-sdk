@@ -4,11 +4,11 @@ import hashlib
 
 from rdflib import Graph, Literal, URIRef
 
-from .vocab import SEOVOC_IMPORT_HASH
+from .vocab import IMPORT_METADATA_PREDICATES, SEOVOC_IMPORT_HASH
 
 
 def compute_import_hash(graph: Graph, iri: URIRef, dataset_uri: str = "") -> str:
-    """Hash the triples of *iri* and its dataset siblings, without the hash itself."""
+    """Hash the triples of *iri* and its dataset siblings, without import metadata."""
     siblings = {
         subject
         for subject in graph.subjects()
@@ -20,7 +20,7 @@ def compute_import_hash(graph: Graph, iri: URIRef, dataset_uri: str = "") -> str
         f"{subject.n3()} {predicate.n3()} {obj.n3()}"
         for subject in siblings
         for _, predicate, obj in graph.triples((subject, None, None))
-        if predicate != SEOVOC_IMPORT_HASH
+        if predicate not in IMPORT_METADATA_PREDICATES
     )
     return hashlib.sha256("\n".join(terms).encode("utf-8")).hexdigest()
 
