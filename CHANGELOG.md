@@ -17,6 +17,8 @@
   `lastmod`. Once `seovoc:dateImported` exists it used to drop them for good;
   now the import hash decides whether they are written. A URL whose `lastmod`
   moves without a content change is still fetched on each run until it changes.
+  Projects with `overwrite = false` whose entities already carry
+  `seovoc:dateImported` from another writer will fetch more URLs per run.
 
 ### Changed
 
