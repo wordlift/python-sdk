@@ -5,26 +5,29 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from jinja2 import UndefinedError
-from rdflib import BNode, Graph, Literal, RDF, URIRef
+from rdflib import RDF, BNode, Graph, Literal, URIRef
 from wordlift_client import WebPage, WebPageScrapeResponse
 
-from wordlift_sdk.kg_build.config.loader import ProfileDefinition, ProfileMappingRoute
 import wordlift_sdk.kg_build.protocol as protocol_module
-from wordlift_sdk.kg_build.protocol import (
-    ProfileImportProtocol,
-    _path_contains_part,
-    _resolve_postprocessor_runtime,
-)
-from wordlift_sdk.kg_build.rml_mapping import MappingResult
-from wordlift_sdk.kg_build.postprocessors.types import PostprocessorResult
+from wordlift_sdk.kg_build.config.loader import ProfileDefinition, ProfileMappingRoute
+from wordlift_sdk.kg_build.import_metadata import compute_import_hash
 from wordlift_sdk.kg_build.postprocessors.processors.graph_annotation import (
     ImportAnnotationPostprocessor,
 )
 from wordlift_sdk.kg_build.postprocessors.processors.id_postprocessor import (
     CanonicalIdsPostprocessor,
     RootIdReconcilerPostprocessor,
+)
+from wordlift_sdk.kg_build.postprocessors.processors.id_postprocessor import (
     _find_web_page_iri as _find_web_page_iri_impl,
 )
+from wordlift_sdk.kg_build.postprocessors.types import PostprocessorResult
+from wordlift_sdk.kg_build.protocol import (
+    ProfileImportProtocol,
+    _path_contains_part,
+    _resolve_postprocessor_runtime,
+)
+from wordlift_sdk.kg_build.rml_mapping import MappingResult
 from wordlift_sdk.validation.shacl_validation_service import ValidationOutcome
 
 
@@ -397,9 +400,9 @@ async def test_profile_protocol_put_strategy_skips_when_import_hash_matches() ->
         import_hash_mode="on",
     )
     ImportAnnotationPostprocessor().process_graph(graph, ann_ctx)
-    expected_hash = protocol.patcher._compute_import_hash(
-        URIRef("https://data.example.com/dataset/web-pages/1"),
+    expected_hash = compute_import_hash(
         graph,
+        URIRef("https://data.example.com/dataset/web-pages/1"),
         "https://data.example.com/dataset",
     )
     protocol._run_mapping_stage = AsyncMock(return_value=_make_mapping_result(graph))
@@ -1721,6 +1724,7 @@ def test_protocol_validation_mode_normalization_and_deprecation(
 @pytest.mark.asyncio
 async def test_put_write_failure_is_reported_as_url_failure() -> None:
     import wordlift_client
+
     from wordlift_sdk.url_source.url_source import Url
     from wordlift_sdk.workflow.url_handler.default_url_handler import (
         DefaultUrlHandler,
