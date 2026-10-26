@@ -13,6 +13,14 @@
 
 ### Fixed
 
+- Static templates are no longer rewritten on every run. With
+  `import_hash_mode = "on"`, the SDK reads the `seovoc:importHash` stored on
+  their first-level subjects (GraphQL `resource(iri:)`, private properties)
+  and skips the write when every subject stores the hash the templates produce
+  now. A missing or mixed hash, or a failed lookup, writes them as before.
+  `KgBuildApplicationContainer` registers the lookup in
+  `Context.extensions["kg_build.import_hash_lookup"]`; supply your own
+  `ImportHashLookup` there to replace it.
 - `NewOrChangedUrlSource` (`overwrite = false`) keeps URLs that have no sitemap
   `lastmod`. Once `seovoc:dateImported` exists it used to drop them for good;
   now the import hash decides whether they are written. A URL whose `lastmod`

@@ -29,7 +29,11 @@ from wordlift_sdk.validation.shacl_validation_service import (
 from .cloud_flow import run_cloud_workflow as run_cloud_workflow  # noqa: F401
 from .config import ProfileDefinition
 from .entity_patcher import EntityPatcher
-from .import_metadata import ImportWritePlanner
+from .import_metadata import (
+    IMPORT_HASH_LOOKUP_EXTENSION,
+    ImportWritePlanner,
+    restore_stored_import_hash,
+)
 from .iri_lookup import DataFrameUrlIriLookup
 from .kpi import KgBuildKpiCollector
 from .postprocessors import (
@@ -605,6 +609,7 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
                 raise RuntimeError(
                     "SHACL validation failed for static templates in fail mode."
                 )
+            await self._restore_static_templates_hash()
             await self._write_graph(self._template_graph)
             if self.debug_dir:
                 static_debug = self.debug_dir / "static_templates.ttl"
@@ -715,6 +720,16 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             await self.context.graph_queue.put(graph)
             return
         await self.patcher.patch_all(graph, import_hash_mode=self._import_hash_mode)
+
+    async def _restore_static_templates_hash(self) -> None:
+        # Page graphs get their stored hash from the URL source; static
+        # templates have no URL, so it is looked up by their IRIs.
+        extensions = getattr(self.context, "extensions", None) or {}
+        lookup = extensions.get(IMPORT_HASH_LOOKUP_EXTENSION)
+        if self._import_hash_mode == "on" and lookup is not None:
+            await restore_stored_import_hash(
+                self._template_graph, self._dataset_uri, lookup
+            )
 
     def _prepare_graph_for_put(self, graph: Graph) -> bool:
         return bool(
