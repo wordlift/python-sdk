@@ -491,10 +491,10 @@ class CrawlerLoaderAdapter(BaseLoaderAdapter):
                 )
             )
 
-            html = getattr(response, "html", None)
-            if not html:
+            body = getattr(response, "body", None)
+            if not body:
                 raise LoaderRuntimeError(
-                    f"Crawler loader returned no HTML for {item.url}",
+                    f"Crawler loader returned no body for {item.url}",
                     code="INGEST_LOAD_REMOTE_API_ERROR",
                     retryable=True,
                 )
@@ -512,7 +512,7 @@ class CrawlerLoaderAdapter(BaseLoaderAdapter):
                 url=item.url,
                 final_url=getattr(response, "url_final", None) or item.url,
                 status_code=getattr(response, "status_code", None),
-                html=html,
+                html=body,
                 fetch_meta=meta,
             )
 

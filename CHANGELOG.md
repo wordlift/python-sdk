@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- The crawler loader reads the fetched document from `FetchResponse.body`
+  instead of `html`, which crawler 0.16.0 deprecates. The values are the same,
+  so loaded pages do not change. Requires `wordlift-client` 1.219.0 or later.
+
 ## 8.6.0 - 2026-10-27
 
 ### Added
