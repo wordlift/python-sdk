@@ -1,9 +1,15 @@
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
 from wordlift_sdk.configuration import ConfigurationProvider
+from wordlift_sdk.container.application_container import ApplicationContainer
 from wordlift_sdk.kg_build.container import KgBuildApplicationContainer
+from wordlift_sdk.kg_build.import_metadata import (
+    IMPORT_HASH_LOOKUP_EXTENSION,
+    GraphQlImportHashLookup,
+)
 from wordlift_sdk.workflow.url_handler.default_url_handler import DefaultUrlHandler
 from wordlift_sdk.workflow.url_handler.ingestion_web_page_scrape_url_handler import (
     IngestionWebPageScrapeUrlHandler,
@@ -87,3 +93,31 @@ async def test_create_kg_import_workflow_uses_concurrency_override():
     container.create_multi_url_handler = AsyncMock(return_value=MagicMock())
     workflow = await container.create_kg_import_workflow()
     assert workflow._concurrency == 7
+
+
+@pytest.mark.asyncio
+async def test_get_context_registers_graphql_import_hash_lookup(monkeypatch):
+    context = SimpleNamespace(extensions={})
+    monkeypatch.setattr(
+        ApplicationContainer, "get_context", AsyncMock(return_value=context)
+    )
+    container = KgBuildApplicationContainer(configuration_provider=_make_provider())
+
+    assert await container.get_context() is context
+    assert isinstance(
+        context.extensions[IMPORT_HASH_LOOKUP_EXTENSION], GraphQlImportHashLookup
+    )
+
+
+@pytest.mark.asyncio
+async def test_get_context_keeps_a_lookup_already_registered(monkeypatch):
+    lookup = object()
+    context = SimpleNamespace(extensions={IMPORT_HASH_LOOKUP_EXTENSION: lookup})
+    monkeypatch.setattr(
+        ApplicationContainer, "get_context", AsyncMock(return_value=context)
+    )
+    container = KgBuildApplicationContainer(configuration_provider=_make_provider())
+
+    await container.get_context()
+
+    assert context.extensions[IMPORT_HASH_LOOKUP_EXTENSION] is lookup

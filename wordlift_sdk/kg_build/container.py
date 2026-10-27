@@ -4,6 +4,7 @@ import logging
 from typing import Optional
 
 from wordlift_sdk.container.application_container import ApplicationContainer
+from wordlift_sdk.protocol import Context
 from wordlift_sdk.protocol.web_page_import_protocol import (
     WebPageImportProtocolInterface,
 )
@@ -13,6 +14,8 @@ from wordlift_sdk.workflow.url_handler.ingestion_web_page_scrape_url_handler imp
     IngestionWebPageScrapeUrlHandler,
 )
 from wordlift_sdk.workflow.url_handler.url_handler import UrlHandler
+
+from .import_metadata import IMPORT_HASH_LOOKUP_EXTENSION, GraphQlImportHashLookup
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +29,14 @@ class KgBuildApplicationContainer(ApplicationContainer):
 
     def set_protocol(self, protocol: WebPageImportProtocolInterface):
         self.protocol = protocol
+
+    async def get_context(self) -> Context:
+        context = await super().get_context()
+        if IMPORT_HASH_LOOKUP_EXTENSION not in context.extensions:
+            context.extensions[IMPORT_HASH_LOOKUP_EXTENSION] = GraphQlImportHashLookup(
+                await self.create_gql_client_provider()
+            )
+        return context
 
     async def create_web_page_scrape_url_handler(
         self,
@@ -54,9 +65,7 @@ class KgBuildApplicationContainer(ApplicationContainer):
 
     async def create_kg_import_workflow(self) -> KgImportWorkflow:
         concurrency = self._configuration_provider.get_value("CONCURRENCY", 2)
-        logger.info(
-            "URL fetch concurrency: %d", concurrency
-        )
+        logger.info("URL fetch concurrency: %d", concurrency)
         url_source = await self.create_new_or_changed_source()
 
         return KgImportWorkflow(

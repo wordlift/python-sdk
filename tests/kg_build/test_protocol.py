@@ -5,26 +5,33 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from jinja2 import UndefinedError
-from rdflib import BNode, Graph, Literal, RDF, URIRef
+from rdflib import RDF, BNode, Graph, Literal, URIRef
 from wordlift_client import WebPage, WebPageScrapeResponse
 
-from wordlift_sdk.kg_build.config.loader import ProfileDefinition, ProfileMappingRoute
 import wordlift_sdk.kg_build.protocol as protocol_module
-from wordlift_sdk.kg_build.protocol import (
-    ProfileImportProtocol,
-    _path_contains_part,
-    _resolve_postprocessor_runtime,
+from wordlift_sdk.kg_build.config.loader import ProfileDefinition, ProfileMappingRoute
+from wordlift_sdk.kg_build.import_metadata import (
+    IMPORT_HASH_LOOKUP_EXTENSION,
+    compute_import_hash,
+    import_subjects,
 )
-from wordlift_sdk.kg_build.rml_mapping import MappingResult
-from wordlift_sdk.kg_build.postprocessors.types import PostprocessorResult
 from wordlift_sdk.kg_build.postprocessors.processors.graph_annotation import (
     ImportAnnotationPostprocessor,
 )
 from wordlift_sdk.kg_build.postprocessors.processors.id_postprocessor import (
     CanonicalIdsPostprocessor,
     RootIdReconcilerPostprocessor,
+)
+from wordlift_sdk.kg_build.postprocessors.processors.id_postprocessor import (
     _find_web_page_iri as _find_web_page_iri_impl,
 )
+from wordlift_sdk.kg_build.postprocessors.types import PostprocessorResult
+from wordlift_sdk.kg_build.protocol import (
+    ProfileImportProtocol,
+    _path_contains_part,
+    _resolve_postprocessor_runtime,
+)
+from wordlift_sdk.kg_build.rml_mapping import MappingResult
 from wordlift_sdk.validation.shacl_validation_service import ValidationOutcome
 
 
@@ -74,6 +81,7 @@ def _make_context() -> SimpleNamespace:
         configuration_provider=SimpleNamespace(
             get_value=lambda *_args, **_kwargs: None
         ),
+        extensions={},
     )
 
 
@@ -85,6 +93,7 @@ def _make_context_without_dataset() -> SimpleNamespace:
         configuration_provider=SimpleNamespace(
             get_value=lambda *_args, **_kwargs: None
         ),
+        extensions={},
     )
 
 
@@ -397,9 +406,9 @@ async def test_profile_protocol_put_strategy_skips_when_import_hash_matches() ->
         import_hash_mode="on",
     )
     ImportAnnotationPostprocessor().process_graph(graph, ann_ctx)
-    expected_hash = protocol.patcher._compute_import_hash(
-        URIRef("https://data.example.com/dataset/web-pages/1"),
+    expected_hash = compute_import_hash(
         graph,
+        URIRef("https://data.example.com/dataset/web-pages/1"),
         "https://data.example.com/dataset",
     )
     protocol._run_mapping_stage = AsyncMock(return_value=_make_mapping_result(graph))
@@ -1721,6 +1730,7 @@ def test_protocol_validation_mode_normalization_and_deprecation(
 @pytest.mark.asyncio
 async def test_put_write_failure_is_reported_as_url_failure() -> None:
     import wordlift_client
+
     from wordlift_sdk.url_source.url_source import Url
     from wordlift_sdk.workflow.url_handler.default_url_handler import (
         DefaultUrlHandler,
@@ -1783,3 +1793,89 @@ async def test_static_templates_failure_fails_later_callbacks_fast() -> None:
 
     protocol.patcher.patch_all.assert_awaited_once()
     assert protocol._static_templates_patched is False
+
+
+def _static_templates_protocol(
+    strategy: str, lookup: object | None = None, import_hash_mode: str = "on"
+) -> ProfileImportProtocol:
+    context = _make_context()
+    context.entity_patch_queue = SimpleNamespace(put=AsyncMock())
+    context.extensions = (
+        {IMPORT_HASH_LOOKUP_EXTENSION: lookup} if lookup is not None else {}
+    )
+    protocol = ProfileImportProtocol(
+        context=context,
+        profile=_make_profile_with_overrides(
+            settings={"import_hash_mode": import_hash_mode}
+        ),
+        root_dir=Path.cwd(),
+        graph_write_strategy=strategy,
+    )
+    protocol._template_graph = _make_dataset_scoped_graph()
+    protocol._template_exports = {}
+    protocol._shacl_validator.validate = AsyncMock(return_value=None)
+    return protocol
+
+
+def _stored_hashes_lookup(hashes: dict[str, str]) -> SimpleNamespace:
+    return SimpleNamespace(import_hashes=AsyncMock(return_value=hashes))
+
+
+def _unchanged_templates_hashes() -> dict[str, str]:
+    dataset = "https://data.example.com/dataset"
+    graph = _make_dataset_scoped_graph()
+    roots = import_subjects(graph, dataset)
+    stored = compute_import_hash(graph, min(roots, key=str), dataset)
+    return {str(root): stored for root in roots}
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("strategy", ["put", "patch"])
+async def test_unchanged_static_templates_are_not_written(strategy: str) -> None:
+    protocol = _static_templates_protocol(
+        strategy, _stored_hashes_lookup(_unchanged_templates_hashes())
+    )
+
+    await protocol._patch_static_templates_once()
+
+    protocol.context.graph_queue.put.assert_not_awaited()
+    protocol.context.entity_patch_queue.put.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("strategy", ["put", "patch"])
+async def test_changed_static_templates_are_written(strategy: str) -> None:
+    stale = {iri: "stale" for iri in _unchanged_templates_hashes()}
+    protocol = _static_templates_protocol(strategy, _stored_hashes_lookup(stale))
+
+    await protocol._patch_static_templates_once()
+
+    writes = (
+        protocol.context.graph_queue.put
+        if strategy == "put"
+        else protocol.context.entity_patch_queue.put
+    )
+    writes.assert_awaited()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("import_hash_mode", ["write", "off"])
+async def test_static_templates_hash_is_looked_up_only_in_on_mode(
+    import_hash_mode: str,
+) -> None:
+    lookup = _stored_hashes_lookup(_unchanged_templates_hashes())
+    protocol = _static_templates_protocol("put", lookup, import_hash_mode)
+
+    await protocol._patch_static_templates_once()
+
+    lookup.import_hashes.assert_not_awaited()
+    protocol.context.graph_queue.put.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_static_templates_without_lookup_are_written() -> None:
+    protocol = _static_templates_protocol("put")
+
+    await protocol._patch_static_templates_once()
+
+    protocol.context.graph_queue.put.assert_awaited_once()

@@ -1,5 +1,45 @@
 # Changelog
 
+## 8.6.0 - 2026-10-27
+
+### Added
+
+- Graph writes (`patch_all` and the `put` strategy) stamp `seovoc:dateImported`
+  (UTC `xsd:dateTime`) on the first-level subjects they write. It is set only
+  when the write goes ahead: a graph skipped because its import hash is
+  unchanged keeps its stored date, so the date tells when the content last
+  changed. The date is not part of the import hash, so stored hashes still
+  match and nothing is rewritten on upgrade.
+
+### Fixed
+
+- Static templates are no longer rewritten on every run. With
+  `import_hash_mode = "on"`, the SDK reads the `seovoc:importHash` stored on
+  their first-level subjects (GraphQL `resource(iri:)`, private properties)
+  and skips the write when every subject stores the hash the templates produce
+  now. A missing or mixed hash, or a failed lookup, writes them as before.
+  `KgBuildApplicationContainer` registers the lookup in
+  `Context.extensions["kg_build.import_hash_lookup"]`; supply your own
+  `ImportHashLookup` there to replace it.
+- `NewOrChangedUrlSource` (`overwrite = false`) keeps URLs that have no sitemap
+  `lastmod`. Once `seovoc:dateImported` exists it used to drop them for good;
+  now the import hash decides whether they are written. A URL whose `lastmod`
+  moves without a content change is still fetched on each run until it changes.
+  Projects with `overwrite = false` whose entities already carry
+  `seovoc:dateImported` from another writer will fetch more URLs per run.
+
+### Changed
+
+- Import-hash handling moved to `wordlift_sdk.kg_build.import_metadata`
+  (vocabulary, subject selection, hashing and `ImportWritePlanner`). The `put`
+  and `patch` strategies now share one write decision; stored hashes are
+  unchanged. `entity_patcher.SEOVOC_IMPORT_HASH` is still importable.
+- With the `put` strategy, nested dataset subjects no longer keep the previous
+  run's `seovoc:importHash`; only first-level subjects carry it, as with `patch`.
+- With the `put` strategy, a graph whose only unreferenced subject was outside
+  the dataset (no `<dataset>/<type>/<id>` IDs) is now written; it used to be
+  dropped silently.
+
 ## 8.5.1 - 2026-10-23
 
 ### Fixed

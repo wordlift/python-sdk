@@ -2,21 +2,27 @@ from __future__ import annotations
 
 import asyncio
 import functools
-import hashlib
 import logging
 from collections.abc import Awaitable, Callable
 from typing import ParamSpec, TypeVar
 
 import anyio
-from rdflib import Graph, Literal, URIRef
+from rdflib import Graph, URIRef
 from wordlift_client.models.entity_patch_request import EntityPatchRequest
 from wordlift_sdk.protocol import Context
 from wordlift_sdk.protocol.entity_patch import EntityPatch
 from wordlift_sdk.protocol.errors import is_transient_error
 
-logger = logging.getLogger(__name__)
+from .import_metadata import (
+    IMPORT_METADATA_PREDICATES,
+    SEOVOC_IMPORT_HASH as SEOVOC_IMPORT_HASH,  # re-exported for existing importers
+    ImportWritePlanner,
+    compute_import_hash,
+    set_import_hash,
+    stored_import_hash,
+)
 
-SEOVOC_IMPORT_HASH = URIRef("https://w3id.org/seovoc/importHash")
+logger = logging.getLogger(__name__)
 
 _STEP_UP_AFTER = 20  # consecutive successful patch_all calls before step-up
 
@@ -88,8 +94,11 @@ class _AdaptiveConcurrency:
 class EntityPatcher:
     """Queue entity patches from an RDFLib graph."""
 
-    def __init__(self, context: Context) -> None:
+    def __init__(
+        self, context: Context, planner: ImportWritePlanner | None = None
+    ) -> None:
         self._context = context
+        self._planner = planner or ImportWritePlanner()
         concurrency = getattr(context, "patch_concurrency", 10)
         max_concurrency = getattr(context, "patch_concurrency_max", 20)
         self._concurrency = _AdaptiveConcurrency(
@@ -103,18 +112,20 @@ class EntityPatcher:
         dataset_uri = str(
             getattr(self._context.account, "dataset_uri", "") or ""
         ).rstrip("/")
-        non_hash_predicates = {
+        content_predicates = {
             predicate
             for _, predicate, _ in graph.triples((iri, None, None))
-            if predicate != SEOVOC_IMPORT_HASH
+            if predicate not in IMPORT_METADATA_PREDICATES
         }
-        if not non_hash_predicates:
+        if not content_predicates:
             return
 
+        # Kept for callers of patch() alone; patch_all() leaves hashing to the
+        # ImportWritePlanner and patches every subject with mode "off".
         if import_hash_mode != "off":
-            existing_hash = self._existing_import_hash(iri, graph)
-            import_hash = self._compute_import_hash(iri, graph, dataset_uri)
-            self._set_import_hash(iri, graph, import_hash)
+            existing_hash = stored_import_hash(graph, iri)
+            import_hash = compute_import_hash(graph, iri, dataset_uri)
+            set_import_hash(graph, iri, import_hash)
             if (
                 import_hash_mode == "on"
                 and existing_hash
@@ -141,46 +152,15 @@ class EntityPatcher:
         await self._context.entity_patch_queue.put(EntityPatch(iri, patches))
 
     async def patch_all(self, graph: Graph, import_hash_mode: str = "on") -> None:
-        dataset_uri = getattr(self._context.account, "dataset_uri", None)
-        if not dataset_uri:
-            return
-
-        subjects = {
-            subject
-            for subject in graph.subjects()
-            if isinstance(subject, URIRef) and str(subject).startswith(dataset_uri)
-        }
-
+        dataset_uri = str(getattr(self._context.account, "dataset_uri", "") or "")
+        # The planner stamps the hashes, so each subject is patched as it stands.
+        subjects = self._planner.plan(graph, dataset_uri, import_hash_mode)
         if not subjects:
             return
 
-        subject_modes = {iri: import_hash_mode for iri in subjects}
-
-        if import_hash_mode != "off":
-            first_level_subjects = self._first_level_subjects(graph, dataset_uri)
-            if first_level_subjects:
-                representative = next(iter(first_level_subjects))
-                existing_hash = self._existing_import_hash(representative, graph)
-                import_hash = self._compute_import_hash(
-                    representative, graph, str(dataset_uri).rstrip("/")
-                )
-                for iri in first_level_subjects:
-                    self._set_import_hash(iri, graph, import_hash)
-                if (
-                    import_hash_mode == "on"
-                    and existing_hash
-                    and existing_hash == import_hash
-                ):
-                    return
-                for iri in subjects - first_level_subjects:
-                    graph.remove((iri, SEOVOC_IMPORT_HASH, None))
-                    subject_modes[iri] = "off"
-                for iri in first_level_subjects:
-                    subject_modes[iri] = "write"
-
         tasks = [
             asyncio.ensure_future(
-                self._patch_limited(iri, graph, import_hash_mode=subject_modes[iri])
+                self._patch_limited(iri, graph, import_hash_mode="off")
             )
             for iri in subjects
         ]
@@ -195,63 +175,3 @@ class EntityPatcher:
             raise
 
         self._concurrency.record_batch_success()
-
-    @staticmethod
-    def _first_level_subjects(graph: Graph, dataset_uri: str) -> set[URIRef]:
-        base = str(dataset_uri or "").rstrip("/")
-        subjects = {
-            subject
-            for subject in graph.subjects()
-            if isinstance(subject, URIRef) and str(subject).startswith(f"{base}/")
-        }
-        if not subjects:
-            return set()
-
-        first_level_by_id = {
-            subject
-            for subject in subjects
-            if len([part for part in str(subject)[len(base) + 1 :].split("/") if part])
-            == 2
-        }
-        if first_level_by_id:
-            return first_level_by_id
-
-        referenced = {
-            obj
-            for _, _, obj in graph.triples((None, None, None))
-            if isinstance(obj, URIRef) and obj in subjects
-        }
-        first_level = subjects - referenced
-        return first_level or subjects
-
-    @staticmethod
-    def _existing_import_hash(iri: URIRef, graph: Graph) -> str | None:
-        for obj in graph.objects(iri, SEOVOC_IMPORT_HASH):
-            value = str(obj).strip()
-            if value:
-                return value
-        return None
-
-    @staticmethod
-    def _set_import_hash(iri: URIRef, graph: Graph, import_hash: str) -> None:
-        graph.remove((iri, SEOVOC_IMPORT_HASH, None))
-        graph.add((iri, SEOVOC_IMPORT_HASH, Literal(import_hash)))
-
-    @staticmethod
-    def _compute_import_hash(iri: URIRef, graph: Graph, dataset_uri: str = "") -> str:
-        sibling_subjects = {
-            subject
-            for subject in graph.subjects()
-            if isinstance(subject, URIRef)
-            and (not dataset_uri or str(subject).startswith(dataset_uri))
-        }
-        sibling_subjects.add(iri)
-
-        terms: list[str] = []
-        for subject in sibling_subjects:
-            for _, predicate, obj in graph.triples((subject, None, None)):
-                if predicate == SEOVOC_IMPORT_HASH:
-                    continue
-                terms.append(f"{subject.n3()} {predicate.n3()} {obj.n3()}")
-        digest_input = "\n".join(sorted(terms))
-        return hashlib.sha256(digest_input.encode("utf-8")).hexdigest()

@@ -19,6 +19,9 @@ __all__ = [
     "CanonicalIdsPostprocessor",
     "IriLookup",
     "DataFrameUrlIriLookup",
+    "ImportHashLookup",
+    "GraphQlImportHashLookup",
+    "ImportWritePlanner",
     "KgBuildKpiCollector",
     "DependentRule",
     "IdPolicy",
@@ -73,6 +76,15 @@ _EXPORTS: dict[str, tuple[str, str]] = {
     "CanonicalIdsPostprocessor": (
         "wordlift_sdk.kg_build.postprocessors.processors.id_postprocessor",
         "CanonicalIdsPostprocessor",
+    ),
+    "ImportHashLookup": ("wordlift_sdk.kg_build.import_metadata", "ImportHashLookup"),
+    "GraphQlImportHashLookup": (
+        "wordlift_sdk.kg_build.import_metadata",
+        "GraphQlImportHashLookup",
+    ),
+    "ImportWritePlanner": (
+        "wordlift_sdk.kg_build.import_metadata",
+        "ImportWritePlanner",
     ),
     "IriLookup": ("wordlift_sdk.kg_build.iri_lookup", "IriLookup"),
     "DataFrameUrlIriLookup": (

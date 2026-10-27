@@ -1,17 +1,23 @@
 from __future__ import annotations
 
 import asyncio
+from datetime import datetime, timezone
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
 import pytest
-from rdflib import Graph, Literal, URIRef
+from rdflib import XSD, Graph, Literal, URIRef
 from wordlift_client.exceptions import ApiException
 
 from wordlift_sdk.kg_build.entity_patcher import (
-    EntityPatcher,
     SEOVOC_IMPORT_HASH,
+    EntityPatcher,
     _AdaptiveConcurrency,
+)
+from wordlift_sdk.kg_build.import_metadata import (
+    SEOVOC_DATE_IMPORTED,
+    ImportWritePlanner,
+    compute_import_hash,
 )
 
 
@@ -78,7 +84,7 @@ async def test_patch_skips_when_existing_import_hash_matches() -> None:
     g = Graph()
     pred = URIRef("https://schema.org/name")
     g.add((iri, pred, Literal("A")))
-    expected_hash = patcher._compute_import_hash(iri, g)
+    expected_hash = compute_import_hash(g, iri)
     g.add((iri, SEOVOC_IMPORT_HASH, Literal(expected_hash)))
 
     await patcher.patch(iri, g)
@@ -95,51 +101,12 @@ async def test_patch_write_mode_does_not_skip_on_matching_hash() -> None:
     g = Graph()
     pred = URIRef("https://schema.org/name")
     g.add((iri, pred, Literal("A")))
-    expected_hash = patcher._compute_import_hash(iri, g)
+    expected_hash = compute_import_hash(g, iri)
     g.add((iri, SEOVOC_IMPORT_HASH, Literal(expected_hash)))
 
     await patcher.patch(iri, g, import_hash_mode="write")
 
     context.entity_patch_queue.put.assert_awaited_once()
-
-
-@pytest.mark.asyncio
-async def test_compute_import_hash_ignores_existing_import_hash_value() -> None:
-    patcher = EntityPatcher(_ctx("https://data.example.com"))
-    iri = URIRef("https://data.example.com/a")
-    pred = URIRef("https://schema.org/name")
-
-    g1 = Graph()
-    g1.add((iri, pred, Literal("A")))
-    g1.add((iri, SEOVOC_IMPORT_HASH, Literal("old-1")))
-
-    g2 = Graph()
-    g2.add((iri, pred, Literal("A")))
-    g2.add((iri, SEOVOC_IMPORT_HASH, Literal("old-2")))
-
-    assert patcher._compute_import_hash(iri, g1) == patcher._compute_import_hash(
-        iri, g2
-    )
-
-
-def test_compute_import_hash_includes_sibling_subjects() -> None:
-    patcher = EntityPatcher(_ctx("https://data.example.com"))
-    iri = URIRef("https://data.example.com/a")
-    sibling = URIRef("https://data.example.com/b")
-    pred = URIRef("https://schema.org/name")
-
-    g1 = Graph()
-    g1.add((iri, pred, Literal("A")))
-    g1.add((sibling, pred, Literal("B")))
-
-    g2 = Graph()
-    g2.add((iri, pred, Literal("A")))
-    g2.add((sibling, pred, Literal("B2")))
-
-    assert patcher._compute_import_hash(iri, g1, "https://data.example.com")
-    assert patcher._compute_import_hash(
-        iri, g1, "https://data.example.com"
-    ) != patcher._compute_import_hash(iri, g2, "https://data.example.com")
 
 
 @pytest.mark.asyncio
@@ -155,7 +122,7 @@ async def test_patch_all_skips_all_nodes_when_provided_hash_matches_graph_snapsh
     g.add((a, pred, Literal("A")))
     g.add((b, pred, Literal("B")))
 
-    expected = patcher._compute_import_hash(a, g, "https://data.example.com")
+    expected = compute_import_hash(g, a, "https://data.example.com")
     g.add((a, SEOVOC_IMPORT_HASH, Literal(expected)))
     g.add((b, SEOVOC_IMPORT_HASH, Literal(expected)))
 
@@ -178,7 +145,7 @@ async def test_patch_all_skips_child_nodes_when_first_level_hash_matches() -> No
     g.add((article, URIRef("https://schema.org/hasPart"), child))
     g.add((child, URIRef("https://schema.org/name"), Literal("Child FAQ")))
 
-    expected = patcher._compute_import_hash(page, g, "https://data.example.com/dataset")
+    expected = compute_import_hash(g, page, "https://data.example.com/dataset")
     g.add((page, SEOVOC_IMPORT_HASH, Literal(expected)))
     g.add((article, SEOVOC_IMPORT_HASH, Literal(expected)))
 
@@ -232,9 +199,7 @@ async def test_patch_all_skips_child_only_graph_when_fallback_hash_matches() -> 
     child = URIRef("https://data.example.com/dataset/entities/article-1/children/1")
     g = Graph()
     g.add((child, URIRef("https://schema.org/name"), Literal("Child Node")))
-    expected = patcher._compute_import_hash(
-        child, g, "https://data.example.com/dataset"
-    )
+    expected = compute_import_hash(g, child, "https://data.example.com/dataset")
     g.add((child, SEOVOC_IMPORT_HASH, Literal(expected)))
 
     await patcher.patch_all(g)
@@ -511,3 +476,40 @@ async def test_patch_all_concurrency_1_is_sequential() -> None:
 
     assert sorted(call_order) == sorted(iris)
     assert peak == 1
+
+
+@pytest.mark.asyncio
+async def test_patch_skips_subject_with_only_import_metadata() -> None:
+    context = _ctx("https://data.example.com")
+    iri = URIRef("https://data.example.com/a")
+    g = Graph()
+    g.add((iri, SEOVOC_IMPORT_HASH, Literal("hash")))
+    g.add((iri, SEOVOC_DATE_IMPORTED, Literal("2026-10-26T12:30:45+00:00")))
+
+    await EntityPatcher(context).patch(iri, g)
+
+    context.entity_patch_queue.put.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_patch_all_sends_typed_date_imported_in_json_ld() -> None:
+    context = _ctx("https://data.example.com/dataset")
+    planner = ImportWritePlanner(
+        clock=lambda: datetime(2026, 10, 26, 12, 30, 45, tzinfo=timezone.utc)
+    )
+    page = URIRef("https://data.example.com/dataset/web-pages/1")
+    g = Graph()
+    g.add((page, URIRef("https://schema.org/name"), Literal("Page 1")))
+
+    await EntityPatcher(context, planner=planner).patch_all(g)
+
+    (call,) = context.entity_patch_queue.put.await_args_list
+    (added,) = [
+        request.value
+        for request in call.args[0].requests
+        if request.op == "add" and request.path == f"/{SEOVOC_DATE_IMPORTED}"
+    ]
+    (value,) = (
+        Graph().parse(data=added, format="json-ld").objects(page, SEOVOC_DATE_IMPORTED)
+    )
+    assert value == Literal("2026-10-26T12:30:45+00:00", datatype=XSD.dateTime)
