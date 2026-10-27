@@ -3,9 +3,9 @@ from __future__ import annotations
 from rdflib import Graph, Literal, URIRef
 
 from ...graph_utils import first_level_subjects
+from ...import_metadata import SEOVOC_IMPORT_HASH
 
 SEOVOC_SOURCE = URIRef("https://w3id.org/seovoc/source")
-SEOVOC_IMPORT_HASH = URIRef("https://w3id.org/seovoc/importHash")
 
 
 class ImportAnnotationPostprocessor:

@@ -12,7 +12,7 @@ from typing import Any
 
 from jinja2 import UndefinedError
 import pandas as pd
-from rdflib import Graph, URIRef
+from rdflib import Graph
 from wordlift_client.models.web_page_scrape_response import WebPageScrapeResponse
 from wordlift_sdk.protocol import Context
 from wordlift_sdk.protocol.errors import summarize_error
@@ -29,6 +29,7 @@ from wordlift_sdk.validation.shacl_validation_service import (
 from .cloud_flow import run_cloud_workflow as run_cloud_workflow  # noqa: F401
 from .config import ProfileDefinition
 from .entity_patcher import EntityPatcher
+from .import_metadata import ImportWritePlanner
 from .iri_lookup import DataFrameUrlIriLookup
 from .kpi import KgBuildKpiCollector
 from .postprocessors import (
@@ -38,7 +39,6 @@ from .postprocessors import (
     load_postprocessors_for_profile,
 )
 from .postprocessors.processors.graph_annotation import ImportAnnotationPostprocessor
-from .graph_utils import first_level_subjects
 from .postprocessors.processors.id_allocator import IdAllocator
 from .postprocessors.processors.id_postprocessor import (
     CanonicalIdsPostprocessor,
@@ -349,7 +349,8 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         )
 
     def _init_graph_writer(self, settings: dict, context: Context) -> None:
-        self.patcher = EntityPatcher(context)
+        self._import_writes = ImportWritePlanner()
+        self.patcher = EntityPatcher(context, planner=self._import_writes)
         self._import_hash_mode = _resolve_import_hash_mode(
             _setting(settings, "import_hash_mode", "IMPORT_HASH_MODE", "on")
         )
@@ -716,41 +717,8 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
         await self.patcher.patch_all(graph, import_hash_mode=self._import_hash_mode)
 
     def _prepare_graph_for_put(self, graph: Graph) -> bool:
-        dataset_uri = self._dataset_uri
-        if not dataset_uri:
-            return False
-
-        subjects = {
-            subject
-            for subject in graph.subjects()
-            if isinstance(subject, URIRef) and str(subject).startswith(dataset_uri)
-        }
-        if not subjects:
-            return False
-
-        page_subjects = {
-            subject
-            for subject in first_level_subjects(graph, dataset_uri)
-            if subject in subjects
-        }
-        if not page_subjects:
-            return False
-
-        if self._import_hash_mode == "off":
-            return True
-
-        representative = next(iter(page_subjects))
-        existing_hash = self.patcher._existing_import_hash(representative, graph)
-        import_hash = self.patcher._compute_import_hash(
-            representative, graph, dataset_uri
-        )
-        for subject in page_subjects:
-            self.patcher._set_import_hash(subject, graph, import_hash)
-
-        return not (
-            self._import_hash_mode == "on"
-            and existing_hash
-            and existing_hash == import_hash
+        return bool(
+            self._import_writes.plan(graph, self._dataset_uri, self._import_hash_mode)
         )
 
     def _write_debug_graph(self, graph: Graph, url: str) -> None:

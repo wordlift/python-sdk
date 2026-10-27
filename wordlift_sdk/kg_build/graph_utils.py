@@ -3,15 +3,22 @@ from __future__ import annotations
 from rdflib import Graph, URIRef
 
 
-def first_level_subjects(graph: Graph, dataset_uri: str) -> set[URIRef]:
+def first_level_subjects(
+    graph: Graph, dataset_uri: str, candidates: set[URIRef] | None = None
+) -> set[URIRef]:
     """Return the first-level URIRef subjects of *graph*.
 
     When *dataset_uri* is set, first-level subjects are those whose IRI matches
     ``<dataset_uri>/<type>/<id>`` (exactly two non-empty path segments after the
     base URI).  Falls back to subjects that are not referenced as objects by any
     other triple; if every subject is referenced, returns all subjects.
+    *candidates*, when given, limits the subjects considered.
     """
-    subjects = {s for s in graph.subjects() if isinstance(s, URIRef)}
+    subjects = (
+        candidates
+        if candidates is not None
+        else {s for s in graph.subjects() if isinstance(s, URIRef)}
+    )
     if dataset_uri:
         first_level_by_id = {
             s
