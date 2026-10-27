@@ -14,6 +14,7 @@ from wordlift_sdk.protocol.entity_patch import EntityPatch
 from wordlift_sdk.protocol.errors import is_transient_error
 
 from .import_metadata import (
+    IMPORT_METADATA_PREDICATES,
     SEOVOC_IMPORT_HASH as SEOVOC_IMPORT_HASH,  # re-exported for existing importers
     ImportWritePlanner,
     compute_import_hash,
@@ -111,12 +112,12 @@ class EntityPatcher:
         dataset_uri = str(
             getattr(self._context.account, "dataset_uri", "") or ""
         ).rstrip("/")
-        non_hash_predicates = {
+        content_predicates = {
             predicate
             for _, predicate, _ in graph.triples((iri, None, None))
-            if predicate != SEOVOC_IMPORT_HASH
+            if predicate not in IMPORT_METADATA_PREDICATES
         }
-        if not non_hash_predicates:
+        if not content_predicates:
             return
 
         # Kept for callers of patch() alone; patch_all() leaves hashing to the

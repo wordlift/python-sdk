@@ -45,9 +45,12 @@ class NewOrChangedUrlSource(UrlSource):
         merged_df["date_modified"] = pd.to_datetime(
             merged_df["date_modified"], utc=True, errors="coerce"
         )
+        # Without a lastmod the stored date proves nothing: keep the URL and
+        # let the import hash skip it if it is unchanged.
         filtered_df = merged_df[
             self.overwrite
             | merged_df["date_imported"].isna()
+            | merged_df["date_modified"].isna()
             | (merged_df["date_imported"] < merged_df["date_modified"])
         ]
         for _, row in filtered_df.iterrows():
