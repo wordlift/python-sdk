@@ -589,7 +589,8 @@ def test_crawler_loader_success_returns_loaded_page(
     async def fake_fetch(**kwargs):
         del kwargs
         return SimpleNamespace(
-            html="<html>crawler</html>",
+            body="<html>crawler</html>",
+            html="<html>deprecated</html>",
             url_final="https://example.com/final",
             status_code=200,
             from_cache=True,
@@ -620,7 +621,7 @@ def test_crawler_loader_final_url_falls_back_to_item_url(
     async def fake_fetch(**kwargs):
         del kwargs
         return SimpleNamespace(
-            html="<html>ok</html>",
+            body="<html>ok</html>",
             url_final=None,
             status_code=200,
             from_cache=None,
@@ -635,14 +636,14 @@ def test_crawler_loader_final_url_falls_back_to_item_url(
     assert page.final_url == "https://example.com/original"
 
 
-def test_crawler_loader_empty_html_raises_runtime_error(
+def test_crawler_loader_empty_body_raises_runtime_error(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     loader = CrawlerLoaderAdapter()
 
     async def fake_fetch(**kwargs):
         del kwargs
-        return SimpleNamespace(html=None, url_final=None, status_code=200)
+        return SimpleNamespace(body=None, url_final=None, status_code=200)
 
     monkeypatch.setattr(loader, "_fetch_async", fake_fetch)
 
@@ -668,7 +669,7 @@ async def test_crawler_fetch_async_passes_enum_args(
 
         async def fetch_page_fetch_get(self, **kwargs):
             captured.update(kwargs)
-            return SimpleNamespace(html="<html/>", url_final=None, status_code=200)
+            return SimpleNamespace(body="<html/>", url_final=None, status_code=200)
 
     class _ClientCtx:
         def __init__(self, cfg):
@@ -765,7 +766,7 @@ def test_crawler_loader_sets_user_agent_when_provided(
 
     async def fake_fetch(**kwargs):
         return SimpleNamespace(
-            html="<html/>",
+            body="<html/>",
             url_final=None,
             status_code=200,
             from_cache=None,
@@ -792,7 +793,7 @@ def test_crawler_loader_does_not_touch_user_agent_when_absent(
 
     async def fake_fetch(**kwargs):
         return SimpleNamespace(
-            html="<html/>",
+            body="<html/>",
             url_final=None,
             status_code=200,
             from_cache=None,
@@ -823,7 +824,7 @@ def test_crawler_loader_defaults_render_mode_and_proxy_to_disabled(
     async def fake_fetch(**kwargs):
         captured.update(kwargs)
         return SimpleNamespace(
-            html="<html/>",
+            body="<html/>",
             url_final=None,
             status_code=200,
             from_cache=None,
@@ -850,7 +851,7 @@ def test_crawler_loader_passes_configured_enum_values(
     async def fake_fetch(**kwargs):
         captured.update(kwargs)
         return SimpleNamespace(
-            html="<html/>",
+            body="<html/>",
             url_final=None,
             status_code=200,
             from_cache=None,
@@ -968,7 +969,7 @@ def test_crawler_loader_exposes_resources_in_fetch_meta(
 
     async def fake_fetch(**kwargs):
         return SimpleNamespace(
-            html="<html/>",
+            body="<html/>",
             url_final=None,
             status_code=200,
             from_cache=None,
@@ -999,7 +1000,7 @@ def test_crawler_loader_omits_resources_when_har_absent(
 
     async def fake_fetch(**kwargs):
         return SimpleNamespace(
-            html="<html/>",
+            body="<html/>",
             url_final=None,
             status_code=200,
             from_cache=None,
