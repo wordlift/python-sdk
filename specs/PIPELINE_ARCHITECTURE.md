@@ -44,6 +44,7 @@ Sequence:
    - set `seovoc:source` to `"web-page-import"` on first-level URI-subject entities in host-generated callback graph output, where first-level follows dataset ID depth `/<dataset>/<bucket>/<id>`
    - compute per-node `seovoc:importHash` before patching (hash excludes `seovoc:importHash` and `seovoc:dateImported`), write it back to the node, and apply `import_hash_mode` (`on|write|off`) for skip behavior; `kg_build.import_metadata.ImportWritePlanner` makes this decision for both the `put` and `patch` strategies
    - stamp `seovoc:dateImported` on first-level nodes only when the write goes ahead, so a hash-skipped node keeps its stored date
+   - before writing static templates with `import_hash_mode = "on"`, read the hash stored on their first-level subjects (`Context.extensions["kg_build.import_hash_lookup"]`) and restore it when all of them agree, so unchanged templates are skipped; a template entity that page graphs also write gets the page's hash, the hashes then disagree, and the templates are written on every run
    - aggregate run-level KPI counters for dataset-scoped entities in the patched graph (`total_entities`, type/property totals, and by-type/by-predicate breakdowns)
    - optionally run SHACL validation for each graph (`off`/`warn`/`fail`) and aggregate validation KPI counters (`total`, `pass`, `fail`, warnings/errors counts and per-shape sources)
    - in `fail` mode, emit failing progress payload first, then raise to stop the failing graph/static-template sync path
