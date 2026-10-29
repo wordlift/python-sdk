@@ -4374,14 +4374,14 @@ files = [
 
 [[package]]
 name = "wordlift-client"
-version = "1.219.0"
+version = "1.222.0"
 description = "WordLift API"
 optional = false
 python-versions = "*"
 groups = ["main"]
 files = [
-    {file = "wordlift_client-1.219.0-py3-none-any.whl", hash = "sha256:33a1c4a0fbc63ba09ed3c2feb8fdb88f6f53a1be0f71e7d913cdbd0f3afe1159"},
-    {file = "wordlift_client-1.219.0.tar.gz", hash = "sha256:a3fb20cc47bbc00557ebd241a3733b4412bf8e5e5ad1cd7bcb7fe8658fd360cf"},
+    {file = "wordlift_client-1.222.0-py3-none-any.whl", hash = "sha256:91990a68521e16b04db1e8d7d25bd4e5e887e65aa3e5d928cad5e3db876144f8"},
+    {file = "wordlift_client-1.222.0.tar.gz", hash = "sha256:69d4ecec9e42aa4c1201bd91e6e9ae1f79dbad953d6ac84f0a4778bc5ba6c3ca"},
 ]
 
 [package.dependencies]
@@ -4646,4 +4646,4 @@ workflow = ["advertools", "google-auth", "gql", "gspread", "lxml", "pandas", "pl
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10, <3.15"
-content-hash = "26821da1faec73532ea8469d17d516a9b2237c083038d106b65ee7c20cf9210e"
+content-hash = "4ef0bc85028b6daa0c2b1cd57b77a578408b849e87a42cba6f3eebbb5d71d600"
