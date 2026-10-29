@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- Requires `wordlift-client` 1.222.0 or later. Versions 1.219.0 to 1.221.0
+  require the deprecated `html` key in crawler `/fetch` responses, so the
+  crawler loader would fail on every page once the crawler stops sending it.
+
 ## 8.6.1 - 2026-10-28
 
 ### Changed
