@@ -1,5 +1,17 @@
 # Changelog
 
+## 8.7.0 - 2026-11-04
+
+### Added
+
+- The crawler loader sends `CRAWLER_TARGET_LOAD_EVENT` (`crawler_target_load_event`
+  in worai profiles) to `/crawler/fetch` as `target_load_event`. `networkidle`
+  makes the crawler wait for the network to go idle before it captures a
+  JavaScript-rendered page, so content rendered after hydration (prices, stock
+  state) is in the HTML; until now a JavaScript render was always captured at
+  DOMContentLoaded. The crawler accepts it only with `js_render_mode=enabled`
+  and `proxy_mode=disabled`. Unset, the request is unchanged.
+
 ## 8.6.2 - 2026-10-29
 
 ### Changed
