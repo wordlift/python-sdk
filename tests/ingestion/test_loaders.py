@@ -9,6 +9,7 @@ from types import SimpleNamespace
 
 import pytest
 from wordlift_client.models.fetch_js_render_mode import FetchJsRenderMode
+from wordlift_client.models.fetch_target_load_event import FetchTargetLoadEvent
 from wordlift_client.models.proxy_mode import ProxyMode
 
 from wordlift_sdk.ingestion.errors import LoaderConfigError, LoaderRuntimeError
@@ -690,11 +691,13 @@ async def test_crawler_fetch_async_passes_enum_args(
         client_configuration=object(),
         js_render_mode=FetchJsRenderMode.AUTO,
         proxy_mode=ProxyMode.STANDARD,
+        target_load_event=FetchTargetLoadEvent.NETWORKIDLE,
     )
 
     assert captured["url"] == "https://example.com"
     assert captured["js_render_mode"] == FetchJsRenderMode.AUTO
     assert captured["proxy_mode"] == ProxyMode.STANDARD
+    assert captured["target_load_event"] == FetchTargetLoadEvent.NETWORKIDLE
     assert captured["_request_timeout"] == pytest.approx(5.0)
 
 
@@ -870,6 +873,45 @@ def test_crawler_loader_passes_configured_enum_values(
 
     assert captured["js_render_mode"] == FetchJsRenderMode.ENABLED
     assert captured["proxy_mode"] == ProxyMode.STANDARD
+
+
+@pytest.mark.parametrize(
+    ("configured", "expected"),
+    [
+        (None, None),
+        ("networkidle", FetchTargetLoadEvent.NETWORKIDLE),
+    ],
+)
+def test_crawler_loader_passes_target_load_event(
+    monkeypatch: pytest.MonkeyPatch,
+    configured: str | None,
+    expected: FetchTargetLoadEvent | None,
+) -> None:
+    # Unset stays None, so the client leaves target_load_event out of the request.
+    loader = CrawlerLoaderAdapter()
+    captured: dict = {}
+
+    async def fake_fetch(**kwargs):
+        captured.update(kwargs)
+        return SimpleNamespace(
+            body="<html/>",
+            url_final=None,
+            status_code=200,
+            from_cache=None,
+            error_code=None,
+        )
+
+    monkeypatch.setattr(loader, "_fetch_async", fake_fetch)
+
+    loader.load(
+        SourceItem(id="1", url="https://example.com"),
+        _crawler_config(
+            crawler_js_render_mode="enabled",
+            crawler_target_load_event=configured,
+        ),
+    )
+
+    assert captured["target_load_event"] == expected
 
 
 # ---------------------------------------------------------------------------

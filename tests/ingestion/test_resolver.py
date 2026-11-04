@@ -114,10 +114,12 @@ def test_crawler_env_vars_are_passed_to_loader_config() -> None:
             "URLS": ["https://example.com"],
             "CRAWLER_JS_RENDER_MODE": "auto",
             "CRAWLER_PROXY_MODE": "standard",
+            "CRAWLER_TARGET_LOAD_EVENT": "networkidle",
         }
     )
     assert cfg.loader_config["crawler_js_render_mode"] == "auto"
     assert cfg.loader_config["crawler_proxy_mode"] == "standard"
+    assert cfg.loader_config["crawler_target_load_event"] == "networkidle"
 
 
 def test_crawler_env_vars_default_to_none_when_absent() -> None:
@@ -130,6 +132,7 @@ def test_crawler_env_vars_default_to_none_when_absent() -> None:
     )
     assert cfg.loader_config["crawler_js_render_mode"] is None
     assert cfg.loader_config["crawler_proxy_mode"] is None
+    assert cfg.loader_config["crawler_target_load_event"] is None
 
 
 def test_crawler_loader_defaults_timeout_to_ten_minutes() -> None:
