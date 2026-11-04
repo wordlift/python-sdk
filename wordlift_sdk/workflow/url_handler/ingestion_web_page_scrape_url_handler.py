@@ -109,6 +109,7 @@ class IngestionWebPageScrapeUrlHandler(UrlHandler):
             "PLAYWRIGHT_HEADLESS",
             "CRAWLER_JS_RENDER_MODE",
             "CRAWLER_PROXY_MODE",
+            "CRAWLER_TARGET_LOAD_EVENT",
             "CRAWLER_USER_AGENT",
         ]
         settings = {
