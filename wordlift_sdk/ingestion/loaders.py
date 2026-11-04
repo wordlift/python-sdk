@@ -17,6 +17,7 @@ from wordlift_client import (
 from wordlift_client.api.fetch_api import FetchApi
 from wordlift_client.exceptions import ApiException
 from wordlift_client.models.fetch_js_render_mode import FetchJsRenderMode
+from wordlift_client.models.fetch_target_load_event import FetchTargetLoadEvent
 from wordlift_client.models.proxy_mode import ProxyMode
 
 from wordlift_sdk.render.browser import BrowserOperationError
@@ -479,6 +480,12 @@ class CrawlerLoaderAdapter(BaseLoaderAdapter):
             ProxyMode.DISABLED,
             "crawler_proxy_mode",
         )
+        target_load_event = _parse_crawler_enum(
+            FetchTargetLoadEvent,
+            config.loader_config.get("crawler_target_load_event"),
+            None,
+            "crawler_target_load_event",
+        )
 
         def _run() -> LoadedPage:
             response = _run_coro_sync(
@@ -488,6 +495,7 @@ class CrawlerLoaderAdapter(BaseLoaderAdapter):
                     client_configuration=client_configuration,
                     js_render_mode=js_render_mode,
                     proxy_mode=proxy_mode,
+                    target_load_event=target_load_event,
                 )
             )
 
@@ -530,6 +538,7 @@ class CrawlerLoaderAdapter(BaseLoaderAdapter):
         client_configuration: Any,
         js_render_mode: FetchJsRenderMode,
         proxy_mode: ProxyMode,
+        target_load_event: FetchTargetLoadEvent | None = None,
     ) -> Any:
         async with ApiClient(client_configuration) as client:
             api = FetchApi(client)
@@ -538,6 +547,7 @@ class CrawlerLoaderAdapter(BaseLoaderAdapter):
                     url=item_url,
                     js_render_mode=js_render_mode,
                     proxy_mode=proxy_mode,
+                    target_load_event=target_load_event,
                     _request_timeout=max(timeout_ms, 1) / 1000.0,
                 )
             except ApiException as exc:
