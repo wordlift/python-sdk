@@ -402,6 +402,7 @@ def test_build_settings_includes_crawler_keys() -> None:
         "WORDLIFT_KEY": "key",
         "CRAWLER_JS_RENDER_MODE": "auto",
         "CRAWLER_PROXY_MODE": "standard",
+        "CRAWLER_TARGET_LOAD_EVENT": "networkidle",
     }.get(key, default)
 
     handler = IngestionWebPageScrapeUrlHandler(
@@ -414,6 +415,7 @@ def test_build_settings_includes_crawler_keys() -> None:
     settings = handler._build_settings(Url(value="https://example.com"))
     assert settings.get("CRAWLER_JS_RENDER_MODE") == "auto"
     assert settings.get("CRAWLER_PROXY_MODE") == "standard"
+    assert settings.get("CRAWLER_TARGET_LOAD_EVENT") == "networkidle"
 
 
 def test_diagnostic_helpers_cover_fallback_paths() -> None:
