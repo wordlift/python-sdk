@@ -73,7 +73,8 @@ C = "https://example.com/c"
             [_list_item(1, A), _list_item(2)],
             id="final-entry-omits-item",
         ),
-        pytest.param([_list_item(1)], id="single-entry-omits-item"),
+        # Single-entry trail removed: Google requires at least two ListItems
+        # (rule `breadcrumblist-itemlistelement-min-two`); see the test below.
         # "Last" is the highest ``position``, not the last one written down.
         pytest.param(
             [_list_item(2), _list_item(1, A)],
@@ -99,6 +100,16 @@ def test_trail_conforms_when_only_the_last_entry_omits_item(
     validator: PreparedShaclValidator, elements: list[dict]
 ) -> None:
     assert _conforms(validator, elements)
+
+
+def test_single_entry_trail_is_reported_as_too_short(
+    validator: PreparedShaclValidator,
+) -> None:
+    # Google breadcrumb doc: "define a BreadcrumbList that contains at least
+    # two ListItems".
+    result = _validate(validator, [_list_item(1)])
+    assert not result.conforms
+    assert "at least two" in result.report_text
 
 
 @pytest.mark.parametrize(

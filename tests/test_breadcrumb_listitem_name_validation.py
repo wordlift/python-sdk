@@ -15,7 +15,12 @@ def _breadcrumb(list_item: dict) -> dict:
     return {
         "@context": "https://schema.org",
         "@type": "BreadcrumbList",
-        "itemListElement": [{"@type": "ListItem", "position": 1, **list_item}],
+        # Second ListItem: Google requires a breadcrumb trail of at least two
+        # ListItems (the last may omit `item`).
+        "itemListElement": [
+            {"@type": "ListItem", "position": 1, **list_item},
+            {"@type": "ListItem", "position": 2, "name": "Page"},
+        ],
     }
 
 

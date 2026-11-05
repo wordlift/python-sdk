@@ -30,7 +30,9 @@ def test_breadcrumb_listitem_item_without_type_has_no_range_check_warning(
                 "@type": "ListItem",
                 "position": 1,
                 "item": {"@id": "https://example.com/", "name": "Home"},
-            }
+            },
+            # Google requires at least two ListItems in a BreadcrumbList.
+            {"@type": "ListItem", "position": 2, "name": "Page"},
         ],
     }
     path = _write_jsonld(tmp_path, "breadcrumb-untyped-item.jsonld", payload)
