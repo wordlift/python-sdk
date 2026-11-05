@@ -1,40 +1,133 @@
-@prefix : <https://wordlift.io/shacl/google/google-carousel/> .
-@prefix sh: <http://www.w3.org/ns/shacl#> .
-@prefix schema: <http://schema.org/> .
-
 # Source: https://developers.google.com/search/docs/appearance/structured-data/carousel
-# Generated: 2026-02-26T15:41:56Z
+# Generated: 2026-11-05T14:35:24Z
 # Notes: required properties => errors; recommended properties => warnings.
+# google-carousel: 6 rules generated from the Google Search Central doc by the tdd-mvp-3 pipeline.
+# Bundled from per-rule files by harness/bundle.py, schema.org subtypes expanded (targetClass 6, class 2, in 0). Do not edit by hand.
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-:google_ItemListShape
-  a sh:NodeShape ;
-  sh:targetClass schema:ItemList ;
-  sh:property [
-    sh:path schema:itemListElement ;
-    sh:minCount 1 ;
-    sh:node [
-      a sh:NodeShape ;
-      sh:class schema:ListItem ;
-      sh:property [
-        sh:path schema:item ;
-        sh:minCount 1 ;
-      ] ;
-      sh:property [
-        sh:path ( schema:item schema:name ) ;
-        sh:minCount 1 ;
-      ] ;
-      sh:property [
-        sh:path ( schema:item schema:url ) ;
-        sh:minCount 1 ;
-      ] ;
-      sh:property [
-        sh:path schema:position ;
-        sh:minCount 1 ;
-      ] ;
-      sh:property [
-        sh:path schema:url ;
-        sh:minCount 1 ;
-      ] ;
-    ] ;
-  ] ;
-.
+<https://wordlift.io/shacl/google/carousel/itemlist-itemlistelement-min-two> a sh:NodeShape ;
+    sh:message "A carousel ItemList must have at least two elements in itemListElement." ;
+    sh:or ( [ sh:not [ sh:or ( [ sh:property [ sh:path ( schema:itemListElement schema:item ) ;
+                                            sh:qualifiedMinCount 1 ;
+                                            sh:qualifiedValueShape [ sh:or ( [ sh:class schema:Course ] [ sh:class schema:Movie ] [ sh:class schema:Recipe ] [ sh:class schema:Restaurant ] ) ] ] ] [ sh:property [ sh:path schema:itemListElement ;
+                                            sh:qualifiedMinCount 1 ;
+                                            sh:qualifiedValueShape [ sh:or ( [ sh:class schema:Course ] [ sh:class schema:Movie ] [ sh:class schema:Recipe ] [ sh:class schema:Restaurant ] ) ] ] ] ) ] ] [ sh:message "A carousel ItemList must have at least two elements in itemListElement." ;
+                sh:property [ sh:minCount 2 ;
+                        sh:path schema:itemListElement ] ] ) ;
+    sh:severity sh:Violation ;
+    sh:targetClass schema:BreadcrumbList,
+        schema:HowToSection,
+        schema:HowToStep,
+        schema:ItemList,
+        schema:OfferCatalog .
+
+<https://wordlift.io/shacl/google/carousel/itemlist-items-same-type> a sh:NodeShape ;
+    sh:message "All items in a carousel ItemList must be of the same type." ;
+    sh:or ( [ sh:not [ sh:or ( [ sh:property [ sh:path ( schema:itemListElement schema:item ) ;
+                                            sh:qualifiedMinCount 1 ;
+                                            sh:qualifiedValueShape [ sh:or ( [ sh:class schema:Course ] [ sh:class schema:Movie ] [ sh:class schema:Recipe ] [ sh:class schema:Restaurant ] ) ] ] ] [ sh:property [ sh:path schema:itemListElement ;
+                                            sh:qualifiedMinCount 1 ;
+                                            sh:qualifiedValueShape [ sh:or ( [ sh:class schema:Course ] [ sh:class schema:Movie ] [ sh:class schema:Recipe ] [ sh:class schema:Restaurant ] ) ] ] ] ) ] ] [ sh:message "All items in a carousel ItemList must be of the same type." ;
+                sh:sparql [ a sh:SPARQLConstraint ;
+                        sh:message "All items in a carousel ItemList must be of the same type." ;
+                        sh:select """
+SELECT $this WHERE {
+  {
+    $this <http://schema.org/itemListElement> ?la .
+    ?la <http://schema.org/item> ?a .
+  } UNION {
+    $this <http://schema.org/itemListElement> ?a .
+    FILTER NOT EXISTS { ?a a <http://schema.org/ListItem> }
+  }
+  ?a a ?t .
+  {
+    $this <http://schema.org/itemListElement> ?lb .
+    ?lb <http://schema.org/item> ?b .
+  } UNION {
+    $this <http://schema.org/itemListElement> ?b .
+    FILTER NOT EXISTS { ?b a <http://schema.org/ListItem> }
+  }
+  FILTER NOT EXISTS { ?b a ?t }
+}
+""" ] ] ) ;
+    sh:severity sh:Violation ;
+    sh:targetClass schema:BreadcrumbList,
+        schema:HowToSection,
+        schema:HowToStep,
+        schema:ItemList,
+        schema:OfferCatalog .
+
+<https://wordlift.io/shacl/google/carousel/listitem-item-name-present> a sh:NodeShape ;
+    sh:message "A ListItem item in a carousel ItemList must have a name." ;
+    sh:or ( [ sh:not [ sh:or ( [ sh:property [ sh:path ( schema:itemListElement schema:item ) ;
+                                            sh:qualifiedMinCount 1 ;
+                                            sh:qualifiedValueShape [ sh:or ( [ sh:class schema:Course ] [ sh:class schema:Movie ] [ sh:class schema:Recipe ] [ sh:class schema:Restaurant ] ) ] ] ] [ sh:property [ sh:path schema:itemListElement ;
+                                            sh:qualifiedMinCount 1 ;
+                                            sh:qualifiedValueShape [ sh:or ( [ sh:class schema:Course ] [ sh:class schema:Movie ] [ sh:class schema:Recipe ] [ sh:class schema:Restaurant ] ) ] ] ] ) ] ] [ sh:property [ sh:node [ sh:property [ sh:node [ sh:property [ sh:message "A ListItem item in a carousel ItemList must have a name." ;
+                                                        sh:minCount 1 ;
+                                                        sh:path schema:name ] ] ;
+                                        sh:path schema:item ] ] ;
+                        sh:path schema:itemListElement ] ] ) ;
+    sh:severity sh:Violation ;
+    sh:targetClass schema:BreadcrumbList,
+        schema:HowToSection,
+        schema:HowToStep,
+        schema:ItemList,
+        schema:OfferCatalog .
+
+<https://wordlift.io/shacl/google/carousel/listitem-item-url-present> a sh:NodeShape ;
+    sh:message "A ListItem item in a carousel ItemList must have a url." ;
+    sh:or ( [ sh:not [ sh:or ( [ sh:property [ sh:path ( schema:itemListElement schema:item ) ;
+                                            sh:qualifiedMinCount 1 ;
+                                            sh:qualifiedValueShape [ sh:or ( [ sh:class schema:Course ] [ sh:class schema:Movie ] [ sh:class schema:Recipe ] [ sh:class schema:Restaurant ] ) ] ] ] [ sh:property [ sh:path schema:itemListElement ;
+                                            sh:qualifiedMinCount 1 ;
+                                            sh:qualifiedValueShape [ sh:or ( [ sh:class schema:Course ] [ sh:class schema:Movie ] [ sh:class schema:Recipe ] [ sh:class schema:Restaurant ] ) ] ] ] ) ] ] [ sh:property [ sh:node [ sh:property [ sh:node [ sh:property [ sh:message "A ListItem item in a carousel ItemList must have a url." ;
+                                                        sh:minCount 1 ;
+                                                        sh:path schema:url ] ] ;
+                                        sh:path schema:item ] ] ;
+                        sh:path schema:itemListElement ] ] ) ;
+    sh:severity sh:Violation ;
+    sh:targetClass schema:BreadcrumbList,
+        schema:HowToSection,
+        schema:HowToStep,
+        schema:ItemList,
+        schema:OfferCatalog .
+
+<https://wordlift.io/shacl/google/carousel/listitem-position-present> a sh:NodeShape ;
+    sh:message "Every ListItem in a carousel ItemList must have a position." ;
+    sh:or ( [ sh:not [ sh:or ( [ sh:property [ sh:path ( schema:itemListElement schema:item ) ;
+                                            sh:qualifiedMinCount 1 ;
+                                            sh:qualifiedValueShape [ sh:or ( [ sh:class schema:Course ] [ sh:class schema:Movie ] [ sh:class schema:Recipe ] [ sh:class schema:Restaurant ] ) ] ] ] [ sh:property [ sh:path schema:itemListElement ;
+                                            sh:qualifiedMinCount 1 ;
+                                            sh:qualifiedValueShape [ sh:or ( [ sh:class schema:Course ] [ sh:class schema:Movie ] [ sh:class schema:Recipe ] [ sh:class schema:Restaurant ] ) ] ] ] ) ] ] [ sh:property [ sh:node [ sh:message "Every ListItem in a carousel ItemList must have a position." ;
+                                sh:or ( [ sh:not [ sh:or ( [ sh:class schema:ListItem ] [ sh:class schema:HowToDirection ] [ sh:class schema:HowToItem ] [ sh:class schema:HowToSection ] [ sh:class schema:HowToStep ] [ sh:class schema:HowToSupply ] [ sh:class schema:HowToTip ] [ sh:class schema:HowToTool ] ) ] ] [ sh:property [ sh:minCount 1 ;
+                                                    sh:path schema:position ] ] ) ] ;
+                        sh:path schema:itemListElement ] ] ) ;
+    sh:severity sh:Violation ;
+    sh:targetClass schema:BreadcrumbList,
+        schema:HowToSection,
+        schema:HowToStep,
+        schema:ItemList,
+        schema:OfferCatalog .
+
+<https://wordlift.io/shacl/google/carousel/listitem-url-or-item-present> a sh:NodeShape ;
+    sh:message "Every ListItem in a carousel ItemList must have a url (summary) or an item (all-in-one)." ;
+    sh:or ( [ sh:not [ sh:or ( [ sh:property [ sh:path ( schema:itemListElement schema:item ) ;
+                                            sh:qualifiedMinCount 1 ;
+                                            sh:qualifiedValueShape [ sh:or ( [ sh:class schema:Course ] [ sh:class schema:Movie ] [ sh:class schema:Recipe ] [ sh:class schema:Restaurant ] ) ] ] ] [ sh:property [ sh:path schema:itemListElement ;
+                                            sh:qualifiedMinCount 1 ;
+                                            sh:qualifiedValueShape [ sh:or ( [ sh:class schema:Course ] [ sh:class schema:Movie ] [ sh:class schema:Recipe ] [ sh:class schema:Restaurant ] ) ] ] ] ) ] ] [ sh:property [ sh:node [ sh:message "Every ListItem in a carousel ItemList must have a url or an item." ;
+                                sh:or ( [ sh:not [ sh:or ( [ sh:class schema:ListItem ] [ sh:class schema:HowToDirection ] [ sh:class schema:HowToItem ] [ sh:class schema:HowToSection ] [ sh:class schema:HowToStep ] [ sh:class schema:HowToSupply ] [ sh:class schema:HowToTip ] [ sh:class schema:HowToTool ] ) ] ] [ sh:property [ sh:minCount 1 ;
+                                                    sh:path schema:url ] ] [ sh:property [ sh:minCount 1 ;
+                                                    sh:path schema:item ] ] ) ] ;
+                        sh:path schema:itemListElement ] ] ) ;
+    sh:severity sh:Violation ;
+    sh:targetClass schema:BreadcrumbList,
+        schema:HowToSection,
+        schema:HowToStep,
+        schema:ItemList,
+        schema:OfferCatalog .
+

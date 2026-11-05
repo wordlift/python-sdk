@@ -1,81 +1,78 @@
-@prefix : <https://wordlift.io/shacl/google/google-breadcrumb/> .
-@prefix sh: <http://www.w3.org/ns/shacl#> .
-@prefix schema: <http://schema.org/> .
-
 # Source: https://developers.google.com/search/docs/appearance/structured-data/breadcrumb
-# Generated: 2026-09-16T12:45:54Z
+# Generated: 2026-11-05T14:35:24Z
 # Notes: required properties => errors; recommended properties => warnings.
+# google-breadcrumb: 6 rules generated from the Google Search Central doc by the tdd-mvp-3 pipeline.
+# Bundled from per-rule files by harness/bundle.py, schema.org subtypes expanded (targetClass 0, class 0, in 0). Do not edit by hand.
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-:google_BreadcrumbListShape
-  a sh:NodeShape ;
-  sh:targetClass schema:BreadcrumbList ;
-  sh:property [
-    sh:path schema:itemListElement ;
-    sh:minCount 1 ;
-    sh:node [
-      a sh:NodeShape ;
-      sh:class schema:ListItem ;
-      sh:property [
-        sh:path schema:position ;
-        sh:minCount 1 ;
-      ] ;
-      sh:or (
-        [
-          sh:property [
-            sh:path schema:name ;
+<https://wordlift.io/shacl/google/breadcrumb/breadcrumblist-itemlistelement-min-two> a sh:NodeShape ;
+    sh:or ( [ sh:property [ sh:maxCount 0 ;
+                        sh:path schema:itemListElement ] ] [ sh:property [ sh:message "A BreadcrumbList that has an itemListElement must contain at least two ListItems." ;
+                        sh:minCount 2 ;
+                        sh:path schema:itemListElement ;
+                        sh:severity sh:Violation ] ] ) ;
+    sh:targetClass schema:BreadcrumbList .
+
+<https://wordlift.io/shacl/google/breadcrumb/breadcrumblist-itemlistelement-required> a sh:NodeShape ;
+    sh:property [ sh:message "A BreadcrumbList must have an itemListElement listing its breadcrumbs." ;
             sh:minCount 1 ;
-          ] ;
-        ]
-        [
-          sh:property [
-            sh:path schema:item ;
-            sh:node [
-              sh:property [
-                sh:path schema:name ;
-                sh:minCount 1 ;
-              ] ;
-            ] ;
-          ] ;
-        ]
-      ) ;
-    ] ;
-  ] ;
-  sh:sparql :google_BreadcrumbListItemOrderConstraint ;
-  sh:sparql :google_BreadcrumbListPositionConstraint ;
-.
+            sh:path schema:itemListElement ;
+            sh:severity sh:Violation ] ;
+    sh:targetClass schema:BreadcrumbList .
 
-:google_BreadcrumbListItemOrderConstraint
-  a sh:SPARQLConstraint ;
-  sh:message "Required by Google: item on every ListItem except the last (highest position) one." ;
-  sh:select """
-  SELECT $this ?value ?path
-  WHERE {
-    BIND(<http://schema.org/itemListElement> AS ?path)
-    $this <http://schema.org/itemListElement> ?value .
-    FILTER NOT EXISTS { ?value <http://schema.org/item> ?item }
-    FILTER EXISTS {
-      ?value <http://schema.org/position> ?position .
-      $this <http://schema.org/itemListElement> ?other .
-      FILTER (!sameTerm(?other, ?value))
-      ?other <http://schema.org/position> ?otherPosition .
-      FILTER (<http://www.w3.org/2001/XMLSchema#double>(str(?otherPosition)) >= <http://www.w3.org/2001/XMLSchema#double>(str(?position)))
-    }
-  }
-  """ ;
-.
+<https://wordlift.io/shacl/google/breadcrumb/listitem-item-required> a sh:NodeShape ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+            sh:message "A ListItem that is not the last breadcrumb in the trail must have an item." ;
+            sh:select """
+      SELECT $this ?value ?path WHERE {
+        BIND(<http://schema.org/itemListElement> AS ?path)
+        $this <http://schema.org/itemListElement> ?value .
+        FILTER NOT EXISTS { ?value <http://schema.org/item> ?item }
+        FILTER EXISTS {
+          ?value <http://schema.org/position> ?position .
+          $this <http://schema.org/itemListElement> ?other .
+          FILTER (!sameTerm(?other, ?value))
+          ?other <http://schema.org/position> ?otherPosition .
+          FILTER (<http://www.w3.org/2001/XMLSchema#double>(str(?otherPosition)) >= <http://www.w3.org/2001/XMLSchema#double>(str(?position)))
+        }
+      }
+    """ ;
+            sh:severity sh:Violation ] ;
+    sh:targetClass schema:BreadcrumbList .
 
-:google_BreadcrumbListPositionConstraint
-  a sh:SPARQLConstraint ;
-  sh:message "Required by Google: position must be a number on every ListItem." ;
-  sh:select """
-  SELECT $this ?value ?path
-  WHERE {
-    BIND(<http://schema.org/itemListElement> AS ?path)
-    $this <http://schema.org/itemListElement> ?value .
-    ?value <http://schema.org/position> ?position .
-    FILTER NOT EXISTS {
-      FILTER (<http://www.w3.org/2001/XMLSchema#double>(str(?position)) = <http://www.w3.org/2001/XMLSchema#double>(str(?position)))
-    }
-  }
-  """ ;
-.
+<https://wordlift.io/shacl/google/breadcrumb/listitem-name-required> a sh:NodeShape ;
+    sh:property [ sh:node [ sh:message "Each ListItem in a BreadcrumbList must have a name, unless its item is a Thing with its own name." ;
+                    sh:or ( [ sh:property [ sh:minCount 1 ;
+                                        sh:path schema:name ] ] [ sh:property [ sh:minCount 1 ;
+                                        sh:path ( schema:item schema:name ) ] ] ) ;
+                    sh:severity sh:Violation ] ;
+            sh:path schema:itemListElement ] ;
+    sh:targetClass schema:BreadcrumbList .
+
+<https://wordlift.io/shacl/google/breadcrumb/listitem-position-numeric> a sh:NodeShape ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+            sh:message "Required by Google: position must be a number on every ListItem of a BreadcrumbList." ;
+            sh:select """
+      SELECT $this ?value ?path WHERE {
+        BIND(<http://schema.org/itemListElement> AS ?path)
+        $this <http://schema.org/itemListElement> ?value .
+        ?value <http://schema.org/position> ?position .
+        FILTER NOT EXISTS {
+          FILTER (<http://www.w3.org/2001/XMLSchema#double>(str(?position)) = <http://www.w3.org/2001/XMLSchema#double>(str(?position)))
+        }
+      }
+    """ ;
+            sh:severity sh:Violation ] ;
+    sh:targetClass schema:BreadcrumbList .
+
+<https://wordlift.io/shacl/google/breadcrumb/listitem-position-required> a sh:NodeShape ;
+    sh:property [ sh:node [ sh:property [ sh:message "Each ListItem in a BreadcrumbList must have a position." ;
+                            sh:minCount 1 ;
+                            sh:path schema:position ;
+                            sh:severity sh:Violation ] ] ;
+            sh:path schema:itemListElement ] ;
+    sh:targetClass schema:BreadcrumbList .
+
