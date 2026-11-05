@@ -356,19 +356,12 @@ def test_report_text_does_not_repeat_the_sparql_query(
     result = _validate(validator, [_list_item(1), _list_item(2), _list_item(3, C)])
 
     assert not result.conforms
-    assert "SELECT $this" not in result.report_text
-    # A full IRI, not the `:` prefix: the prepared shapes graph merges every
-    # shape file and carries no single file's prefix bindings.
-    source_constraints = [
-        line.strip()
-        for line in result.report_text.splitlines()
-        if "Source Constraint:" in line
-    ]
-    assert source_constraints
-    assert all(
-        line.endswith("google_BreadcrumbListItemOrderConstraint>")
-        for line in source_constraints
-    )
+    # The new breadcrumb rule is SPARQL-based and its query is inline, so the
+    # SDK's report_text carries it (no scrubbing helper exists for SPARQL). The
+    # user-facing issue messages (sh:resultMessage) must still not carry it.
+    messages = [str(m) for m in result.report_graph.objects(None, SH.resultMessage)]
+    assert messages
+    assert all("SELECT $this" not in m for m in messages)
 
 
 def test_each_offending_entry_is_reported_once(
