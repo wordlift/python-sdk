@@ -327,7 +327,11 @@ def test_focus_nodes_and_paths_are_stable_and_never_blank_hashes() -> None:
     pointers_first = _resolved_pointers(payload)
     pointers_second = _resolved_pointers(payload)
     assert pointers_first == pointers_second
-    assert "/@graph/0/offers" in pointers_first
+    # The doc-derived Product rules report a missing Offer price/availability on
+    # the Product (path offers...), not on the Offer node, so the Product's
+    # pointer is what resolves. Nested-node pointer resolution is covered by the
+    # pointer-map tests above.
+    assert "/@graph/0" in pointers_first
 
 
 def test_scrub_synthetic_ids_strips_prefix_to_pointer() -> None:
@@ -401,10 +405,11 @@ def test_extract_resolves_node_pointer_and_stays_urn_free() -> None:
     # The SDK — not the consumer — resolved the pointers, so the nested Offer is
     # addressable and the constraint component is carried through.
     pointers = {i.node_pointer for i in issues}
+    # New Google rules report on the Product (not the nested Offer) using
+    # sh:or constraints, so only /@graph/0 is reported and the component is Or.
     assert "/@graph/0" in pointers
-    assert "/@graph/0/offers" in pointers
     assert any(
-        (i.constraint_component or "").endswith("MinCountConstraintComponent")
+        (i.constraint_component or "").endswith("OrConstraintComponent")
         for i in issues
     )
 
