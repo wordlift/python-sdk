@@ -11,6 +11,7 @@ The `HtmlConverter` utility class provides a mechanism to convert HTML strings i
 - **Namespace Safety**: Rewrites undeclared prefixed tags (e.g. `o:p` -> `p`) and removes undeclared prefixed attributes (e.g. `foo:bar`) to avoid XML parser `unbound prefix` failures.
 - **XPath Compatibility**: Strips default XHTML `xmlns` declarations so unprefixed XPath selectors (e.g. `.//div`, `.//h1`) work on converted output.
 - **Malformed Node Cleanup**: Removes comment and processing-instruction nodes that can serialize into XML-invalid token sequences.
+- **Script/Style Removal**: Removes `<script>` and `<style>` elements (and their text content, e.g. embedded JSON-LD) so downstream XPath mappings never extract non-visible markup as page text.
 - **Validation Guardrail**: Validates serialized XHTML with `xml.etree.ElementTree.fromstring()` and applies a stricter fallback sanitation pass before failing with line/column context.
 - **Encoding**: Produces UTF-8 encoded, recover-mode parsed XHTML.
 
