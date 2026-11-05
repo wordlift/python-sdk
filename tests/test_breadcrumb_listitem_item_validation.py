@@ -194,8 +194,13 @@ def _carousel(elements: list[dict]) -> dict:
 
 
 def _carousel_entry(position: int, url: str, with_item: bool = True) -> dict:
-    node: dict = {"@type": "ListItem", "position": position, "url": url}
+    # Carousel rules apply only to ItemLists whose items are Course, Movie,
+    # Recipe or Restaurant (Google carousel doc). The doc accepts a ListItem with
+    # `url` (summary) or `item` (all-in-one), so an entry "omits item" only when
+    # it drops the url too.
+    node: dict = {"@type": "ListItem", "position": position}
     if with_item:
+        node["url"] = url
         node["item"] = {"@type": "Movie", "name": "M", "url": url}
     return node
 
