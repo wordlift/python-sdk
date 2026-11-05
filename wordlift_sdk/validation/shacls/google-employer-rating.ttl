@@ -1,40 +1,49 @@
-@prefix : <https://wordlift.io/shacl/google/google-employer-rating/> .
-@prefix sh: <http://www.w3.org/ns/shacl#> .
-@prefix schema: <http://schema.org/> .
-
 # Source: https://developers.google.com/search/docs/appearance/structured-data/employer-rating
-# Generated: 2026-02-26T15:42:00Z
+# Generated: 2026-11-05T14:35:24Z
 # Notes: required properties => errors; recommended properties => warnings.
+# google-employer-rating: 6 rules generated from the Google Search Central doc by the tdd-mvp-3 pipeline.
+# Bundled from per-rule files by harness/bundle.py, schema.org subtypes expanded (targetClass 0, class 1, in 0). Do not edit by hand.
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-:google_EmployerAggregateRatingShape
-  a sh:NodeShape ;
-  sh:targetClass schema:EmployerAggregateRating ;
-  sh:property [
-    sh:path schema:itemReviewed ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:ratingCount ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:ratingValue ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:reviewCount ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:bestRating ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: bestRating." ;
-  ] ;
-  sh:property [
-    sh:path schema:worstRating ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: worstRating." ;
-  ] ;
-.
+<https://wordlift.io/shacl/google/employer-rating/employeraggregaterating-bestrating-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "Employer rating rule employeraggregaterating-bestrating-recommended: every EmployerAggregateRating should have a bestRating." ;
+            sh:minCount 1 ;
+            sh:path schema:bestRating ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:EmployerAggregateRating .
+
+<https://wordlift.io/shacl/google/employer-rating/employeraggregaterating-itemreviewed-organization> a sh:NodeShape ;
+    sh:property [ sh:message "Employer rating rule employeraggregaterating-itemreviewed-organization: when present, itemReviewed of an EmployerAggregateRating must be an Organization (or a subtype) representing the company being rated." ;
+            sh:or ( [ sh:class schema:Organization ] [ sh:class schema:AccountingService ] [ sh:class schema:AdultEntertainment ] [ sh:class schema:Airline ] [ sh:class schema:AmusementPark ] [ sh:class schema:AnimalShelter ] [ sh:class schema:ArchiveOrganization ] [ sh:class schema:ArtGallery ] [ sh:class schema:Attorney ] [ sh:class schema:AutoBodyShop ] [ sh:class schema:AutoDealer ] [ sh:class schema:AutoPartsStore ] [ sh:class schema:AutoRental ] [ sh:class schema:AutoRepair ] [ sh:class schema:AutoWash ] [ sh:class schema:AutomatedTeller ] [ sh:class schema:AutomotiveBusiness ] [ sh:class schema:Bakery ] [ sh:class schema:BankOrCreditUnion ] [ sh:class schema:BarOrPub ] [ sh:class schema:BeautySalon ] [ sh:class schema:BedAndBreakfast ] [ sh:class schema:BikeStore ] [ sh:class schema:BookStore ] [ sh:class schema:BowlingAlley ] [ sh:class schema:Brewery ] [ sh:class schema:CafeOrCoffeeShop ] [ sh:class schema:Campground ] [ sh:class schema:Casino ] [ sh:class schema:ChildCare ] [ sh:class schema:ClothingStore ] [ sh:class schema:CollegeOrUniversity ] [ sh:class schema:ComedyClub ] [ sh:class schema:CommunityHealth ] [ sh:class schema:ComputerStore ] [ sh:class schema:Consortium ] [ sh:class schema:ConvenienceStore ] [ sh:class schema:Cooperative ] [ sh:class schema:Corporation ] [ sh:class schema:CovidTestingFacility ] [ sh:class schema:DanceGroup ] [ sh:class schema:DaySpa ] [ sh:class schema:Dentist ] [ sh:class schema:DepartmentStore ] [ sh:class schema:Dermatology ] [ sh:class schema:DiagnosticLab ] [ sh:class schema:DietNutrition ] [ sh:class schema:Distillery ] [ sh:class schema:DryCleaningOrLaundry ] [ sh:class schema:EducationalOrganization ] [ sh:class schema:Electrician ] [ sh:class schema:ElectronicsStore ] [ sh:class schema:ElementarySchool ] [ sh:class schema:Emergency ] [ sh:class schema:EmergencyService ] [ sh:class schema:EmploymentAgency ] [ sh:class schema:EntertainmentBusiness ] [ sh:class schema:ExerciseGym ] [ sh:class schema:FastFoodRestaurant ] [ sh:class schema:FinancialService ] [ sh:class schema:FireStation ] [ sh:class schema:Florist ] [ sh:class schema:FoodEstablishment ] [ sh:class schema:FundingAgency ] [ sh:class schema:FundingScheme ] [ sh:class schema:FurnitureStore ] [ sh:class schema:GardenStore ] [ sh:class schema:GasStation ] [ sh:class schema:GeneralContractor ] [ sh:class schema:Geriatric ] [ sh:class schema:GolfCourse ] [ sh:class schema:GovernmentOffice ] [ sh:class schema:GovernmentOrganization ] [ sh:class schema:GroceryStore ] [ sh:class schema:Gynecologic ] [ sh:class schema:HVACBusiness ] [ sh:class schema:HairSalon ] [ sh:class schema:HardwareStore ] [ sh:class schema:HealthAndBeautyBusiness ] [ sh:class schema:HealthClub ] [ sh:class schema:HighSchool ] [ sh:class schema:HobbyShop ] [ sh:class schema:HomeAndConstructionBusiness ] [ sh:class schema:HomeGoodsStore ] [ sh:class schema:Hospital ] [ sh:class schema:Hostel ] [ sh:class schema:Hotel ] [ sh:class schema:HousePainter ] [ sh:class schema:IceCreamShop ] [ sh:class schema:IndividualPhysician ] [ sh:class schema:InsuranceAgency ] [ sh:class schema:InternetCafe ] [ sh:class schema:JewelryStore ] [ sh:class schema:LegalService ] [ sh:class schema:Library ] [ sh:class schema:LibrarySystem ] [ sh:class schema:LiquorStore ] [ sh:class schema:LocalBusiness ] [ sh:class schema:Locksmith ] [ sh:class schema:LodgingBusiness ] [ sh:class schema:MedicalBusiness ] [ sh:class schema:MedicalClinic ] [ sh:class schema:MedicalOrganization ] [ sh:class schema:MensClothingStore ] [ sh:class schema:MiddleSchool ] [ sh:class schema:Midwifery ] [ sh:class schema:MobilePhoneStore ] [ sh:class schema:Motel ] [ sh:class schema:MotorcycleDealer ] [ sh:class schema:MotorcycleRepair ] [ sh:class schema:MovieRentalStore ] [ sh:class schema:MovieTheater ] [ sh:class schema:MovingCompany ] [ sh:class schema:MusicGroup ] [ sh:class schema:MusicStore ] [ sh:class schema:NGO ] [ sh:class schema:NailSalon ] [ sh:class schema:NewsMediaOrganization ] [ sh:class schema:NightClub ] [ sh:class schema:Notary ] [ sh:class schema:Nursing ] [ sh:class schema:Obstetric ] [ sh:class schema:OfficeEquipmentStore ] [ sh:class schema:Oncologic ] [ sh:class schema:OnlineBusiness ] [ sh:class schema:OnlineMarketplace ] [ sh:class schema:OnlineStore ] [ sh:class schema:Optician ] [ sh:class schema:Optometric ] [ sh:class schema:Otolaryngologic ] [ sh:class schema:OutletStore ] [ sh:class schema:PawnShop ] [ sh:class schema:Pediatric ] [ sh:class schema:PerformingGroup ] [ sh:class schema:PetStore ] [ sh:class schema:Pharmacy ] [ sh:class schema:Physician ] [ sh:class schema:PhysiciansOffice ] [ sh:class schema:Physiotherapy ] [ sh:class schema:PlasticSurgery ] [ sh:class schema:Plumber ] [ sh:class schema:Podiatric ] [ sh:class schema:PoliceStation ] [ sh:class schema:PoliticalParty ] [ sh:class schema:PostOffice ] [ sh:class schema:Preschool ] [ sh:class schema:PrimaryCare ] [ sh:class schema:ProfessionalService ] [ sh:class schema:Project ] [ sh:class schema:Psychiatric ] [ sh:class schema:PublicHealth ] [ sh:class schema:PublicSwimmingPool ] [ sh:class schema:RadioStation ] [ sh:class schema:RealEstateAgent ] [ sh:class schema:RecyclingCenter ] [ sh:class schema:ResearchOrganization ] [ sh:class schema:ResearchProject ] [ sh:class schema:Resort ] [ sh:class schema:Restaurant ] [ sh:class schema:RoofingContractor ] [ sh:class schema:School ] [ sh:class schema:SearchRescueOrganization ] [ sh:class schema:SelfStorage ] [ sh:class schema:ShoeStore ] [ sh:class schema:ShoppingCenter ] [ sh:class schema:SkiResort ] [ sh:class schema:SportingGoodsStore ] [ sh:class schema:SportsActivityLocation ] [ sh:class schema:SportsClub ] [ sh:class schema:SportsOrganization ] [ sh:class schema:SportsTeam ] [ sh:class schema:StadiumOrArena ] [ sh:class schema:Store ] [ sh:class schema:TattooParlor ] [ sh:class schema:TelevisionStation ] [ sh:class schema:TennisComplex ] [ sh:class schema:TheaterGroup ] [ sh:class schema:TireShop ] [ sh:class schema:TouristInformationCenter ] [ sh:class schema:ToyStore ] [ sh:class schema:TravelAgency ] [ sh:class schema:VacationRental ] [ sh:class schema:VeterinaryCare ] [ sh:class schema:WholesaleStore ] [ sh:class schema:Winery ] [ sh:class schema:WorkersUnion ] ) ;
+            sh:path schema:itemReviewed ] ;
+    sh:targetClass schema:EmployerAggregateRating .
+
+<https://wordlift.io/shacl/google/employer-rating/employeraggregaterating-itemreviewed-required> a sh:NodeShape ;
+    sh:property [ sh:message "Employer rating rule employeraggregaterating-itemreviewed-required: every EmployerAggregateRating must have an itemReviewed." ;
+            sh:minCount 1 ;
+            sh:path schema:itemReviewed ] ;
+    sh:targetClass schema:EmployerAggregateRating .
+
+<https://wordlift.io/shacl/google/employer-rating/employeraggregaterating-ratingcount-or-reviewcount-required> a sh:NodeShape ;
+    sh:message "Employer rating rule employeraggregaterating-ratingcount-or-reviewcount-required: every EmployerAggregateRating must have at least one of ratingCount or reviewCount." ;
+    sh:or ( [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:ratingCount ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:reviewCount ] ] ) ;
+    sh:targetClass schema:EmployerAggregateRating .
+
+<https://wordlift.io/shacl/google/employer-rating/employeraggregaterating-ratingvalue-required> a sh:NodeShape ;
+    sh:property [ sh:message "Employer rating rule employeraggregaterating-ratingvalue-required: every EmployerAggregateRating must have a ratingValue." ;
+            sh:minCount 1 ;
+            sh:path schema:ratingValue ] ;
+    sh:targetClass schema:EmployerAggregateRating .
+
+<https://wordlift.io/shacl/google/employer-rating/employeraggregaterating-worstrating-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "Employer rating rule employeraggregaterating-worstrating-recommended: every EmployerAggregateRating should have a worstRating." ;
+            sh:minCount 1 ;
+            sh:path schema:worstRating ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:EmployerAggregateRating .
+

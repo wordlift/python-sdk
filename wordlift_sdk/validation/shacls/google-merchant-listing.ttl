@@ -1,506 +1,1843 @@
-@prefix : <https://wordlift.io/shacl/google/google-merchant-listing/> .
-@prefix sh: <http://www.w3.org/ns/shacl#> .
-@prefix schema: <http://schema.org/> .
-
 # Source: https://developers.google.com/search/docs/appearance/structured-data/merchant-listing
-# Generated: 2026-02-26T15:42:10Z
+# Generated: 2026-11-05T14:35:24Z
 # Notes: required properties => errors; recommended properties => warnings.
+# google-merchant-listing: 113 rules generated from the Google Search Central doc by the tdd-mvp-3 pipeline.
+# Bundled from per-rule files by harness/bundle.py, schema.org subtypes expanded (targetClass 78, class 4, in 0). Do not edit by hand.
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-:google_3DModelShape
-  a sh:NodeShape ;
-  sh:targetClass schema:3DModel ;
-  sh:property [
-    sh:path schema:encoding ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path ( schema:encoding schema:contentUrl ) ;
-    sh:minCount 1 ;
-  ] ;
-.
+<https://wordlift.io/shacl/google/merchant-listing/3dmodel-encoding-contenturl-missing> a sh:NodeShape ;
+    sh:message "Every MediaObject under a 3DModel's encoding must have contentUrl." ;
+    sh:or ( [ sh:property [ sh:node [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                                    sh:path schema:contentUrl ] ] ) ] ;
+                        sh:path schema:encoding ] ] ) ;
+    sh:targetClass schema:3DModel .
 
-:google_CertificationShape
-  a sh:NodeShape ;
-  sh:targetClass schema:Certification ;
-  sh:property [
-    sh:path schema:issuedBy ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:certificationIdentification ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: certificationIdentification." ;
-  ] ;
-  sh:property [
-    sh:path schema:certificationRating ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: certificationRating." ;
-  ] ;
-.
+<https://wordlift.io/shacl/google/merchant-listing/3dmodel-encoding-contenturl-suffix> a sh:NodeShape ;
+    sh:message "The contentUrl of a 3DModel's encoding must end in .gltf or .glb (query and fragment ignored, case-insensitive)." ;
+    sh:or ( [ sh:property [ sh:node [ sh:or ( [ sh:property [ sh:flags "i" ;
+                                                    sh:path schema:contentUrl ;
+                                                    sh:pattern "^[^?#]*\\.(gltf|glb)([?#].*)?$" ] ] ) ] ;
+                        sh:path schema:encoding ] ] ) ;
+    sh:targetClass schema:3DModel .
 
-:google_DefinedRegionShape
-  a sh:NodeShape ;
-  sh:targetClass schema:DefinedRegion ;
-  sh:property [
-    sh:path schema:addressCountry ;
-    sh:minCount 1 ;
-  ] ;
-.
+<https://wordlift.io/shacl/google/merchant-listing/3dmodel-encoding-missing> a sh:NodeShape ;
+    sh:message "Every 3DModel must have encoding." ;
+    sh:or ( [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:encoding ] ] ) ;
+    sh:targetClass schema:3DModel .
 
-:google_DefinedRegionRecommendedOneOf1Shape
-  a sh:NodeShape ;
-  sh:targetClass schema:DefinedRegion ;
-  sh:severity sh:Warning ;
-  sh:message "Recommended by Google: choose either addressRegion or postalCode." ;
-  sh:or (
-    [
-      sh:property [
-        sh:path schema:addressRegion ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-    [
-      sh:property [
-        sh:path schema:postalCode ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-  ) ;
-.
+<https://wordlift.io/shacl/google/merchant-listing/categorycode-codevalue-missing> a sh:NodeShape ;
+    sh:message "A CategoryCode under a checked Product's category must have codeValue." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:node [ sh:or ( [ sh:not [ sh:or ( [ sh:class schema:CategoryCode ] [ sh:class schema:MedicalCode ] ) ] ] [ sh:property [ sh:minCount 1 ;
+                                                    sh:path schema:codeValue ] ] ) ] ;
+                        sh:path schema:category ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
 
-:google_MerchantReturnPolicyShape
-  a sh:NodeShape ;
-  sh:targetClass schema:MerchantReturnPolicy ;
-  sh:property [
-    sh:path schema:applicableCountry ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:returnPolicyCategory ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:merchantReturnDays ;
-    sh:minCount 1 ;
+<https://wordlift.io/shacl/google/merchant-listing/categorycode-codevalue-segment-letterless> a sh:NodeShape ;
+    sh:message "A CategoryCode under a checked Product's category whose codeValue uses the path format (contains >) must have at least one letter in every segment; numeric IDs without > are accepted." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:node [ sh:or ( [ sh:not [ sh:or ( [ sh:class schema:CategoryCode ] [ sh:class schema:MedicalCode ] ) ] ] [ sh:property [ sh:path schema:codeValue ;
+                                                    sh:pattern "^(?:[^>]*|[^>]*[^\\W\\d_][^>]*(?:>[^>]*[^\\W\\d_][^>]*)+)$" ] ] ) ] ;
+                        sh:path schema:category ] ] [ sh:property [ sh:maxCount 0 ;
+                        sh:path schema:offers ] ] ) ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: merchantReturnDays." ;
-  ] ;
-  sh:property [
-    sh:path schema:returnFees ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: returnFees." ;
-  ] ;
-  sh:property [
-    sh:path schema:returnMethod ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: returnMethod." ;
-  ] ;
-  sh:property [
-    sh:path schema:returnShippingFeesAmount ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: returnShippingFeesAmount." ;
-  ] ;
-.
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
 
-:google_OfferShippingDetailsShape
-  a sh:NodeShape ;
-  sh:targetClass schema:OfferShippingDetails ;
-  sh:property [
-    sh:path schema:deliveryTime ;
-    sh:minCount 1 ;
+<https://wordlift.io/shacl/google/merchant-listing/categorycode-incodeset-missing> a sh:NodeShape ;
+    sh:message "A CategoryCode under a checked Product's category must have inCodeSet." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:node [ sh:or ( [ sh:not [ sh:or ( [ sh:class schema:CategoryCode ] [ sh:class schema:MedicalCode ] ) ] ] [ sh:property [ sh:minCount 1 ;
+                                                    sh:path schema:inCodeSet ] ] ) ] ;
+                        sh:path schema:category ] ] ) ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: deliveryTime." ;
-  ] ;
-  sh:property [
-    sh:path schema:shippingDestination ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: shippingDestination." ;
-  ] ;
-  sh:property [
-    sh:path schema:shippingRate ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: shippingRate." ;
-  ] ;
-  sh:property [
-    sh:path ( schema:shippingRate schema:currency ) ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: shippingRate.currency." ;
-  ] ;
-.
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
 
-:google_OfferShippingDetailsRecommendedOneOf1Shape
-  a sh:NodeShape ;
-  sh:targetClass schema:OfferShippingDetails ;
-  sh:severity sh:Warning ;
-  sh:message "Recommended by Google: choose either shippingRate.maxValue or shippingRate.value." ;
-  sh:or (
-    [
-      sh:property [
-        sh:path ( schema:shippingRate schema:maxValue ) ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-    [
-      sh:property [
-        sh:path ( schema:shippingRate schema:value ) ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-  ) ;
-.
+<https://wordlift.io/shacl/google/merchant-listing/certification-identification-or-rating-missing> a sh:NodeShape ;
+    sh:message "Every Certification should have certificationIdentification or certificationRating." ;
+    sh:or ( [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:alternativePath ( schema:certificationIdentification schema:certificationRating ) ] ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:Certification .
 
-:google_PeopleAudienceShape
-  a sh:NodeShape ;
-  sh:targetClass schema:PeopleAudience ;
-  sh:property [
-    sh:path ( schema:suggestedAge schema:maxValue ) ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: suggestedAge.maxValue." ;
-  ] ;
-  sh:property [
-    sh:path ( schema:suggestedAge schema:minValue ) ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: suggestedAge.minValue." ;
-  ] ;
-  sh:property [
-    sh:path schema:suggestedGender ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: suggestedGender." ;
-  ] ;
-  sh:property [
-    sh:path schema:suggestedMaxAge ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: suggestedMaxAge." ;
-  ] ;
-  sh:property [
-    sh:path schema:suggestedMinAge ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: suggestedMinAge." ;
-  ] ;
-.
+<https://wordlift.io/shacl/google/merchant-listing/certification-issuedby-missing> a sh:NodeShape ;
+    sh:message "Every Certification must have issuedBy." ;
+    sh:or ( [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:issuedBy ] ] ) ;
+    sh:targetClass schema:Certification .
 
-:google_ProductShape
-  a sh:NodeShape ;
-  sh:targetClass schema:Product ;
-  sh:property [
-    sh:path schema:image ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:name ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:offers ;
-    sh:minCount 1 ;
-    sh:node [
-      a sh:NodeShape ;
-      sh:class schema:Offer ;
-      sh:property [
-        sh:path schema:priceSpecification ;
-        sh:minCount 1 ;
-      ] ;
-      sh:property [
-        sh:path schema:availability ;
-        sh:minCount 1 ;
-        sh:severity sh:Warning ;
-        sh:message "Recommended by Google: availability." ;
-      ] ;
-      sh:property [
-        sh:path schema:hasMerchantReturnPolicy ;
-        sh:minCount 1 ;
-        sh:severity sh:Warning ;
-        sh:message "Recommended by Google: hasMerchantReturnPolicy." ;
-      ] ;
-      sh:property [
-        sh:path schema:itemCondition ;
-        sh:minCount 1 ;
-        sh:severity sh:Warning ;
-        sh:message "Recommended by Google: itemCondition." ;
-      ] ;
-      sh:property [
-        sh:path schema:shippingDetails ;
-        sh:minCount 1 ;
-        sh:severity sh:Warning ;
-        sh:message "Recommended by Google: shippingDetails." ;
-      ] ;
-      sh:property [
-        sh:path schema:url ;
-        sh:minCount 1 ;
-        sh:severity sh:Warning ;
-        sh:message "Recommended by Google: url." ;
-      ] ;
-      sh:or (
-        [
-          sh:property [
-            sh:path schema:price ;
-            sh:minCount 1 ;
-          ] ;
-        ]
-        [
-          sh:property [
-            sh:path ( schema:priceSpecification schema:price ) ;
-            sh:minCount 1 ;
-          ] ;
-        ]
-      ) ;
-      sh:or (
-        [
-          sh:property [
-            sh:path schema:priceCurrency ;
-            sh:minCount 1 ;
-          ] ;
-        ]
-        [
-          sh:property [
-            sh:path ( schema:priceSpecification schema:priceCurrency ) ;
-            sh:minCount 1 ;
-          ] ;
-        ]
-      ) ;
-    ] ;
-  ] ;
-  sh:property [
-    sh:path schema:aggregateRating ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: aggregateRating." ;
-  ] ;
-  sh:property [
-    sh:path schema:audience ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: audience." ;
-  ] ;
-  sh:property [
-    sh:path ( schema:brand schema:name ) ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: brand.name." ;
-  ] ;
-  sh:property [
-    sh:path schema:color ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: color." ;
-  ] ;
-  sh:property [
-    sh:path schema:description ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: description." ;
-  ] ;
-  sh:property [
-    sh:path schema:gtin ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: gtin." ;
-  ] ;
-  sh:property [
-    sh:path schema:gtin12 ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: gtin12." ;
-  ] ;
-  sh:property [
-    sh:path schema:gtin13 ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: gtin13." ;
-  ] ;
-  sh:property [
-    sh:path schema:gtin14 ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: gtin14." ;
-  ] ;
-  sh:property [
-    sh:path schema:gtin8 ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: gtin8." ;
-  ] ;
-  sh:property [
-    sh:path schema:hasCertification ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: hasCertification." ;
-  ] ;
-  sh:property [
-    sh:path schema:inProductGroupWithID ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: inProductGroupWithID." ;
-  ] ;
-  sh:property [
-    sh:path schema:isVariantOf ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: isVariantOf." ;
-  ] ;
-  sh:property [
-    sh:path schema:isbn ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: isbn." ;
-  ] ;
-  sh:property [
-    sh:path schema:material ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: material." ;
-  ] ;
-  sh:property [
-    sh:path schema:mpn ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: mpn." ;
-  ] ;
-  sh:property [
-    sh:path schema:pattern ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: pattern." ;
-  ] ;
-  sh:property [
-    sh:path schema:review ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: review." ;
-  ] ;
-  sh:property [
-    sh:path schema:size ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: size." ;
-  ] ;
-  sh:property [
-    sh:path schema:sku ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: sku." ;
-  ] ;
-  sh:property [
-    sh:path schema:subjectOf ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: subjectOf." ;
-  ] ;
-.
+<https://wordlift.io/shacl/google/merchant-listing/certification-issuedby-name-value> a sh:NodeShape ;
+    sh:message "A Certification's issuedBy must have a name of EC, European_Commission, ADEME or BMWK." ;
+    sh:or ( [ sh:property [ sh:in ( "EC" "European_Commission" "ADEME" "BMWK" ) ;
+                        sh:path ( schema:issuedBy schema:name ) ] ] ) ;
+    sh:targetClass schema:Certification .
 
-:google_QuantitativeValueShape
-  a sh:NodeShape ;
-  sh:targetClass schema:QuantitativeValue ;
-  sh:property [
-    sh:path schema:maxValue ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:minValue ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:unitCode ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:value ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:valueReference ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: valueReference." ;
-  ] ;
-.
+<https://wordlift.io/shacl/google/merchant-listing/certification-name-missing> a sh:NodeShape ;
+    sh:message "Every Certification must have name." ;
+    sh:or ( [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:name ] ] ) ;
+    sh:targetClass schema:Certification .
 
-:google_ShippingDeliveryTimeShape
-  a sh:NodeShape ;
-  sh:targetClass schema:ShippingDeliveryTime ;
-  sh:property [
-    sh:path schema:handlingTime ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: handlingTime." ;
-  ] ;
-  sh:property [
-    sh:path schema:transitTime ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: transitTime." ;
-  ] ;
-.
+<https://wordlift.io/shacl/google/merchant-listing/certification-name-value> a sh:NodeShape ;
+    sh:message "A Certification's name must be EPREL, Vehicle_CO2_Class or Vehicle_CO2_Class_Discharged_Battery." ;
+    sh:or ( [ sh:property [ sh:in ( "EPREL" "Vehicle_CO2_Class" "Vehicle_CO2_Class_Discharged_Battery" ) ;
+                        sh:path schema:name ] ] ) ;
+    sh:targetClass schema:Certification .
 
-:google_SizeSpecificationShape
-  a sh:NodeShape ;
-  sh:targetClass schema:SizeSpecification ;
-  sh:property [
-    sh:path schema:name ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: name." ;
-  ] ;
-  sh:property [
-    sh:path schema:sizeGroup ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: sizeGroup." ;
-  ] ;
-  sh:property [
-    sh:path schema:sizeSystem ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: sizeSystem." ;
-  ] ;
-.
+<https://wordlift.io/shacl/google/merchant-listing/certification-rating-bestrating-missing> a sh:NodeShape ;
+    sh:message "The Rating under the certificationRating of a Certification named EPREL must have bestRating." ;
+    sh:or ( [ sh:not [ sh:class schema:Certification ;
+                        sh:property [ sh:hasValue "EPREL" ;
+                                sh:path schema:name ] ] ] [ sh:property [ sh:node [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                                    sh:path schema:bestRating ] ] ) ] ;
+                        sh:path schema:certificationRating ] ] ) ;
+    sh:targetClass schema:Certification .
 
-:google_UnitPriceSpecificationShape
-  a sh:NodeShape ;
-  sh:targetClass schema:UnitPriceSpecification ;
-  sh:property [
-    sh:path schema:price ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:priceCurrency ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:membershipPointsEarned ;
-    sh:minCount 1 ;
+<https://wordlift.io/shacl/google/merchant-listing/certification-rating-ratingvalue-missing> a sh:NodeShape ;
+    sh:message "The Rating under a Certification's certificationRating must have ratingValue." ;
+    sh:or ( [ sh:property [ sh:node [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                                    sh:path schema:ratingValue ] ] ) ] ;
+                        sh:path schema:certificationRating ] ] ) ;
+    sh:targetClass schema:Certification .
+
+<https://wordlift.io/shacl/google/merchant-listing/certification-rating-worstrating-missing> a sh:NodeShape ;
+    sh:message "The Rating under the certificationRating of a Certification named EPREL must have worstRating." ;
+    sh:or ( [ sh:not [ sh:class schema:Certification ;
+                        sh:property [ sh:hasValue "EPREL" ;
+                                sh:path schema:name ] ] ] [ sh:property [ sh:node [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                                    sh:path schema:worstRating ] ] ) ] ;
+                        sh:path schema:certificationRating ] ] ) ;
+    sh:targetClass schema:Certification .
+
+<https://wordlift.io/shacl/google/merchant-listing/definedregion-addresscountry-missing> a sh:NodeShape ;
+    sh:message "the DefinedRegion under an OfferShippingDetails' shippingDestination must have addressCountry." ;
+    sh:or ( [ sh:property [ sh:node [ sh:or ( [ sh:not [ sh:class schema:DefinedRegion ] ] [ sh:property [ sh:minCount 1 ;
+                                                    sh:path schema:addressCountry ] ] ) ] ;
+                        sh:path schema:shippingDestination ] ] ) ;
+    sh:targetClass schema:OfferShippingDetails .
+
+<https://wordlift.io/shacl/google/merchant-listing/definedregion-addressregion-format> a sh:NodeShape ;
+    sh:message "Every addressRegion of the DefinedRegion under an OfferShippingDetails' shippingDestination must be 2 or 3 alphanumeric characters (no country prefix)." ;
+    sh:or ( [ sh:property [ sh:node [ sh:or ( [ sh:not [ sh:class schema:DefinedRegion ] ] [ sh:property [ sh:path schema:addressRegion ;
+                                                    sh:pattern "^[A-Za-z0-9]{2,3}$" ] ] ) ] ;
+                        sh:path schema:shippingDestination ] ] ) ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: membershipPointsEarned." ;
-  ] ;
-  sh:property [
-    sh:path schema:priceType ;
-    sh:minCount 1 ;
+    sh:targetClass schema:OfferShippingDetails .
+
+<https://wordlift.io/shacl/google/merchant-listing/definedregion-addressregion-or-postalcode-missing> a sh:NodeShape ;
+    sh:message "the DefinedRegion under an OfferShippingDetails' shippingDestination should have addressRegion or postalCode." ;
+    sh:or ( [ sh:property [ sh:node [ sh:or ( [ sh:not [ sh:class schema:DefinedRegion ] ] [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                                                sh:path schema:addressRegion ] ] [ sh:property [ sh:minCount 1 ;
+                                                                sh:path schema:postalCode ] ] ) ] ) ] ;
+                        sh:path schema:shippingDestination ] ] ) ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: priceType." ;
-  ] ;
-  sh:property [
-    sh:path schema:referenceQuantity ;
-    sh:minCount 1 ;
+    sh:targetClass schema:OfferShippingDetails .
+
+<https://wordlift.io/shacl/google/merchant-listing/definedregion-addressregion-postalcode-both> a sh:NodeShape ;
+    sh:message "the DefinedRegion under an OfferShippingDetails' shippingDestination must not have both addressRegion and postalCode." ;
+    sh:or ( [ sh:property [ sh:node [ sh:or ( [ sh:not [ sh:class schema:DefinedRegion ] ] [ sh:property [ sh:maxCount 0 ;
+                                                    sh:path schema:addressRegion ] ] [ sh:property [ sh:maxCount 0 ;
+                                                    sh:path schema:postalCode ] ] ) ] ;
+                        sh:path schema:shippingDestination ] ] ) ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: referenceQuantity." ;
-  ] ;
-  sh:property [
-    sh:path schema:validForMemberTier ;
-    sh:minCount 1 ;
+    sh:targetClass schema:OfferShippingDetails .
+
+<https://wordlift.io/shacl/google/merchant-listing/merchantreturnpolicy-applicablecountry-missing> a sh:NodeShape ;
+    sh:message "the MerchantReturnPolicy under such an Offer's hasMerchantReturnPolicy must have applicableCountry." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:node [ sh:or ( [ sh:class schema:AggregateOffer ] [ sh:property [ sh:node [ sh:or ( [ sh:closed true ;
+                                                                        sh:ignoredProperties ( rdf:type ) ] [ sh:property [ sh:minCount 1 ;
+                                                                                sh:path schema:applicableCountry ] ] ) ] ;
+                                                    sh:path schema:hasMerchantReturnPolicy ] ] ) ] ;
+                        sh:path schema:offers ] ] ) ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/merchantreturnpolicy-applicablecountry-too-many> a sh:NodeShape ;
+    sh:message "the MerchantReturnPolicy under such an Offer's hasMerchantReturnPolicy must have at most 50 applicableCountry values." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:node [ sh:or ( [ sh:class schema:AggregateOffer ] [ sh:property [ sh:node [ sh:or ( [ sh:closed true ;
+                                                                        sh:ignoredProperties ( rdf:type ) ] [ sh:property [ sh:maxCount 50 ;
+                                                                                sh:path schema:applicableCountry ] ] ) ] ;
+                                                    sh:path schema:hasMerchantReturnPolicy ] ] ) ] ;
+                        sh:path schema:offers ] ] ) ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/merchantreturnpolicy-merchantreturndays-missing> a sh:NodeShape ;
+    sh:message "the MerchantReturnPolicy under such an Offer's hasMerchantReturnPolicy with category MerchantReturnFiniteReturnWindow must have merchantReturnDays." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:node [ sh:or ( [ sh:class schema:AggregateOffer ] [ sh:property [ sh:node [ sh:or ( [ sh:closed true ;
+                                                                        sh:ignoredProperties ( rdf:type ) ] [ sh:property [ sh:not [ sh:in ( schema:MerchantReturnFiniteReturnWindow <https://schema.org/MerchantReturnFiniteReturnWindow> "http://schema.org/MerchantReturnFiniteReturnWindow" "https://schema.org/MerchantReturnFiniteReturnWindow" ) ] ;
+                                                                                sh:path schema:returnPolicyCategory ] ] [ sh:property [ sh:minCount 1 ;
+                                                                                sh:path schema:merchantReturnDays ] ] ) ] ;
+                                                    sh:path schema:hasMerchantReturnPolicy ] ] ) ] ;
+                        sh:path schema:offers ] ] ) ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/merchantreturnpolicy-returnfees-missing> a sh:NodeShape ;
+    sh:message "the MerchantReturnPolicy under such an Offer's hasMerchantReturnPolicy should have returnFees." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:node [ sh:or ( [ sh:class schema:AggregateOffer ] [ sh:property [ sh:node [ sh:or ( [ sh:closed true ;
+                                                                        sh:ignoredProperties ( rdf:type ) ] [ sh:property [ sh:minCount 1 ;
+                                                                                sh:path schema:returnFees ] ] ) ] ;
+                                                    sh:path schema:hasMerchantReturnPolicy ] ] ) ] ;
+                        sh:path schema:offers ] ] ) ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: validForMemberTier." ;
-  ] ;
-.
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/merchantreturnpolicy-returnfees-value> a sh:NodeShape ;
+    sh:message "The returnFees of the MerchantReturnPolicy under such an Offer's hasMerchantReturnPolicy must be one of FreeReturn, ReturnFeesCustomerResponsibility, ReturnShippingFees (https://schema.org/ URLs)." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:node [ sh:or ( [ sh:class schema:AggregateOffer ] [ sh:property [ sh:node [ sh:or ( [ sh:closed true ;
+                                                                        sh:ignoredProperties ( rdf:type ) ] [ sh:property [ sh:in ( schema:FreeReturn <https://schema.org/FreeReturn> "http://schema.org/FreeReturn" "https://schema.org/FreeReturn" schema:ReturnFeesCustomerResponsibility <https://schema.org/ReturnFeesCustomerResponsibility> "http://schema.org/ReturnFeesCustomerResponsibility" "https://schema.org/ReturnFeesCustomerResponsibility" schema:ReturnShippingFees <https://schema.org/ReturnShippingFees> "http://schema.org/ReturnShippingFees" "https://schema.org/ReturnShippingFees" ) ;
+                                                                                sh:path schema:returnFees ] ] ) ] ;
+                                                    sh:path schema:hasMerchantReturnPolicy ] ] ) ] ;
+                        sh:path schema:offers ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/merchantreturnpolicy-returnmethod-missing> a sh:NodeShape ;
+    sh:message "the MerchantReturnPolicy under such an Offer's hasMerchantReturnPolicy with category MerchantReturnFiniteReturnWindow or MerchantReturnUnlimitedWindow should have returnMethod." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:node [ sh:or ( [ sh:class schema:AggregateOffer ] [ sh:property [ sh:node [ sh:or ( [ sh:closed true ;
+                                                                        sh:ignoredProperties ( rdf:type ) ] [ sh:property [ sh:not [ sh:in ( schema:MerchantReturnFiniteReturnWindow <https://schema.org/MerchantReturnFiniteReturnWindow> "http://schema.org/MerchantReturnFiniteReturnWindow" "https://schema.org/MerchantReturnFiniteReturnWindow" schema:MerchantReturnUnlimitedWindow <https://schema.org/MerchantReturnUnlimitedWindow> "http://schema.org/MerchantReturnUnlimitedWindow" "https://schema.org/MerchantReturnUnlimitedWindow" ) ] ;
+                                                                                sh:path schema:returnPolicyCategory ] ] [ sh:property [ sh:minCount 1 ;
+                                                                                sh:path schema:returnMethod ] ] ) ] ;
+                                                    sh:path schema:hasMerchantReturnPolicy ] ] ) ] ;
+                        sh:path schema:offers ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/merchantreturnpolicy-returnmethod-value> a sh:NodeShape ;
+    sh:message "Every returnMethod of the MerchantReturnPolicy under such an Offer's hasMerchantReturnPolicy must be one of ReturnAtKiosk, ReturnByMail, ReturnInStore (https://schema.org/ URLs)." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:node [ sh:or ( [ sh:class schema:AggregateOffer ] [ sh:property [ sh:node [ sh:or ( [ sh:closed true ;
+                                                                        sh:ignoredProperties ( rdf:type ) ] [ sh:property [ sh:in ( schema:ReturnAtKiosk <https://schema.org/ReturnAtKiosk> "http://schema.org/ReturnAtKiosk" "https://schema.org/ReturnAtKiosk" schema:ReturnByMail <https://schema.org/ReturnByMail> "http://schema.org/ReturnByMail" "https://schema.org/ReturnByMail" schema:ReturnInStore <https://schema.org/ReturnInStore> "http://schema.org/ReturnInStore" "https://schema.org/ReturnInStore" ) ;
+                                                                                sh:path schema:returnMethod ] ] ) ] ;
+                                                    sh:path schema:hasMerchantReturnPolicy ] ] ) ] ;
+                        sh:path schema:offers ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/merchantreturnpolicy-returnpolicycategory-missing> a sh:NodeShape ;
+    sh:message "the MerchantReturnPolicy under such an Offer's hasMerchantReturnPolicy must have returnPolicyCategory." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:node [ sh:or ( [ sh:class schema:AggregateOffer ] [ sh:property [ sh:node [ sh:or ( [ sh:closed true ;
+                                                                        sh:ignoredProperties ( rdf:type ) ] [ sh:property [ sh:minCount 1 ;
+                                                                                sh:path schema:returnPolicyCategory ] ] ) ] ;
+                                                    sh:path schema:hasMerchantReturnPolicy ] ] ) ] ;
+                        sh:path schema:offers ] ] ) ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/merchantreturnpolicy-returnpolicycategory-value> a sh:NodeShape ;
+    sh:message "The returnPolicyCategory of the MerchantReturnPolicy under such an Offer's hasMerchantReturnPolicy must be one of https://schema.org/MerchantReturnFiniteReturnWindow, MerchantReturnNotPermitted, MerchantReturnUnlimitedWindow." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:node [ sh:or ( [ sh:class schema:AggregateOffer ] [ sh:property [ sh:node [ sh:or ( [ sh:closed true ;
+                                                                        sh:ignoredProperties ( rdf:type ) ] [ sh:property [ sh:in ( schema:MerchantReturnFiniteReturnWindow <https://schema.org/MerchantReturnFiniteReturnWindow> "http://schema.org/MerchantReturnFiniteReturnWindow" "https://schema.org/MerchantReturnFiniteReturnWindow" schema:MerchantReturnNotPermitted <https://schema.org/MerchantReturnNotPermitted> "http://schema.org/MerchantReturnNotPermitted" "https://schema.org/MerchantReturnNotPermitted" schema:MerchantReturnUnlimitedWindow <https://schema.org/MerchantReturnUnlimitedWindow> "http://schema.org/MerchantReturnUnlimitedWindow" "https://schema.org/MerchantReturnUnlimitedWindow" ) ;
+                                                                                sh:path schema:returnPolicyCategory ] ] ) ] ;
+                                                    sh:path schema:hasMerchantReturnPolicy ] ] ) ] ;
+                        sh:path schema:offers ] ] ) ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/merchantreturnpolicy-returnshippingfeesamount-forbidden> a sh:NodeShape ;
+    sh:message "the MerchantReturnPolicy under such an Offer's hasMerchantReturnPolicy whose returnFees is FreeReturn or ReturnFeesCustomerResponsibility must not have returnShippingFeesAmount." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:node [ sh:or ( [ sh:class schema:AggregateOffer ] [ sh:property [ sh:node [ sh:or ( [ sh:closed true ;
+                                                                        sh:ignoredProperties ( rdf:type ) ] [ sh:property [ sh:not [ sh:in ( schema:FreeReturn <https://schema.org/FreeReturn> "http://schema.org/FreeReturn" "https://schema.org/FreeReturn" schema:ReturnFeesCustomerResponsibility <https://schema.org/ReturnFeesCustomerResponsibility> "http://schema.org/ReturnFeesCustomerResponsibility" "https://schema.org/ReturnFeesCustomerResponsibility" ) ] ;
+                                                                                sh:path schema:returnFees ] ] [ sh:property [ sh:maxCount 0 ;
+                                                                                sh:path schema:returnShippingFeesAmount ] ] ) ] ;
+                                                    sh:path schema:hasMerchantReturnPolicy ] ] ) ] ;
+                        sh:path schema:offers ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/merchantreturnpolicy-returnshippingfeesamount-missing> a sh:NodeShape ;
+    sh:message "the MerchantReturnPolicy under such an Offer's hasMerchantReturnPolicy whose returnFees is ReturnShippingFees must have returnShippingFeesAmount." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:node [ sh:or ( [ sh:class schema:AggregateOffer ] [ sh:property [ sh:node [ sh:or ( [ sh:closed true ;
+                                                                        sh:ignoredProperties ( rdf:type ) ] [ sh:property [ sh:not [ sh:in ( schema:ReturnShippingFees <https://schema.org/ReturnShippingFees> "http://schema.org/ReturnShippingFees" "https://schema.org/ReturnShippingFees" ) ] ;
+                                                                                sh:path schema:returnFees ] ] [ sh:property [ sh:minCount 1 ;
+                                                                                sh:path schema:returnShippingFeesAmount ] ] ) ] ;
+                                                    sh:path schema:hasMerchantReturnPolicy ] ] ) ] ;
+                        sh:path schema:offers ] ] ) ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/merchantreturnpolicy-returnshippingfeesamount-zero> a sh:NodeShape ;
+    sh:message "For the MerchantReturnPolicy under such an Offer's hasMerchantReturnPolicy whose returnFees is ReturnShippingFees, the returnShippingFeesAmount.value must not be zero." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:node [ sh:or ( [ sh:class schema:AggregateOffer ] [ sh:property [ sh:node [ sh:or ( [ sh:closed true ;
+                                                                        sh:ignoredProperties ( rdf:type ) ] [ sh:property [ sh:not [ sh:in ( schema:ReturnShippingFees <https://schema.org/ReturnShippingFees> "http://schema.org/ReturnShippingFees" "https://schema.org/ReturnShippingFees" ) ] ;
+                                                                                sh:path schema:returnFees ] ] [ sh:property [ sh:not [ sh:or ( [ sh:maxInclusive 0 ;
+                                                                                                    sh:minInclusive 0 ] [ sh:pattern "^ *0*(\\.0*)? *$" ] ) ] ;
+                                                                                sh:path ( schema:returnShippingFeesAmount schema:value ) ] ] ) ] ;
+                                                    sh:path schema:hasMerchantReturnPolicy ] ] ) ] ;
+                        sh:path schema:offers ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/offer-availability-missing> a sh:NodeShape ;
+    sh:message "the Offer under a Product's offers (AggregateOffer is not checked) should have availability." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:node [ sh:or ( [ sh:class schema:AggregateOffer ] [ sh:property [ sh:minCount 1 ;
+                                                    sh:path schema:availability ] ] ) ] ;
+                        sh:path schema:offers ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/offer-availability-multiple> a sh:NodeShape ;
+    sh:message "the Offer under a Product's offers (AggregateOffer is not checked) must have at most one availability value." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:node [ sh:or ( [ sh:class schema:AggregateOffer ] [ sh:property [ sh:maxCount 1 ;
+                                                    sh:path schema:availability ] ] ) ] ;
+                        sh:path schema:offers ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/offer-hasmerchantreturnpolicy-missing> a sh:NodeShape ;
+    sh:message "the Offer under a Product's offers (AggregateOffer is not checked) should have hasMerchantReturnPolicy." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:node [ sh:or ( [ sh:class schema:AggregateOffer ] [ sh:property [ sh:minCount 1 ;
+                                                    sh:path schema:hasMerchantReturnPolicy ] ] ) ] ;
+                        sh:path schema:offers ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/offer-itemcondition-missing> a sh:NodeShape ;
+    sh:message "the Offer under a Product's offers (AggregateOffer is not checked) should have itemCondition." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:node [ sh:or ( [ sh:class schema:AggregateOffer ] [ sh:property [ sh:minCount 1 ;
+                                                    sh:path schema:itemCondition ] ] ) ] ;
+                        sh:path schema:offers ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/offer-itemcondition-multiple> a sh:NodeShape ;
+    sh:message "the Offer under a Product's offers (AggregateOffer is not checked) must have at most one itemCondition value." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:node [ sh:or ( [ sh:class schema:AggregateOffer ] [ sh:property [ sh:maxCount 1 ;
+                                                    sh:path schema:itemCondition ] ] ) ] ;
+                        sh:path schema:offers ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/offer-price-missing> a sh:NodeShape ;
+    sh:message "the Offer under a Product's offers (AggregateOffer is not checked) must have price or a priceSpecification that has price." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:node [ sh:or ( [ sh:class schema:AggregateOffer ] [ sh:property [ sh:minCount 1 ;
+                                                    sh:path schema:price ] ] [ sh:property [ sh:minCount 1 ;
+                                                    sh:path ( schema:priceSpecification schema:price ) ] ] ) ] ;
+                        sh:path schema:offers ] ] ) ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/offer-price-nonpositive> a sh:NodeShape ;
+    sh:message "If the Offer under a Product's offers (AggregateOffer is not checked) has price, it must be greater than zero." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:node [ sh:or ( [ sh:class schema:AggregateOffer ] [ sh:property [ sh:or ( [ sh:minExclusive 0 ] [ sh:pattern "^ *(?=[0-9.]*[1-9])[0-9]*(\\.[0-9]+)? *$" ] ) ;
+                                                    sh:path schema:price ] ] ) ] ;
+                        sh:path schema:offers ] ] ) ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/offer-pricecurrency-missing> a sh:NodeShape ;
+    sh:message "If the Offer under a Product's offers (AggregateOffer is not checked) has price, it must have priceCurrency." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:node [ sh:or ( [ sh:class schema:AggregateOffer ] [ sh:property [ sh:maxCount 0 ;
+                                                    sh:path schema:price ] ] [ sh:property [ sh:minCount 1 ;
+                                                    sh:path schema:priceCurrency ] ] ) ] ;
+                        sh:path schema:offers ] ] ) ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/offer-pricetype-active-price-missing> a sh:NodeShape ;
+    sh:message "If any priceSpecification of the Offer under a Product's offers (AggregateOffer is not checked) has priceType, the Offer must also have price or a priceSpecification with a price and neither priceType nor validForMemberTier." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:node [ sh:or ( [ sh:class schema:AggregateOffer ] [ sh:not [ sh:property [ sh:path schema:priceSpecification ;
+                                                            sh:qualifiedMinCount 1 ;
+                                                            sh:qualifiedValueShape [ sh:property [ sh:minCount 1 ;
+                                                                            sh:path schema:priceType ] ] ] ] ] [ sh:property [ sh:minCount 1 ;
+                                                    sh:path schema:price ] ] [ sh:property [ sh:path schema:priceSpecification ;
+                                                    sh:qualifiedMinCount 1 ;
+                                                    sh:qualifiedValueShape [ sh:property [ sh:minCount 1 ;
+                                                                    sh:path schema:price ],
+                                                                [ sh:maxCount 0 ;
+                                                                    sh:path schema:priceType ],
+                                                                [ sh:maxCount 0 ;
+                                                                    sh:path schema:validForMemberTier ] ] ] ] ) ] ;
+                        sh:path schema:offers ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/offer-pricevaliduntil-missing> a sh:NodeShape ;
+    sh:message "the Offer under a Product's offers (AggregateOffer is not checked) should have priceValidUntil." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:node [ sh:or ( [ sh:class schema:AggregateOffer ] [ sh:property [ sh:minCount 1 ;
+                                                    sh:path schema:priceValidUntil ] ] ) ] ;
+                        sh:path schema:offers ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/offer-shippingdetails-missing> a sh:NodeShape ;
+    sh:message "the Offer under a Product's offers (AggregateOffer is not checked) should have shippingDetails." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:node [ sh:or ( [ sh:class schema:AggregateOffer ] [ sh:property [ sh:minCount 1 ;
+                                                    sh:path schema:shippingDetails ] ] ) ] ;
+                        sh:path schema:offers ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/offer-url-missing> a sh:NodeShape ;
+    sh:message "the Offer under a Product's offers (AggregateOffer is not checked) should have url." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:node [ sh:or ( [ sh:class schema:AggregateOffer ] [ sh:property [ sh:minCount 1 ;
+                                                    sh:path schema:url ] ] ) ] ;
+                        sh:path schema:offers ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/offer-url-multiple> a sh:NodeShape ;
+    sh:message "the Offer under a Product's offers (AggregateOffer is not checked) must not have multiple url values." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:node [ sh:or ( [ sh:class schema:AggregateOffer ] [ sh:property [ sh:maxCount 1 ;
+                                                    sh:path schema:url ] ] ) ] ;
+                        sh:path schema:offers ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/offer-validformembertier-regular-price-missing> a sh:NodeShape ;
+    sh:message "If any priceSpecification of the Offer under a Product's offers (AggregateOffer is not checked) has validForMemberTier, the Offer must also have price or a priceSpecification with a price and neither priceType nor validForMemberTier." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:node [ sh:or ( [ sh:class schema:AggregateOffer ] [ sh:not [ sh:property [ sh:path schema:priceSpecification ;
+                                                            sh:qualifiedMinCount 1 ;
+                                                            sh:qualifiedValueShape [ sh:property [ sh:minCount 1 ;
+                                                                            sh:path schema:validForMemberTier ] ] ] ] ] [ sh:property [ sh:minCount 1 ;
+                                                    sh:path schema:price ] ] [ sh:property [ sh:path schema:priceSpecification ;
+                                                    sh:qualifiedMinCount 1 ;
+                                                    sh:qualifiedValueShape [ sh:property [ sh:minCount 1 ;
+                                                                    sh:path schema:price ],
+                                                                [ sh:maxCount 0 ;
+                                                                    sh:path schema:priceType ],
+                                                                [ sh:maxCount 0 ;
+                                                                    sh:path schema:validForMemberTier ] ] ] ] ) ] ;
+                        sh:path schema:offers ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/offer-validfrom-missing> a sh:NodeShape ;
+    sh:message "the Offer under a Product's offers (AggregateOffer is not checked) should have validFrom." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:node [ sh:or ( [ sh:class schema:AggregateOffer ] [ sh:property [ sh:minCount 1 ;
+                                                    sh:path schema:validFrom ] ] ) ] ;
+                        sh:path schema:offers ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/offer-validthrough-missing> a sh:NodeShape ;
+    sh:message "the Offer under a Product's offers (AggregateOffer is not checked) should have validThrough." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:node [ sh:or ( [ sh:class schema:AggregateOffer ] [ sh:property [ sh:minCount 1 ;
+                                                    sh:path schema:validThrough ] ] ) ] ;
+                        sh:path schema:offers ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/offershippingdetails-deliverytime-missing> a sh:NodeShape ;
+    sh:message "every OfferShippingDetails node without hasShippingService must have deliveryTime." ;
+    sh:or ( [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:hasShippingService ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:deliveryTime ] ] ) ;
+    sh:targetClass schema:OfferShippingDetails .
+
+<https://wordlift.io/shacl/google/merchant-listing/offershippingdetails-deliverytime-multiple> a sh:NodeShape ;
+    sh:message "every OfferShippingDetails node must have at most one deliveryTime." ;
+    sh:or ( [ sh:property [ sh:maxCount 1 ;
+                        sh:path schema:deliveryTime ] ] ) ;
+    sh:targetClass schema:OfferShippingDetails .
+
+<https://wordlift.io/shacl/google/merchant-listing/offershippingdetails-shippingdestination-missing> a sh:NodeShape ;
+    sh:message "every OfferShippingDetails node without hasShippingService must have shippingDestination." ;
+    sh:or ( [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:hasShippingService ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:shippingDestination ] ] ) ;
+    sh:targetClass schema:OfferShippingDetails .
+
+<https://wordlift.io/shacl/google/merchant-listing/offershippingdetails-shippingrate-missing> a sh:NodeShape ;
+    sh:message "every OfferShippingDetails node without hasShippingService must have shippingRate." ;
+    sh:or ( [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:hasShippingService ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:shippingRate ] ] ) ;
+    sh:targetClass schema:OfferShippingDetails .
+
+<https://wordlift.io/shacl/google/merchant-listing/offershippingdetails-shippingrate-multiple> a sh:NodeShape ;
+    sh:message "every OfferShippingDetails node must have at most one shippingRate." ;
+    sh:or ( [ sh:property [ sh:maxCount 1 ;
+                        sh:path schema:shippingRate ] ] ) ;
+    sh:targetClass schema:OfferShippingDetails .
+
+<https://wordlift.io/shacl/google/merchant-listing/peopleaudience-suggestedgender-missing> a sh:NodeShape ;
+    sh:message "Every PeopleAudience should have suggestedGender." ;
+    sh:or ( [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:suggestedGender ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:MedicalAudience,
+        schema:ParentAudience,
+        schema:Patient,
+        schema:PeopleAudience .
+
+<https://wordlift.io/shacl/google/merchant-listing/peopleaudience-suggestedgender-value> a sh:NodeShape ;
+    sh:message "Every suggestedGender of a PeopleAudience must be https://schema.org/Male, https://schema.org/Female, or male, female, unisex (case-insensitive)." ;
+    sh:or ( [ sh:property [ sh:or ( [ sh:in ( schema:Male <https://schema.org/Male> "http://schema.org/Male" "https://schema.org/Male" schema:Female <https://schema.org/Female> "http://schema.org/Female" "https://schema.org/Female" ) ] [ sh:flags "i" ;
+                                    sh:pattern "^(male|female|unisex)$" ] ) ;
+                        sh:path schema:suggestedGender ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:MedicalAudience,
+        schema:ParentAudience,
+        schema:Patient,
+        schema:PeopleAudience .
+
+<https://wordlift.io/shacl/google/merchant-listing/peopleaudience-suggestedmaxage-missing> a sh:NodeShape ;
+    sh:message "Every PeopleAudience should have suggestedMaxAge (or suggestedAge.maxValue), unless its minimum age is 13 or more (adults)." ;
+    sh:or ( [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:alternativePath ( schema:suggestedMaxAge ( schema:suggestedAge schema:maxValue ) ) ] ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:or ( [ sh:minInclusive 13 ] [ sh:pattern "^ *(1[3-9]|[2-9][0-9]|[0-9]{3,})(\\.[0-9]+)? *$" ] ) ;
+                        sh:path [ sh:alternativePath ( schema:suggestedMinAge ( schema:suggestedAge schema:minValue ) ) ] ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:MedicalAudience,
+        schema:ParentAudience,
+        schema:Patient,
+        schema:PeopleAudience .
+
+<https://wordlift.io/shacl/google/merchant-listing/peopleaudience-suggestedminage-missing> a sh:NodeShape ;
+    sh:message "Every PeopleAudience should have suggestedMinAge (or suggestedAge.minValue)." ;
+    sh:or ( [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:alternativePath ( schema:suggestedMinAge ( schema:suggestedAge schema:minValue ) ) ] ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:MedicalAudience,
+        schema:ParentAudience,
+        schema:Patient,
+        schema:PeopleAudience .
+
+<https://wordlift.io/shacl/google/merchant-listing/product-aggregaterating-missing> a sh:NodeShape ;
+    sh:message "the Product (a Product node, including subtypes, that has an offers value; ProductGroup itself is excluded) should have aggregateRating." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:aggregateRating ] ] [ sh:property [ sh:maxCount 0 ;
+                        sh:path schema:offers ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/product-audience-missing> a sh:NodeShape ;
+    sh:message "the Product (a Product node, including subtypes, that has an offers value; ProductGroup itself is excluded) should have audience." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:audience ] ] [ sh:property [ sh:maxCount 0 ;
+                        sh:path schema:offers ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/product-brand-name-missing> a sh:NodeShape ;
+    sh:message "the Product (a Product node, including subtypes, that has an offers value; ProductGroup itself is excluded) should have a brand (under brand) that has a name. A plain string brand has no name." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:minCount 1 ;
+                        sh:path ( schema:brand schema:name ) ] ] [ sh:property [ sh:maxCount 0 ;
+                        sh:path schema:offers ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/product-brand-name-multiple> a sh:NodeShape ;
+    sh:message "The brand node(s) of the Product (a Product node, including subtypes, that has an offers value; ProductGroup itself is excluded) must carry at most one name value in total." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:maxCount 1 ;
+                        sh:path ( schema:brand schema:name ) ] ] [ sh:property [ sh:maxCount 0 ;
+                        sh:path schema:offers ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/product-category-missing> a sh:NodeShape ;
+    sh:message "the Product (a Product node, including subtypes, that has an offers value; ProductGroup itself is excluded) should have category." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:category ] ] [ sh:property [ sh:maxCount 0 ;
+                        sh:path schema:offers ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/product-color-missing> a sh:NodeShape ;
+    sh:message "the Product (a Product node, including subtypes, that has an offers value; ProductGroup itself is excluded) should have color." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:color ] ] [ sh:property [ sh:maxCount 0 ;
+                        sh:path schema:offers ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/product-description-missing> a sh:NodeShape ;
+    sh:message "the Product (a Product node, including subtypes, that has an offers value; ProductGroup itself is excluded) should have description." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:description ] ] [ sh:property [ sh:maxCount 0 ;
+                        sh:path schema:offers ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/product-gtin-missing> a sh:NodeShape ;
+    sh:message "the Product (a Product node, including subtypes, that has an offers value; ProductGroup itself is excluded) should have at least one of gtin, gtin8, gtin12, gtin13, gtin14, isbn." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:alternativePath ( schema:gtin schema:gtin8 schema:gtin12 schema:gtin13 schema:gtin14 schema:isbn ) ] ] ] [ sh:property [ sh:maxCount 0 ;
+                        sh:path schema:offers ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/product-hasadultconsideration-missing> a sh:NodeShape ;
+    sh:message "the Product (a Product node, including subtypes, that has an offers value; ProductGroup itself is excluded) should have hasAdultConsideration." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:hasAdultConsideration ] ] [ sh:property [ sh:maxCount 0 ;
+                        sh:path schema:offers ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/product-hasadultconsideration-value> a sh:NodeShape ;
+    sh:message "Every hasAdultConsideration value of the Product (a Product node, including subtypes, that has an offers value; ProductGroup itself is excluded) must be https://schema.org/SexualContentConsideration." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:in ( schema:SexualContentConsideration <https://schema.org/SexualContentConsideration> "http://schema.org/SexualContentConsideration" "https://schema.org/SexualContentConsideration" ) ;
+                        sh:path schema:hasAdultConsideration ] ] [ sh:property [ sh:maxCount 0 ;
+                        sh:path schema:offers ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/product-hascertification-missing> a sh:NodeShape ;
+    sh:message "the Product (a Product node, including subtypes, that has an offers value; ProductGroup itself is excluded) should have hasCertification." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:hasCertification ] ] [ sh:property [ sh:maxCount 0 ;
+                        sh:path schema:offers ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/product-hascertification-too-many> a sh:NodeShape ;
+    sh:message "the Product (a Product node, including subtypes, that has an offers value; ProductGroup itself is excluded) must have at most 10 hasCertification values." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:maxCount 10 ;
+                        sh:path schema:hasCertification ] ] [ sh:property [ sh:maxCount 0 ;
+                        sh:path schema:offers ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/product-image-missing> a sh:NodeShape ;
+    sh:message "the Product (a Product node, including subtypes, that has an offers value; ProductGroup itself is excluded) must have image." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:image ] ] [ sh:property [ sh:maxCount 0 ;
+                        sh:path schema:offers ] ] ) ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/product-inproductgroupwithid-missing> a sh:NodeShape ;
+    sh:message "the Product (a Product node, including subtypes, that has an offers value; ProductGroup itself is excluded) should have `inProductGroupWithID`." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:maxCount 0 ;
+                        sh:path schema:offers ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:inProductGroupWithID ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/product-inproductgroupwithid-multiple> a sh:NodeShape ;
+    sh:message "the Product (a Product node, including subtypes, that has an offers value; ProductGroup itself is excluded) must have at most one inProductGroupWithID value." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:maxCount 1 ;
+                        sh:path schema:inProductGroupWithID ] ] [ sh:property [ sh:maxCount 0 ;
+                        sh:path schema:offers ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/product-isvariantof-missing> a sh:NodeShape ;
+    sh:message "the Product (a Product node, including subtypes, that has an offers value; ProductGroup itself is excluded) should have `isVariantOf`." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:maxCount 0 ;
+                        sh:path schema:offers ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:isVariantOf ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/product-material-missing> a sh:NodeShape ;
+    sh:message "the Product (a Product node, including subtypes, that has an offers value; ProductGroup itself is excluded) should have material." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:material ] ] [ sh:property [ sh:maxCount 0 ;
+                        sh:path schema:offers ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/product-mpn-missing> a sh:NodeShape ;
+    sh:message "the Product (a Product node, including subtypes, that has an offers value; ProductGroup itself is excluded) should have mpn." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:mpn ] ] [ sh:property [ sh:maxCount 0 ;
+                        sh:path schema:offers ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/product-name-missing> a sh:NodeShape ;
+    sh:message "the Product (a Product node, including subtypes, that has an offers value; ProductGroup itself is excluded) must have name." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:name ] ] [ sh:property [ sh:maxCount 0 ;
+                        sh:path schema:offers ] ] ) ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/product-offers-offer-missing> a sh:NodeShape ;
+    sh:message "the Product (a Product node, including subtypes, that has an offers value; ProductGroup itself is excluded) must have at least one Offer under offers; an offers that holds only AggregateOffer values is an error, an Offer next to an AggregateOffer is accepted." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:maxCount 0 ;
+                        sh:path schema:offers ] ] [ sh:property [ sh:path schema:offers ;
+                        sh:qualifiedMinCount 1 ;
+                        sh:qualifiedValueShape [ sh:and ( [ sh:or ( [ sh:class schema:Offer ] [ sh:class schema:AggregateOffer ] [ sh:class schema:OfferForLease ] [ sh:class schema:OfferForPurchase ] ) ] [ sh:not [ sh:class schema:AggregateOffer ] ] ) ] ] ] ) ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/product-pattern-missing> a sh:NodeShape ;
+    sh:message "the Product (a Product node, including subtypes, that has an offers value; ProductGroup itself is excluded) should have pattern." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:pattern ] ] [ sh:property [ sh:maxCount 0 ;
+                        sh:path schema:offers ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/product-review-missing> a sh:NodeShape ;
+    sh:message "the Product (a Product node, including subtypes, that has an offers value; ProductGroup itself is excluded) should have review." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:review ] ] [ sh:property [ sh:maxCount 0 ;
+                        sh:path schema:offers ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/product-size-missing> a sh:NodeShape ;
+    sh:message "the Product (a Product node, including subtypes, that has an offers value; ProductGroup itself is excluded) should have size." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:size ] ] [ sh:property [ sh:maxCount 0 ;
+                        sh:path schema:offers ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/product-size-multiple> a sh:NodeShape ;
+    sh:message "the Product (a Product node, including subtypes, that has an offers value; ProductGroup itself is excluded) must have at most one size value." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:maxCount 1 ;
+                        sh:path schema:size ] ] [ sh:property [ sh:maxCount 0 ;
+                        sh:path schema:offers ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/product-sku-missing> a sh:NodeShape ;
+    sh:message "the Product (a Product node, including subtypes, that has an offers value; ProductGroup itself is excluded) should have sku." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:sku ] ] [ sh:property [ sh:maxCount 0 ;
+                        sh:path schema:offers ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/product-sku-multiple> a sh:NodeShape ;
+    sh:message "the Product (a Product node, including subtypes, that has an offers value; ProductGroup itself is excluded) must have at most one sku value." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:maxCount 1 ;
+                        sh:path schema:sku ] ] [ sh:property [ sh:maxCount 0 ;
+                        sh:path schema:offers ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/product-sku-whitespace> a sh:NodeShape ;
+    sh:message "A sku value of the Product (a Product node, including subtypes, that has an offers value; ProductGroup itself is excluded) must not contain whitespace." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:path schema:sku ;
+                        sh:pattern "^\\S*$" ] ] [ sh:property [ sh:maxCount 0 ;
+                        sh:path schema:offers ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/product-subjectof-missing> a sh:NodeShape ;
+    sh:message "the Product (a Product node, including subtypes, that has an offers value; ProductGroup itself is excluded) should have `subjectOf`." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:maxCount 0 ;
+                        sh:path schema:offers ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:subjectOf ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/product-subjectof-multiple> a sh:NodeShape ;
+    sh:message "the Product (a Product node, including subtypes, that has an offers value; ProductGroup itself is excluded) must have at most one 3DModel under subjectOf." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:path schema:subjectOf ;
+                        sh:qualifiedMaxCount 1 ;
+                        sh:qualifiedValueShape [ sh:class schema:3DModel ] ] ] [ sh:property [ sh:maxCount 0 ;
+                        sh:path schema:offers ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/referencequantity-unitcode-missing> a sh:NodeShape ;
+    sh:message "the QuantitativeValue under such a UnitPriceSpecification's referenceQuantity must have unitCode." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:node [ sh:or ( [ sh:class schema:AggregateOffer ] [ sh:property [ sh:node [ sh:or ( [ sh:not [ sh:class schema:UnitPriceSpecification ] ] [ sh:property [ sh:node [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                                                                                            sh:path schema:unitCode ] ] ) ] ;
+                                                                                sh:path schema:referenceQuantity ] ] ) ] ;
+                                                    sh:path schema:priceSpecification ] ] ) ] ;
+                        sh:path schema:offers ] ] ) ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/referencequantity-unitcode-unsupported> a sh:NodeShape ;
+    sh:message "The unitCode of the QuantitativeValue under such a UnitPriceSpecification's referenceQuantity must not be sheet or item." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:node [ sh:or ( [ sh:class schema:AggregateOffer ] [ sh:property [ sh:node [ sh:or ( [ sh:not [ sh:class schema:UnitPriceSpecification ] ] [ sh:property [ sh:node [ sh:or ( [ sh:property [ sh:not [ sh:in ( "sheet" "item" ) ] ;
+                                                                                                            sh:path schema:unitCode ] ] ) ] ;
+                                                                                sh:path schema:referenceQuantity ] ] ) ] ;
+                                                    sh:path schema:priceSpecification ] ] ) ] ;
+                        sh:path schema:offers ] ] ) ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/referencequantity-value-missing> a sh:NodeShape ;
+    sh:message "the QuantitativeValue under such a UnitPriceSpecification's referenceQuantity must have value." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:node [ sh:or ( [ sh:class schema:AggregateOffer ] [ sh:property [ sh:node [ sh:or ( [ sh:not [ sh:class schema:UnitPriceSpecification ] ] [ sh:property [ sh:node [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                                                                                            sh:path schema:value ] ] ) ] ;
+                                                                                sh:path schema:referenceQuantity ] ] ) ] ;
+                                                    sh:path schema:priceSpecification ] ] ) ] ;
+                        sh:path schema:offers ] ] ) ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/referencequantity-valuereference-missing> a sh:NodeShape ;
+    sh:message "the QuantitativeValue under such a UnitPriceSpecification's referenceQuantity should have valueReference." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:node [ sh:or ( [ sh:class schema:AggregateOffer ] [ sh:property [ sh:node [ sh:or ( [ sh:not [ sh:class schema:UnitPriceSpecification ] ] [ sh:property [ sh:node [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                                                                                            sh:path schema:valueReference ] ] ) ] ;
+                                                                                sh:path schema:referenceQuantity ] ] ) ] ;
+                                                    sh:path schema:priceSpecification ] ] ) ] ;
+                        sh:path schema:offers ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/shippingdeliverytime-handlingtime-missing> a sh:NodeShape ;
+    sh:message "Every ShippingDeliveryTime should have handlingTime." ;
+    sh:or ( [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:handlingTime ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:ShippingDeliveryTime .
+
+<https://wordlift.io/shacl/google/merchant-listing/shippingdeliverytime-transittime-missing> a sh:NodeShape ;
+    sh:message "Every ShippingDeliveryTime should have transitTime." ;
+    sh:or ( [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:transitTime ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:ShippingDeliveryTime .
+
+<https://wordlift.io/shacl/google/merchant-listing/shippingrate-currency-mismatch> a sh:NodeShape ;
+    sh:message "the MonetaryAmount under an OfferShippingDetails' shippingRate for an OfferShippingDetails nested under an Offer must have the same currency as that Offer's priceCurrency (checked only when both exist)." ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+            sh:message "the MonetaryAmount under an OfferShippingDetails' shippingRate for an OfferShippingDetails nested under an Offer must have the same currency as that Offer's priceCurrency (checked only when both exist)." ;
+            sh:select "SELECT $this ?value WHERE { $this <http://schema.org/currency> ?value . ?osd <http://schema.org/shippingRate> $this . ?offer <http://schema.org/shippingDetails> ?osd . ?offer <http://schema.org/priceCurrency> ?offerCurrency . FILTER NOT EXISTS { ?offer a <http://schema.org/AggregateOffer> } FILTER (?offerCurrency != ?value) }" ] ;
+    sh:targetObjectsOf schema:shippingRate .
+
+<https://wordlift.io/shacl/google/merchant-listing/shippingrate-currency-missing> a sh:NodeShape ;
+    sh:message "the MonetaryAmount under an OfferShippingDetails' shippingRate must have currency." ;
+    sh:or ( [ sh:property [ sh:node [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                                    sh:path schema:currency ] ] ) ] ;
+                        sh:path schema:shippingRate ] ] ) ;
+    sh:targetClass schema:OfferShippingDetails .
+
+<https://wordlift.io/shacl/google/merchant-listing/shippingrate-value-missing> a sh:NodeShape ;
+    sh:message "the MonetaryAmount under an OfferShippingDetails' shippingRate must have value or maxValue." ;
+    sh:or ( [ sh:property [ sh:node [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                                    sh:path schema:value ] ] [ sh:property [ sh:minCount 1 ;
+                                                    sh:path schema:maxValue ] ] ) ] ;
+                        sh:path schema:shippingRate ] ] ) ;
+    sh:targetClass schema:OfferShippingDetails .
+
+<https://wordlift.io/shacl/google/merchant-listing/shippingtime-maxvalue-invalid> a sh:NodeShape ;
+    sh:message "The maxValue of the QuantitativeValue under a ShippingDeliveryTime's handlingTime or transitTime must be a non-negative whole number." ;
+    sh:or ( [ sh:property [ sh:node [ sh:or ( [ sh:property [ sh:path schema:maxValue ;
+                                                    sh:pattern "^[0-9]+$" ] ] ) ] ;
+                        sh:path [ sh:alternativePath ( schema:handlingTime schema:transitTime ) ] ] ] ) ;
+    sh:targetClass schema:ShippingDeliveryTime .
+
+<https://wordlift.io/shacl/google/merchant-listing/shippingtime-maxvalue-missing> a sh:NodeShape ;
+    sh:message "the QuantitativeValue under a ShippingDeliveryTime's handlingTime or transitTime must have maxValue." ;
+    sh:or ( [ sh:property [ sh:node [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                                    sh:path schema:maxValue ] ] ) ] ;
+                        sh:path [ sh:alternativePath ( schema:handlingTime schema:transitTime ) ] ] ] ) ;
+    sh:targetClass schema:ShippingDeliveryTime .
+
+<https://wordlift.io/shacl/google/merchant-listing/shippingtime-minvalue-invalid> a sh:NodeShape ;
+    sh:message "The minValue of the QuantitativeValue under a ShippingDeliveryTime's handlingTime or transitTime must be a non-negative whole number." ;
+    sh:or ( [ sh:property [ sh:node [ sh:or ( [ sh:property [ sh:path schema:minValue ;
+                                                    sh:pattern "^[0-9]+$" ] ] ) ] ;
+                        sh:path [ sh:alternativePath ( schema:handlingTime schema:transitTime ) ] ] ] ) ;
+    sh:targetClass schema:ShippingDeliveryTime .
+
+<https://wordlift.io/shacl/google/merchant-listing/shippingtime-minvalue-missing> a sh:NodeShape ;
+    sh:message "the QuantitativeValue under a ShippingDeliveryTime's handlingTime or transitTime must have minValue." ;
+    sh:or ( [ sh:property [ sh:node [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                                    sh:path schema:minValue ] ] ) ] ;
+                        sh:path [ sh:alternativePath ( schema:handlingTime schema:transitTime ) ] ] ] ) ;
+    sh:targetClass schema:ShippingDeliveryTime .
+
+<https://wordlift.io/shacl/google/merchant-listing/shippingtime-unitcode-missing> a sh:NodeShape ;
+    sh:message "the QuantitativeValue under a ShippingDeliveryTime's handlingTime or transitTime must have unitCode." ;
+    sh:or ( [ sh:property [ sh:node [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                                    sh:path schema:unitCode ] ] ) ] ;
+                        sh:path [ sh:alternativePath ( schema:handlingTime schema:transitTime ) ] ] ] ) ;
+    sh:targetClass schema:ShippingDeliveryTime .
+
+<https://wordlift.io/shacl/google/merchant-listing/shippingtime-unitcode-value> a sh:NodeShape ;
+    sh:message "The unitCode of the QuantitativeValue under a ShippingDeliveryTime's handlingTime or transitTime must be DAY or d." ;
+    sh:or ( [ sh:property [ sh:node [ sh:or ( [ sh:property [ sh:in ( "DAY" "d" ) ;
+                                                    sh:path schema:unitCode ] ] ) ] ;
+                        sh:path [ sh:alternativePath ( schema:handlingTime schema:transitTime ) ] ] ] ) ;
+    sh:targetClass schema:ShippingDeliveryTime .
+
+<https://wordlift.io/shacl/google/merchant-listing/sizespecification-name-missing> a sh:NodeShape ;
+    sh:message "Every SizeSpecification should have name." ;
+    sh:or ( [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:name ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:SizeSpecification .
+
+<https://wordlift.io/shacl/google/merchant-listing/sizespecification-sizegroup-missing> a sh:NodeShape ;
+    sh:message "Every SizeSpecification should have sizeGroup." ;
+    sh:or ( [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:sizeGroup ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:SizeSpecification .
+
+<https://wordlift.io/shacl/google/merchant-listing/sizespecification-sizegroup-too-many> a sh:NodeShape ;
+    sh:message "Every SizeSpecification must have at most two sizeGroup values." ;
+    sh:or ( [ sh:property [ sh:maxCount 2 ;
+                        sh:path schema:sizeGroup ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:SizeSpecification .
+
+<https://wordlift.io/shacl/google/merchant-listing/sizespecification-sizesystem-missing> a sh:NodeShape ;
+    sh:message "Every SizeSpecification should have sizeSystem." ;
+    sh:or ( [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:sizeSystem ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:SizeSpecification .
+
+<https://wordlift.io/shacl/google/merchant-listing/unitpricespecification-membershippointsearned-missing> a sh:NodeShape ;
+    sh:message "the UnitPriceSpecification under such an Offer's priceSpecification that has validForMemberTier should have membershipPointsEarned." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:node [ sh:or ( [ sh:class schema:AggregateOffer ] [ sh:property [ sh:node [ sh:or ( [ sh:not [ sh:class schema:UnitPriceSpecification ] ] [ sh:property [ sh:maxCount 0 ;
+                                                                                sh:path schema:validForMemberTier ] ] [ sh:property [ sh:minCount 1 ;
+                                                                                sh:path schema:membershipPointsEarned ] ] ) ] ;
+                                                    sh:path schema:priceSpecification ] ] ) ] ;
+                        sh:path schema:offers ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/unitpricespecification-membershippointsearned-without-tier> a sh:NodeShape ;
+    sh:message "the UnitPriceSpecification under such an Offer's priceSpecification that has membershipPointsEarned must also have validForMemberTier." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:node [ sh:or ( [ sh:class schema:AggregateOffer ] [ sh:property [ sh:node [ sh:or ( [ sh:not [ sh:class schema:UnitPriceSpecification ] ] [ sh:property [ sh:maxCount 0 ;
+                                                                                sh:path schema:membershipPointsEarned ] ] [ sh:property [ sh:minCount 1 ;
+                                                                                sh:path schema:validForMemberTier ] ] ) ] ;
+                                                    sh:path schema:priceSpecification ] ] ) ] ;
+                        sh:path schema:offers ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/unitpricespecification-price-missing> a sh:NodeShape ;
+    sh:message "the UnitPriceSpecification under such an Offer's priceSpecification must have price, unless it has membershipPointsEarned." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:node [ sh:or ( [ sh:class schema:AggregateOffer ] [ sh:property [ sh:node [ sh:or ( [ sh:not [ sh:class schema:UnitPriceSpecification ] ] [ sh:property [ sh:minCount 1 ;
+                                                                                sh:path schema:price ] ] [ sh:property [ sh:minCount 1 ;
+                                                                                sh:path schema:membershipPointsEarned ] ] ) ] ;
+                                                    sh:path schema:priceSpecification ] ] ) ] ;
+                        sh:path schema:offers ] ] ) ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/unitpricespecification-price-nonpositive> a sh:NodeShape ;
+    sh:message "The active the UnitPriceSpecification under such an Offer's priceSpecification (no priceType, no validForMemberTier) must have price greater than zero." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:node [ sh:or ( [ sh:class schema:AggregateOffer ] [ sh:property [ sh:node [ sh:or ( [ sh:not [ sh:class schema:UnitPriceSpecification ] ] [ sh:property [ sh:minCount 1 ;
+                                                                                sh:path schema:priceType ] ] [ sh:property [ sh:minCount 1 ;
+                                                                                sh:path schema:validForMemberTier ] ] [ sh:property [ sh:or ( [ sh:minExclusive 0 ] [ sh:pattern "^ *(?=[0-9.]*[1-9])[0-9]*(\\.[0-9]+)? *$" ] ) ;
+                                                                                sh:path schema:price ] ] ) ] ;
+                                                    sh:path schema:priceSpecification ] ] ) ] ;
+                        sh:path schema:offers ] ] ) ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/unitpricespecification-pricecurrency-missing> a sh:NodeShape ;
+    sh:message "the UnitPriceSpecification under such an Offer's priceSpecification must have priceCurrency, unless it has membershipPointsEarned." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:node [ sh:or ( [ sh:class schema:AggregateOffer ] [ sh:property [ sh:node [ sh:or ( [ sh:not [ sh:class schema:UnitPriceSpecification ] ] [ sh:property [ sh:minCount 1 ;
+                                                                                sh:path schema:priceCurrency ] ] [ sh:property [ sh:minCount 1 ;
+                                                                                sh:path schema:membershipPointsEarned ] ] ) ] ;
+                                                    sh:path schema:priceSpecification ] ] ) ] ;
+                        sh:path schema:offers ] ] ) ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/unitpricespecification-pricetype-validformembertier-both> a sh:NodeShape ;
+    sh:message "the UnitPriceSpecification under such an Offer's priceSpecification must not have both priceType and validForMemberTier." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:node [ sh:or ( [ sh:class schema:AggregateOffer ] [ sh:property [ sh:node [ sh:or ( [ sh:not [ sh:class schema:UnitPriceSpecification ] ] [ sh:property [ sh:maxCount 0 ;
+                                                                                sh:path schema:priceType ] ] [ sh:property [ sh:maxCount 0 ;
+                                                                                sh:path schema:validForMemberTier ] ] ) ] ;
+                                                    sh:path schema:priceSpecification ] ] ) ] ;
+                        sh:path schema:offers ] ] ) ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/unitpricespecification-pricetype-value> a sh:NodeShape ;
+    sh:message "A priceType of the UnitPriceSpecification under such an Offer's priceSpecification must be https://schema.org/StrikethroughPrice or https://schema.org/ListPrice." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:node [ sh:or ( [ sh:class schema:AggregateOffer ] [ sh:property [ sh:node [ sh:or ( [ sh:not [ sh:class schema:UnitPriceSpecification ] ] [ sh:property [ sh:in ( schema:StrikethroughPrice <https://schema.org/StrikethroughPrice> "http://schema.org/StrikethroughPrice" "https://schema.org/StrikethroughPrice" schema:ListPrice <https://schema.org/ListPrice> "http://schema.org/ListPrice" "https://schema.org/ListPrice" ) ;
+                                                                                sh:path schema:priceType ] ] ) ] ;
+                                                    sh:path schema:priceSpecification ] ] ) ] ;
+                        sh:path schema:offers ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/unitpricespecification-referencequantity-missing> a sh:NodeShape ;
+    sh:message "the UnitPriceSpecification under such an Offer's priceSpecification should have referenceQuantity." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:node [ sh:or ( [ sh:class schema:AggregateOffer ] [ sh:property [ sh:node [ sh:or ( [ sh:not [ sh:class schema:UnitPriceSpecification ] ] [ sh:property [ sh:minCount 1 ;
+                                                                                sh:path schema:referenceQuantity ] ] ) ] ;
+                                                    sh:path schema:priceSpecification ] ] ) ] ;
+                        sh:path schema:offers ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/unitpricespecification-validfrom-missing> a sh:NodeShape ;
+    sh:message "the UnitPriceSpecification under such an Offer's priceSpecification should have validFrom." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:node [ sh:or ( [ sh:class schema:AggregateOffer ] [ sh:property [ sh:node [ sh:or ( [ sh:not [ sh:class schema:UnitPriceSpecification ] ] [ sh:property [ sh:minCount 1 ;
+                                                                                sh:path schema:validFrom ] ] ) ] ;
+                                                    sh:path schema:priceSpecification ] ] ) ] ;
+                        sh:path schema:offers ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/merchant-listing/unitpricespecification-validthrough-missing> a sh:NodeShape ;
+    sh:message "the UnitPriceSpecification under such an Offer's priceSpecification should have validThrough." ;
+    sh:or ( [ sh:class schema:ProductGroup ] [ sh:property [ sh:node [ sh:or ( [ sh:class schema:AggregateOffer ] [ sh:property [ sh:node [ sh:or ( [ sh:not [ sh:class schema:UnitPriceSpecification ] ] [ sh:property [ sh:minCount 1 ;
+                                                                                sh:path schema:validThrough ] ] ) ] ;
+                                                    sh:path schema:priceSpecification ] ] ) ] ;
+                        sh:path schema:offers ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+

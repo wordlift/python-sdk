@@ -1,64 +1,112 @@
-@prefix : <https://wordlift.io/shacl/google/google-image-license-metadata/> .
-@prefix sh: <http://www.w3.org/ns/shacl#> .
-@prefix schema: <http://schema.org/> .
-
 # Source: https://developers.google.com/search/docs/appearance/structured-data/image-license-metadata
-# Generated: 2026-02-26T15:42:04Z
+# Generated: 2026-11-05T14:35:24Z
 # Notes: required properties => errors; recommended properties => warnings.
+# google-image-license-metadata: 8 rules generated from the Google Search Central doc by the tdd-mvp-3 pipeline.
+# Bundled from per-rule files by harness/bundle.py, schema.org subtypes expanded (targetClass 8, class 0, in 0). Do not edit by hand.
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-:google_ImageObjectShape
-  a sh:NodeShape ;
-  sh:targetClass schema:ImageObject ;
-  sh:property [
-    sh:path schema:acquireLicensePage ;
-    sh:minCount 1 ;
+<https://wordlift.io/shacl/google/image-license-metadata/imageobject-acquirelicensepage-recommended> a sh:NodeShape ;
+    sh:message "Image license metadata: an ImageObject with license information should include acquireLicensePage (recommended)." ;
+    sh:or ( [ sh:not [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                            sh:path schema:creator ] ] [ sh:property [ sh:minCount 1 ;
+                                            sh:path schema:creditText ] ] [ sh:property [ sh:minCount 1 ;
+                                            sh:path schema:copyrightNotice ] ] [ sh:property [ sh:minCount 1 ;
+                                            sh:path schema:license ] ] ) ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:acquireLicensePage ] ] ) ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: acquireLicensePage." ;
-  ] ;
-  sh:property [
-    sh:path ( schema:creator schema:name ) ;
-    sh:minCount 1 ;
+    sh:targetClass schema:Barcode,
+        schema:ImageObject,
+        schema:ImageObjectSnapshot .
+
+<https://wordlift.io/shacl/google/image-license-metadata/imageobject-contenturl-required> a sh:NodeShape ;
+    sh:message "Image license metadata: a claimed ImageObject must have contentUrl, or url when contentUrl is absent." ;
+    sh:or ( [ sh:not [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                            sh:path schema:creator ] ] [ sh:property [ sh:minCount 1 ;
+                                            sh:path schema:creditText ] ] [ sh:property [ sh:minCount 1 ;
+                                            sh:path schema:copyrightNotice ] ] [ sh:property [ sh:minCount 1 ;
+                                            sh:path schema:license ] ] [ sh:property [ sh:minCount 1 ;
+                                            sh:path schema:acquireLicensePage ] ] ) ] ] [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                    sh:path schema:contentUrl ] ] [ sh:property [ sh:minCount 1 ;
+                                    sh:path schema:url ] ] ) ] ) ;
+    sh:targetClass schema:Barcode,
+        schema:ImageObject,
+        schema:ImageObjectSnapshot .
+
+<https://wordlift.io/shacl/google/image-license-metadata/imageobject-copyrightnotice-recommended> a sh:NodeShape ;
+    sh:message "Image license metadata: an ImageObject with image-license properties should include copyrightNotice (recommended)." ;
+    sh:or ( [ sh:not [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                            sh:path schema:creator ] ] [ sh:property [ sh:minCount 1 ;
+                                            sh:path schema:creditText ] ] [ sh:property [ sh:minCount 1 ;
+                                            sh:path schema:copyrightNotice ] ] [ sh:property [ sh:minCount 1 ;
+                                            sh:path schema:license ] ] ) ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:copyrightNotice ] ] ) ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: creator.name." ;
-  ] ;
-  sh:or (
-    [
-      sh:property [
-        sh:path schema:contentUrl ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-    [
-      sh:property [
-        sh:path schema:url ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-  ) ;
-  sh:or (
-    [
-      sh:property [
-        sh:path schema:copyrightNotice ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-    [
-      sh:property [
-        sh:path schema:creator ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-    [
-      sh:property [
-        sh:path schema:creditText ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-    [
-      sh:property [
-        sh:path schema:license ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-  ) ;
-.
+    sh:targetClass schema:Barcode,
+        schema:ImageObject,
+        schema:ImageObjectSnapshot .
+
+<https://wordlift.io/shacl/google/image-license-metadata/imageobject-creator-credittext-copyrightnotice-license-one-required> a sh:NodeShape ;
+    sh:message "Image license metadata: an ImageObject with acquireLicensePage must also include one of creator, creditText, copyrightNotice or license." ;
+    sh:or ( [ sh:property [ sh:maxCount 0 ;
+                        sh:path schema:acquireLicensePage ] ] [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                    sh:path schema:creator ] ] [ sh:property [ sh:minCount 1 ;
+                                    sh:path schema:creditText ] ] [ sh:property [ sh:minCount 1 ;
+                                    sh:path schema:copyrightNotice ] ] [ sh:property [ sh:minCount 1 ;
+                                    sh:path schema:license ] ] ) ] ) ;
+    sh:targetClass schema:Barcode,
+        schema:ImageObject,
+        schema:ImageObjectSnapshot .
+
+<https://wordlift.io/shacl/google/image-license-metadata/imageobject-creator-name-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "Image license metadata: each creator of an ImageObject should have a name (recommended)." ;
+            sh:path schema:creator ;
+            sh:qualifiedMaxCount 0 ;
+            sh:qualifiedValueShape [ sh:not [ sh:property [ sh:minCount 1 ;
+                                    sh:path schema:name ] ] ] ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:Barcode,
+        schema:ImageObject,
+        schema:ImageObjectSnapshot .
+
+<https://wordlift.io/shacl/google/image-license-metadata/imageobject-creator-recommended> a sh:NodeShape ;
+    sh:message "Image license metadata: an ImageObject with image-license properties should include creator (recommended)." ;
+    sh:or ( [ sh:not [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                            sh:path schema:creator ] ] [ sh:property [ sh:minCount 1 ;
+                                            sh:path schema:creditText ] ] [ sh:property [ sh:minCount 1 ;
+                                            sh:path schema:copyrightNotice ] ] [ sh:property [ sh:minCount 1 ;
+                                            sh:path schema:license ] ] ) ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:creator ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:Barcode,
+        schema:ImageObject,
+        schema:ImageObjectSnapshot .
+
+<https://wordlift.io/shacl/google/image-license-metadata/imageobject-credittext-recommended> a sh:NodeShape ;
+    sh:message "Image license metadata: an ImageObject with image-license properties should include creditText (recommended)." ;
+    sh:or ( [ sh:not [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                            sh:path schema:creator ] ] [ sh:property [ sh:minCount 1 ;
+                                            sh:path schema:creditText ] ] [ sh:property [ sh:minCount 1 ;
+                                            sh:path schema:copyrightNotice ] ] [ sh:property [ sh:minCount 1 ;
+                                            sh:path schema:license ] ] ) ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:creditText ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:Barcode,
+        schema:ImageObject,
+        schema:ImageObjectSnapshot .
+
+<https://wordlift.io/shacl/google/image-license-metadata/imageobject-license-recommended> a sh:NodeShape ;
+    sh:message "Image license metadata: an ImageObject with image-license properties should include license (recommended)." ;
+    sh:or ( [ sh:not [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                            sh:path schema:creator ] ] [ sh:property [ sh:minCount 1 ;
+                                            sh:path schema:creditText ] ] [ sh:property [ sh:minCount 1 ;
+                                            sh:path schema:copyrightNotice ] ] [ sh:property [ sh:minCount 1 ;
+                                            sh:path schema:license ] ] ) ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:license ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:Barcode,
+        schema:ImageObject,
+        schema:ImageObjectSnapshot .
+

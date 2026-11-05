@@ -1,136 +1,463 @@
-@prefix : <https://wordlift.io/shacl/google/google-vacation-rental/> .
-@prefix sh: <http://www.w3.org/ns/shacl#> .
-@prefix schema: <http://schema.org/> .
-
 # Source: https://developers.google.com/search/docs/appearance/structured-data/vacation-rental
-# Generated: 2026-02-26T15:42:21Z
+# Generated: 2026-11-05T14:35:24Z
 # Notes: required properties => errors; recommended properties => warnings.
+# google-vacation-rental: 40 rules generated from the Google Search Central doc by the tdd-mvp-3 pipeline.
+# Bundled from per-rule files by harness/bundle.py, schema.org subtypes expanded (targetClass 0, class 12, in 0). Do not edit by hand.
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-:google_VacationRentalShape
-  a sh:NodeShape ;
-  sh:targetClass schema:VacationRental ;
-  sh:property [
-    sh:path schema:containsPlace ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path ( schema:containsPlace schema:occupancy ) ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path ( schema:containsPlace schema:occupancy schema:value ) ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path ( schema:geo schema:latitude ) ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path ( schema:geo schema:longitude ) ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:identifier ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:image ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:latitude ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:longitude ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:name ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:additionalType ;
-    sh:minCount 1 ;
+<https://wordlift.io/shacl/google/vacation-rental/vacationrental-additionaltype-recommended> a sh:NodeShape ;
+    sh:message "A VacationRental should have an additionalType." ;
+    sh:or ( [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:item ] ] ] [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:itemListElement ] ] ] ) ] [ sh:property [ sh:message "A VacationRental should have an additionalType." ;
+                        sh:minCount 1 ;
+                        sh:path schema:additionalType ] ] ) ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: additionalType." ;
-  ] ;
-  sh:property [
-    sh:path schema:address ;
-    sh:minCount 1 ;
+    sh:targetClass schema:VacationRental .
+
+<https://wordlift.io/shacl/google/vacation-rental/vacationrental-address-addresscountry-recommended> a sh:NodeShape ;
+    sh:message "The address of a VacationRental should have addressCountry." ;
+    sh:or ( [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:item ] ] ] [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:itemListElement ] ] ] ) ] [ sh:property [ sh:message "The address of a VacationRental should have addressCountry." ;
+                        sh:path schema:address ;
+                        sh:qualifiedMaxCount 0 ;
+                        sh:qualifiedValueShape [ sh:property [ sh:maxCount 0 ;
+                                        sh:path schema:addressCountry ] ] ] ] ) ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: address." ;
-  ] ;
-  sh:property [
-    sh:path ( schema:address schema:addressCountry ) ;
-    sh:minCount 1 ;
+    sh:targetClass schema:VacationRental .
+
+<https://wordlift.io/shacl/google/vacation-rental/vacationrental-address-addresslocality-recommended> a sh:NodeShape ;
+    sh:message "The address of a VacationRental should have addressLocality." ;
+    sh:or ( [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:item ] ] ] [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:itemListElement ] ] ] ) ] [ sh:property [ sh:message "The address of a VacationRental should have addressLocality." ;
+                        sh:path schema:address ;
+                        sh:qualifiedMaxCount 0 ;
+                        sh:qualifiedValueShape [ sh:property [ sh:maxCount 0 ;
+                                        sh:path schema:addressLocality ] ] ] ] ) ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: address.addressCountry." ;
-  ] ;
-  sh:property [
-    sh:path ( schema:address schema:addressLocality ) ;
-    sh:minCount 1 ;
+    sh:targetClass schema:VacationRental .
+
+<https://wordlift.io/shacl/google/vacation-rental/vacationrental-address-addressregion-recommended> a sh:NodeShape ;
+    sh:message "The address of a VacationRental should have addressRegion." ;
+    sh:or ( [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:item ] ] ] [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:itemListElement ] ] ] ) ] [ sh:property [ sh:message "The address of a VacationRental should have addressRegion." ;
+                        sh:path schema:address ;
+                        sh:qualifiedMaxCount 0 ;
+                        sh:qualifiedValueShape [ sh:property [ sh:maxCount 0 ;
+                                        sh:path schema:addressRegion ] ] ] ] ) ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: address.addressLocality." ;
-  ] ;
-  sh:property [
-    sh:path ( schema:address schema:addressRegion ) ;
-    sh:minCount 1 ;
+    sh:targetClass schema:VacationRental .
+
+<https://wordlift.io/shacl/google/vacation-rental/vacationrental-address-postalcode-recommended> a sh:NodeShape ;
+    sh:message "The address of a VacationRental should have postalCode." ;
+    sh:or ( [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:item ] ] ] [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:itemListElement ] ] ] ) ] [ sh:property [ sh:message "The address of a VacationRental should have postalCode." ;
+                        sh:path schema:address ;
+                        sh:qualifiedMaxCount 0 ;
+                        sh:qualifiedValueShape [ sh:property [ sh:maxCount 0 ;
+                                        sh:path schema:postalCode ] ] ] ] ) ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: address.addressRegion." ;
-  ] ;
-  sh:property [
-    sh:path ( schema:address schema:postalCode ) ;
-    sh:minCount 1 ;
+    sh:targetClass schema:VacationRental .
+
+<https://wordlift.io/shacl/google/vacation-rental/vacationrental-address-recommended> a sh:NodeShape ;
+    sh:message "A VacationRental should have an address." ;
+    sh:or ( [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:item ] ] ] [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:itemListElement ] ] ] ) ] [ sh:property [ sh:message "A VacationRental should have an address." ;
+                        sh:minCount 1 ;
+                        sh:path schema:address ] ] ) ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: address.postalCode." ;
-  ] ;
-  sh:property [
-    sh:path ( schema:address schema:streetAddress ) ;
-    sh:minCount 1 ;
+    sh:targetClass schema:VacationRental .
+
+<https://wordlift.io/shacl/google/vacation-rental/vacationrental-address-streetaddress-recommended> a sh:NodeShape ;
+    sh:message "The address of a VacationRental should have streetAddress." ;
+    sh:or ( [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:item ] ] ] [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:itemListElement ] ] ] ) ] [ sh:property [ sh:message "The address of a VacationRental should have streetAddress." ;
+                        sh:path schema:address ;
+                        sh:qualifiedMaxCount 0 ;
+                        sh:qualifiedValueShape [ sh:property [ sh:maxCount 0 ;
+                                        sh:path schema:streetAddress ] ] ] ] ) ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: address.streetAddress." ;
-  ] ;
-  sh:property [
-    sh:path schema:aggregateRating ;
-    sh:minCount 1 ;
+    sh:targetClass schema:VacationRental .
+
+<https://wordlift.io/shacl/google/vacation-rental/vacationrental-aggregaterating-recommended> a sh:NodeShape ;
+    sh:message "A VacationRental should have an aggregateRating." ;
+    sh:or ( [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:item ] ] ] [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:itemListElement ] ] ] ) ] [ sh:property [ sh:message "A VacationRental should have an aggregateRating." ;
+                        sh:minCount 1 ;
+                        sh:path schema:aggregateRating ] ] ) ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: aggregateRating." ;
-  ] ;
-  sh:property [
-    sh:path schema:brand ;
-    sh:minCount 1 ;
+    sh:targetClass schema:VacationRental .
+
+<https://wordlift.io/shacl/google/vacation-rental/vacationrental-brand-recommended> a sh:NodeShape ;
+    sh:message "A VacationRental should have a brand." ;
+    sh:or ( [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:item ] ] ] [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:itemListElement ] ] ] ) ] [ sh:property [ sh:message "A VacationRental should have a brand." ;
+                        sh:minCount 1 ;
+                        sh:path schema:brand ] ] ) ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: brand." ;
-  ] ;
-  sh:property [
-    sh:path schema:checkinTime ;
-    sh:minCount 1 ;
+    sh:targetClass schema:VacationRental .
+
+<https://wordlift.io/shacl/google/vacation-rental/vacationrental-checkintime-recommended> a sh:NodeShape ;
+    sh:message "A VacationRental should have a checkinTime." ;
+    sh:or ( [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:item ] ] ] [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:itemListElement ] ] ] ) ] [ sh:property [ sh:message "A VacationRental should have a checkinTime." ;
+                        sh:minCount 1 ;
+                        sh:path schema:checkinTime ] ] ) ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: checkinTime." ;
-  ] ;
-  sh:property [
-    sh:path schema:checkoutTime ;
-    sh:minCount 1 ;
+    sh:targetClass schema:VacationRental .
+
+<https://wordlift.io/shacl/google/vacation-rental/vacationrental-checkouttime-recommended> a sh:NodeShape ;
+    sh:message "A VacationRental should have a checkoutTime." ;
+    sh:or ( [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:item ] ] ] [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:itemListElement ] ] ] ) ] [ sh:property [ sh:message "A VacationRental should have a checkoutTime." ;
+                        sh:minCount 1 ;
+                        sh:path schema:checkoutTime ] ] ) ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: checkoutTime." ;
-  ] ;
-  sh:property [
-    sh:path ( schema:containsPlace schema:additionalType ) ;
-    sh:minCount 1 ;
+    sh:targetClass schema:VacationRental .
+
+<https://wordlift.io/shacl/google/vacation-rental/vacationrental-containsplace-additionaltype-recommended> a sh:NodeShape ;
+    sh:message "The Accommodation under containsPlace should have an additionalType." ;
+    sh:or ( [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:item ] ] ] [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:itemListElement ] ] ] ) ] [ sh:property [ sh:message "The Accommodation under containsPlace should have an additionalType." ;
+                        sh:path schema:containsPlace ;
+                        sh:qualifiedMaxCount 0 ;
+                        sh:qualifiedValueShape [ sh:or ( [ sh:class schema:Accommodation ] [ sh:class schema:Apartment ] [ sh:class schema:CampingPitch ] [ sh:class schema:HotelRoom ] [ sh:class schema:House ] [ sh:class schema:MeetingRoom ] [ sh:class schema:Room ] [ sh:class schema:SingleFamilyResidence ] [ sh:class schema:Suite ] ) ;
+                                sh:property [ sh:maxCount 0 ;
+                                        sh:path schema:additionalType ] ] ] ] ) ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: containsPlace.additionalType." ;
-  ] ;
-  sh:property [
-    sh:path ( schema:containsPlace schema:amenityFeature ) ;
-    sh:minCount 1 ;
+    sh:targetClass schema:VacationRental .
+
+<https://wordlift.io/shacl/google/vacation-rental/vacationrental-containsplace-additionaltype-value> a sh:NodeShape ;
+    sh:message "The additionalType of the Accommodation under containsPlace must be EntirePlace, PrivateRoom or SharedRoom." ;
+    sh:or ( [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:item ] ] ] [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:itemListElement ] ] ] ) ] [ sh:property [ sh:in ( "EntirePlace" "PrivateRoom" "SharedRoom" ) ;
+                        sh:message "The additionalType of the Accommodation under containsPlace must be EntirePlace, PrivateRoom or SharedRoom." ;
+                        sh:path ( schema:containsPlace schema:additionalType ) ] ] ) ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: containsPlace.amenityFeature." ;
-  ] ;
-  sh:property [
-    sh:path schema:smokingAllowed ;
-    sh:minCount 1 ;
+    sh:targetClass schema:VacationRental .
+
+<https://wordlift.io/shacl/google/vacation-rental/vacationrental-containsplace-amenityfeature-name-value> a sh:NodeShape ;
+    sh:message "An amenityFeature name of the Accommodation under containsPlace must be one of the listed names." ;
+    sh:or ( [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:item ] ] ] [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:itemListElement ] ] ] ) ] [ sh:property [ sh:in ( "ac" "airportShuttle" "balcony" "beachAccess" "childFriendly" "crib" "elevator" "fireplace" "freeBreakfast" "gymFitnessEquipment" "heating" "hotTub" "instantBookable" "ironingBoard" "kitchen" "microwave" "outdoorGrill" "ovenStove" "patio" "petsAllowed" "pool" "privateBeachAccess" "selfCheckinCheckout" "smokingAllowed" "tv" "washerDryer" "wheelchairAccessible" "wifi" "internetType" "parkingType" "poolType" "licenseNum" ) ;
+                        sh:message "An amenityFeature name of the Accommodation under containsPlace must be one of the listed names." ;
+                        sh:path ( schema:containsPlace schema:amenityFeature schema:name ) ] ] ) ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: smokingAllowed." ;
-  ] ;
-.
+    sh:targetClass schema:VacationRental .
+
+<https://wordlift.io/shacl/google/vacation-rental/vacationrental-containsplace-amenityfeature-recommended> a sh:NodeShape ;
+    sh:message "The Accommodation under containsPlace should have an amenityFeature." ;
+    sh:or ( [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:item ] ] ] [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:itemListElement ] ] ] ) ] [ sh:property [ sh:message "The Accommodation under containsPlace should have an amenityFeature." ;
+                        sh:path schema:containsPlace ;
+                        sh:qualifiedMaxCount 0 ;
+                        sh:qualifiedValueShape [ sh:or ( [ sh:class schema:Accommodation ] [ sh:class schema:Apartment ] [ sh:class schema:CampingPitch ] [ sh:class schema:HotelRoom ] [ sh:class schema:House ] [ sh:class schema:MeetingRoom ] [ sh:class schema:Room ] [ sh:class schema:SingleFamilyResidence ] [ sh:class schema:Suite ] ) ;
+                                sh:property [ sh:maxCount 0 ;
+                                        sh:path schema:amenityFeature ] ] ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:VacationRental .
+
+<https://wordlift.io/shacl/google/vacation-rental/vacationrental-containsplace-bed-numberofbeds-recommended> a sh:NodeShape ;
+    sh:message "Each BedDetails under the Accommodation bed should have numberOfBeds." ;
+    sh:or ( [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:item ] ] ] [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:itemListElement ] ] ] ) ] [ sh:property [ sh:message "Each BedDetails under the Accommodation bed should have numberOfBeds." ;
+                        sh:path ( schema:containsPlace schema:bed ) ;
+                        sh:qualifiedMaxCount 0 ;
+                        sh:qualifiedValueShape [ sh:class schema:BedDetails ;
+                                sh:property [ sh:maxCount 0 ;
+                                        sh:path schema:numberOfBeds ] ] ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:VacationRental .
+
+<https://wordlift.io/shacl/google/vacation-rental/vacationrental-containsplace-bed-recommended> a sh:NodeShape ;
+    sh:message "The Accommodation under containsPlace should have a bed." ;
+    sh:or ( [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:item ] ] ] [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:itemListElement ] ] ] ) ] [ sh:property [ sh:message "The Accommodation under containsPlace should have a bed." ;
+                        sh:path schema:containsPlace ;
+                        sh:qualifiedMaxCount 0 ;
+                        sh:qualifiedValueShape [ sh:or ( [ sh:class schema:Accommodation ] [ sh:class schema:Apartment ] [ sh:class schema:CampingPitch ] [ sh:class schema:HotelRoom ] [ sh:class schema:House ] [ sh:class schema:MeetingRoom ] [ sh:class schema:Room ] [ sh:class schema:SingleFamilyResidence ] [ sh:class schema:Suite ] ) ;
+                                sh:property [ sh:maxCount 0 ;
+                                        sh:path schema:bed ] ] ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:VacationRental .
+
+<https://wordlift.io/shacl/google/vacation-rental/vacationrental-containsplace-bed-typeofbed-recommended> a sh:NodeShape ;
+    sh:message "Each BedDetails under the Accommodation bed should have typeOfBed." ;
+    sh:or ( [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:item ] ] ] [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:itemListElement ] ] ] ) ] [ sh:property [ sh:message "Each BedDetails under the Accommodation bed should have typeOfBed." ;
+                        sh:path ( schema:containsPlace schema:bed ) ;
+                        sh:qualifiedMaxCount 0 ;
+                        sh:qualifiedValueShape [ sh:class schema:BedDetails ;
+                                sh:property [ sh:maxCount 0 ;
+                                        sh:path schema:typeOfBed ] ] ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:VacationRental .
+
+<https://wordlift.io/shacl/google/vacation-rental/vacationrental-containsplace-floorsize-recommended> a sh:NodeShape ;
+    sh:message "The Accommodation under containsPlace should have a floorSize." ;
+    sh:or ( [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:item ] ] ] [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:itemListElement ] ] ] ) ] [ sh:property [ sh:message "The Accommodation under containsPlace should have a floorSize." ;
+                        sh:path schema:containsPlace ;
+                        sh:qualifiedMaxCount 0 ;
+                        sh:qualifiedValueShape [ sh:or ( [ sh:class schema:Accommodation ] [ sh:class schema:Apartment ] [ sh:class schema:CampingPitch ] [ sh:class schema:HotelRoom ] [ sh:class schema:House ] [ sh:class schema:MeetingRoom ] [ sh:class schema:Room ] [ sh:class schema:SingleFamilyResidence ] [ sh:class schema:Suite ] ) ;
+                                sh:property [ sh:maxCount 0 ;
+                                        sh:path schema:floorSize ] ] ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:VacationRental .
+
+<https://wordlift.io/shacl/google/vacation-rental/vacationrental-containsplace-floorsize-unitcode> a sh:NodeShape ;
+    sh:message "The floorSize of the Accommodation under containsPlace must use unitCode FTK, SQFT, MTK or SQM." ;
+    sh:or ( [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:item ] ] ] [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:itemListElement ] ] ] ) ] [ sh:property [ sh:message "The floorSize of the Accommodation under containsPlace must use unitCode FTK, SQFT, MTK or SQM." ;
+                        sh:path ( schema:containsPlace schema:floorSize ) ;
+                        sh:qualifiedMaxCount 0 ;
+                        sh:qualifiedValueShape [ sh:not [ sh:property [ sh:in ( "FTK" "SQFT" "MTK" "SQM" ) ;
+                                                sh:minCount 1 ;
+                                                sh:path schema:unitCode ] ] ] ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:VacationRental .
+
+<https://wordlift.io/shacl/google/vacation-rental/vacationrental-containsplace-numberofbathroomstotal-recommended> a sh:NodeShape ;
+    sh:message "The Accommodation under containsPlace should have numberOfBathroomsTotal." ;
+    sh:or ( [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:item ] ] ] [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:itemListElement ] ] ] ) ] [ sh:property [ sh:message "The Accommodation under containsPlace should have numberOfBathroomsTotal." ;
+                        sh:path schema:containsPlace ;
+                        sh:qualifiedMaxCount 0 ;
+                        sh:qualifiedValueShape [ sh:or ( [ sh:class schema:Accommodation ] [ sh:class schema:Apartment ] [ sh:class schema:CampingPitch ] [ sh:class schema:HotelRoom ] [ sh:class schema:House ] [ sh:class schema:MeetingRoom ] [ sh:class schema:Room ] [ sh:class schema:SingleFamilyResidence ] [ sh:class schema:Suite ] ) ;
+                                sh:property [ sh:maxCount 0 ;
+                                        sh:path schema:numberOfBathroomsTotal ] ] ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:VacationRental .
+
+<https://wordlift.io/shacl/google/vacation-rental/vacationrental-containsplace-numberofbedrooms-recommended> a sh:NodeShape ;
+    sh:message "The Accommodation under containsPlace should have numberOfBedrooms." ;
+    sh:or ( [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:item ] ] ] [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:itemListElement ] ] ] ) ] [ sh:property [ sh:message "The Accommodation under containsPlace should have numberOfBedrooms." ;
+                        sh:path schema:containsPlace ;
+                        sh:qualifiedMaxCount 0 ;
+                        sh:qualifiedValueShape [ sh:or ( [ sh:class schema:Accommodation ] [ sh:class schema:Apartment ] [ sh:class schema:CampingPitch ] [ sh:class schema:HotelRoom ] [ sh:class schema:House ] [ sh:class schema:MeetingRoom ] [ sh:class schema:Room ] [ sh:class schema:SingleFamilyResidence ] [ sh:class schema:Suite ] ) ;
+                                sh:property [ sh:maxCount 0 ;
+                                        sh:path schema:numberOfBedrooms ] ] ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:VacationRental .
+
+<https://wordlift.io/shacl/google/vacation-rental/vacationrental-containsplace-numberofrooms-recommended> a sh:NodeShape ;
+    sh:message "The Accommodation under containsPlace should have numberOfRooms." ;
+    sh:or ( [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:item ] ] ] [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:itemListElement ] ] ] ) ] [ sh:property [ sh:message "The Accommodation under containsPlace should have numberOfRooms." ;
+                        sh:path schema:containsPlace ;
+                        sh:qualifiedMaxCount 0 ;
+                        sh:qualifiedValueShape [ sh:or ( [ sh:class schema:Accommodation ] [ sh:class schema:Apartment ] [ sh:class schema:CampingPitch ] [ sh:class schema:HotelRoom ] [ sh:class schema:House ] [ sh:class schema:MeetingRoom ] [ sh:class schema:Room ] [ sh:class schema:SingleFamilyResidence ] [ sh:class schema:Suite ] ) ;
+                                sh:property [ sh:maxCount 0 ;
+                                        sh:path schema:numberOfRooms ] ] ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:VacationRental .
+
+<https://wordlift.io/shacl/google/vacation-rental/vacationrental-containsplace-occupancy-required> a sh:NodeShape ;
+    sh:message "The Accommodation under containsPlace must have an occupancy." ;
+    sh:or ( [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:item ] ] ] [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:itemListElement ] ] ] ) ] [ sh:property [ sh:message "The Accommodation under containsPlace must have an occupancy." ;
+                        sh:path schema:containsPlace ;
+                        sh:qualifiedMaxCount 0 ;
+                        sh:qualifiedValueShape [ sh:or ( [ sh:class schema:Accommodation ] [ sh:class schema:Apartment ] [ sh:class schema:CampingPitch ] [ sh:class schema:HotelRoom ] [ sh:class schema:House ] [ sh:class schema:MeetingRoom ] [ sh:class schema:Room ] [ sh:class schema:SingleFamilyResidence ] [ sh:class schema:Suite ] ) ;
+                                sh:property [ sh:maxCount 0 ;
+                                        sh:path schema:occupancy ] ] ] ] ) ;
+    sh:targetClass schema:VacationRental .
+
+<https://wordlift.io/shacl/google/vacation-rental/vacationrental-containsplace-occupancy-value-required> a sh:NodeShape ;
+    sh:message "The occupancy of the Accommodation under containsPlace must have a value." ;
+    sh:or ( [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:item ] ] ] [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:itemListElement ] ] ] ) ] [ sh:property [ sh:message "The occupancy of the Accommodation under containsPlace must have a value." ;
+                        sh:path ( schema:containsPlace schema:occupancy ) ;
+                        sh:qualifiedMaxCount 0 ;
+                        sh:qualifiedValueShape [ sh:property [ sh:maxCount 0 ;
+                                        sh:path schema:value ] ] ] ] ) ;
+    sh:targetClass schema:VacationRental .
+
+<https://wordlift.io/shacl/google/vacation-rental/vacationrental-containsplace-required> a sh:NodeShape ;
+    sh:message "A VacationRental must contain an Accommodation under containsPlace." ;
+    sh:or ( [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:item ] ] ] [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:itemListElement ] ] ] ) ] [ sh:property [ sh:message "A VacationRental must contain an Accommodation under containsPlace." ;
+                        sh:path schema:containsPlace ;
+                        sh:qualifiedMinCount 1 ;
+                        sh:qualifiedValueShape [ sh:or ( [ sh:class schema:Accommodation ] [ sh:class schema:Apartment ] [ sh:class schema:CampingPitch ] [ sh:class schema:HotelRoom ] [ sh:class schema:House ] [ sh:class schema:MeetingRoom ] [ sh:class schema:Room ] [ sh:class schema:SingleFamilyResidence ] [ sh:class schema:Suite ] ) ] ] ] ) ;
+    sh:targetClass schema:VacationRental .
+
+<https://wordlift.io/shacl/google/vacation-rental/vacationrental-description-recommended> a sh:NodeShape ;
+    sh:message "A VacationRental should have a description." ;
+    sh:or ( [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:item ] ] ] [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:itemListElement ] ] ] ) ] [ sh:property [ sh:message "A VacationRental should have a description." ;
+                        sh:minCount 1 ;
+                        sh:path schema:description ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:VacationRental .
+
+<https://wordlift.io/shacl/google/vacation-rental/vacationrental-identifier-required> a sh:NodeShape ;
+    sh:message "A VacationRental must have an identifier." ;
+    sh:or ( [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:item ] ] ] [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:itemListElement ] ] ] ) ] [ sh:property [ sh:message "A VacationRental must have an identifier." ;
+                        sh:minCount 1 ;
+                        sh:path schema:identifier ] ] ) ;
+    sh:targetClass schema:VacationRental .
+
+<https://wordlift.io/shacl/google/vacation-rental/vacationrental-image-min-count> a sh:NodeShape ;
+    sh:message "A VacationRental with images must have at least 8 images." ;
+    sh:or ( [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:item ] ] ] [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:itemListElement ] ] ] ) ] [ sh:or ( [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:image ] ] [ sh:property [ sh:minCount 8 ;
+                                    sh:path schema:image ] ] ) ] ) ;
+    sh:targetClass schema:VacationRental .
+
+<https://wordlift.io/shacl/google/vacation-rental/vacationrental-image-required> a sh:NodeShape ;
+    sh:message "A VacationRental must have at least one image." ;
+    sh:or ( [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:item ] ] ] [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:itemListElement ] ] ] ) ] [ sh:property [ sh:message "A VacationRental must have at least one image." ;
+                        sh:minCount 1 ;
+                        sh:path schema:image ] ] ) ;
+    sh:targetClass schema:VacationRental .
+
+<https://wordlift.io/shacl/google/vacation-rental/vacationrental-knowslanguage-recommended> a sh:NodeShape ;
+    sh:message "A VacationRental should have knowsLanguage." ;
+    sh:or ( [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:item ] ] ] [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:itemListElement ] ] ] ) ] [ sh:property [ sh:message "A VacationRental should have knowsLanguage." ;
+                        sh:minCount 1 ;
+                        sh:path schema:knowsLanguage ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:VacationRental .
+
+<https://wordlift.io/shacl/google/vacation-rental/vacationrental-latitude-precision> a sh:NodeShape ;
+    sh:message "The latitude of a VacationRental must have at least 5 decimal places." ;
+    sh:or ( [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:item ] ] ] [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:itemListElement ] ] ] ) ] [ sh:property [ sh:message "The latitude of a VacationRental must have at least 5 decimal places." ;
+                        sh:path schema:latitude ;
+                        sh:pattern "^-?[0-9]+\\.[0-9]{5,}$" ] ] ),
+        ( [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:item ] ] ] [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:itemListElement ] ] ] ) ] [ sh:property [ sh:message "The geo latitude of a VacationRental must have at least 5 decimal places." ;
+                        sh:path ( schema:geo schema:latitude ) ;
+                        sh:pattern "^-?[0-9]+\\.[0-9]{5,}$" ] ] ) ;
+    sh:targetClass schema:VacationRental .
+
+<https://wordlift.io/shacl/google/vacation-rental/vacationrental-latitude-required> a sh:NodeShape ;
+    sh:message "A VacationRental must have a latitude, directly or as geo.latitude." ;
+    sh:or ( [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:item ] ] ] [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:itemListElement ] ] ] ) ] [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                    sh:path schema:latitude ] ] [ sh:property [ sh:minCount 1 ;
+                                    sh:path ( schema:geo schema:latitude ) ] ] ) ] ) ;
+    sh:targetClass schema:VacationRental .
+
+<https://wordlift.io/shacl/google/vacation-rental/vacationrental-longitude-precision> a sh:NodeShape ;
+    sh:message "The longitude of a VacationRental must have at least 5 decimal places." ;
+    sh:or ( [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:item ] ] ] [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:itemListElement ] ] ] ) ] [ sh:property [ sh:message "The longitude of a VacationRental must have at least 5 decimal places." ;
+                        sh:path schema:longitude ;
+                        sh:pattern "^-?[0-9]+\\.[0-9]{5,}$" ] ] ),
+        ( [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:item ] ] ] [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:itemListElement ] ] ] ) ] [ sh:property [ sh:message "The geo longitude of a VacationRental must have at least 5 decimal places." ;
+                        sh:path ( schema:geo schema:longitude ) ;
+                        sh:pattern "^-?[0-9]+\\.[0-9]{5,}$" ] ] ) ;
+    sh:targetClass schema:VacationRental .
+
+<https://wordlift.io/shacl/google/vacation-rental/vacationrental-longitude-required> a sh:NodeShape ;
+    sh:message "A VacationRental must have a longitude, directly or as geo.longitude." ;
+    sh:or ( [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:item ] ] ] [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:itemListElement ] ] ] ) ] [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                    sh:path schema:longitude ] ] [ sh:property [ sh:minCount 1 ;
+                                    sh:path ( schema:geo schema:longitude ) ] ] ) ] ) ;
+    sh:targetClass schema:VacationRental .
+
+<https://wordlift.io/shacl/google/vacation-rental/vacationrental-name-required> a sh:NodeShape ;
+    sh:message "A VacationRental must have a name." ;
+    sh:or ( [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:item ] ] ] [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:itemListElement ] ] ] ) ] [ sh:property [ sh:message "A VacationRental must have a name." ;
+                        sh:minCount 1 ;
+                        sh:path schema:name ] ] ) ;
+    sh:targetClass schema:VacationRental .
+
+<https://wordlift.io/shacl/google/vacation-rental/vacationrental-review-contentreferencetime-france-required> a sh:NodeShape ;
+    sh:message "A review of a VacationRental located in France must have contentReferenceTime." ;
+    sh:or ( [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:item ] ] ] [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:itemListElement ] ] ] ) ] [ sh:or ( [ sh:property [ sh:path ( schema:address schema:addressCountry ) ;
+                                    sh:qualifiedMaxCount 0 ;
+                                    sh:qualifiedValueShape [ sh:pattern "^[Ff][Rr]$" ] ] ] [ sh:property [ sh:path schema:review ;
+                                    sh:qualifiedMaxCount 0 ;
+                                    sh:qualifiedValueShape [ sh:or ( [ sh:class schema:Review ] [ sh:class schema:ClaimReview ] [ sh:class schema:CriticReview ] [ sh:class schema:EmployerReview ] [ sh:class schema:MediaReview ] [ sh:class schema:Recommendation ] [ sh:class schema:ReviewNewsArticle ] [ sh:class schema:UserReview ] ) ;
+                                            sh:property [ sh:maxCount 0 ;
+                                                    sh:path schema:contentReferenceTime ] ] ] ] ) ] ) ;
+    sh:targetClass schema:VacationRental .
+
+<https://wordlift.io/shacl/google/vacation-rental/vacationrental-review-contentreferencetime-recommended> a sh:NodeShape ;
+    sh:message "Each review of a VacationRental should have contentReferenceTime." ;
+    sh:or ( [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:item ] ] ] [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:itemListElement ] ] ] ) ] [ sh:property [ sh:message "Each review of a VacationRental should have contentReferenceTime." ;
+                        sh:path schema:review ;
+                        sh:qualifiedMaxCount 0 ;
+                        sh:qualifiedValueShape [ sh:or ( [ sh:class schema:Review ] [ sh:class schema:ClaimReview ] [ sh:class schema:CriticReview ] [ sh:class schema:EmployerReview ] [ sh:class schema:MediaReview ] [ sh:class schema:Recommendation ] [ sh:class schema:ReviewNewsArticle ] [ sh:class schema:UserReview ] ) ;
+                                sh:property [ sh:maxCount 0 ;
+                                        sh:path schema:contentReferenceTime ] ] ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:VacationRental .
+
+<https://wordlift.io/shacl/google/vacation-rental/vacationrental-review-datepublished-required> a sh:NodeShape ;
+    sh:message "Each review of a VacationRental must have a datePublished." ;
+    sh:or ( [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:item ] ] ] [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:itemListElement ] ] ] ) ] [ sh:property [ sh:message "Each review of a VacationRental must have a datePublished." ;
+                        sh:path schema:review ;
+                        sh:qualifiedMaxCount 0 ;
+                        sh:qualifiedValueShape [ sh:or ( [ sh:class schema:Review ] [ sh:class schema:ClaimReview ] [ sh:class schema:CriticReview ] [ sh:class schema:EmployerReview ] [ sh:class schema:MediaReview ] [ sh:class schema:Recommendation ] [ sh:class schema:ReviewNewsArticle ] [ sh:class schema:UserReview ] ) ;
+                                sh:property [ sh:maxCount 0 ;
+                                        sh:path schema:datePublished ] ] ] ] ) ;
+    sh:targetClass schema:VacationRental .
+
+<https://wordlift.io/shacl/google/vacation-rental/vacationrental-review-recommended> a sh:NodeShape ;
+    sh:message "A VacationRental should have a review." ;
+    sh:or ( [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:item ] ] ] [ sh:property [ sh:minCount 1 ;
+                                    sh:path [ sh:inversePath schema:itemListElement ] ] ] ) ] [ sh:property [ sh:message "A VacationRental should have a review." ;
+                        sh:minCount 1 ;
+                        sh:path schema:review ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:VacationRental .
+

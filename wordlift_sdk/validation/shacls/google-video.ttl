@@ -1,149 +1,250 @@
-@prefix : <https://wordlift.io/shacl/google/google-video/> .
-@prefix sh: <http://www.w3.org/ns/shacl#> .
-@prefix schema: <http://schema.org/> .
-
 # Source: https://developers.google.com/search/docs/appearance/structured-data/video
-# Generated: 2026-02-26T15:42:22Z
+# Generated: 2026-11-05T14:35:24Z
 # Notes: required properties => errors; recommended properties => warnings.
+# google-video: 29 rules generated from the Google Search Central doc by the tdd-mvp-3 pipeline.
+# Bundled from per-rule files by harness/bundle.py, schema.org subtypes expanded (targetClass 22, class 1, in 0). Do not edit by hand.
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-:google_BroadcastEventShape
-  a sh:NodeShape ;
-  sh:targetClass schema:BroadcastEvent ;
-  sh:property [
-    sh:path schema:publication ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path ( schema:publication schema:endDate ) ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path ( schema:publication schema:isLiveBroadcast ) ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path ( schema:publication schema:startDate ) ;
-    sh:minCount 1 ;
-  ] ;
-.
+<https://wordlift.io/shacl/google/video/broadcastevent-enddate-required> a sh:NodeShape ;
+    sh:property [ sh:message "BroadcastEvent must have an endDate." ;
+            sh:minCount 1 ;
+            sh:path schema:endDate ] ;
+    sh:targetClass schema:BroadcastEvent .
 
-:google_ClipShape
-  a sh:NodeShape ;
-  sh:targetClass schema:Clip ;
-  sh:property [
-    sh:path schema:name ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:startOffset ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:url ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:endOffset ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: endOffset." ;
-  ] ;
-.
+<https://wordlift.io/shacl/google/video/broadcastevent-islivebroadcast-required> a sh:NodeShape ;
+    sh:property [ sh:message "BroadcastEvent must have isLiveBroadcast." ;
+            sh:minCount 1 ;
+            sh:path schema:isLiveBroadcast ] ;
+    sh:targetClass schema:BroadcastEvent .
 
-:google_SeekToActionShape
-  a sh:NodeShape ;
-  sh:targetClass schema:SeekToAction ;
-  sh:property [
-    sh:path schema:input ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:potentialAction ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path ( schema:potentialAction schema:startOffset ) ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path ( schema:potentialAction schema:target ) ;
-    sh:minCount 1 ;
-  ] ;
-.
+<https://wordlift.io/shacl/google/video/broadcastevent-startdate-required> a sh:NodeShape ;
+    sh:property [ sh:message "BroadcastEvent must have a startDate." ;
+            sh:minCount 1 ;
+            sh:path schema:startDate ] ;
+    sh:targetClass schema:BroadcastEvent .
 
-:google_VideoObjectShape
-  a sh:NodeShape ;
-  sh:targetClass schema:VideoObject ;
-  sh:property [
-    sh:path schema:name ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:thumbnailUrl ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:uploadDate ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:contentUrl ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: contentUrl." ;
-  ] ;
-  sh:property [
-    sh:path schema:description ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: description." ;
-  ] ;
-  sh:property [
-    sh:path schema:duration ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: duration." ;
-  ] ;
-  sh:property [
-    sh:path schema:embedUrl ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: embedUrl." ;
-  ] ;
-  sh:property [
-    sh:path schema:expires ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: expires." ;
-  ] ;
-  sh:property [
-    sh:path schema:hasPart ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: hasPart." ;
-  ] ;
-  sh:property [
-    sh:path schema:ineligibleRegion ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: ineligibleRegion." ;
-  ] ;
-  sh:property [
-    sh:path schema:interactionStatistic ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: interactionStatistic." ;
-  ] ;
-  sh:property [
-    sh:path schema:publication ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: publication." ;
-  ] ;
-  sh:property [
-    sh:path schema:regionsAllowed ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: regionsAllowed." ;
-  ] ;
-.
+<https://wordlift.io/shacl/google/video/clip-endoffset-present> a sh:NodeShape ;
+    sh:property [ sh:message "Clip should have an endOffset." ;
+            sh:minCount 1 ;
+            sh:path schema:endOffset ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:Clip,
+        schema:MovieClip,
+        schema:RadioClip,
+        schema:TVClip,
+        schema:VideoGameClip .
+
+<https://wordlift.io/shacl/google/video/clip-name-required> a sh:NodeShape ;
+    sh:property [ sh:message "Clip must have a name." ;
+            sh:minCount 1 ;
+            sh:path schema:name ] ;
+    sh:targetClass schema:Clip,
+        schema:MovieClip,
+        schema:RadioClip,
+        schema:TVClip,
+        schema:VideoGameClip .
+
+<https://wordlift.io/shacl/google/video/clip-startoffset-required> a sh:NodeShape ;
+    sh:property [ sh:message "Clip must have a startOffset." ;
+            sh:minCount 1 ;
+            sh:path schema:startOffset ] ;
+    sh:targetClass schema:Clip,
+        schema:MovieClip,
+        schema:RadioClip,
+        schema:TVClip,
+        schema:VideoGameClip .
+
+<https://wordlift.io/shacl/google/video/clip-url-required> a sh:NodeShape ;
+    sh:property [ sh:message "Clip must have a url." ;
+            sh:minCount 1 ;
+            sh:path schema:url ] ;
+    sh:targetClass schema:Clip,
+        schema:MovieClip,
+        schema:RadioClip,
+        schema:TVClip,
+        schema:VideoGameClip .
+
+<https://wordlift.io/shacl/google/video/seektoaction-startoffset-input-required> a sh:NodeShape ;
+    sh:property [ sh:message "SeekToAction must have startOffset-input." ;
+            sh:minCount 1 ;
+            sh:path schema:startOffset-input ] ;
+    sh:targetClass schema:SeekToAction .
+
+<https://wordlift.io/shacl/google/video/seektoaction-startoffset-input-value> a sh:NodeShape ;
+    sh:property [ sh:in ( "required name=seek_to_second_number" ) ;
+            sh:message "SeekToAction startOffset-input must be 'required name=seek_to_second_number'." ;
+            sh:path schema:startOffset-input ] ;
+    sh:targetClass schema:SeekToAction .
+
+<https://wordlift.io/shacl/google/video/seektoaction-target-placeholder> a sh:NodeShape ;
+    sh:property [ sh:message "SeekToAction target must contain the placeholder {seek_to_second_number}." ;
+            sh:or ( [ sh:class schema:EntryPoint ] [ sh:pattern "\\{seek_to_second_number\\}" ] ) ;
+            sh:path schema:target ] ;
+    sh:targetClass schema:SeekToAction .
+
+<https://wordlift.io/shacl/google/video/seektoaction-target-required> a sh:NodeShape ;
+    sh:property [ sh:message "SeekToAction must have a target." ;
+            sh:minCount 1 ;
+            sh:path schema:target ] ;
+    sh:targetClass schema:SeekToAction .
+
+<https://wordlift.io/shacl/google/video/video-contenturl-or-embedurl-present> a sh:NodeShape ;
+    sh:property [ sh:message "Video should have contentUrl, or embedUrl when contentUrl is not available." ;
+            sh:minCount 1 ;
+            sh:path [ sh:alternativePath ( schema:contentUrl schema:embedUrl ) ] ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:VideoObject,
+        schema:VideoObjectSnapshot .
+
+<https://wordlift.io/shacl/google/video/video-creator-name-present> a sh:NodeShape ;
+    sh:property [ sh:path [ sh:alternativePath ( schema:creator schema:author ) ] ;
+            sh:property [ sh:message "Each creator or author of a video should have a name or alternateName." ;
+                    sh:minCount 1 ;
+                    sh:path [ sh:alternativePath ( schema:name schema:alternateName ) ] ;
+                    sh:severity sh:Warning ] ] ;
+    sh:targetClass schema:VideoObject,
+        schema:VideoObjectSnapshot .
+
+<https://wordlift.io/shacl/google/video/video-creator-present> a sh:NodeShape ;
+    sh:property [ sh:message "Video should have a creator or author." ;
+            sh:minCount 1 ;
+            sh:path [ sh:alternativePath ( schema:creator schema:author ) ] ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:VideoObject,
+        schema:VideoObjectSnapshot .
+
+<https://wordlift.io/shacl/google/video/video-creator-url-present> a sh:NodeShape ;
+    sh:property [ sh:path [ sh:alternativePath ( schema:creator schema:author ) ] ;
+            sh:property [ sh:message "Each creator or author of a video should have a url." ;
+                    sh:minCount 1 ;
+                    sh:path schema:url ;
+                    sh:severity sh:Warning ] ] ;
+    sh:targetClass schema:VideoObject,
+        schema:VideoObjectSnapshot .
+
+<https://wordlift.io/shacl/google/video/video-description-present> a sh:NodeShape ;
+    sh:property [ sh:message "Video should have a description." ;
+            sh:minCount 1 ;
+            sh:path schema:description ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:VideoObject,
+        schema:VideoObjectSnapshot .
+
+<https://wordlift.io/shacl/google/video/video-duration-min-30s-with-clip-or-seektoaction> a sh:NodeShape ;
+    sh:message "A video with a Clip or SeekToAction must have a duration of at least 30 seconds." ;
+    sh:or ( [ sh:property [ sh:maxCount 0 ;
+                        sh:path schema:duration ] ] [ sh:not [ sh:or ( [ sh:property [ sh:path schema:hasPart ;
+                                            sh:qualifiedMinCount 1 ;
+                                            sh:qualifiedValueShape [ sh:or ( [ sh:class schema:Clip ] [ sh:class schema:MovieClip ] [ sh:class schema:RadioClip ] [ sh:class schema:TVClip ] [ sh:class schema:VideoGameClip ] ) ] ] ] [ sh:property [ sh:path schema:potentialAction ;
+                                            sh:qualifiedMinCount 1 ;
+                                            sh:qualifiedValueShape [ sh:class schema:SeekToAction ] ] ] ) ] ] [ sh:property [ sh:message "Duration is under 30 seconds on a video with a Clip or SeekToAction." ;
+                        sh:not [ sh:pattern "^PT(?:0*M)?(?:0*(?:[0-9]|[12][0-9])(?:\\.[0-9]+)?S)?$" ] ;
+                        sh:path schema:duration ] ] ) ;
+    sh:targetClass schema:VideoObject,
+        schema:VideoObjectSnapshot .
+
+<https://wordlift.io/shacl/google/video/video-duration-present> a sh:NodeShape ;
+    sh:property [ sh:message "Video should have a duration." ;
+            sh:minCount 1 ;
+            sh:path schema:duration ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:VideoObject,
+        schema:VideoObjectSnapshot .
+
+<https://wordlift.io/shacl/google/video/video-expires-present> a sh:NodeShape ;
+    sh:property [ sh:message "Video should have expires." ;
+            sh:minCount 1 ;
+            sh:path schema:expires ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:VideoObject,
+        schema:VideoObjectSnapshot .
+
+<https://wordlift.io/shacl/google/video/video-haspart-clip-startoffset-unique> a sh:NodeShape ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+            sh:message "Two Clips under the same video's hasPart must not share a startOffset." ;
+            sh:select """
+            SELECT $this ?value WHERE {
+                $this <http://schema.org/hasPart> ?c1 .
+                ?c1 a <http://schema.org/Clip> ; <http://schema.org/startOffset> ?value .
+                $this <http://schema.org/hasPart> ?c2 .
+                ?c2 a <http://schema.org/Clip> ; <http://schema.org/startOffset> ?value .
+                FILTER (?c1 != ?c2)
+            }
+        """ ] ;
+    sh:targetClass schema:VideoObject,
+        schema:VideoObjectSnapshot .
+
+<https://wordlift.io/shacl/google/video/video-haspart-present> a sh:NodeShape ;
+    sh:property [ sh:message "Video should have hasPart (Clip segments)." ;
+            sh:minCount 1 ;
+            sh:path schema:hasPart ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:VideoObject,
+        schema:VideoObjectSnapshot .
+
+<https://wordlift.io/shacl/google/video/video-interactionstatistic-interactiontype-present> a sh:NodeShape ;
+    sh:property [ sh:path schema:interactionStatistic ;
+            sh:property [ sh:message "Each interactionStatistic of a video should have an interactionType." ;
+                    sh:minCount 1 ;
+                    sh:path schema:interactionType ;
+                    sh:severity sh:Warning ] ] ;
+    sh:targetClass schema:VideoObject,
+        schema:VideoObjectSnapshot .
+
+<https://wordlift.io/shacl/google/video/video-interactionstatistic-present> a sh:NodeShape ;
+    sh:property [ sh:message "Video should have interactionStatistic." ;
+            sh:minCount 1 ;
+            sh:path schema:interactionStatistic ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:VideoObject,
+        schema:VideoObjectSnapshot .
+
+<https://wordlift.io/shacl/google/video/video-interactionstatistic-userinteractioncount-present> a sh:NodeShape ;
+    sh:property [ sh:path schema:interactionStatistic ;
+            sh:property [ sh:message "Each interactionStatistic of a video should have a userInteractionCount." ;
+                    sh:minCount 1 ;
+                    sh:path schema:userInteractionCount ;
+                    sh:severity sh:Warning ] ] ;
+    sh:targetClass schema:VideoObject,
+        schema:VideoObjectSnapshot .
+
+<https://wordlift.io/shacl/google/video/video-name-required> a sh:NodeShape ;
+    sh:property [ sh:message "Video must have a name." ;
+            sh:minCount 1 ;
+            sh:path schema:name ] ;
+    sh:targetClass schema:VideoObject,
+        schema:VideoObjectSnapshot .
+
+<https://wordlift.io/shacl/google/video/video-publication-present> a sh:NodeShape ;
+    sh:property [ sh:message "Video should have publication (BroadcastEvent for the LIVE badge)." ;
+            sh:minCount 1 ;
+            sh:path schema:publication ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:VideoObject,
+        schema:VideoObjectSnapshot .
+
+<https://wordlift.io/shacl/google/video/video-region-present> a sh:NodeShape ;
+    sh:property [ sh:message "Video should have ineligibleRegion or regionsAllowed." ;
+            sh:minCount 1 ;
+            sh:path [ sh:alternativePath ( schema:ineligibleRegion schema:regionsAllowed ) ] ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:VideoObject,
+        schema:VideoObjectSnapshot .
+
+<https://wordlift.io/shacl/google/video/video-thumbnailurl-required> a sh:NodeShape ;
+    sh:property [ sh:message "Video must have a thumbnailUrl." ;
+            sh:minCount 1 ;
+            sh:path schema:thumbnailUrl ] ;
+    sh:targetClass schema:VideoObject,
+        schema:VideoObjectSnapshot .
+
+<https://wordlift.io/shacl/google/video/video-uploaddate-required> a sh:NodeShape ;
+    sh:property [ sh:message "Video must have an uploadDate." ;
+            sh:minCount 1 ;
+            sh:path schema:uploadDate ] ;
+    sh:targetClass schema:VideoObject,
+        schema:VideoObjectSnapshot .
+

@@ -1,355 +1,521 @@
-@prefix : <https://wordlift.io/shacl/google/google-book/> .
-@prefix sh: <http://www.w3.org/ns/shacl#> .
-@prefix schema: <http://schema.org/> .
-
 # Source: https://developers.google.com/search/docs/appearance/structured-data/book
-# Generated: 2026-02-26T15:41:54Z
+# Generated: 2026-11-05T14:35:24Z
 # Notes: required properties => errors; recommended properties => warnings.
+# google-book: 64 rules generated from the Google Search Central doc by the tdd-mvp-3 pipeline.
+# Bundled from per-rule files by harness/bundle.py, schema.org subtypes expanded (targetClass 10, class 3, in 0). Do not edit by hand.
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-:google_BookShape
-  a sh:NodeShape ;
-  sh:targetClass schema:Book ;
-  sh:property [
-    sh:path schema:author ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:bookFormat ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:expectsAcceptanceOf ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path ( schema:expectsAcceptanceOf schema:category ) ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path ( schema:expectsAcceptanceOf schema:eligibleRegion ) ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path ( schema:expectsAcceptanceOf schema:eligibleRegion schema:name ) ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:inLanguage ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:isbn ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:lender ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:name ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:potentialAction ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:propertyID ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:target ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path ( schema:target schema:actionPlatform ) ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path ( schema:target schema:urlTemplate ) ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:url ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:value ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:workExample ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:bookEdition ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: bookEdition." ;
-  ] ;
-  sh:property [
-    sh:path schema:datePublished ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: datePublished." ;
-  ] ;
-  sh:property [
-    sh:path ( schema:expectsAcceptanceOf schema:availabilityEnds ) ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: expectsAcceptanceOf.availabilityEnds." ;
-  ] ;
-  sh:property [
-    sh:path ( schema:expectsAcceptanceOf schema:availabilityStarts ) ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: expectsAcceptanceOf.availabilityStarts." ;
-  ] ;
-  sh:property [
-    sh:path ( schema:expectsAcceptanceOf schema:price ) ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: expectsAcceptanceOf.price." ;
-  ] ;
-  sh:property [
-    sh:path ( schema:expectsAcceptanceOf schema:priceCurrency ) ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: expectsAcceptanceOf.priceCurrency." ;
-  ] ;
-  sh:property [
-    sh:path schema:identifier ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: identifier." ;
-  ] ;
-  sh:property [
-    sh:path schema:sameAs ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: sameAs." ;
-  ] ;
-.
+<https://wordlift.io/shacl/google/book/book-author-name-present> a sh:NodeShape ;
+    sh:message "Every author has a name (on the Person or Organization under the author of a Work or an Edition)." ;
+    sh:or ( [ sh:not [ sh:property [ sh:path [ sh:inversePath schema:author ] ;
+                                sh:qualifiedMinCount 1 ;
+                                sh:qualifiedValueShape [ sh:or ( [ sh:class schema:Book ] [ sh:class schema:Audiobook ] [ sh:class schema:SequentialArt ] ),
+                                            ( [ sh:property [ sh:minCount 1 ;
+                                                            sh:path [ sh:inversePath schema:dataFeedElement ] ] ] [ sh:property [ sh:minCount 1 ;
+                                                            sh:path schema:workExample ] ] [ sh:property [ sh:minCount 1 ;
+                                                            sh:path [ sh:inversePath schema:workExample ] ] ] ) ] ] ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:name ] ] ) ;
+    sh:targetObjectsOf schema:author .
 
-:google_DataFeedShape
-  a sh:NodeShape ;
-  sh:targetClass schema:DataFeed ;
-  sh:property [
-    sh:path schema:dataFeedElement ;
-    sh:minCount 1 ;
-  ] ;
-.
+<https://wordlift.io/shacl/google/book/book-author-sameas-present> a sh:NodeShape ;
+    sh:message "Every author has a sameAs (on the Person or Organization under the author of a Work or an Edition)." ;
+    sh:or ( [ sh:not [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                            sh:path [ sh:inversePath schema:dataFeedElement ] ] ] [ sh:property [ sh:minCount 1 ;
+                                            sh:path schema:workExample ] ] [ sh:property [ sh:minCount 1 ;
+                                            sh:path [ sh:inversePath schema:workExample ] ] ] ) ] ] [ sh:property [ sh:path schema:author ;
+                        sh:qualifiedMaxCount 0 ;
+                        sh:qualifiedValueShape [ sh:not [ sh:property [ sh:minCount 1 ;
+                                                sh:path schema:sameAs ] ] ] ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:Audiobook,
+        schema:Book,
+        schema:SequentialArt .
 
-:google_EditionShape
-  a sh:NodeShape ;
-  sh:targetClass schema:Edition ;
-  sh:property [
-    sh:path schema:bookFormat ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:expectsAcceptanceOf ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path ( schema:expectsAcceptanceOf schema:category ) ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path ( schema:expectsAcceptanceOf schema:eligibleRegion ) ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path ( schema:expectsAcceptanceOf schema:eligibleRegion schema:name ) ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:inLanguage ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:isbn ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:lender ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:name ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:potentialAction ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:propertyID ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:target ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path ( schema:target schema:actionPlatform ) ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path ( schema:target schema:urlTemplate ) ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:value ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:author ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: author." ;
-  ] ;
-  sh:property [
-    sh:path schema:bookEdition ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: bookEdition." ;
-  ] ;
-  sh:property [
-    sh:path schema:datePublished ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: datePublished." ;
-  ] ;
-  sh:property [
-    sh:path ( schema:expectsAcceptanceOf schema:availabilityEnds ) ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: expectsAcceptanceOf.availabilityEnds." ;
-  ] ;
-  sh:property [
-    sh:path ( schema:expectsAcceptanceOf schema:availabilityStarts ) ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: expectsAcceptanceOf.availabilityStarts." ;
-  ] ;
-  sh:property [
-    sh:path ( schema:expectsAcceptanceOf schema:price ) ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: expectsAcceptanceOf.price." ;
-  ] ;
-  sh:property [
-    sh:path ( schema:expectsAcceptanceOf schema:priceCurrency ) ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: expectsAcceptanceOf.priceCurrency." ;
-  ] ;
-  sh:property [
-    sh:path schema:identifier ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: identifier." ;
-  ] ;
-  sh:property [
-    sh:path schema:sameAs ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: sameAs." ;
-  ] ;
-  sh:property [
-    sh:path schema:url ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: url." ;
-  ] ;
-.
+<https://wordlift.io/shacl/google/book/book-edition-author-present> a sh:NodeShape ;
+    sh:message "Every Edition has an author (D1: the 'only use this when different' wording does not exempt the row)." ;
+    sh:property [ sh:minCount 1 ;
+            sh:path schema:author ;
+            sh:severity sh:Warning ] ;
+    sh:targetObjectsOf schema:workExample .
 
-:google_LibraryShape
-  a sh:NodeShape ;
-  sh:targetClass schema:Library ;
-  sh:property [
-    sh:path schema:location ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path ( schema:location schema:addressCountry ) ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path ( schema:location schema:addressLocality ) ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path ( schema:location schema:addressRegion ) ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path ( schema:location schema:postalCode ) ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path ( schema:location schema:streetAddress ) ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:name ;
-    sh:minCount 1 ;
-  ] ;
-.
+<https://wordlift.io/shacl/google/book/book-edition-bookedition-present> a sh:NodeShape ;
+    sh:message "Every Edition has a bookEdition." ;
+    sh:property [ sh:minCount 1 ;
+            sh:path schema:bookEdition ;
+            sh:severity sh:Warning ] ;
+    sh:targetObjectsOf schema:workExample .
 
-:google_LibrarySystemShape
-  a sh:NodeShape ;
-  sh:targetClass schema:LibrarySystem ;
-  sh:property [
-    sh:path schema:additionalProperty ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path ( schema:additionalProperty schema:name ) ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path ( schema:additionalProperty schema:value ) ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:member ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:name ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:url ;
-    sh:minCount 1 ;
-  ] ;
-.
+<https://wordlift.io/shacl/google/book/book-edition-bookformat-allowed> a sh:NodeShape ;
+    sh:message "An Edition's bookFormat values are among https://schema.org/AudiobookFormat, EBook, Hardcover, Paperback (IRI or literal accepted)." ;
+    sh:property [ sh:in ( schema:AudiobookFormat schema:EBook schema:Hardcover schema:Paperback <https://schema.org/AudiobookFormat> <https://schema.org/EBook> <https://schema.org/Hardcover> <https://schema.org/Paperback> "AudiobookFormat" "EBook" "Hardcover" "Paperback" "https://schema.org/AudiobookFormat" "https://schema.org/EBook" "https://schema.org/Hardcover" "https://schema.org/Paperback" "http://schema.org/AudiobookFormat" "http://schema.org/EBook" "http://schema.org/Hardcover" "http://schema.org/Paperback" ) ;
+            sh:path schema:bookFormat ] ;
+    sh:targetObjectsOf schema:workExample .
 
-:google_WorkShape
-  a sh:NodeShape ;
-  sh:targetClass schema:Work ;
-  sh:property [
-    sh:path schema:author ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:name ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:url ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:workExample ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:sameAs ;
-    sh:minCount 1 ;
+<https://wordlift.io/shacl/google/book/book-edition-bookformat-present> a sh:NodeShape ;
+    sh:message "Every Edition has a bookFormat." ;
+    sh:property [ sh:minCount 1 ;
+            sh:path schema:bookFormat ] ;
+    sh:targetObjectsOf schema:workExample .
+
+<https://wordlift.io/shacl/google/book/book-edition-datepublished-present> a sh:NodeShape ;
+    sh:message "Every Edition has a datePublished." ;
+    sh:property [ sh:minCount 1 ;
+            sh:path schema:datePublished ;
+            sh:severity sh:Warning ] ;
+    sh:targetObjectsOf schema:workExample .
+
+<https://wordlift.io/shacl/google/book/book-edition-id-present> a sh:NodeShape ;
+    sh:message "Every Edition has an @id (is not a blank node)." ;
+    sh:nodeKind sh:IRI ;
+    sh:not [ sh:pattern "^urn:wl:node:" ] ;
+    sh:targetObjectsOf schema:workExample .
+
+<https://wordlift.io/shacl/google/book/book-edition-identifier-present> a sh:NodeShape ;
+    sh:message "Every Edition has an identifier." ;
+    sh:or ( [ sh:not [ sh:property [ sh:minCount 1 ;
+                                sh:path schema:isbn ] ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:identifier ] ] ) ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: sameAs." ;
-  ] ;
-.
+    sh:targetObjectsOf schema:workExample .
+
+<https://wordlift.io/shacl/google/book/book-edition-inlanguage-present> a sh:NodeShape ;
+    sh:message "Every Edition has an inLanguage." ;
+    sh:property [ sh:minCount 1 ;
+            sh:path schema:inLanguage ] ;
+    sh:targetObjectsOf schema:workExample .
+
+<https://wordlift.io/shacl/google/book/book-edition-isbn-not-isbn10> a sh:NodeShape ;
+    sh:message "An Edition's isbn, ignoring hyphens and spaces, is not a 10-character ISBN-10." ;
+    sh:property [ sh:not [ sh:pattern "^[ -]*([0-9Xx][ -]*){10}$" ] ;
+            sh:path schema:isbn ] ;
+    sh:targetObjectsOf schema:workExample .
+
+<https://wordlift.io/shacl/google/book/book-edition-isbn-present> a sh:NodeShape ;
+    sh:message "Every Edition has an isbn." ;
+    sh:property [ sh:minCount 1 ;
+            sh:path schema:isbn ] ;
+    sh:targetObjectsOf schema:workExample .
+
+<https://wordlift.io/shacl/google/book/book-edition-name-present> a sh:NodeShape ;
+    sh:message "Every Edition has a name (D1: the 'only use this when different' wording does not exempt the row)." ;
+    sh:property [ sh:minCount 1 ;
+            sh:path schema:name ;
+            sh:severity sh:Warning ] ;
+    sh:targetObjectsOf schema:workExample .
+
+<https://wordlift.io/shacl/google/book/book-edition-potentialaction-present> a sh:NodeShape ;
+    sh:message "Every Edition has a potentialAction that is a ReadAction or a BorrowAction." ;
+    sh:property [ sh:path schema:potentialAction ;
+            sh:qualifiedMinCount 1 ;
+            sh:qualifiedValueShape [ sh:or ( [ sh:class schema:ReadAction ] [ sh:class schema:BorrowAction ] ) ] ] ;
+    sh:targetObjectsOf schema:workExample .
+
+<https://wordlift.io/shacl/google/book/book-edition-sameas-not-work-sameas> a sh:NodeShape ;
+    sh:message "An Edition's sameAs is not one of its Work's sameAs values." ;
+    sh:severity sh:Warning ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+            sh:message "An edition sameAs must not repeat the sameAs of its Work." ;
+            sh:select """
+SELECT $this WHERE {
+  ?work <http://schema.org/workExample> $this .
+  ?work <http://schema.org/sameAs> ?s .
+  $this <http://schema.org/sameAs> ?s .
+}
+""" ] ;
+    sh:targetObjectsOf schema:workExample .
+
+<https://wordlift.io/shacl/google/book/book-edition-sameas-present> a sh:NodeShape ;
+    sh:message "Every Edition has a sameAs." ;
+    sh:property [ sh:minCount 1 ;
+            sh:path schema:sameAs ;
+            sh:severity sh:Warning ] ;
+    sh:targetObjectsOf schema:workExample .
+
+<https://wordlift.io/shacl/google/book/book-edition-url-present> a sh:NodeShape ;
+    sh:message "Every Edition has a url." ;
+    sh:property [ sh:minCount 1 ;
+            sh:path schema:url ;
+            sh:severity sh:Warning ] ;
+    sh:targetObjectsOf schema:workExample .
+
+<https://wordlift.io/shacl/google/book/book-identifier-propertyid-allowed> a sh:NodeShape ;
+    sh:message "A propertyID is OCLC_NUMBER, LCCN or JP_E-CODE (on the PropertyValue under an Edition's identifier)." ;
+    sh:or ( [ sh:not [ sh:property [ sh:minCount 1 ;
+                                sh:path ( [ sh:inversePath schema:identifier ] [ sh:inversePath schema:workExample ] ) ] ] ] [ sh:property [ sh:in ( "OCLC_NUMBER" "LCCN" "JP_E-CODE" ) ;
+                        sh:path schema:propertyID ] ] ) ;
+    sh:targetObjectsOf schema:identifier .
+
+<https://wordlift.io/shacl/google/book/book-identifier-propertyid-present> a sh:NodeShape ;
+    sh:message "Every identifier PropertyValue has a propertyID (on the PropertyValue under an Edition's identifier)." ;
+    sh:property [ sh:path schema:identifier ;
+            sh:qualifiedMaxCount 0 ;
+            sh:qualifiedValueShape [ sh:and ( [ sh:nodeKind sh:BlankNodeOrIRI ] [ sh:not [ sh:property [ sh:minCount 1 ;
+                                                sh:path schema:propertyID ] ] ] ) ] ] ;
+    sh:targetObjectsOf schema:workExample .
+
+<https://wordlift.io/shacl/google/book/book-identifier-type-propertyvalue> a sh:NodeShape ;
+    sh:message "Every identifier value of an Edition is a PropertyValue node, not plain text (on the identifier of an Edition)." ;
+    sh:property [ sh:nodeKind sh:BlankNodeOrIRI ;
+            sh:or ( [ sh:class schema:PropertyValue ] [ sh:class schema:LocationFeatureSpecification ] ) ;
+            sh:path schema:identifier ] ;
+    sh:targetObjectsOf schema:workExample .
+
+<https://wordlift.io/shacl/google/book/book-identifier-value-present> a sh:NodeShape ;
+    sh:message "Every identifier PropertyValue has a value (on the PropertyValue under an Edition's identifier)." ;
+    sh:property [ sh:path schema:identifier ;
+            sh:qualifiedMaxCount 0 ;
+            sh:qualifiedValueShape [ sh:and ( [ sh:nodeKind sh:BlankNodeOrIRI ] [ sh:not [ sh:property [ sh:minCount 1 ;
+                                                sh:path schema:value ] ] ] ) ] ] ;
+    sh:targetObjectsOf schema:workExample .
+
+<https://wordlift.io/shacl/google/book/book-work-author-or-contributor-present> a sh:NodeShape ;
+    sh:message "Every Work has an author, or, when it has no author, a contributor/editor (on Book nodes that are Works (a Book that is a dataFeedElement value of a DataFeed, or that has a workExample); a standalone Book without workExample, and Books that are workExample values, are not Works)." ;
+    sh:or ( [ sh:not [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                            sh:path [ sh:inversePath schema:dataFeedElement ] ] ] [ sh:property [ sh:minCount 1 ;
+                                            sh:path schema:workExample ] ] ) ] ] [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                    sh:path schema:author ] ] [ sh:property [ sh:minCount 1 ;
+                                    sh:path schema:contributor ] ] [ sh:property [ sh:minCount 1 ;
+                                    sh:path schema:editor ] ] ) ] ) ;
+    sh:targetClass schema:Audiobook,
+        schema:Book,
+        schema:SequentialArt .
+
+<https://wordlift.io/shacl/google/book/book-work-edition-identifier-present> a sh:NodeShape ;
+    sh:message "A Work that has workExample values has at least one edition carrying an isbn or an identifier." ;
+    sh:or ( [ sh:not [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                            sh:path [ sh:inversePath schema:dataFeedElement ] ] ] [ sh:property [ sh:minCount 1 ;
+                                            sh:path schema:workExample ] ] ) ] ] [ sh:or ( [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:workExample ] ] [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                                sh:path ( schema:workExample schema:isbn ) ] ] [ sh:property [ sh:minCount 1 ;
+                                                sh:path ( schema:workExample schema:identifier ) ] ] ) ] ) ] ) ;
+    sh:targetClass schema:Audiobook,
+        schema:Book,
+        schema:SequentialArt .
+
+<https://wordlift.io/shacl/google/book/book-work-id-present> a sh:NodeShape ;
+    sh:message "Every Work has an @id (is not a blank node)." ;
+    sh:or ( [ sh:not [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                            sh:path [ sh:inversePath schema:dataFeedElement ] ] ] [ sh:property [ sh:minCount 1 ;
+                                            sh:path schema:workExample ] ] ) ] ] [ sh:nodeKind sh:IRI ;
+                sh:not [ sh:pattern "^urn:wl:node:" ] ] ) ;
+    sh:targetClass schema:Audiobook,
+        schema:Book,
+        schema:SequentialArt .
+
+<https://wordlift.io/shacl/google/book/book-work-name-present> a sh:NodeShape ;
+    sh:message "Every Work has a name." ;
+    sh:or ( [ sh:not [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                            sh:path [ sh:inversePath schema:dataFeedElement ] ] ] [ sh:property [ sh:minCount 1 ;
+                                            sh:path schema:workExample ] ] ) ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:name ] ] ) ;
+    sh:targetClass schema:Audiobook,
+        schema:Book,
+        schema:SequentialArt .
+
+<https://wordlift.io/shacl/google/book/book-work-sameas-present> a sh:NodeShape ;
+    sh:message "Every Work has a sameAs." ;
+    sh:property [ sh:minCount 1 ;
+            sh:path schema:sameAs ;
+            sh:severity sh:Warning ] ;
+    sh:targetSubjectsOf schema:workExample .
+
+<https://wordlift.io/shacl/google/book/book-work-url-present> a sh:NodeShape ;
+    sh:message "Every Work has a url." ;
+    sh:or ( [ sh:not [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                            sh:path [ sh:inversePath schema:dataFeedElement ] ] ] [ sh:property [ sh:minCount 1 ;
+                                            sh:path schema:workExample ] ] ) ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:url ] ] ) ;
+    sh:targetClass schema:Audiobook,
+        schema:Book,
+        schema:SequentialArt .
+
+<https://wordlift.io/shacl/google/book/book-work-workexample-present> a sh:NodeShape ;
+    sh:message "Every Work has at least one workExample." ;
+    sh:or ( [ sh:not [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                            sh:path [ sh:inversePath schema:dataFeedElement ] ] ] [ sh:property [ sh:minCount 1 ;
+                                            sh:path schema:workExample ] ] ) ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:workExample ] ] ) ;
+    sh:targetClass schema:Audiobook,
+        schema:Book,
+        schema:SequentialArt .
+
+<https://wordlift.io/shacl/google/book/borrowaction-lender-id-present> a sh:NodeShape ;
+    sh:message "The lender of a BorrowAction has an @id (on the BorrowAction under an Edition's potentialAction)." ;
+    sh:or ( [ sh:not [ sh:property [ sh:minCount 1 ;
+                                sh:path ( [ sh:inversePath schema:potentialAction ] [ sh:inversePath schema:workExample ] ) ] ] ] [ sh:not [ sh:class schema:BorrowAction ] ] [ sh:property [ sh:node [ sh:nodeKind sh:IRI ;
+                                sh:not [ sh:pattern "^urn:wl:node:" ] ] ;
+                        sh:path schema:lender ] ] ) ;
+    sh:targetObjectsOf schema:potentialAction .
+
+<https://wordlift.io/shacl/google/book/borrowaction-lender-present> a sh:NodeShape ;
+    sh:message "Every BorrowAction has a lender (on the BorrowAction under an Edition's potentialAction)." ;
+    sh:or ( [ sh:not [ sh:property [ sh:minCount 1 ;
+                                sh:path ( [ sh:inversePath schema:potentialAction ] [ sh:inversePath schema:workExample ] ) ] ] ] [ sh:not [ sh:class schema:BorrowAction ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:lender ] ] ) ;
+    sh:targetObjectsOf schema:potentialAction .
+
+<https://wordlift.io/shacl/google/book/borrowaction-lender-type-librarysystem> a sh:NodeShape ;
+    sh:message "The lender of a BorrowAction is a LibrarySystem node (on the BorrowAction under an Edition's potentialAction)." ;
+    sh:or ( [ sh:not [ sh:property [ sh:minCount 1 ;
+                                sh:path ( [ sh:inversePath schema:potentialAction ] [ sh:inversePath schema:workExample ] ) ] ] ] [ sh:not [ sh:class schema:BorrowAction ] ] [ sh:property [ sh:class schema:LibrarySystem ;
+                        sh:path schema:lender ] ] ) ;
+    sh:targetObjectsOf schema:potentialAction .
+
+<https://wordlift.io/shacl/google/book/borrowaction-target-present> a sh:NodeShape ;
+    sh:message "Every BorrowAction has a target (on the BorrowAction under an Edition's potentialAction)." ;
+    sh:or ( [ sh:not [ sh:property [ sh:minCount 1 ;
+                                sh:path ( [ sh:inversePath schema:potentialAction ] [ sh:inversePath schema:workExample ] ) ] ] ] [ sh:not [ sh:class schema:BorrowAction ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:target ] ] ) ;
+    sh:targetObjectsOf schema:potentialAction .
+
+<https://wordlift.io/shacl/google/book/datafeed-datafeedelement-mixed-types> a sh:NodeShape ;
+    sh:message "The dataFeedElement values of one DataFeed are not a mix of Book nodes and LibrarySystem nodes." ;
+    sh:not [ sh:and ( [ sh:property [ sh:path schema:dataFeedElement ;
+                                sh:qualifiedMinCount 1 ;
+                                sh:qualifiedValueShape [ sh:or ( [ sh:class schema:Book ] [ sh:class schema:Audiobook ] [ sh:class schema:SequentialArt ] ) ] ] ] [ sh:property [ sh:path schema:dataFeedElement ;
+                                sh:qualifiedMinCount 1 ;
+                                sh:qualifiedValueShape [ sh:class schema:LibrarySystem ] ] ] ) ] ;
+    sh:targetClass schema:CompleteDataFeed,
+        schema:DataFeed .
+
+<https://wordlift.io/shacl/google/book/datafeed-datafeedelement-present> a sh:NodeShape ;
+    sh:message "Every DataFeed has a dataFeedElement." ;
+    sh:property [ sh:minCount 1 ;
+            sh:path schema:dataFeedElement ] ;
+    sh:targetClass schema:CompleteDataFeed,
+        schema:DataFeed .
+
+<https://wordlift.io/shacl/google/book/datafeed-datemodified-present> a sh:NodeShape ;
+    sh:message "Every DataFeed has a dateModified." ;
+    sh:property [ sh:minCount 1 ;
+            sh:path schema:dateModified ] ;
+    sh:targetClass schema:CompleteDataFeed,
+        schema:DataFeed .
+
+<https://wordlift.io/shacl/google/book/entrypoint-actionplatform-allowed> a sh:NodeShape ;
+    sh:message "Every actionPlatform value is https://schema.org/DesktopWebPlatform, AndroidPlatform or IOSPlatform (IRI or literal accepted) (on the EntryPoint under the target of a ReadAction or BorrowAction under an Edition's potentialAction)." ;
+    sh:or ( [ sh:not [ sh:property [ sh:minCount 1 ;
+                                sh:path ( [ sh:inversePath schema:target ] [ sh:inversePath schema:potentialAction ] [ sh:inversePath schema:workExample ] ) ] ] ] [ sh:property [ sh:in ( schema:DesktopWebPlatform schema:AndroidPlatform schema:IOSPlatform <https://schema.org/DesktopWebPlatform> <https://schema.org/AndroidPlatform> <https://schema.org/IOSPlatform> "DesktopWebPlatform" "AndroidPlatform" "IOSPlatform" "https://schema.org/DesktopWebPlatform" "https://schema.org/AndroidPlatform" "https://schema.org/IOSPlatform" "http://schema.org/DesktopWebPlatform" "http://schema.org/AndroidPlatform" "http://schema.org/IOSPlatform" ) ;
+                        sh:path schema:actionPlatform ] ] ) ;
+    sh:targetObjectsOf schema:target .
+
+<https://wordlift.io/shacl/google/book/entrypoint-actionplatform-present> a sh:NodeShape ;
+    sh:message "Every EntryPoint has an actionPlatform (on the EntryPoint under the target of a ReadAction or BorrowAction under an Edition's potentialAction)." ;
+    sh:or ( [ sh:not [ sh:property [ sh:minCount 1 ;
+                                sh:path ( [ sh:inversePath schema:target ] [ sh:inversePath schema:potentialAction ] [ sh:inversePath schema:workExample ] ) ] ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:actionPlatform ] ] ) ;
+    sh:targetObjectsOf schema:target .
+
+<https://wordlift.io/shacl/google/book/entrypoint-urltemplate-present> a sh:NodeShape ;
+    sh:message "Every EntryPoint has a urlTemplate (on the EntryPoint under the target of a ReadAction or BorrowAction under an Edition's potentialAction)." ;
+    sh:or ( [ sh:not [ sh:property [ sh:minCount 1 ;
+                                sh:path ( [ sh:inversePath schema:target ] [ sh:inversePath schema:potentialAction ] [ sh:inversePath schema:workExample ] ) ] ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:urlTemplate ] ] ) ;
+    sh:targetObjectsOf schema:target .
+
+<https://wordlift.io/shacl/google/book/library-id-present> a sh:NodeShape ;
+    sh:message "Every Library has an @id (on Library nodes (except a Library used as the lender of a BorrowAction))." ;
+    sh:or ( [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:lender ] ] ] [ sh:nodeKind sh:IRI ;
+                sh:not [ sh:pattern "^urn:wl:node:" ] ] ) ;
+    sh:targetClass schema:Library .
+
+<https://wordlift.io/shacl/google/book/library-location-present> a sh:NodeShape ;
+    sh:message "Every Library has a location that is a PostalAddress (on Library nodes (except a Library used as the lender of a BorrowAction))." ;
+    sh:or ( [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:lender ] ] ] [ sh:property [ sh:path schema:location ;
+                        sh:qualifiedMinCount 1 ;
+                        sh:qualifiedValueShape [ sh:class schema:PostalAddress ] ] ] ) ;
+    sh:targetClass schema:Library .
+
+<https://wordlift.io/shacl/google/book/library-membership-required> a sh:NodeShape ;
+    sh:message "Every Library is the member of at least one LibrarySystem (on Library nodes (except a Library used as the lender of a BorrowAction))." ;
+    sh:or ( [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:lender ] ] ] [ sh:property [ sh:path [ sh:inversePath schema:member ] ;
+                        sh:qualifiedMinCount 1 ;
+                        sh:qualifiedValueShape [ sh:class schema:LibrarySystem ] ] ] ) ;
+    sh:targetClass schema:Library .
+
+<https://wordlift.io/shacl/google/book/library-name-present> a sh:NodeShape ;
+    sh:message "Every Library has a name (on Library nodes (except a Library used as the lender of a BorrowAction))." ;
+    sh:or ( [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:lender ] ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:name ] ] ) ;
+    sh:targetClass schema:Library .
+
+<https://wordlift.io/shacl/google/book/library-postaladdress-addresscountry-present> a sh:NodeShape ;
+    sh:message "Every PostalAddress has an addressCountry (on the PostalAddress under a Library's location)." ;
+    sh:property [ sh:node [ sh:or ( [ sh:not [ sh:class schema:PostalAddress ] ] [ sh:property [ sh:minCount 1 ;
+                                        sh:path schema:addressCountry ] ] ) ] ;
+            sh:path schema:location ] ;
+    sh:targetClass schema:Library .
+
+<https://wordlift.io/shacl/google/book/library-postaladdress-addresslocality-present> a sh:NodeShape ;
+    sh:message "Every PostalAddress has an addressLocality (on the PostalAddress under a Library's location)." ;
+    sh:property [ sh:node [ sh:or ( [ sh:not [ sh:class schema:PostalAddress ] ] [ sh:property [ sh:minCount 1 ;
+                                        sh:path schema:addressLocality ] ] ) ] ;
+            sh:path schema:location ] ;
+    sh:targetClass schema:Library .
+
+<https://wordlift.io/shacl/google/book/library-postaladdress-addressregion-present> a sh:NodeShape ;
+    sh:property [ sh:message "Every PostalAddress has an addressRegion (on the PostalAddress under a Library's location)." ;
+            sh:path schema:location ;
+            sh:qualifiedMaxCount 0 ;
+            sh:qualifiedValueShape [ sh:and ( [ sh:class schema:PostalAddress ] [ sh:not [ sh:property [ sh:minCount 1 ;
+                                                sh:path schema:addressRegion ] ] ] ) ] ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:Library .
+
+<https://wordlift.io/shacl/google/book/library-postaladdress-postalcode-present> a sh:NodeShape ;
+    sh:message "Every PostalAddress has a postalCode (on the PostalAddress under a Library's location)." ;
+    sh:property [ sh:node [ sh:or ( [ sh:not [ sh:class schema:PostalAddress ] ] [ sh:property [ sh:minCount 1 ;
+                                        sh:path schema:postalCode ] ] ) ] ;
+            sh:path schema:location ] ;
+    sh:targetClass schema:Library .
+
+<https://wordlift.io/shacl/google/book/library-postaladdress-streetaddress-present> a sh:NodeShape ;
+    sh:message "Every PostalAddress has a streetAddress (on the PostalAddress under a Library's location)." ;
+    sh:property [ sh:node [ sh:or ( [ sh:not [ sh:class schema:PostalAddress ] ] [ sh:property [ sh:minCount 1 ;
+                                        sh:path schema:streetAddress ] ] ) ] ;
+            sh:path schema:location ] ;
+    sh:targetClass schema:Library .
+
+<https://wordlift.io/shacl/google/book/librarysystem-id-present> a sh:NodeShape ;
+    sh:message "Every LibrarySystem has an @id (on LibrarySystem nodes (except a LibrarySystem used as the lender of a BorrowAction, which is only a reference))." ;
+    sh:or ( [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:lender ] ] ] [ sh:nodeKind sh:IRI ;
+                sh:not [ sh:pattern "^urn:wl:node:" ] ] ) ;
+    sh:targetClass schema:LibrarySystem .
+
+<https://wordlift.io/shacl/google/book/librarysystem-librarytype-present> a sh:NodeShape ;
+    sh:message "Every LibrarySystem has an additionalProperty PropertyValue named librarytype (on LibrarySystem nodes (except a LibrarySystem used as the lender of a BorrowAction, which is only a reference))." ;
+    sh:or ( [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:lender ] ] ] [ sh:property [ sh:path schema:additionalProperty ;
+                        sh:qualifiedMinCount 1 ;
+                        sh:qualifiedValueShape [ sh:property [ sh:hasValue "librarytype" ;
+                                        sh:path schema:name ] ] ] ] ) ;
+    sh:targetClass schema:LibrarySystem .
+
+<https://wordlift.io/shacl/google/book/librarysystem-librarytype-value-allowed> a sh:NodeShape ;
+    sh:message "A librarytype PropertyValue under a LibrarySystem's additionalProperty has a value among public, academic, corporate, government, school, special (on LibrarySystem nodes (except a LibrarySystem used as the lender of a BorrowAction, which is only a reference))." ;
+    sh:or ( [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:lender ] ] ] [ sh:property [ sh:node [ sh:or ( [ sh:not [ sh:property [ sh:hasValue "librarytype" ;
+                                                            sh:path schema:name ] ] ] [ sh:property [ sh:in ( "public" "academic" "corporate" "government" "school" "special" ) ;
+                                                    sh:minCount 1 ;
+                                                    sh:path schema:value ] ] ) ] ;
+                        sh:path schema:additionalProperty ] ] ) ;
+    sh:targetClass schema:LibrarySystem .
+
+<https://wordlift.io/shacl/google/book/librarysystem-member-present> a sh:NodeShape ;
+    sh:message "Every LibrarySystem has at least one member that is a Library (on LibrarySystem nodes (except a LibrarySystem used as the lender of a BorrowAction, which is only a reference))." ;
+    sh:or ( [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:lender ] ] ] [ sh:property [ sh:path schema:member ;
+                        sh:qualifiedMinCount 1 ;
+                        sh:qualifiedValueShape [ sh:class schema:Library ] ] ] ) ;
+    sh:targetClass schema:LibrarySystem .
+
+<https://wordlift.io/shacl/google/book/librarysystem-name-present> a sh:NodeShape ;
+    sh:message "Every LibrarySystem has a name (on LibrarySystem nodes (except a LibrarySystem used as the lender of a BorrowAction, which is only a reference))." ;
+    sh:or ( [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:lender ] ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:name ] ] ) ;
+    sh:targetClass schema:LibrarySystem .
+
+<https://wordlift.io/shacl/google/book/librarysystem-url-present> a sh:NodeShape ;
+    sh:message "Every LibrarySystem has a url (on LibrarySystem nodes (except a LibrarySystem used as the lender of a BorrowAction, which is only a reference))." ;
+    sh:or ( [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:lender ] ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:url ] ] ) ;
+    sh:targetClass schema:LibrarySystem .
+
+<https://wordlift.io/shacl/google/book/readaction-country-name-present> a sh:NodeShape ;
+    sh:message "Every Country under eligibleRegion has a name (on the Offer under the expectsAcceptanceOf of a ReadAction under an Edition's potentialAction)." ;
+    sh:or ( [ sh:not [ sh:property [ sh:minCount 1 ;
+                                sh:path ( [ sh:inversePath schema:expectsAcceptanceOf ] [ sh:inversePath schema:potentialAction ] [ sh:inversePath schema:workExample ] ) ] ] ] [ sh:property [ sh:node [ sh:or ( [ sh:not [ sh:class schema:Country ] ] [ sh:property [ sh:minCount 1 ;
+                                                    sh:path schema:name ] ] ) ] ;
+                        sh:path schema:eligibleRegion ] ] ) ;
+    sh:targetObjectsOf schema:expectsAcceptanceOf .
+
+<https://wordlift.io/shacl/google/book/readaction-eligibleregion-type-country> a sh:NodeShape ;
+    sh:message "Every eligibleRegion value is a Country node (on the Offer under the expectsAcceptanceOf of a ReadAction under an Edition's potentialAction)." ;
+    sh:or ( [ sh:not [ sh:property [ sh:minCount 1 ;
+                                sh:path ( [ sh:inversePath schema:expectsAcceptanceOf ] [ sh:inversePath schema:potentialAction ] [ sh:inversePath schema:workExample ] ) ] ] ] [ sh:property [ sh:class schema:Country ;
+                        sh:path schema:eligibleRegion ] ] ) ;
+    sh:targetObjectsOf schema:expectsAcceptanceOf .
+
+<https://wordlift.io/shacl/google/book/readaction-expectsacceptanceof-present> a sh:NodeShape ;
+    sh:message "Every ReadAction has an expectsAcceptanceOf (on the ReadAction under an Edition's potentialAction)." ;
+    sh:or ( [ sh:not [ sh:property [ sh:minCount 1 ;
+                                sh:path ( [ sh:inversePath schema:potentialAction ] [ sh:inversePath schema:workExample ] ) ] ] ] [ sh:not [ sh:class schema:ReadAction ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:expectsAcceptanceOf ] ] ) ;
+    sh:targetObjectsOf schema:potentialAction .
+
+<https://wordlift.io/shacl/google/book/readaction-offer-availabilityends-present> a sh:NodeShape ;
+    sh:message "Every Offer has an availabilityEnds (on the Offer under the expectsAcceptanceOf of a ReadAction under an Edition's potentialAction)." ;
+    sh:property [ sh:path ( schema:potentialAction schema:expectsAcceptanceOf ) ;
+            sh:qualifiedMaxCount 0 ;
+            sh:qualifiedValueShape [ sh:not [ sh:property [ sh:minCount 1 ;
+                                    sh:path schema:availabilityEnds ] ] ] ;
+            sh:severity sh:Warning ] ;
+    sh:targetObjectsOf schema:workExample .
+
+<https://wordlift.io/shacl/google/book/readaction-offer-availabilitystarts-present> a sh:NodeShape ;
+    sh:message "Every Offer has an availabilityStarts (on the Offer under the expectsAcceptanceOf of a ReadAction under an Edition's potentialAction)." ;
+    sh:property [ sh:path ( schema:potentialAction schema:expectsAcceptanceOf ) ;
+            sh:qualifiedMaxCount 0 ;
+            sh:qualifiedValueShape [ sh:not [ sh:property [ sh:minCount 1 ;
+                                    sh:path schema:availabilityStarts ] ] ] ;
+            sh:severity sh:Warning ] ;
+    sh:targetObjectsOf schema:workExample .
+
+<https://wordlift.io/shacl/google/book/readaction-offer-category-allowed> a sh:NodeShape ;
+    sh:message "The Offer category is nologinrequired, free, subscription, purchase or rental, compared case-insensitively (on the Offer under the expectsAcceptanceOf of a ReadAction under an Edition's potentialAction)." ;
+    sh:or ( [ sh:not [ sh:property [ sh:minCount 1 ;
+                                sh:path ( [ sh:inversePath schema:expectsAcceptanceOf ] [ sh:inversePath schema:potentialAction ] [ sh:inversePath schema:workExample ] ) ] ] ] [ sh:property [ sh:flags "i" ;
+                        sh:path schema:category ;
+                        sh:pattern "^(nologinrequired|free|subscription|purchase|rental)$" ] ] ) ;
+    sh:targetObjectsOf schema:expectsAcceptanceOf .
+
+<https://wordlift.io/shacl/google/book/readaction-offer-category-present> a sh:NodeShape ;
+    sh:message "Every Offer has a category (on the Offer under the expectsAcceptanceOf of a ReadAction under an Edition's potentialAction)." ;
+    sh:or ( [ sh:not [ sh:property [ sh:minCount 1 ;
+                                sh:path ( [ sh:inversePath schema:expectsAcceptanceOf ] [ sh:inversePath schema:potentialAction ] [ sh:inversePath schema:workExample ] ) ] ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:category ] ] ) ;
+    sh:targetObjectsOf schema:expectsAcceptanceOf .
+
+<https://wordlift.io/shacl/google/book/readaction-offer-eligibleregion-present> a sh:NodeShape ;
+    sh:message "Every Offer has an eligibleRegion (on the Offer under the expectsAcceptanceOf of a ReadAction under an Edition's potentialAction)." ;
+    sh:or ( [ sh:not [ sh:property [ sh:minCount 1 ;
+                                sh:path ( [ sh:inversePath schema:expectsAcceptanceOf ] [ sh:inversePath schema:potentialAction ] [ sh:inversePath schema:workExample ] ) ] ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:eligibleRegion ] ] ) ;
+    sh:targetObjectsOf schema:expectsAcceptanceOf .
+
+<https://wordlift.io/shacl/google/book/readaction-offer-price-required-for-purchase-rental> a sh:NodeShape ;
+    sh:message "An Offer whose category is purchase or rental (case-insensitive) has a price (on the Offer under the expectsAcceptanceOf of a ReadAction under an Edition's potentialAction)." ;
+    sh:or ( [ sh:not [ sh:property [ sh:minCount 1 ;
+                                sh:path ( [ sh:inversePath schema:expectsAcceptanceOf ] [ sh:inversePath schema:potentialAction ] [ sh:inversePath schema:workExample ] ) ] ] ] [ sh:not [ sh:property [ sh:path schema:category ;
+                                sh:qualifiedMinCount 1 ;
+                                sh:qualifiedValueShape [ sh:flags "i" ;
+                                        sh:pattern "^(purchase|rental)$" ] ] ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:price ] ] ) ;
+    sh:targetObjectsOf schema:expectsAcceptanceOf .
+
+<https://wordlift.io/shacl/google/book/readaction-offer-pricecurrency-present> a sh:NodeShape ;
+    sh:message "Every Offer has a priceCurrency (on the Offer under the expectsAcceptanceOf of a ReadAction under an Edition's potentialAction)." ;
+    sh:property [ sh:path ( schema:potentialAction schema:expectsAcceptanceOf ) ;
+            sh:qualifiedMaxCount 0 ;
+            sh:qualifiedValueShape [ sh:not [ sh:property [ sh:minCount 1 ;
+                                    sh:path schema:priceCurrency ] ] ] ;
+            sh:severity sh:Warning ] ;
+    sh:targetObjectsOf schema:workExample .
+
+<https://wordlift.io/shacl/google/book/readaction-target-present> a sh:NodeShape ;
+    sh:message "Every ReadAction has a target (on the ReadAction under an Edition's potentialAction)." ;
+    sh:or ( [ sh:not [ sh:property [ sh:minCount 1 ;
+                                sh:path ( [ sh:inversePath schema:potentialAction ] [ sh:inversePath schema:workExample ] ) ] ] ] [ sh:not [ sh:class schema:ReadAction ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:target ] ] ) ;
+    sh:targetObjectsOf schema:potentialAction .
+
