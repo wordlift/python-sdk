@@ -1,61 +1,89 @@
-@prefix : <https://wordlift.io/shacl/google/google-loyalty-program/> .
-@prefix sh: <http://www.w3.org/ns/shacl#> .
-@prefix schema: <http://schema.org/> .
-
 # Source: https://developers.google.com/search/docs/appearance/structured-data/loyalty-program
-# Generated: 2026-02-26T15:42:12Z
+# Generated: 2026-11-05T14:35:24Z
 # Notes: required properties => errors; recommended properties => warnings.
+# google-loyalty-program: 11 rules generated from the Google Search Central doc by the tdd-mvp-3 pipeline.
+# Bundled from per-rule files by harness/bundle.py, schema.org subtypes expanded (targetClass 0, class 0, in 0). Do not edit by hand.
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-:google_MemberProgramShape
-  a sh:NodeShape ;
-  sh:targetClass schema:MemberProgram ;
-  sh:property [
-    sh:path schema:description ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:hasTiers ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:name ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:url ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: url." ;
-  ] ;
-.
+<https://wordlift.io/shacl/google/loyalty-program/memberprogram-description-required> a sh:NodeShape ;
+    sh:property [ sh:message "Rule memberprogram-description-required: every MemberProgram must have a description." ;
+            sh:minCount 1 ;
+            sh:path schema:description ;
+            sh:severity sh:Violation ] ;
+    sh:targetClass schema:MemberProgram .
 
-:google_MemberProgramTierShape
-  a sh:NodeShape ;
-  sh:targetClass schema:MemberProgramTier ;
-  sh:property [
-    sh:path schema:hasTierBenefit ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:name ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:hasTierRequirement ;
-    sh:minCount 1 ;
+<https://wordlift.io/shacl/google/loyalty-program/memberprogram-hastiers-required> a sh:NodeShape ;
+    sh:property [ sh:message "Rule memberprogram-hastiers-required: every MemberProgram must have at least one hasTiers value." ;
+            sh:minCount 1 ;
+            sh:path schema:hasTiers ;
+            sh:severity sh:Violation ] ;
+    sh:targetClass schema:MemberProgram .
+
+<https://wordlift.io/shacl/google/loyalty-program/memberprogram-name-required> a sh:NodeShape ;
+    sh:property [ sh:message "Rule memberprogram-name-required: every MemberProgram must have a name." ;
+            sh:minCount 1 ;
+            sh:path schema:name ;
+            sh:severity sh:Violation ] ;
+    sh:targetClass schema:MemberProgram .
+
+<https://wordlift.io/shacl/google/loyalty-program/memberprogram-url-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "Rule memberprogram-url-recommended: every MemberProgram should have a url." ;
+            sh:minCount 1 ;
+            sh:path schema:url ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:MemberProgram .
+
+<https://wordlift.io/shacl/google/loyalty-program/memberprogram-url-single> a sh:NodeShape ;
+    sh:property [ sh:maxCount 1 ;
+            sh:message "Rule memberprogram-url-single: a MemberProgram must not have more than one url." ;
+            sh:path schema:url ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:MemberProgram .
+
+<https://wordlift.io/shacl/google/loyalty-program/membertier-hastierbenefit-required> a sh:NodeShape ;
+    sh:property [ sh:message "Rule membertier-hastierbenefit-required: every MemberProgramTier must have at least one hasTierBenefit value." ;
+            sh:minCount 1 ;
+            sh:path schema:hasTierBenefit ;
+            sh:severity sh:Violation ] ;
+    sh:targetClass schema:MemberProgramTier .
+
+<https://wordlift.io/shacl/google/loyalty-program/membertier-hastierrequirement-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "Rule membertier-hastierrequirement-recommended: every MemberProgramTier should have a hasTierRequirement." ;
+            sh:minCount 1 ;
+            sh:path schema:hasTierRequirement ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:MemberProgramTier .
+
+<https://wordlift.io/shacl/google/loyalty-program/membertier-membershippointsearned-recommended> a sh:NodeShape ;
+    sh:message "Rule membertier-membershippointsearned-recommended: a MemberProgramTier whose hasTierBenefit includes TierBenefitLoyaltyPoints should have membershipPointsEarned." ;
+    sh:or ( [ sh:not [ sh:property [ sh:path schema:hasTierBenefit ;
+                                sh:qualifiedMinCount 1 ;
+                                sh:qualifiedValueShape [ sh:pattern "(^|[/#])TierBenefitLoyaltyPoints$" ] ] ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:membershipPointsEarned ] ] ) ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: hasTierRequirement." ;
-  ] ;
-  sh:property [
-    sh:path schema:membershipPointsEarned ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: membershipPointsEarned." ;
-  ] ;
-  sh:property [
-    sh:path schema:url ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: url." ;
-  ] ;
-.
+    sh:targetClass schema:MemberProgramTier .
+
+<https://wordlift.io/shacl/google/loyalty-program/membertier-name-required> a sh:NodeShape ;
+    sh:property [ sh:message "Rule membertier-name-required: every MemberProgramTier must have a name." ;
+            sh:minCount 1 ;
+            sh:path schema:name ;
+            sh:severity sh:Violation ] ;
+    sh:targetClass schema:MemberProgramTier .
+
+<https://wordlift.io/shacl/google/loyalty-program/membertier-url-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "Rule membertier-url-recommended: every MemberProgramTier should have a url." ;
+            sh:minCount 1 ;
+            sh:path schema:url ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:MemberProgramTier .
+
+<https://wordlift.io/shacl/google/loyalty-program/membertier-url-single> a sh:NodeShape ;
+    sh:property [ sh:maxCount 1 ;
+            sh:message "Rule membertier-url-single: a MemberProgramTier must not have more than one url." ;
+            sh:path schema:url ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:MemberProgramTier .
+

@@ -1,36 +1,108 @@
-@prefix : <https://wordlift.io/shacl/google/google-software-app/> .
-@prefix sh: <http://www.w3.org/ns/shacl#> .
-@prefix schema: <http://schema.org/> .
-
 # Source: https://developers.google.com/search/docs/appearance/structured-data/software-app
-# Generated: 2026-02-26T15:42:19Z
+# Generated: 2026-11-05T14:35:24Z
 # Notes: required properties => errors; recommended properties => warnings.
+# google-software-app: 8 rules generated from the Google Search Central doc by the tdd-mvp-3 pipeline.
+# Bundled from per-rule files by harness/bundle.py, schema.org subtypes expanded (targetClass 7, class 1, in 0). Do not edit by hand.
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-:google_SoftwareApplicationShape
-  a sh:NodeShape ;
-  sh:targetClass schema:SoftwareApplication ;
-  sh:property [
-    sh:path schema:name ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path ( schema:offers schema:price ) ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:review ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:applicationCategory ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: applicationCategory." ;
-  ] ;
-  sh:property [
-    sh:path schema:operatingSystem ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: operatingSystem." ;
-  ] ;
-.
+<https://wordlift.io/shacl/google/software-app/offer-pricecurrency-recommended-when-price-positive> a sh:NodeShape ;
+    sh:property [ sh:message "software-app rule offer-pricecurrency-recommended-when-price-positive: an Offer with a price greater than 0 should have priceCurrency." ;
+            sh:path schema:offers ;
+            sh:qualifiedMaxCount 0 ;
+            sh:qualifiedValueShape [ sh:property [ sh:path schema:price ;
+                            sh:qualifiedMinCount 1 ;
+                            sh:qualifiedValueShape [ sh:or ( [ sh:minExclusive 0 ] [ sh:pattern "^\\+?(0*[1-9][0-9]*(\\.[0-9]*)?|0*\\.[0-9]*[1-9][0-9]*)$" ] ) ] ],
+                        [ sh:maxCount 0 ;
+                            sh:path schema:priceCurrency ] ] ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:MobileApplication,
+        schema:OperatingSystem,
+        schema:RuntimePlatform,
+        schema:SoftwareApplication,
+        schema:VideoGame,
+        schema:WebApplication .
+
+<https://wordlift.io/shacl/google/software-app/softwareapplication-applicationcategory-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "software-app rule softwareapplication-applicationcategory-recommended: a SoftwareApplication should have applicationCategory." ;
+            sh:minCount 1 ;
+            sh:path schema:applicationCategory ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:MobileApplication,
+        schema:OperatingSystem,
+        schema:RuntimePlatform,
+        schema:SoftwareApplication,
+        schema:VideoGame,
+        schema:WebApplication .
+
+<https://wordlift.io/shacl/google/software-app/softwareapplication-applicationcategory-supported-value> a sh:NodeShape ;
+    sh:property [ sh:in ( "GameApplication" "SocialNetworkingApplication" "TravelApplication" "ShoppingApplication" "SportsApplication" "LifestyleApplication" "BusinessApplication" "DesignApplication" "DeveloperApplication" "DriverApplication" "EducationalApplication" "HealthApplication" "FinanceApplication" "SecurityApplication" "BrowserApplication" "CommunicationApplication" "DesktopEnhancementApplication" "EntertainmentApplication" "MultimediaApplication" "HomeApplication" "UtilitiesApplication" ) ;
+            sh:message "software-app rule softwareapplication-applicationcategory-supported-value: each applicationCategory must be one of the supported app types (exact text, e.g. GameApplication)." ;
+            sh:path schema:applicationCategory ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:MobileApplication,
+        schema:OperatingSystem,
+        schema:RuntimePlatform,
+        schema:SoftwareApplication,
+        schema:VideoGame,
+        schema:WebApplication .
+
+<https://wordlift.io/shacl/google/software-app/softwareapplication-name-required> a sh:NodeShape ;
+    sh:property [ sh:message "software-app rule softwareapplication-name-required: a SoftwareApplication must have a name." ;
+            sh:minCount 1 ;
+            sh:path schema:name ] ;
+    sh:targetClass schema:MobileApplication,
+        schema:OperatingSystem,
+        schema:RuntimePlatform,
+        schema:SoftwareApplication,
+        schema:VideoGame,
+        schema:WebApplication .
+
+<https://wordlift.io/shacl/google/software-app/softwareapplication-offers-price-required> a sh:NodeShape ;
+    sh:property [ sh:message "software-app rule softwareapplication-offers-price-required: a SoftwareApplication must have an Offer in offers with a price (0 counts as present)." ;
+            sh:path schema:offers ;
+            sh:qualifiedMinCount 1 ;
+            sh:qualifiedValueShape [ sh:or ( [ sh:class schema:Offer ] [ sh:class schema:AggregateOffer ] [ sh:class schema:OfferForLease ] [ sh:class schema:OfferForPurchase ] ) ;
+                    sh:property [ sh:minCount 1 ;
+                            sh:path schema:price ] ] ] ;
+    sh:targetClass schema:MobileApplication,
+        schema:OperatingSystem,
+        schema:RuntimePlatform,
+        schema:SoftwareApplication,
+        schema:VideoGame,
+        schema:WebApplication .
+
+<https://wordlift.io/shacl/google/software-app/softwareapplication-operatingsystem-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "software-app rule softwareapplication-operatingsystem-recommended: a SoftwareApplication should have operatingSystem." ;
+            sh:minCount 1 ;
+            sh:path schema:operatingSystem ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:MobileApplication,
+        schema:OperatingSystem,
+        schema:RuntimePlatform,
+        schema:SoftwareApplication,
+        schema:VideoGame,
+        schema:WebApplication .
+
+<https://wordlift.io/shacl/google/software-app/softwareapplication-rating-or-review-required> a sh:NodeShape ;
+    sh:message "software-app rule softwareapplication-rating-or-review-required: a SoftwareApplication must have aggregateRating or review." ;
+    sh:or ( [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:aggregateRating ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:review ] ] ) ;
+    sh:targetClass schema:MobileApplication,
+        schema:OperatingSystem,
+        schema:RuntimePlatform,
+        schema:SoftwareApplication,
+        schema:VideoGame,
+        schema:WebApplication .
+
+<https://wordlift.io/shacl/google/software-app/softwareapplication-videogame-needs-cotype> a sh:NodeShape ;
+    sh:property [ sh:message "software-app rule softwareapplication-videogame-needs-cotype: a VideoGame SoftwareApplication is not rich-result eligible unless co-typed (e.g. MobileApplication or WebApplication)." ;
+            sh:path rdf:type ;
+            sh:qualifiedMinCount 1 ;
+            sh:qualifiedValueShape [ sh:in ( schema:MobileApplication schema:WebApplication ) ] ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:VideoGame .
+

@@ -1,366 +1,383 @@
-@prefix : <https://wordlift.io/shacl/google/google-qapage/> .
-@prefix sh: <http://www.w3.org/ns/shacl#> .
-@prefix schema: <http://schema.org/> .
-
 # Source: https://developers.google.com/search/docs/appearance/structured-data/qapage
-# Generated: 2026-02-26T15:42:16Z
+# Generated: 2026-11-05T14:35:24Z
 # Notes: required properties => errors; recommended properties => warnings.
+# google-qapage: 38 rules generated from the Google Search Central doc by the tdd-mvp-3 pipeline.
+# Bundled from per-rule files by harness/bundle.py, schema.org subtypes expanded (targetClass 0, class 15, in 0). Do not edit by hand.
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-:google_QAPageShape
-  a sh:NodeShape ;
-  sh:targetClass schema:QAPage ;
-  sh:property [
-    sh:path schema:mainEntity ;
-    sh:minCount 1 ;
-    sh:node [
-      a sh:NodeShape ;
-      sh:class schema:Question ;
-      sh:property [
-        sh:path schema:answerCount ;
-        sh:minCount 1 ;
-      ] ;
-      sh:property [
-        sh:path schema:author ;
-        sh:minCount 1 ;
-        sh:severity sh:Warning ;
-        sh:message "Recommended by Google: author." ;
-      ] ;
-      sh:property [
-        sh:path ( schema:author schema:url ) ;
-        sh:minCount 1 ;
-        sh:severity sh:Warning ;
-        sh:message "Recommended by Google: author.url." ;
-      ] ;
-      sh:property [
-        sh:path schema:comment ;
-        sh:minCount 1 ;
-        sh:severity sh:Warning ;
-        sh:message "Recommended by Google: comment." ;
-        sh:node [
-          a sh:NodeShape ;
-          sh:class schema:Comment ;
-          sh:property [
-            sh:path schema:text ;
-            sh:minCount 1 ;
-          ] ;
-          sh:property [
-            sh:path schema:author ;
-            sh:minCount 1 ;
-            sh:severity sh:Warning ;
-            sh:message "Recommended by Google: author." ;
-          ] ;
-          sh:property [
-            sh:path ( schema:author schema:url ) ;
-            sh:minCount 1 ;
-            sh:severity sh:Warning ;
-            sh:message "Recommended by Google: author.url." ;
-          ] ;
-          sh:property [
-            sh:path schema:comment ;
-            sh:minCount 1 ;
-            sh:severity sh:Warning ;
-            sh:message "Recommended by Google: comment." ;
-          ] ;
-          sh:property [
-            sh:path schema:dateModified ;
-            sh:minCount 1 ;
-            sh:severity sh:Warning ;
-            sh:message "Recommended by Google: dateModified." ;
-          ] ;
-          sh:property [
-            sh:path schema:datePublished ;
-            sh:minCount 1 ;
-            sh:severity sh:Warning ;
-            sh:message "Recommended by Google: datePublished." ;
-          ] ;
-          sh:property [
-            sh:path schema:image ;
-            sh:minCount 1 ;
-            sh:severity sh:Warning ;
-            sh:message "Recommended by Google: image." ;
-          ] ;
-          sh:property [
-            sh:path schema:video ;
-            sh:minCount 1 ;
-            sh:severity sh:Warning ;
-            sh:message "Recommended by Google: video." ;
-          ] ;
-        ] ;
-      ] ;
-      sh:property [
-        sh:path schema:dateModified ;
-        sh:minCount 1 ;
-        sh:severity sh:Warning ;
-        sh:message "Recommended by Google: dateModified." ;
-      ] ;
-      sh:property [
-        sh:path schema:datePublished ;
-        sh:minCount 1 ;
-        sh:severity sh:Warning ;
-        sh:message "Recommended by Google: datePublished." ;
-      ] ;
-      sh:property [
-        sh:path schema:image ;
-        sh:minCount 1 ;
-        sh:severity sh:Warning ;
-        sh:message "Recommended by Google: image." ;
-      ] ;
-      sh:property [
-        sh:path schema:text ;
-        sh:minCount 1 ;
-        sh:severity sh:Warning ;
-        sh:message "Recommended by Google: text." ;
-      ] ;
-      sh:property [
-        sh:path schema:upvoteCount ;
-        sh:minCount 1 ;
-        sh:severity sh:Warning ;
-        sh:message "Recommended by Google: upvoteCount." ;
-      ] ;
-      sh:property [
-        sh:path schema:video ;
-        sh:minCount 1 ;
-        sh:severity sh:Warning ;
-        sh:message "Recommended by Google: video." ;
-      ] ;
-      sh:or (
-        [
-          sh:property [
-            sh:path schema:acceptedAnswer ;
-            sh:minCount 1 ;
-              sh:node [
-                a sh:NodeShape ;
-                sh:class schema:Answer ;
-                sh:property [
-                  sh:path schema:text ;
-                  sh:minCount 1 ;
-                ] ;
-                sh:property [
-                  sh:path schema:author ;
-                  sh:minCount 1 ;
-                  sh:severity sh:Warning ;
-                  sh:message "Recommended by Google: author." ;
-                ] ;
-                sh:property [
-                  sh:path ( schema:author schema:url ) ;
-                  sh:minCount 1 ;
-                  sh:severity sh:Warning ;
-                  sh:message "Recommended by Google: author.url." ;
-                ] ;
-                sh:property [
-                  sh:path schema:comment ;
-                  sh:minCount 1 ;
-                  sh:severity sh:Warning ;
-                  sh:message "Recommended by Google: comment." ;
-                  sh:node [
-                    a sh:NodeShape ;
-                    sh:class schema:Comment ;
-                    sh:property [
-                      sh:path schema:text ;
-                      sh:minCount 1 ;
-                    ] ;
-                    sh:property [
-                      sh:path schema:author ;
-                      sh:minCount 1 ;
-                      sh:severity sh:Warning ;
-                      sh:message "Recommended by Google: author." ;
-                    ] ;
-                    sh:property [
-                      sh:path ( schema:author schema:url ) ;
-                      sh:minCount 1 ;
-                      sh:severity sh:Warning ;
-                      sh:message "Recommended by Google: author.url." ;
-                    ] ;
-                    sh:property [
-                      sh:path schema:comment ;
-                      sh:minCount 1 ;
-                      sh:severity sh:Warning ;
-                      sh:message "Recommended by Google: comment." ;
-                    ] ;
-                    sh:property [
-                      sh:path schema:dateModified ;
-                      sh:minCount 1 ;
-                      sh:severity sh:Warning ;
-                      sh:message "Recommended by Google: dateModified." ;
-                    ] ;
-                    sh:property [
-                      sh:path schema:datePublished ;
-                      sh:minCount 1 ;
-                      sh:severity sh:Warning ;
-                      sh:message "Recommended by Google: datePublished." ;
-                    ] ;
-                    sh:property [
-                      sh:path schema:image ;
-                      sh:minCount 1 ;
-                      sh:severity sh:Warning ;
-                      sh:message "Recommended by Google: image." ;
-                    ] ;
-                    sh:property [
-                      sh:path schema:video ;
-                      sh:minCount 1 ;
-                      sh:severity sh:Warning ;
-                      sh:message "Recommended by Google: video." ;
-                    ] ;
-                  ] ;
-                ] ;
-                sh:property [
-                  sh:path schema:dateModified ;
-                  sh:minCount 1 ;
-                  sh:severity sh:Warning ;
-                  sh:message "Recommended by Google: dateModified." ;
-                ] ;
-                sh:property [
-                  sh:path schema:datePublished ;
-                  sh:minCount 1 ;
-                  sh:severity sh:Warning ;
-                  sh:message "Recommended by Google: datePublished." ;
-                ] ;
-                sh:property [
-                  sh:path schema:image ;
-                  sh:minCount 1 ;
-                  sh:severity sh:Warning ;
-                  sh:message "Recommended by Google: image." ;
-                ] ;
-                sh:property [
-                  sh:path schema:upvoteCount ;
-                  sh:minCount 1 ;
-                  sh:severity sh:Warning ;
-                  sh:message "Recommended by Google: upvoteCount." ;
-                ] ;
-                sh:property [
-                  sh:path schema:url ;
-                  sh:minCount 1 ;
-                  sh:severity sh:Warning ;
-                  sh:message "Recommended by Google: url." ;
-                ] ;
-                sh:property [
-                  sh:path schema:video ;
-                  sh:minCount 1 ;
-                  sh:severity sh:Warning ;
-                  sh:message "Recommended by Google: video." ;
-                ] ;
-              ] ;
-          ] ;
-        ]
-        [
-          sh:property [
-            sh:path schema:suggestedAnswer ;
-            sh:minCount 1 ;
-              sh:node [
-                a sh:NodeShape ;
-                sh:class schema:Answer ;
-                sh:property [
-                  sh:path schema:text ;
-                  sh:minCount 1 ;
-                ] ;
-                sh:property [
-                  sh:path schema:author ;
-                  sh:minCount 1 ;
-                  sh:severity sh:Warning ;
-                  sh:message "Recommended by Google: author." ;
-                ] ;
-                sh:property [
-                  sh:path ( schema:author schema:url ) ;
-                  sh:minCount 1 ;
-                  sh:severity sh:Warning ;
-                  sh:message "Recommended by Google: author.url." ;
-                ] ;
-                sh:property [
-                  sh:path schema:comment ;
-                  sh:minCount 1 ;
-                  sh:severity sh:Warning ;
-                  sh:message "Recommended by Google: comment." ;
-                  sh:node [
-                    a sh:NodeShape ;
-                    sh:class schema:Comment ;
-                    sh:property [
-                      sh:path schema:text ;
-                      sh:minCount 1 ;
-                    ] ;
-                    sh:property [
-                      sh:path schema:author ;
-                      sh:minCount 1 ;
-                      sh:severity sh:Warning ;
-                      sh:message "Recommended by Google: author." ;
-                    ] ;
-                    sh:property [
-                      sh:path ( schema:author schema:url ) ;
-                      sh:minCount 1 ;
-                      sh:severity sh:Warning ;
-                      sh:message "Recommended by Google: author.url." ;
-                    ] ;
-                    sh:property [
-                      sh:path schema:comment ;
-                      sh:minCount 1 ;
-                      sh:severity sh:Warning ;
-                      sh:message "Recommended by Google: comment." ;
-                    ] ;
-                    sh:property [
-                      sh:path schema:dateModified ;
-                      sh:minCount 1 ;
-                      sh:severity sh:Warning ;
-                      sh:message "Recommended by Google: dateModified." ;
-                    ] ;
-                    sh:property [
-                      sh:path schema:datePublished ;
-                      sh:minCount 1 ;
-                      sh:severity sh:Warning ;
-                      sh:message "Recommended by Google: datePublished." ;
-                    ] ;
-                    sh:property [
-                      sh:path schema:image ;
-                      sh:minCount 1 ;
-                      sh:severity sh:Warning ;
-                      sh:message "Recommended by Google: image." ;
-                    ] ;
-                    sh:property [
-                      sh:path schema:video ;
-                      sh:minCount 1 ;
-                      sh:severity sh:Warning ;
-                      sh:message "Recommended by Google: video." ;
-                    ] ;
-                  ] ;
-                ] ;
-                sh:property [
-                  sh:path schema:dateModified ;
-                  sh:minCount 1 ;
-                  sh:severity sh:Warning ;
-                  sh:message "Recommended by Google: dateModified." ;
-                ] ;
-                sh:property [
-                  sh:path schema:datePublished ;
-                  sh:minCount 1 ;
-                  sh:severity sh:Warning ;
-                  sh:message "Recommended by Google: datePublished." ;
-                ] ;
-                sh:property [
-                  sh:path schema:image ;
-                  sh:minCount 1 ;
-                  sh:severity sh:Warning ;
-                  sh:message "Recommended by Google: image." ;
-                ] ;
-                sh:property [
-                  sh:path schema:upvoteCount ;
-                  sh:minCount 1 ;
-                  sh:severity sh:Warning ;
-                  sh:message "Recommended by Google: upvoteCount." ;
-                ] ;
-                sh:property [
-                  sh:path schema:url ;
-                  sh:minCount 1 ;
-                  sh:severity sh:Warning ;
-                  sh:message "Recommended by Google: url." ;
-                ] ;
-                sh:property [
-                  sh:path schema:video ;
-                  sh:minCount 1 ;
-                  sh:severity sh:Warning ;
-                  sh:message "Recommended by Google: video." ;
-                ] ;
-              ] ;
-          ] ;
-        ]
-      ) ;
-    ] ;
-  ] ;
-.
+<https://wordlift.io/shacl/google/qapage/answer-author-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "answer author recommended check failed for this QAPage" ;
+            sh:path ( schema:mainEntity [ sh:alternativePath ( schema:acceptedAnswer schema:suggestedAnswer ) ] ) ;
+            sh:qualifiedMaxCount 0 ;
+            sh:qualifiedValueShape [ sh:class schema:Answer ;
+                    sh:not [ sh:property [ sh:minCount 1 ;
+                                    sh:path schema:author ] ] ] ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:QAPage .
+
+<https://wordlift.io/shacl/google/qapage/answer-author-url-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "answer author url recommended check failed for this QAPage" ;
+            sh:path ( schema:mainEntity [ sh:alternativePath ( schema:acceptedAnswer schema:suggestedAnswer ) ] schema:author ) ;
+            sh:qualifiedMaxCount 0 ;
+            sh:qualifiedValueShape [ sh:nodeKind sh:BlankNodeOrIRI ;
+                    sh:not [ sh:property [ sh:minCount 1 ;
+                                    sh:path schema:url ] ] ;
+                    sh:or ( [ sh:or ( [ sh:class schema:Person ] [ sh:class schema:Patient ] ) ] [ sh:or ( [ sh:class schema:Organization ] [ sh:class schema:AccountingService ] [ sh:class schema:AdultEntertainment ] [ sh:class schema:Airline ] [ sh:class schema:AmusementPark ] [ sh:class schema:AnimalShelter ] [ sh:class schema:ArchiveOrganization ] [ sh:class schema:ArtGallery ] [ sh:class schema:Attorney ] [ sh:class schema:AutoBodyShop ] [ sh:class schema:AutoDealer ] [ sh:class schema:AutoPartsStore ] [ sh:class schema:AutoRental ] [ sh:class schema:AutoRepair ] [ sh:class schema:AutoWash ] [ sh:class schema:AutomatedTeller ] [ sh:class schema:AutomotiveBusiness ] [ sh:class schema:Bakery ] [ sh:class schema:BankOrCreditUnion ] [ sh:class schema:BarOrPub ] [ sh:class schema:BeautySalon ] [ sh:class schema:BedAndBreakfast ] [ sh:class schema:BikeStore ] [ sh:class schema:BookStore ] [ sh:class schema:BowlingAlley ] [ sh:class schema:Brewery ] [ sh:class schema:CafeOrCoffeeShop ] [ sh:class schema:Campground ] [ sh:class schema:Casino ] [ sh:class schema:ChildCare ] [ sh:class schema:ClothingStore ] [ sh:class schema:CollegeOrUniversity ] [ sh:class schema:ComedyClub ] [ sh:class schema:CommunityHealth ] [ sh:class schema:ComputerStore ] [ sh:class schema:Consortium ] [ sh:class schema:ConvenienceStore ] [ sh:class schema:Cooperative ] [ sh:class schema:Corporation ] [ sh:class schema:CovidTestingFacility ] [ sh:class schema:DanceGroup ] [ sh:class schema:DaySpa ] [ sh:class schema:Dentist ] [ sh:class schema:DepartmentStore ] [ sh:class schema:Dermatology ] [ sh:class schema:DiagnosticLab ] [ sh:class schema:DietNutrition ] [ sh:class schema:Distillery ] [ sh:class schema:DryCleaningOrLaundry ] [ sh:class schema:EducationalOrganization ] [ sh:class schema:Electrician ] [ sh:class schema:ElectronicsStore ] [ sh:class schema:ElementarySchool ] [ sh:class schema:Emergency ] [ sh:class schema:EmergencyService ] [ sh:class schema:EmploymentAgency ] [ sh:class schema:EntertainmentBusiness ] [ sh:class schema:ExerciseGym ] [ sh:class schema:FastFoodRestaurant ] [ sh:class schema:FinancialService ] [ sh:class schema:FireStation ] [ sh:class schema:Florist ] [ sh:class schema:FoodEstablishment ] [ sh:class schema:FundingAgency ] [ sh:class schema:FundingScheme ] [ sh:class schema:FurnitureStore ] [ sh:class schema:GardenStore ] [ sh:class schema:GasStation ] [ sh:class schema:GeneralContractor ] [ sh:class schema:Geriatric ] [ sh:class schema:GolfCourse ] [ sh:class schema:GovernmentOffice ] [ sh:class schema:GovernmentOrganization ] [ sh:class schema:GroceryStore ] [ sh:class schema:Gynecologic ] [ sh:class schema:HVACBusiness ] [ sh:class schema:HairSalon ] [ sh:class schema:HardwareStore ] [ sh:class schema:HealthAndBeautyBusiness ] [ sh:class schema:HealthClub ] [ sh:class schema:HighSchool ] [ sh:class schema:HobbyShop ] [ sh:class schema:HomeAndConstructionBusiness ] [ sh:class schema:HomeGoodsStore ] [ sh:class schema:Hospital ] [ sh:class schema:Hostel ] [ sh:class schema:Hotel ] [ sh:class schema:HousePainter ] [ sh:class schema:IceCreamShop ] [ sh:class schema:IndividualPhysician ] [ sh:class schema:InsuranceAgency ] [ sh:class schema:InternetCafe ] [ sh:class schema:JewelryStore ] [ sh:class schema:LegalService ] [ sh:class schema:Library ] [ sh:class schema:LibrarySystem ] [ sh:class schema:LiquorStore ] [ sh:class schema:LocalBusiness ] [ sh:class schema:Locksmith ] [ sh:class schema:LodgingBusiness ] [ sh:class schema:MedicalBusiness ] [ sh:class schema:MedicalClinic ] [ sh:class schema:MedicalOrganization ] [ sh:class schema:MensClothingStore ] [ sh:class schema:MiddleSchool ] [ sh:class schema:Midwifery ] [ sh:class schema:MobilePhoneStore ] [ sh:class schema:Motel ] [ sh:class schema:MotorcycleDealer ] [ sh:class schema:MotorcycleRepair ] [ sh:class schema:MovieRentalStore ] [ sh:class schema:MovieTheater ] [ sh:class schema:MovingCompany ] [ sh:class schema:MusicGroup ] [ sh:class schema:MusicStore ] [ sh:class schema:NGO ] [ sh:class schema:NailSalon ] [ sh:class schema:NewsMediaOrganization ] [ sh:class schema:NightClub ] [ sh:class schema:Notary ] [ sh:class schema:Nursing ] [ sh:class schema:Obstetric ] [ sh:class schema:OfficeEquipmentStore ] [ sh:class schema:Oncologic ] [ sh:class schema:OnlineBusiness ] [ sh:class schema:OnlineMarketplace ] [ sh:class schema:OnlineStore ] [ sh:class schema:Optician ] [ sh:class schema:Optometric ] [ sh:class schema:Otolaryngologic ] [ sh:class schema:OutletStore ] [ sh:class schema:PawnShop ] [ sh:class schema:Pediatric ] [ sh:class schema:PerformingGroup ] [ sh:class schema:PetStore ] [ sh:class schema:Pharmacy ] [ sh:class schema:Physician ] [ sh:class schema:PhysiciansOffice ] [ sh:class schema:Physiotherapy ] [ sh:class schema:PlasticSurgery ] [ sh:class schema:Plumber ] [ sh:class schema:Podiatric ] [ sh:class schema:PoliceStation ] [ sh:class schema:PoliticalParty ] [ sh:class schema:PostOffice ] [ sh:class schema:Preschool ] [ sh:class schema:PrimaryCare ] [ sh:class schema:ProfessionalService ] [ sh:class schema:Project ] [ sh:class schema:Psychiatric ] [ sh:class schema:PublicHealth ] [ sh:class schema:PublicSwimmingPool ] [ sh:class schema:RadioStation ] [ sh:class schema:RealEstateAgent ] [ sh:class schema:RecyclingCenter ] [ sh:class schema:ResearchOrganization ] [ sh:class schema:ResearchProject ] [ sh:class schema:Resort ] [ sh:class schema:Restaurant ] [ sh:class schema:RoofingContractor ] [ sh:class schema:School ] [ sh:class schema:SearchRescueOrganization ] [ sh:class schema:SelfStorage ] [ sh:class schema:ShoeStore ] [ sh:class schema:ShoppingCenter ] [ sh:class schema:SkiResort ] [ sh:class schema:SportingGoodsStore ] [ sh:class schema:SportsActivityLocation ] [ sh:class schema:SportsClub ] [ sh:class schema:SportsOrganization ] [ sh:class schema:SportsTeam ] [ sh:class schema:StadiumOrArena ] [ sh:class schema:Store ] [ sh:class schema:TattooParlor ] [ sh:class schema:TelevisionStation ] [ sh:class schema:TennisComplex ] [ sh:class schema:TheaterGroup ] [ sh:class schema:TireShop ] [ sh:class schema:TouristInformationCenter ] [ sh:class schema:ToyStore ] [ sh:class schema:TravelAgency ] [ sh:class schema:VacationRental ] [ sh:class schema:VeterinaryCare ] [ sh:class schema:WholesaleStore ] [ sh:class schema:Winery ] [ sh:class schema:WorkersUnion ] ) ] ) ] ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:QAPage .
+
+<https://wordlift.io/shacl/google/qapage/answer-comment-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "answer comment recommended check failed for this QAPage" ;
+            sh:path ( schema:mainEntity [ sh:alternativePath ( schema:acceptedAnswer schema:suggestedAnswer ) ] ) ;
+            sh:qualifiedMaxCount 0 ;
+            sh:qualifiedValueShape [ sh:class schema:Answer ;
+                    sh:not [ sh:property [ sh:minCount 1 ;
+                                    sh:path schema:comment ] ] ] ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:QAPage .
+
+<https://wordlift.io/shacl/google/qapage/answer-commentcount-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "answer commentcount recommended check failed for this QAPage" ;
+            sh:path ( schema:mainEntity [ sh:alternativePath ( schema:acceptedAnswer schema:suggestedAnswer ) ] ) ;
+            sh:qualifiedMaxCount 0 ;
+            sh:qualifiedValueShape [ sh:class schema:Answer ;
+                    sh:not [ sh:property [ sh:minCount 1 ;
+                                    sh:path schema:commentCount ] ] ] ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:QAPage .
+
+<https://wordlift.io/shacl/google/qapage/answer-datemodified-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "answer datemodified recommended check failed for this QAPage" ;
+            sh:path ( schema:mainEntity [ sh:alternativePath ( schema:acceptedAnswer schema:suggestedAnswer ) ] ) ;
+            sh:qualifiedMaxCount 0 ;
+            sh:qualifiedValueShape [ sh:class schema:Answer ;
+                    sh:not [ sh:property [ sh:minCount 1 ;
+                                    sh:path schema:dateModified ] ] ] ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:QAPage .
+
+<https://wordlift.io/shacl/google/qapage/answer-datepublished-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "answer datepublished recommended check failed for this QAPage" ;
+            sh:path ( schema:mainEntity [ sh:alternativePath ( schema:acceptedAnswer schema:suggestedAnswer ) ] ) ;
+            sh:qualifiedMaxCount 0 ;
+            sh:qualifiedValueShape [ sh:class schema:Answer ;
+                    sh:not [ sh:property [ sh:minCount 1 ;
+                                    sh:path schema:datePublished ] ] ] ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:QAPage .
+
+<https://wordlift.io/shacl/google/qapage/answer-digitalsourcetype-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "answer digitalsourcetype recommended check failed for this QAPage" ;
+            sh:path ( schema:mainEntity [ sh:alternativePath ( schema:acceptedAnswer schema:suggestedAnswer ) ] ) ;
+            sh:qualifiedMaxCount 0 ;
+            sh:qualifiedValueShape [ sh:class schema:Answer ;
+                    sh:not [ sh:property [ sh:minCount 1 ;
+                                    sh:path schema:digitalSourceType ] ] ] ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:QAPage .
+
+<https://wordlift.io/shacl/google/qapage/answer-image-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "answer image recommended check failed for this QAPage" ;
+            sh:path ( schema:mainEntity [ sh:alternativePath ( schema:acceptedAnswer schema:suggestedAnswer ) ] ) ;
+            sh:qualifiedMaxCount 0 ;
+            sh:qualifiedValueShape [ sh:class schema:Answer ;
+                    sh:not [ sh:property [ sh:minCount 1 ;
+                                    sh:path schema:image ] ] ] ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:QAPage .
+
+<https://wordlift.io/shacl/google/qapage/answer-text-required> a sh:NodeShape ;
+    sh:property [ sh:message "answer text required check failed for this QAPage" ;
+            sh:path ( schema:mainEntity [ sh:alternativePath ( schema:acceptedAnswer schema:suggestedAnswer ) ] ) ;
+            sh:qualifiedMaxCount 0 ;
+            sh:qualifiedValueShape [ sh:class schema:Answer ;
+                    sh:not [ sh:property [ sh:minCount 1 ;
+                                    sh:path schema:text ] ] ] ] ;
+    sh:targetClass schema:QAPage .
+
+<https://wordlift.io/shacl/google/qapage/answer-upvotecount-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "answer upvotecount recommended check failed for this QAPage" ;
+            sh:path ( schema:mainEntity [ sh:alternativePath ( schema:acceptedAnswer schema:suggestedAnswer ) ] ) ;
+            sh:qualifiedMaxCount 0 ;
+            sh:qualifiedValueShape [ sh:class schema:Answer ;
+                    sh:not [ sh:property [ sh:minCount 1 ;
+                                    sh:path schema:upvoteCount ] ] ] ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:QAPage .
+
+<https://wordlift.io/shacl/google/qapage/answer-url-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "answer url recommended check failed for this QAPage" ;
+            sh:path ( schema:mainEntity [ sh:alternativePath ( schema:acceptedAnswer schema:suggestedAnswer ) ] ) ;
+            sh:qualifiedMaxCount 0 ;
+            sh:qualifiedValueShape [ sh:class schema:Answer ;
+                    sh:not [ sh:property [ sh:minCount 1 ;
+                                    sh:path schema:url ] ] ] ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:QAPage .
+
+<https://wordlift.io/shacl/google/qapage/answer-video-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "answer video recommended check failed for this QAPage" ;
+            sh:path ( schema:mainEntity [ sh:alternativePath ( schema:acceptedAnswer schema:suggestedAnswer ) ] ) ;
+            sh:qualifiedMaxCount 0 ;
+            sh:qualifiedValueShape [ sh:class schema:Answer ;
+                    sh:not [ sh:property [ sh:minCount 1 ;
+                                    sh:path schema:video ] ] ] ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:QAPage .
+
+<https://wordlift.io/shacl/google/qapage/comment-author-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "comment author recommended check failed for this QAPage" ;
+            sh:path [ sh:alternativePath ( ( schema:mainEntity schema:comment ) ( schema:mainEntity [ sh:alternativePath ( schema:acceptedAnswer schema:suggestedAnswer ) ] schema:comment ) ) ] ;
+            sh:qualifiedMaxCount 0 ;
+            sh:qualifiedValueShape [ sh:not [ sh:property [ sh:minCount 1 ;
+                                    sh:path schema:author ] ] ;
+                    sh:or ( [ sh:class schema:Comment ] [ sh:class schema:Answer ] [ sh:class schema:CorrectionComment ] [ sh:class schema:Question ] ) ] ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:QAPage .
+
+<https://wordlift.io/shacl/google/qapage/comment-author-url-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "comment author url recommended check failed for this QAPage" ;
+            sh:path [ sh:alternativePath ( ( schema:mainEntity schema:comment schema:author ) ( schema:mainEntity [ sh:alternativePath ( schema:acceptedAnswer schema:suggestedAnswer ) ] schema:comment schema:author ) ) ] ;
+            sh:qualifiedMaxCount 0 ;
+            sh:qualifiedValueShape [ sh:nodeKind sh:BlankNodeOrIRI ;
+                    sh:not [ sh:property [ sh:minCount 1 ;
+                                    sh:path schema:url ] ] ;
+                    sh:or ( [ sh:or ( [ sh:class schema:Person ] [ sh:class schema:Patient ] ) ] [ sh:or ( [ sh:class schema:Organization ] [ sh:class schema:AccountingService ] [ sh:class schema:AdultEntertainment ] [ sh:class schema:Airline ] [ sh:class schema:AmusementPark ] [ sh:class schema:AnimalShelter ] [ sh:class schema:ArchiveOrganization ] [ sh:class schema:ArtGallery ] [ sh:class schema:Attorney ] [ sh:class schema:AutoBodyShop ] [ sh:class schema:AutoDealer ] [ sh:class schema:AutoPartsStore ] [ sh:class schema:AutoRental ] [ sh:class schema:AutoRepair ] [ sh:class schema:AutoWash ] [ sh:class schema:AutomatedTeller ] [ sh:class schema:AutomotiveBusiness ] [ sh:class schema:Bakery ] [ sh:class schema:BankOrCreditUnion ] [ sh:class schema:BarOrPub ] [ sh:class schema:BeautySalon ] [ sh:class schema:BedAndBreakfast ] [ sh:class schema:BikeStore ] [ sh:class schema:BookStore ] [ sh:class schema:BowlingAlley ] [ sh:class schema:Brewery ] [ sh:class schema:CafeOrCoffeeShop ] [ sh:class schema:Campground ] [ sh:class schema:Casino ] [ sh:class schema:ChildCare ] [ sh:class schema:ClothingStore ] [ sh:class schema:CollegeOrUniversity ] [ sh:class schema:ComedyClub ] [ sh:class schema:CommunityHealth ] [ sh:class schema:ComputerStore ] [ sh:class schema:Consortium ] [ sh:class schema:ConvenienceStore ] [ sh:class schema:Cooperative ] [ sh:class schema:Corporation ] [ sh:class schema:CovidTestingFacility ] [ sh:class schema:DanceGroup ] [ sh:class schema:DaySpa ] [ sh:class schema:Dentist ] [ sh:class schema:DepartmentStore ] [ sh:class schema:Dermatology ] [ sh:class schema:DiagnosticLab ] [ sh:class schema:DietNutrition ] [ sh:class schema:Distillery ] [ sh:class schema:DryCleaningOrLaundry ] [ sh:class schema:EducationalOrganization ] [ sh:class schema:Electrician ] [ sh:class schema:ElectronicsStore ] [ sh:class schema:ElementarySchool ] [ sh:class schema:Emergency ] [ sh:class schema:EmergencyService ] [ sh:class schema:EmploymentAgency ] [ sh:class schema:EntertainmentBusiness ] [ sh:class schema:ExerciseGym ] [ sh:class schema:FastFoodRestaurant ] [ sh:class schema:FinancialService ] [ sh:class schema:FireStation ] [ sh:class schema:Florist ] [ sh:class schema:FoodEstablishment ] [ sh:class schema:FundingAgency ] [ sh:class schema:FundingScheme ] [ sh:class schema:FurnitureStore ] [ sh:class schema:GardenStore ] [ sh:class schema:GasStation ] [ sh:class schema:GeneralContractor ] [ sh:class schema:Geriatric ] [ sh:class schema:GolfCourse ] [ sh:class schema:GovernmentOffice ] [ sh:class schema:GovernmentOrganization ] [ sh:class schema:GroceryStore ] [ sh:class schema:Gynecologic ] [ sh:class schema:HVACBusiness ] [ sh:class schema:HairSalon ] [ sh:class schema:HardwareStore ] [ sh:class schema:HealthAndBeautyBusiness ] [ sh:class schema:HealthClub ] [ sh:class schema:HighSchool ] [ sh:class schema:HobbyShop ] [ sh:class schema:HomeAndConstructionBusiness ] [ sh:class schema:HomeGoodsStore ] [ sh:class schema:Hospital ] [ sh:class schema:Hostel ] [ sh:class schema:Hotel ] [ sh:class schema:HousePainter ] [ sh:class schema:IceCreamShop ] [ sh:class schema:IndividualPhysician ] [ sh:class schema:InsuranceAgency ] [ sh:class schema:InternetCafe ] [ sh:class schema:JewelryStore ] [ sh:class schema:LegalService ] [ sh:class schema:Library ] [ sh:class schema:LibrarySystem ] [ sh:class schema:LiquorStore ] [ sh:class schema:LocalBusiness ] [ sh:class schema:Locksmith ] [ sh:class schema:LodgingBusiness ] [ sh:class schema:MedicalBusiness ] [ sh:class schema:MedicalClinic ] [ sh:class schema:MedicalOrganization ] [ sh:class schema:MensClothingStore ] [ sh:class schema:MiddleSchool ] [ sh:class schema:Midwifery ] [ sh:class schema:MobilePhoneStore ] [ sh:class schema:Motel ] [ sh:class schema:MotorcycleDealer ] [ sh:class schema:MotorcycleRepair ] [ sh:class schema:MovieRentalStore ] [ sh:class schema:MovieTheater ] [ sh:class schema:MovingCompany ] [ sh:class schema:MusicGroup ] [ sh:class schema:MusicStore ] [ sh:class schema:NGO ] [ sh:class schema:NailSalon ] [ sh:class schema:NewsMediaOrganization ] [ sh:class schema:NightClub ] [ sh:class schema:Notary ] [ sh:class schema:Nursing ] [ sh:class schema:Obstetric ] [ sh:class schema:OfficeEquipmentStore ] [ sh:class schema:Oncologic ] [ sh:class schema:OnlineBusiness ] [ sh:class schema:OnlineMarketplace ] [ sh:class schema:OnlineStore ] [ sh:class schema:Optician ] [ sh:class schema:Optometric ] [ sh:class schema:Otolaryngologic ] [ sh:class schema:OutletStore ] [ sh:class schema:PawnShop ] [ sh:class schema:Pediatric ] [ sh:class schema:PerformingGroup ] [ sh:class schema:PetStore ] [ sh:class schema:Pharmacy ] [ sh:class schema:Physician ] [ sh:class schema:PhysiciansOffice ] [ sh:class schema:Physiotherapy ] [ sh:class schema:PlasticSurgery ] [ sh:class schema:Plumber ] [ sh:class schema:Podiatric ] [ sh:class schema:PoliceStation ] [ sh:class schema:PoliticalParty ] [ sh:class schema:PostOffice ] [ sh:class schema:Preschool ] [ sh:class schema:PrimaryCare ] [ sh:class schema:ProfessionalService ] [ sh:class schema:Project ] [ sh:class schema:Psychiatric ] [ sh:class schema:PublicHealth ] [ sh:class schema:PublicSwimmingPool ] [ sh:class schema:RadioStation ] [ sh:class schema:RealEstateAgent ] [ sh:class schema:RecyclingCenter ] [ sh:class schema:ResearchOrganization ] [ sh:class schema:ResearchProject ] [ sh:class schema:Resort ] [ sh:class schema:Restaurant ] [ sh:class schema:RoofingContractor ] [ sh:class schema:School ] [ sh:class schema:SearchRescueOrganization ] [ sh:class schema:SelfStorage ] [ sh:class schema:ShoeStore ] [ sh:class schema:ShoppingCenter ] [ sh:class schema:SkiResort ] [ sh:class schema:SportingGoodsStore ] [ sh:class schema:SportsActivityLocation ] [ sh:class schema:SportsClub ] [ sh:class schema:SportsOrganization ] [ sh:class schema:SportsTeam ] [ sh:class schema:StadiumOrArena ] [ sh:class schema:Store ] [ sh:class schema:TattooParlor ] [ sh:class schema:TelevisionStation ] [ sh:class schema:TennisComplex ] [ sh:class schema:TheaterGroup ] [ sh:class schema:TireShop ] [ sh:class schema:TouristInformationCenter ] [ sh:class schema:ToyStore ] [ sh:class schema:TravelAgency ] [ sh:class schema:VacationRental ] [ sh:class schema:VeterinaryCare ] [ sh:class schema:WholesaleStore ] [ sh:class schema:Winery ] [ sh:class schema:WorkersUnion ] ) ] ) ] ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:QAPage .
+
+<https://wordlift.io/shacl/google/qapage/comment-comment-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "comment comment recommended check failed for this QAPage" ;
+            sh:path [ sh:alternativePath ( ( schema:mainEntity schema:comment ) ( schema:mainEntity [ sh:alternativePath ( schema:acceptedAnswer schema:suggestedAnswer ) ] schema:comment ) ) ] ;
+            sh:qualifiedMaxCount 0 ;
+            sh:qualifiedValueShape [ sh:not [ sh:property [ sh:minCount 1 ;
+                                    sh:path schema:comment ] ] ;
+                    sh:or ( [ sh:class schema:Comment ] [ sh:class schema:Answer ] [ sh:class schema:CorrectionComment ] [ sh:class schema:Question ] ) ] ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:QAPage .
+
+<https://wordlift.io/shacl/google/qapage/comment-commentcount-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "comment commentcount recommended check failed for this QAPage" ;
+            sh:path [ sh:alternativePath ( ( schema:mainEntity schema:comment ) ( schema:mainEntity [ sh:alternativePath ( schema:acceptedAnswer schema:suggestedAnswer ) ] schema:comment ) ) ] ;
+            sh:qualifiedMaxCount 0 ;
+            sh:qualifiedValueShape [ sh:not [ sh:property [ sh:minCount 1 ;
+                                    sh:path schema:commentCount ] ] ;
+                    sh:or ( [ sh:class schema:Comment ] [ sh:class schema:Answer ] [ sh:class schema:CorrectionComment ] [ sh:class schema:Question ] ) ] ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:QAPage .
+
+<https://wordlift.io/shacl/google/qapage/comment-datemodified-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "comment datemodified recommended check failed for this QAPage" ;
+            sh:path [ sh:alternativePath ( ( schema:mainEntity schema:comment ) ( schema:mainEntity [ sh:alternativePath ( schema:acceptedAnswer schema:suggestedAnswer ) ] schema:comment ) ) ] ;
+            sh:qualifiedMaxCount 0 ;
+            sh:qualifiedValueShape [ sh:not [ sh:property [ sh:minCount 1 ;
+                                    sh:path schema:dateModified ] ] ;
+                    sh:or ( [ sh:class schema:Comment ] [ sh:class schema:Answer ] [ sh:class schema:CorrectionComment ] [ sh:class schema:Question ] ) ] ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:QAPage .
+
+<https://wordlift.io/shacl/google/qapage/comment-datepublished-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "comment datepublished recommended check failed for this QAPage" ;
+            sh:path [ sh:alternativePath ( ( schema:mainEntity schema:comment ) ( schema:mainEntity [ sh:alternativePath ( schema:acceptedAnswer schema:suggestedAnswer ) ] schema:comment ) ) ] ;
+            sh:qualifiedMaxCount 0 ;
+            sh:qualifiedValueShape [ sh:not [ sh:property [ sh:minCount 1 ;
+                                    sh:path schema:datePublished ] ] ;
+                    sh:or ( [ sh:class schema:Comment ] [ sh:class schema:Answer ] [ sh:class schema:CorrectionComment ] [ sh:class schema:Question ] ) ] ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:QAPage .
+
+<https://wordlift.io/shacl/google/qapage/comment-digitalsourcetype-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "comment digitalsourcetype recommended check failed for this QAPage" ;
+            sh:path [ sh:alternativePath ( ( schema:mainEntity schema:comment ) ( schema:mainEntity [ sh:alternativePath ( schema:acceptedAnswer schema:suggestedAnswer ) ] schema:comment ) ) ] ;
+            sh:qualifiedMaxCount 0 ;
+            sh:qualifiedValueShape [ sh:not [ sh:property [ sh:minCount 1 ;
+                                    sh:path schema:digitalSourceType ] ] ;
+                    sh:or ( [ sh:class schema:Comment ] [ sh:class schema:Answer ] [ sh:class schema:CorrectionComment ] [ sh:class schema:Question ] ) ] ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:QAPage .
+
+<https://wordlift.io/shacl/google/qapage/comment-image-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "comment image recommended check failed for this QAPage" ;
+            sh:path [ sh:alternativePath ( ( schema:mainEntity schema:comment ) ( schema:mainEntity [ sh:alternativePath ( schema:acceptedAnswer schema:suggestedAnswer ) ] schema:comment ) ) ] ;
+            sh:qualifiedMaxCount 0 ;
+            sh:qualifiedValueShape [ sh:not [ sh:property [ sh:minCount 1 ;
+                                    sh:path schema:image ] ] ;
+                    sh:or ( [ sh:class schema:Comment ] [ sh:class schema:Answer ] [ sh:class schema:CorrectionComment ] [ sh:class schema:Question ] ) ] ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:QAPage .
+
+<https://wordlift.io/shacl/google/qapage/comment-text-required> a sh:NodeShape ;
+    sh:property [ sh:message "comment text required check failed for this QAPage" ;
+            sh:path [ sh:alternativePath ( ( schema:mainEntity schema:comment ) ( schema:mainEntity [ sh:alternativePath ( schema:acceptedAnswer schema:suggestedAnswer ) ] schema:comment ) ) ] ;
+            sh:qualifiedMaxCount 0 ;
+            sh:qualifiedValueShape [ sh:not [ sh:property [ sh:minCount 1 ;
+                                    sh:path schema:text ] ] ;
+                    sh:or ( [ sh:class schema:Comment ] [ sh:class schema:Answer ] [ sh:class schema:CorrectionComment ] [ sh:class schema:Question ] ) ] ] ;
+    sh:targetClass schema:QAPage .
+
+<https://wordlift.io/shacl/google/qapage/comment-video-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "comment video recommended check failed for this QAPage" ;
+            sh:path [ sh:alternativePath ( ( schema:mainEntity schema:comment ) ( schema:mainEntity [ sh:alternativePath ( schema:acceptedAnswer schema:suggestedAnswer ) ] schema:comment ) ) ] ;
+            sh:qualifiedMaxCount 0 ;
+            sh:qualifiedValueShape [ sh:not [ sh:property [ sh:minCount 1 ;
+                                    sh:path schema:video ] ] ;
+                    sh:or ( [ sh:class schema:Comment ] [ sh:class schema:Answer ] [ sh:class schema:CorrectionComment ] [ sh:class schema:Question ] ) ] ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:QAPage .
+
+<https://wordlift.io/shacl/google/qapage/qapage-mainentity-required> a sh:NodeShape ;
+    sh:property [ sh:message "qapage mainentity required check failed for this QAPage" ;
+            sh:path schema:mainEntity ;
+            sh:qualifiedMinCount 1 ;
+            sh:qualifiedValueShape [ sh:class schema:Question ] ] ;
+    sh:targetClass schema:QAPage .
+
+<https://wordlift.io/shacl/google/qapage/qapage-mainentity-single-question> a sh:NodeShape ;
+    sh:property [ sh:message "qapage mainentity single question check failed for this QAPage" ;
+            sh:path schema:mainEntity ;
+            sh:qualifiedMaxCount 1 ;
+            sh:qualifiedValueShape [ sh:class schema:Question ] ] ;
+    sh:targetClass schema:QAPage .
+
+<https://wordlift.io/shacl/google/qapage/question-answer-required> a sh:NodeShape ;
+    sh:property [ sh:message "question answer required check failed for this QAPage" ;
+            sh:path schema:mainEntity ;
+            sh:qualifiedMaxCount 0 ;
+            sh:qualifiedValueShape [ sh:class schema:Question ;
+                    sh:not [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                                sh:path schema:acceptedAnswer ] ] [ sh:property [ sh:minCount 1 ;
+                                                sh:path schema:suggestedAnswer ] ] ) ] ] ] ;
+    sh:targetClass schema:QAPage .
+
+<https://wordlift.io/shacl/google/qapage/question-answercount-required> a sh:NodeShape ;
+    sh:property [ sh:message "question answercount required check failed for this QAPage" ;
+            sh:path schema:mainEntity ;
+            sh:qualifiedMaxCount 0 ;
+            sh:qualifiedValueShape [ sh:class schema:Question ;
+                    sh:not [ sh:property [ sh:minCount 1 ;
+                                    sh:path schema:answerCount ] ] ] ] ;
+    sh:targetClass schema:QAPage .
+
+<https://wordlift.io/shacl/google/qapage/question-author-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "question author recommended check failed for this QAPage" ;
+            sh:path schema:mainEntity ;
+            sh:qualifiedMaxCount 0 ;
+            sh:qualifiedValueShape [ sh:class schema:Question ;
+                    sh:not [ sh:property [ sh:minCount 1 ;
+                                    sh:path schema:author ] ] ] ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:QAPage .
+
+<https://wordlift.io/shacl/google/qapage/question-author-url-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "question author url recommended check failed for this QAPage" ;
+            sh:path ( schema:mainEntity schema:author ) ;
+            sh:qualifiedMaxCount 0 ;
+            sh:qualifiedValueShape [ sh:nodeKind sh:BlankNodeOrIRI ;
+                    sh:not [ sh:property [ sh:minCount 1 ;
+                                    sh:path schema:url ] ] ;
+                    sh:or ( [ sh:or ( [ sh:class schema:Person ] [ sh:class schema:Patient ] ) ] [ sh:or ( [ sh:class schema:Organization ] [ sh:class schema:AccountingService ] [ sh:class schema:AdultEntertainment ] [ sh:class schema:Airline ] [ sh:class schema:AmusementPark ] [ sh:class schema:AnimalShelter ] [ sh:class schema:ArchiveOrganization ] [ sh:class schema:ArtGallery ] [ sh:class schema:Attorney ] [ sh:class schema:AutoBodyShop ] [ sh:class schema:AutoDealer ] [ sh:class schema:AutoPartsStore ] [ sh:class schema:AutoRental ] [ sh:class schema:AutoRepair ] [ sh:class schema:AutoWash ] [ sh:class schema:AutomatedTeller ] [ sh:class schema:AutomotiveBusiness ] [ sh:class schema:Bakery ] [ sh:class schema:BankOrCreditUnion ] [ sh:class schema:BarOrPub ] [ sh:class schema:BeautySalon ] [ sh:class schema:BedAndBreakfast ] [ sh:class schema:BikeStore ] [ sh:class schema:BookStore ] [ sh:class schema:BowlingAlley ] [ sh:class schema:Brewery ] [ sh:class schema:CafeOrCoffeeShop ] [ sh:class schema:Campground ] [ sh:class schema:Casino ] [ sh:class schema:ChildCare ] [ sh:class schema:ClothingStore ] [ sh:class schema:CollegeOrUniversity ] [ sh:class schema:ComedyClub ] [ sh:class schema:CommunityHealth ] [ sh:class schema:ComputerStore ] [ sh:class schema:Consortium ] [ sh:class schema:ConvenienceStore ] [ sh:class schema:Cooperative ] [ sh:class schema:Corporation ] [ sh:class schema:CovidTestingFacility ] [ sh:class schema:DanceGroup ] [ sh:class schema:DaySpa ] [ sh:class schema:Dentist ] [ sh:class schema:DepartmentStore ] [ sh:class schema:Dermatology ] [ sh:class schema:DiagnosticLab ] [ sh:class schema:DietNutrition ] [ sh:class schema:Distillery ] [ sh:class schema:DryCleaningOrLaundry ] [ sh:class schema:EducationalOrganization ] [ sh:class schema:Electrician ] [ sh:class schema:ElectronicsStore ] [ sh:class schema:ElementarySchool ] [ sh:class schema:Emergency ] [ sh:class schema:EmergencyService ] [ sh:class schema:EmploymentAgency ] [ sh:class schema:EntertainmentBusiness ] [ sh:class schema:ExerciseGym ] [ sh:class schema:FastFoodRestaurant ] [ sh:class schema:FinancialService ] [ sh:class schema:FireStation ] [ sh:class schema:Florist ] [ sh:class schema:FoodEstablishment ] [ sh:class schema:FundingAgency ] [ sh:class schema:FundingScheme ] [ sh:class schema:FurnitureStore ] [ sh:class schema:GardenStore ] [ sh:class schema:GasStation ] [ sh:class schema:GeneralContractor ] [ sh:class schema:Geriatric ] [ sh:class schema:GolfCourse ] [ sh:class schema:GovernmentOffice ] [ sh:class schema:GovernmentOrganization ] [ sh:class schema:GroceryStore ] [ sh:class schema:Gynecologic ] [ sh:class schema:HVACBusiness ] [ sh:class schema:HairSalon ] [ sh:class schema:HardwareStore ] [ sh:class schema:HealthAndBeautyBusiness ] [ sh:class schema:HealthClub ] [ sh:class schema:HighSchool ] [ sh:class schema:HobbyShop ] [ sh:class schema:HomeAndConstructionBusiness ] [ sh:class schema:HomeGoodsStore ] [ sh:class schema:Hospital ] [ sh:class schema:Hostel ] [ sh:class schema:Hotel ] [ sh:class schema:HousePainter ] [ sh:class schema:IceCreamShop ] [ sh:class schema:IndividualPhysician ] [ sh:class schema:InsuranceAgency ] [ sh:class schema:InternetCafe ] [ sh:class schema:JewelryStore ] [ sh:class schema:LegalService ] [ sh:class schema:Library ] [ sh:class schema:LibrarySystem ] [ sh:class schema:LiquorStore ] [ sh:class schema:LocalBusiness ] [ sh:class schema:Locksmith ] [ sh:class schema:LodgingBusiness ] [ sh:class schema:MedicalBusiness ] [ sh:class schema:MedicalClinic ] [ sh:class schema:MedicalOrganization ] [ sh:class schema:MensClothingStore ] [ sh:class schema:MiddleSchool ] [ sh:class schema:Midwifery ] [ sh:class schema:MobilePhoneStore ] [ sh:class schema:Motel ] [ sh:class schema:MotorcycleDealer ] [ sh:class schema:MotorcycleRepair ] [ sh:class schema:MovieRentalStore ] [ sh:class schema:MovieTheater ] [ sh:class schema:MovingCompany ] [ sh:class schema:MusicGroup ] [ sh:class schema:MusicStore ] [ sh:class schema:NGO ] [ sh:class schema:NailSalon ] [ sh:class schema:NewsMediaOrganization ] [ sh:class schema:NightClub ] [ sh:class schema:Notary ] [ sh:class schema:Nursing ] [ sh:class schema:Obstetric ] [ sh:class schema:OfficeEquipmentStore ] [ sh:class schema:Oncologic ] [ sh:class schema:OnlineBusiness ] [ sh:class schema:OnlineMarketplace ] [ sh:class schema:OnlineStore ] [ sh:class schema:Optician ] [ sh:class schema:Optometric ] [ sh:class schema:Otolaryngologic ] [ sh:class schema:OutletStore ] [ sh:class schema:PawnShop ] [ sh:class schema:Pediatric ] [ sh:class schema:PerformingGroup ] [ sh:class schema:PetStore ] [ sh:class schema:Pharmacy ] [ sh:class schema:Physician ] [ sh:class schema:PhysiciansOffice ] [ sh:class schema:Physiotherapy ] [ sh:class schema:PlasticSurgery ] [ sh:class schema:Plumber ] [ sh:class schema:Podiatric ] [ sh:class schema:PoliceStation ] [ sh:class schema:PoliticalParty ] [ sh:class schema:PostOffice ] [ sh:class schema:Preschool ] [ sh:class schema:PrimaryCare ] [ sh:class schema:ProfessionalService ] [ sh:class schema:Project ] [ sh:class schema:Psychiatric ] [ sh:class schema:PublicHealth ] [ sh:class schema:PublicSwimmingPool ] [ sh:class schema:RadioStation ] [ sh:class schema:RealEstateAgent ] [ sh:class schema:RecyclingCenter ] [ sh:class schema:ResearchOrganization ] [ sh:class schema:ResearchProject ] [ sh:class schema:Resort ] [ sh:class schema:Restaurant ] [ sh:class schema:RoofingContractor ] [ sh:class schema:School ] [ sh:class schema:SearchRescueOrganization ] [ sh:class schema:SelfStorage ] [ sh:class schema:ShoeStore ] [ sh:class schema:ShoppingCenter ] [ sh:class schema:SkiResort ] [ sh:class schema:SportingGoodsStore ] [ sh:class schema:SportsActivityLocation ] [ sh:class schema:SportsClub ] [ sh:class schema:SportsOrganization ] [ sh:class schema:SportsTeam ] [ sh:class schema:StadiumOrArena ] [ sh:class schema:Store ] [ sh:class schema:TattooParlor ] [ sh:class schema:TelevisionStation ] [ sh:class schema:TennisComplex ] [ sh:class schema:TheaterGroup ] [ sh:class schema:TireShop ] [ sh:class schema:TouristInformationCenter ] [ sh:class schema:ToyStore ] [ sh:class schema:TravelAgency ] [ sh:class schema:VacationRental ] [ sh:class schema:VeterinaryCare ] [ sh:class schema:WholesaleStore ] [ sh:class schema:Winery ] [ sh:class schema:WorkersUnion ] ) ] ) ] ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:QAPage .
+
+<https://wordlift.io/shacl/google/qapage/question-comment-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "question comment recommended check failed for this QAPage" ;
+            sh:path schema:mainEntity ;
+            sh:qualifiedMaxCount 0 ;
+            sh:qualifiedValueShape [ sh:class schema:Question ;
+                    sh:not [ sh:property [ sh:minCount 1 ;
+                                    sh:path schema:comment ] ] ] ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:QAPage .
+
+<https://wordlift.io/shacl/google/qapage/question-commentcount-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "question commentcount recommended check failed for this QAPage" ;
+            sh:path schema:mainEntity ;
+            sh:qualifiedMaxCount 0 ;
+            sh:qualifiedValueShape [ sh:class schema:Question ;
+                    sh:not [ sh:property [ sh:minCount 1 ;
+                                    sh:path schema:commentCount ] ] ] ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:QAPage .
+
+<https://wordlift.io/shacl/google/qapage/question-datemodified-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "question datemodified recommended check failed for this QAPage" ;
+            sh:path schema:mainEntity ;
+            sh:qualifiedMaxCount 0 ;
+            sh:qualifiedValueShape [ sh:class schema:Question ;
+                    sh:not [ sh:property [ sh:minCount 1 ;
+                                    sh:path schema:dateModified ] ] ] ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:QAPage .
+
+<https://wordlift.io/shacl/google/qapage/question-datepublished-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "question datepublished recommended check failed for this QAPage" ;
+            sh:path schema:mainEntity ;
+            sh:qualifiedMaxCount 0 ;
+            sh:qualifiedValueShape [ sh:class schema:Question ;
+                    sh:not [ sh:property [ sh:minCount 1 ;
+                                    sh:path schema:datePublished ] ] ] ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:QAPage .
+
+<https://wordlift.io/shacl/google/qapage/question-digitalsourcetype-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "question digitalsourcetype recommended check failed for this QAPage" ;
+            sh:path schema:mainEntity ;
+            sh:qualifiedMaxCount 0 ;
+            sh:qualifiedValueShape [ sh:class schema:Question ;
+                    sh:not [ sh:property [ sh:minCount 1 ;
+                                    sh:path schema:digitalSourceType ] ] ] ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:QAPage .
+
+<https://wordlift.io/shacl/google/qapage/question-image-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "question image recommended check failed for this QAPage" ;
+            sh:path schema:mainEntity ;
+            sh:qualifiedMaxCount 0 ;
+            sh:qualifiedValueShape [ sh:class schema:Question ;
+                    sh:not [ sh:property [ sh:minCount 1 ;
+                                    sh:path schema:image ] ] ] ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:QAPage .
+
+<https://wordlift.io/shacl/google/qapage/question-name-required> a sh:NodeShape ;
+    sh:property [ sh:message "question name required check failed for this QAPage" ;
+            sh:path schema:mainEntity ;
+            sh:qualifiedMaxCount 0 ;
+            sh:qualifiedValueShape [ sh:class schema:Question ;
+                    sh:not [ sh:property [ sh:minCount 1 ;
+                                    sh:path schema:name ] ] ] ] ;
+    sh:targetClass schema:QAPage .
+
+<https://wordlift.io/shacl/google/qapage/question-text-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "question text recommended check failed for this QAPage" ;
+            sh:path schema:mainEntity ;
+            sh:qualifiedMaxCount 0 ;
+            sh:qualifiedValueShape [ sh:class schema:Question ;
+                    sh:not [ sh:property [ sh:minCount 1 ;
+                                    sh:path schema:text ] ] ] ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:QAPage .
+
+<https://wordlift.io/shacl/google/qapage/question-upvotecount-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "question upvotecount recommended check failed for this QAPage" ;
+            sh:path schema:mainEntity ;
+            sh:qualifiedMaxCount 0 ;
+            sh:qualifiedValueShape [ sh:class schema:Question ;
+                    sh:not [ sh:property [ sh:minCount 1 ;
+                                    sh:path schema:upvoteCount ] ] ] ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:QAPage .
+
+<https://wordlift.io/shacl/google/qapage/question-video-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "question video recommended check failed for this QAPage" ;
+            sh:path schema:mainEntity ;
+            sh:qualifiedMaxCount 0 ;
+            sh:qualifiedValueShape [ sh:class schema:Question ;
+                    sh:not [ sh:property [ sh:minCount 1 ;
+                                    sh:path schema:video ] ] ] ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:QAPage .
+

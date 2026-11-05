@@ -6,7 +6,6 @@ import hashlib
 import json
 from datetime import datetime, timezone
 from pathlib import Path
-import re
 import time
 from typing import Any, Callable, Mapping
 
@@ -18,8 +17,39 @@ from wordlift_sdk.utils.auto_concurrency import AutoConcurrencyController
 from .api import run_ingestion
 
 
-_GOOGLE_SHACL_TARGET_CLASS_RE = re.compile(
-    r"sh:targetClass\s+schema:([A-Za-z][A-Za-z0-9]+)"
+_GOOGLE_PRIMARY_TYPES = frozenset(
+    {
+        "Article",
+        "BlogPosting",
+        "Book",
+        "BreadcrumbList",
+        "ClaimReview",
+        "Course",
+        "CreativeWork",
+        "Dataset",
+        "DiscussionForumPosting",
+        "EmployerAggregateRating",
+        "Event",
+        "FAQPage",
+        "JobPosting",
+        "LearningResource",
+        "LocalBusiness",
+        "MathSolver",
+        "Movie",
+        "NewsArticle",
+        "Organization",
+        "Product",
+        "ProductGroup",
+        "ProfilePage",
+        "QAPage",
+        "Quiz",
+        "Recipe",
+        "Review",
+        "SocialMediaPosting",
+        "SoftwareApplication",
+        "VacationRental",
+        "VideoObject",
+    }
 )
 _GOOGLE_SUPPORTING_TYPES = frozenset(
     {
@@ -401,16 +431,7 @@ def _error_row(*, url: str, exc: Exception) -> dict[str, str]:
 
 @lru_cache(maxsize=1)
 def _google_search_gallery_type_groups() -> tuple[tuple[str, ...], tuple[str, ...]]:
-    shacls_dir = Path(__file__).resolve().parent.parent / "validation" / "shacls"
-    primary_types: set[str] = set()
-    supporting_types: set[str] = set()
-    for path in sorted(shacls_dir.glob("google-*.ttl")):
-        for type_name in _GOOGLE_SHACL_TARGET_CLASS_RE.findall(path.read_text()):
-            if type_name in _GOOGLE_SUPPORTING_TYPES:
-                supporting_types.add(type_name)
-            else:
-                primary_types.add(type_name)
-    return tuple(sorted(primary_types)), tuple(sorted(supporting_types))
+    return tuple(sorted(_GOOGLE_PRIMARY_TYPES)), tuple(sorted(_GOOGLE_SUPPORTING_TYPES))
 
 
 def _classification_prompt(*, url: str, markdown: str) -> str:
