@@ -8,7 +8,11 @@ SHAPES_DIR = Path("wordlift_sdk/validation/shacls")
 SCHEMA_GRAMMAR_PATH = SHAPES_DIR / "schemaorg-grammar.ttl"
 
 PATH_PROP_RE = re.compile(r"sh:path\s+(?:\(\s*)?schema:([A-Za-z][A-Za-z0-9]*)")
-TARGET_CLASS_RE = re.compile(r"sh:targetClass\s+schema:[A-Za-z][A-Za-z0-9]*")
+# Bundled pipeline output may target via sh:targetSubjectsOf, sh:targetObjectsOf
+# or sh:targetNode instead of sh:targetClass; accept any SHACL target predicate.
+TARGET_CLASS_RE = re.compile(
+    r"sh:target(?:Class|SubjectsOf|ObjectsOf|Node)\s+\S+"
+)
 KNOWN_GOOGLE_PSEUDO_PROPERTIES = {"input", "xPath"}
 
 

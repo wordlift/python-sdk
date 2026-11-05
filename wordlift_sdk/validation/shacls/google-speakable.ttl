@@ -1,20 +1,100 @@
-@prefix : <https://wordlift.io/shacl/google/google-speakable/> .
-@prefix sh: <http://www.w3.org/ns/shacl#> .
-@prefix schema: <http://schema.org/> .
-
 # Source: https://developers.google.com/search/docs/appearance/structured-data/speakable
-# Generated: 2026-02-26T15:42:20Z
+# Generated: 2026-11-05T14:35:24Z
 # Notes: required properties => errors; recommended properties => warnings.
+# google-speakable: 2 rules generated from the Google Search Central doc by the tdd-mvp-3 pipeline.
+# Bundled from per-rule files by harness/bundle.py, schema.org subtypes expanded (targetClass 4, class 0, in 0). Do not edit by hand.
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-:google_speakableShape
-  a sh:NodeShape ;
-  sh:targetClass schema:speakable ;
-  sh:property [
-    sh:path schema:cssSelector ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:xPath ;
-    sh:minCount 1 ;
-  ] ;
-.
+<https://wordlift.io/shacl/google/speakable/speakable-spec-locator-not-both> a sh:NodeShape ;
+    sh:property [ sh:message "Speakable specification must not have both cssSelector and xPath (speakable-spec-locator-not-both)." ;
+            sh:node [ a sh:NodeShape ;
+                    sh:message "Speakable specification must not have both cssSelector and xPath (speakable-spec-locator-not-both)." ;
+                    sh:not [ sh:and ( [ sh:property [ sh:minCount 1 ;
+                                                sh:path schema:cssSelector ] ] [ sh:property [ sh:minCount 1 ;
+                                                sh:path schema:xPath ] ] ) ] ;
+                    sh:severity sh:Violation ] ;
+            sh:path schema:speakable ;
+            sh:severity sh:Violation ] ;
+    sh:targetClass schema:APIReference,
+        schema:AboutPage,
+        schema:AdvertiserContentArticle,
+        schema:AnalysisNewsArticle,
+        schema:Article,
+        schema:AskPublicNewsArticle,
+        schema:BackgroundNewsArticle,
+        schema:BlogPosting,
+        schema:CheckoutPage,
+        schema:CollectionPage,
+        schema:ContactPage,
+        schema:DiscussionForumPosting,
+        schema:FAQPage,
+        schema:ImageGallery,
+        schema:ItemPage,
+        schema:LiveBlogPosting,
+        schema:MediaGallery,
+        schema:MedicalScholarlyArticle,
+        schema:MedicalWebPage,
+        schema:NewsArticle,
+        schema:OpinionNewsArticle,
+        schema:ProfilePage,
+        schema:QAPage,
+        schema:RealEstateListing,
+        schema:Report,
+        schema:ReportageNewsArticle,
+        schema:ReviewNewsArticle,
+        schema:SatiricalArticle,
+        schema:ScholarlyArticle,
+        schema:SearchResultsPage,
+        schema:SocialMediaPosting,
+        schema:TechArticle,
+        schema:VideoGallery,
+        schema:WebPage .
+
+<https://wordlift.io/shacl/google/speakable/speakable-spec-locator-required> a sh:NodeShape ;
+    sh:property [ sh:message "Speakable specification must have at least one of cssSelector or xPath (speakable-spec-locator-required)." ;
+            sh:node [ a sh:NodeShape ;
+                    sh:message "Speakable specification must have at least one of cssSelector or xPath (speakable-spec-locator-required)." ;
+                    sh:or ( [ sh:property [ sh:minCount 1 ;
+                                        sh:path schema:cssSelector ] ] [ sh:property [ sh:minCount 1 ;
+                                        sh:path schema:xPath ] ] ) ;
+                    sh:severity sh:Violation ] ;
+            sh:path schema:speakable ;
+            sh:severity sh:Violation ] ;
+    sh:targetClass schema:APIReference,
+        schema:AboutPage,
+        schema:AdvertiserContentArticle,
+        schema:AnalysisNewsArticle,
+        schema:Article,
+        schema:AskPublicNewsArticle,
+        schema:BackgroundNewsArticle,
+        schema:BlogPosting,
+        schema:CheckoutPage,
+        schema:CollectionPage,
+        schema:ContactPage,
+        schema:DiscussionForumPosting,
+        schema:FAQPage,
+        schema:ImageGallery,
+        schema:ItemPage,
+        schema:LiveBlogPosting,
+        schema:MediaGallery,
+        schema:MedicalScholarlyArticle,
+        schema:MedicalWebPage,
+        schema:NewsArticle,
+        schema:OpinionNewsArticle,
+        schema:ProfilePage,
+        schema:QAPage,
+        schema:RealEstateListing,
+        schema:Report,
+        schema:ReportageNewsArticle,
+        schema:ReviewNewsArticle,
+        schema:SatiricalArticle,
+        schema:ScholarlyArticle,
+        schema:SearchResultsPage,
+        schema:SocialMediaPosting,
+        schema:TechArticle,
+        schema:VideoGallery,
+        schema:WebPage .
+

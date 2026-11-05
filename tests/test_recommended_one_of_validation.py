@@ -22,13 +22,15 @@ def test_dataset_recommended_either_or_is_warning_only(
         "@context": {"@vocab": "http://schema.org/"},
         "@type": "Dataset",
         "name": "Dataset Name",
-        "description": "Dataset Description",
+        # Google: Dataset description must be 50-5000 characters.
+        "description": "Dataset Description " + "x" * 40,
     }
     with_has_part_payload = {
         "@context": {"@vocab": "http://schema.org/"},
         "@type": "Dataset",
         "name": "Dataset Name",
-        "description": "Dataset Description",
+        # Google: Dataset description must be 50-5000 characters.
+        "description": "Dataset Description " + "x" * 40,
         "hasPart": "urn:dataset:part-a",
     }
 
@@ -48,7 +50,7 @@ def test_dataset_recommended_either_or_is_warning_only(
 
     missing_messages = _messages_for(missing_result)
     with_has_part_messages = _messages_for(with_has_part_result)
-    expected = "Recommended by Google: choose either hasPart or isPartOf."
+    expected = "Every Dataset should have at least one of hasPart or isPartOf."
 
     assert missing_result.conforms is True, missing_result.report_text
     assert expected in missing_messages
@@ -56,19 +58,49 @@ def test_dataset_recommended_either_or_is_warning_only(
     assert expected not in with_has_part_messages
 
 
-def test_offer_shipping_details_recommended_either_or_is_warning_only(
+def _product_with_shipping_rate(rate: dict) -> dict:
+    # The new merchant rules check shipping details only under a Product's Offer,
+    # and require image, shippingDestination and deliveryTime.
+    quantity = {"@type": "QuantitativeValue", "minValue": 0, "maxValue": 1}
+    return {
+        "@context": {"@vocab": "http://schema.org/"},
+        "@type": "Product",
+        "name": "Sample product",
+        "image": "https://example.com/p.jpg",
+        "offers": {
+            "@type": "Offer",
+            "price": "10.00",
+            "priceCurrency": "CAD",
+            "availability": "https://schema.org/InStock",
+            "shippingDetails": {
+                "@type": "OfferShippingDetails",
+                "shippingRate": rate,
+                "shippingDestination": {
+                    "@type": "DefinedRegion",
+                    "addressCountry": "CA",
+                    "addressRegion": "ON",
+                },
+                "deliveryTime": {
+                    "@type": "ShippingDeliveryTime",
+                    "handlingTime": {**quantity, "unitCode": "DAY"},
+                    "transitTime": {**quantity, "unitCode": "DAY"},
+                },
+            },
+        },
+    }
+
+
+def test_offer_shipping_details_either_or_is_now_an_error(
     tmp_path: Path,
 ) -> None:
-    missing_payload = {
-        "@context": {"@vocab": "http://schema.org/"},
-        "@type": "OfferShippingDetails",
-        "shippingRate": {"@type": "MonetaryAmount", "currency": "CAD"},
-    }
-    with_value_payload = {
-        "@context": {"@vocab": "http://schema.org/"},
-        "@type": "OfferShippingDetails",
-        "shippingRate": {"@type": "MonetaryAmount", "currency": "CAD", "value": "9.99"},
-    }
+    # Google's merchant doc requires shippingRate to carry value or maxValue; the
+    # new rule is an error, no longer a warning-only recommendation.
+    missing_payload = _product_with_shipping_rate(
+        {"@type": "MonetaryAmount", "currency": "CAD"}
+    )
+    with_value_payload = _product_with_shipping_rate(
+        {"@type": "MonetaryAmount", "currency": "CAD", "value": "9.99"}
+    )
 
     missing_path = _write_jsonld(
         tmp_path, "offer-shipping-details-missing.jsonld", missing_payload
@@ -88,9 +120,12 @@ def test_offer_shipping_details_recommended_either_or_is_warning_only(
 
     missing_messages = _messages_for(missing_result)
     with_value_messages = _messages_for(with_value_result)
-    expected = "Recommended by Google: choose either shippingRate.maxValue or shippingRate.value."
+    expected = (
+        "the MonetaryAmount under an OfferShippingDetails' shippingRate "
+        "must have value or maxValue."
+    )
 
-    assert missing_result.conforms is True, missing_result.report_text
+    assert missing_result.conforms is False
     assert expected in missing_messages
     assert with_value_result.conforms is True, with_value_result.report_text
     assert expected not in with_value_messages
@@ -130,7 +165,10 @@ def test_product_offer_price_currency_recommended_either_or_is_warning_only(
 
     missing_messages = _messages_for(missing_result)
     with_price_currency_messages = _messages_for(with_price_currency_result)
-    expected = "Recommended by Google: choose either priceCurrency or priceSpecification.priceCurrency."
+    expected = (
+        "Each non-aggregate Offer of the page's Product should have priceCurrency "
+        "or priceSpecification.priceCurrency."
+    )
 
     assert missing_result.conforms is True, missing_result.report_text
     assert expected in missing_messages

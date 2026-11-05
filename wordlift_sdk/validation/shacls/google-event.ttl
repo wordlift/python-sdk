@@ -1,46 +1,1119 @@
-@prefix : <https://wordlift.io/shacl/google/google-event/> .
-@prefix sh: <http://www.w3.org/ns/shacl#> .
-@prefix schema: <http://schema.org/> .
-
 # Source: https://developers.google.com/search/docs/appearance/structured-data/event
-# Generated: 2026-02-26T15:42:02Z
+# Generated: 2026-11-05T14:35:24Z
 # Notes: required properties => errors; recommended properties => warnings.
+# google-event: 23 rules generated from the Google Search Central doc by the tdd-mvp-3 pipeline.
+# Bundled from per-rule files by harness/bundle.py, schema.org subtypes expanded (targetClass 23, class 0, in 0). Do not edit by hand.
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-:google_EventShape
-  a sh:NodeShape ;
-  sh:targetClass schema:Event ;
-  sh:property [
-    sh:path schema:location ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path ( schema:location schema:address ) ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:name ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:startDate ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:description ;
-    sh:minCount 1 ;
+<https://wordlift.io/shacl/google/event/event-description-recommended> a sh:NodeShape ;
+    sh:message "An Event should have a description." ;
+    sh:or ( [ sh:class schema:BroadcastEvent ] [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:item ] ] ] [ sh:property [ sh:maxCount 0 ;
+                        sh:path schema:startDate ],
+                    [ sh:maxCount 0 ;
+                        sh:path schema:location ],
+                    [ sh:maxCount 0 ;
+                        sh:path schema:eventStatus ],
+                    [ sh:maxCount 0 ;
+                        sh:path schema:offers ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:description ] ] ) ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: description." ;
-  ] ;
-  sh:property [
-    sh:path schema:endDate ;
-    sh:minCount 1 ;
+    sh:targetClass schema:BroadcastEvent,
+        schema:BusinessEvent,
+        schema:ChildrensEvent,
+        schema:ComedyEvent,
+        schema:ConferenceEvent,
+        schema:CourseInstance,
+        schema:DanceEvent,
+        schema:DeliveryEvent,
+        schema:EducationEvent,
+        schema:Event,
+        schema:EventSeries,
+        schema:ExhibitionEvent,
+        schema:Festival,
+        schema:FoodEvent,
+        schema:Hackathon,
+        schema:LiteraryEvent,
+        schema:MusicEvent,
+        schema:OnDemandEvent,
+        schema:PerformingArtsEvent,
+        schema:PublicationEvent,
+        schema:SaleEvent,
+        schema:ScreeningEvent,
+        schema:SocialEvent,
+        schema:SportsEvent,
+        schema:TheaterEvent,
+        schema:UserBlocks,
+        schema:UserCheckins,
+        schema:UserComments,
+        schema:UserDownloads,
+        schema:UserInteraction,
+        schema:UserLikes,
+        schema:UserPageVisits,
+        schema:UserPlays,
+        schema:UserPlusOnes,
+        schema:UserTweets,
+        schema:VisualArtsEvent .
+
+<https://wordlift.io/shacl/google/event/event-enddate-recommended> a sh:NodeShape ;
+    sh:message "An Event should have an endDate." ;
+    sh:or ( [ sh:class schema:BroadcastEvent ] [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:item ] ] ] [ sh:property [ sh:maxCount 0 ;
+                        sh:path schema:startDate ],
+                    [ sh:maxCount 0 ;
+                        sh:path schema:location ],
+                    [ sh:maxCount 0 ;
+                        sh:path schema:eventStatus ],
+                    [ sh:maxCount 0 ;
+                        sh:path schema:offers ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:endDate ] ] ) ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: endDate." ;
-  ] ;
-  sh:property [
-    sh:path schema:eventStatus ;
-    sh:minCount 1 ;
+    sh:targetClass schema:BroadcastEvent,
+        schema:BusinessEvent,
+        schema:ChildrensEvent,
+        schema:ComedyEvent,
+        schema:ConferenceEvent,
+        schema:CourseInstance,
+        schema:DanceEvent,
+        schema:DeliveryEvent,
+        schema:EducationEvent,
+        schema:Event,
+        schema:EventSeries,
+        schema:ExhibitionEvent,
+        schema:Festival,
+        schema:FoodEvent,
+        schema:Hackathon,
+        schema:LiteraryEvent,
+        schema:MusicEvent,
+        schema:OnDemandEvent,
+        schema:PerformingArtsEvent,
+        schema:PublicationEvent,
+        schema:SaleEvent,
+        schema:ScreeningEvent,
+        schema:SocialEvent,
+        schema:SportsEvent,
+        schema:TheaterEvent,
+        schema:UserBlocks,
+        schema:UserCheckins,
+        schema:UserComments,
+        schema:UserDownloads,
+        schema:UserInteraction,
+        schema:UserLikes,
+        schema:UserPageVisits,
+        schema:UserPlays,
+        schema:UserPlusOnes,
+        schema:UserTweets,
+        schema:VisualArtsEvent .
+
+<https://wordlift.io/shacl/google/event/event-eventstatus-recommended> a sh:NodeShape ;
+    sh:message "An Event should have an eventStatus." ;
+    sh:or ( [ sh:class schema:BroadcastEvent ] [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:item ] ] ] [ sh:property [ sh:maxCount 0 ;
+                        sh:path schema:startDate ],
+                    [ sh:maxCount 0 ;
+                        sh:path schema:location ],
+                    [ sh:maxCount 0 ;
+                        sh:path schema:eventStatus ],
+                    [ sh:maxCount 0 ;
+                        sh:path schema:offers ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:eventStatus ] ] ) ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: eventStatus." ;
-  ] ;
-.
+    sh:targetClass schema:BroadcastEvent,
+        schema:BusinessEvent,
+        schema:ChildrensEvent,
+        schema:ComedyEvent,
+        schema:ConferenceEvent,
+        schema:CourseInstance,
+        schema:DanceEvent,
+        schema:DeliveryEvent,
+        schema:EducationEvent,
+        schema:Event,
+        schema:EventSeries,
+        schema:ExhibitionEvent,
+        schema:Festival,
+        schema:FoodEvent,
+        schema:Hackathon,
+        schema:LiteraryEvent,
+        schema:MusicEvent,
+        schema:OnDemandEvent,
+        schema:PerformingArtsEvent,
+        schema:PublicationEvent,
+        schema:SaleEvent,
+        schema:ScreeningEvent,
+        schema:SocialEvent,
+        schema:SportsEvent,
+        schema:TheaterEvent,
+        schema:UserBlocks,
+        schema:UserCheckins,
+        schema:UserComments,
+        schema:UserDownloads,
+        schema:UserInteraction,
+        schema:UserLikes,
+        schema:UserPageVisits,
+        schema:UserPlays,
+        schema:UserPlusOnes,
+        schema:UserTweets,
+        schema:VisualArtsEvent .
+
+<https://wordlift.io/shacl/google/event/event-eventstatus-supported-values> a sh:NodeShape ;
+    sh:message "An Event's eventStatus must be one of EventCancelled, EventPostponed, EventRescheduled, EventScheduled." ;
+    sh:or ( [ sh:class schema:BroadcastEvent ] [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:item ] ] ] [ sh:property [ sh:maxCount 0 ;
+                        sh:path schema:startDate ],
+                    [ sh:maxCount 0 ;
+                        sh:path schema:location ],
+                    [ sh:maxCount 0 ;
+                        sh:path schema:eventStatus ],
+                    [ sh:maxCount 0 ;
+                        sh:path schema:offers ] ] [ sh:property [ sh:path schema:eventStatus ;
+                        sh:pattern "^https?://schema\\.org/(EventCancelled|EventPostponed|EventRescheduled|EventScheduled)$" ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BroadcastEvent,
+        schema:BusinessEvent,
+        schema:ChildrensEvent,
+        schema:ComedyEvent,
+        schema:ConferenceEvent,
+        schema:CourseInstance,
+        schema:DanceEvent,
+        schema:DeliveryEvent,
+        schema:EducationEvent,
+        schema:Event,
+        schema:EventSeries,
+        schema:ExhibitionEvent,
+        schema:Festival,
+        schema:FoodEvent,
+        schema:Hackathon,
+        schema:LiteraryEvent,
+        schema:MusicEvent,
+        schema:OnDemandEvent,
+        schema:PerformingArtsEvent,
+        schema:PublicationEvent,
+        schema:SaleEvent,
+        schema:ScreeningEvent,
+        schema:SocialEvent,
+        schema:SportsEvent,
+        schema:TheaterEvent,
+        schema:UserBlocks,
+        schema:UserCheckins,
+        schema:UserComments,
+        schema:UserDownloads,
+        schema:UserInteraction,
+        schema:UserLikes,
+        schema:UserPageVisits,
+        schema:UserPlays,
+        schema:UserPlusOnes,
+        schema:UserTweets,
+        schema:VisualArtsEvent .
+
+<https://wordlift.io/shacl/google/event/event-image-recommended> a sh:NodeShape ;
+    sh:message "An Event should have an image." ;
+    sh:or ( [ sh:class schema:BroadcastEvent ] [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:item ] ] ] [ sh:property [ sh:maxCount 0 ;
+                        sh:path schema:startDate ],
+                    [ sh:maxCount 0 ;
+                        sh:path schema:location ],
+                    [ sh:maxCount 0 ;
+                        sh:path schema:eventStatus ],
+                    [ sh:maxCount 0 ;
+                        sh:path schema:offers ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:image ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BroadcastEvent,
+        schema:BusinessEvent,
+        schema:ChildrensEvent,
+        schema:ComedyEvent,
+        schema:ConferenceEvent,
+        schema:CourseInstance,
+        schema:DanceEvent,
+        schema:DeliveryEvent,
+        schema:EducationEvent,
+        schema:Event,
+        schema:EventSeries,
+        schema:ExhibitionEvent,
+        schema:Festival,
+        schema:FoodEvent,
+        schema:Hackathon,
+        schema:LiteraryEvent,
+        schema:MusicEvent,
+        schema:OnDemandEvent,
+        schema:PerformingArtsEvent,
+        schema:PublicationEvent,
+        schema:SaleEvent,
+        schema:ScreeningEvent,
+        schema:SocialEvent,
+        schema:SportsEvent,
+        schema:TheaterEvent,
+        schema:UserBlocks,
+        schema:UserCheckins,
+        schema:UserComments,
+        schema:UserDownloads,
+        schema:UserInteraction,
+        schema:UserLikes,
+        schema:UserPageVisits,
+        schema:UserPlays,
+        schema:UserPlusOnes,
+        schema:UserTweets,
+        schema:VisualArtsEvent .
+
+<https://wordlift.io/shacl/google/event/event-location-address-required> a sh:NodeShape ;
+    sh:message "The Place under an Event's location must have an address." ;
+    sh:or ( [ sh:class schema:BroadcastEvent ] [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:item ] ] ] [ sh:property [ sh:maxCount 0 ;
+                        sh:path schema:startDate ],
+                    [ sh:maxCount 0 ;
+                        sh:path schema:location ],
+                    [ sh:maxCount 0 ;
+                        sh:path schema:eventStatus ],
+                    [ sh:maxCount 0 ;
+                        sh:path schema:offers ] ] [ sh:property [ sh:maxCount 0 ;
+                        sh:path schema:location ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path ( schema:location schema:address ) ] ] ) ;
+    sh:targetClass schema:BroadcastEvent,
+        schema:BusinessEvent,
+        schema:ChildrensEvent,
+        schema:ComedyEvent,
+        schema:ConferenceEvent,
+        schema:CourseInstance,
+        schema:DanceEvent,
+        schema:DeliveryEvent,
+        schema:EducationEvent,
+        schema:Event,
+        schema:EventSeries,
+        schema:ExhibitionEvent,
+        schema:Festival,
+        schema:FoodEvent,
+        schema:Hackathon,
+        schema:LiteraryEvent,
+        schema:MusicEvent,
+        schema:OnDemandEvent,
+        schema:PerformingArtsEvent,
+        schema:PublicationEvent,
+        schema:SaleEvent,
+        schema:ScreeningEvent,
+        schema:SocialEvent,
+        schema:SportsEvent,
+        schema:TheaterEvent,
+        schema:UserBlocks,
+        schema:UserCheckins,
+        schema:UserComments,
+        schema:UserDownloads,
+        schema:UserInteraction,
+        schema:UserLikes,
+        schema:UserPageVisits,
+        schema:UserPlays,
+        schema:UserPlusOnes,
+        schema:UserTweets,
+        schema:VisualArtsEvent .
+
+<https://wordlift.io/shacl/google/event/event-location-name-not-event-name> a sh:NodeShape ;
+    sh:message "The location name of an Event must not repeat the Event's own name." ;
+    sh:severity sh:Warning ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+            sh:message "The location name of an Event must not repeat the Event's own name." ;
+            sh:select """
+      SELECT $this ?value WHERE {
+        $this <http://schema.org/name> ?value .
+        $this <http://schema.org/location> ?place .
+        ?place <http://schema.org/name> ?value .
+        FILTER NOT EXISTS { ?list <http://schema.org/item> $this }
+      }
+    """ ] ;
+    sh:targetClass schema:BroadcastEvent,
+        schema:BusinessEvent,
+        schema:ChildrensEvent,
+        schema:ComedyEvent,
+        schema:ConferenceEvent,
+        schema:CourseInstance,
+        schema:DanceEvent,
+        schema:DeliveryEvent,
+        schema:EducationEvent,
+        schema:Event,
+        schema:EventSeries,
+        schema:ExhibitionEvent,
+        schema:Festival,
+        schema:FoodEvent,
+        schema:Hackathon,
+        schema:LiteraryEvent,
+        schema:MusicEvent,
+        schema:OnDemandEvent,
+        schema:PerformingArtsEvent,
+        schema:PublicationEvent,
+        schema:SaleEvent,
+        schema:ScreeningEvent,
+        schema:SocialEvent,
+        schema:SportsEvent,
+        schema:TheaterEvent,
+        schema:UserBlocks,
+        schema:UserCheckins,
+        schema:UserComments,
+        schema:UserDownloads,
+        schema:UserInteraction,
+        schema:UserLikes,
+        schema:UserPageVisits,
+        schema:UserPlays,
+        schema:UserPlusOnes,
+        schema:UserTweets,
+        schema:VisualArtsEvent .
+
+<https://wordlift.io/shacl/google/event/event-location-name-recommended> a sh:NodeShape ;
+    sh:message "The Place under an Event's location should have a name." ;
+    sh:or ( [ sh:class schema:BroadcastEvent ] [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:item ] ] ] [ sh:property [ sh:maxCount 0 ;
+                        sh:path schema:startDate ],
+                    [ sh:maxCount 0 ;
+                        sh:path schema:location ],
+                    [ sh:maxCount 0 ;
+                        sh:path schema:eventStatus ],
+                    [ sh:maxCount 0 ;
+                        sh:path schema:offers ] ] [ sh:property [ sh:maxCount 0 ;
+                        sh:path schema:location ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path ( schema:location schema:name ) ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BroadcastEvent,
+        schema:BusinessEvent,
+        schema:ChildrensEvent,
+        schema:ComedyEvent,
+        schema:ConferenceEvent,
+        schema:CourseInstance,
+        schema:DanceEvent,
+        schema:DeliveryEvent,
+        schema:EducationEvent,
+        schema:Event,
+        schema:EventSeries,
+        schema:ExhibitionEvent,
+        schema:Festival,
+        schema:FoodEvent,
+        schema:Hackathon,
+        schema:LiteraryEvent,
+        schema:MusicEvent,
+        schema:OnDemandEvent,
+        schema:PerformingArtsEvent,
+        schema:PublicationEvent,
+        schema:SaleEvent,
+        schema:ScreeningEvent,
+        schema:SocialEvent,
+        schema:SportsEvent,
+        schema:TheaterEvent,
+        schema:UserBlocks,
+        schema:UserCheckins,
+        schema:UserComments,
+        schema:UserDownloads,
+        schema:UserInteraction,
+        schema:UserLikes,
+        schema:UserPageVisits,
+        schema:UserPlays,
+        schema:UserPlusOnes,
+        schema:UserTweets,
+        schema:VisualArtsEvent .
+
+<https://wordlift.io/shacl/google/event/event-location-required> a sh:NodeShape ;
+    sh:message "An Event must have a location (schema:location)." ;
+    sh:or ( [ sh:class schema:BroadcastEvent ] [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:item ] ] ] [ sh:property [ sh:maxCount 0 ;
+                        sh:path schema:startDate ],
+                    [ sh:maxCount 0 ;
+                        sh:path schema:location ],
+                    [ sh:maxCount 0 ;
+                        sh:path schema:eventStatus ],
+                    [ sh:maxCount 0 ;
+                        sh:path schema:offers ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:location ] ] ) ;
+    sh:targetClass schema:BroadcastEvent,
+        schema:BusinessEvent,
+        schema:ChildrensEvent,
+        schema:ComedyEvent,
+        schema:ConferenceEvent,
+        schema:CourseInstance,
+        schema:DanceEvent,
+        schema:DeliveryEvent,
+        schema:EducationEvent,
+        schema:Event,
+        schema:EventSeries,
+        schema:ExhibitionEvent,
+        schema:Festival,
+        schema:FoodEvent,
+        schema:Hackathon,
+        schema:LiteraryEvent,
+        schema:MusicEvent,
+        schema:OnDemandEvent,
+        schema:PerformingArtsEvent,
+        schema:PublicationEvent,
+        schema:SaleEvent,
+        schema:ScreeningEvent,
+        schema:SocialEvent,
+        schema:SportsEvent,
+        schema:TheaterEvent,
+        schema:UserBlocks,
+        schema:UserCheckins,
+        schema:UserComments,
+        schema:UserDownloads,
+        schema:UserInteraction,
+        schema:UserLikes,
+        schema:UserPageVisits,
+        schema:UserPlays,
+        schema:UserPlusOnes,
+        schema:UserTweets,
+        schema:VisualArtsEvent .
+
+<https://wordlift.io/shacl/google/event/event-name-required> a sh:NodeShape ;
+    sh:message "An Event must have a name." ;
+    sh:or ( [ sh:class schema:BroadcastEvent ] [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:item ] ] ] [ sh:property [ sh:maxCount 0 ;
+                        sh:path schema:startDate ],
+                    [ sh:maxCount 0 ;
+                        sh:path schema:location ],
+                    [ sh:maxCount 0 ;
+                        sh:path schema:eventStatus ],
+                    [ sh:maxCount 0 ;
+                        sh:path schema:offers ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:name ] ] ) ;
+    sh:targetClass schema:BroadcastEvent,
+        schema:BusinessEvent,
+        schema:ChildrensEvent,
+        schema:ComedyEvent,
+        schema:ConferenceEvent,
+        schema:CourseInstance,
+        schema:DanceEvent,
+        schema:DeliveryEvent,
+        schema:EducationEvent,
+        schema:Event,
+        schema:EventSeries,
+        schema:ExhibitionEvent,
+        schema:Festival,
+        schema:FoodEvent,
+        schema:Hackathon,
+        schema:LiteraryEvent,
+        schema:MusicEvent,
+        schema:OnDemandEvent,
+        schema:PerformingArtsEvent,
+        schema:PublicationEvent,
+        schema:SaleEvent,
+        schema:ScreeningEvent,
+        schema:SocialEvent,
+        schema:SportsEvent,
+        schema:TheaterEvent,
+        schema:UserBlocks,
+        schema:UserCheckins,
+        schema:UserComments,
+        schema:UserDownloads,
+        schema:UserInteraction,
+        schema:UserLikes,
+        schema:UserPageVisits,
+        schema:UserPlays,
+        schema:UserPlusOnes,
+        schema:UserTweets,
+        schema:VisualArtsEvent .
+
+<https://wordlift.io/shacl/google/event/event-offers-availability-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "Each Offer should have availability, unless it has validFrom (ticket not yet on sale)." ;
+            sh:or ( [ sh:property [ sh:minCount 1 ;
+                                sh:path schema:availability ] ] [ sh:property [ sh:minCount 1 ;
+                                sh:path schema:validFrom ] ] ) ;
+            sh:path schema:offers ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:BroadcastEvent,
+        schema:BusinessEvent,
+        schema:ChildrensEvent,
+        schema:ComedyEvent,
+        schema:ConferenceEvent,
+        schema:CourseInstance,
+        schema:DanceEvent,
+        schema:DeliveryEvent,
+        schema:EducationEvent,
+        schema:Event,
+        schema:EventSeries,
+        schema:ExhibitionEvent,
+        schema:Festival,
+        schema:FoodEvent,
+        schema:Hackathon,
+        schema:LiteraryEvent,
+        schema:MusicEvent,
+        schema:OnDemandEvent,
+        schema:PerformingArtsEvent,
+        schema:PublicationEvent,
+        schema:SaleEvent,
+        schema:ScreeningEvent,
+        schema:SocialEvent,
+        schema:SportsEvent,
+        schema:TheaterEvent,
+        schema:UserBlocks,
+        schema:UserCheckins,
+        schema:UserComments,
+        schema:UserDownloads,
+        schema:UserInteraction,
+        schema:UserLikes,
+        schema:UserPageVisits,
+        schema:UserPlays,
+        schema:UserPlusOnes,
+        schema:UserTweets,
+        schema:VisualArtsEvent .
+
+<https://wordlift.io/shacl/google/event/event-offers-price-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "Each Offer should have a price." ;
+            sh:path schema:offers ;
+            sh:property [ sh:message "Each Offer should have a price." ;
+                    sh:minCount 1 ;
+                    sh:path schema:price ;
+                    sh:severity sh:Warning ] ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:BroadcastEvent,
+        schema:BusinessEvent,
+        schema:ChildrensEvent,
+        schema:ComedyEvent,
+        schema:ConferenceEvent,
+        schema:CourseInstance,
+        schema:DanceEvent,
+        schema:DeliveryEvent,
+        schema:EducationEvent,
+        schema:Event,
+        schema:EventSeries,
+        schema:ExhibitionEvent,
+        schema:Festival,
+        schema:FoodEvent,
+        schema:Hackathon,
+        schema:LiteraryEvent,
+        schema:MusicEvent,
+        schema:OnDemandEvent,
+        schema:PerformingArtsEvent,
+        schema:PublicationEvent,
+        schema:SaleEvent,
+        schema:ScreeningEvent,
+        schema:SocialEvent,
+        schema:SportsEvent,
+        schema:TheaterEvent,
+        schema:UserBlocks,
+        schema:UserCheckins,
+        schema:UserComments,
+        schema:UserDownloads,
+        schema:UserInteraction,
+        schema:UserLikes,
+        schema:UserPageVisits,
+        schema:UserPlays,
+        schema:UserPlusOnes,
+        schema:UserTweets,
+        schema:VisualArtsEvent .
+
+<https://wordlift.io/shacl/google/event/event-offers-pricecurrency-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "Each Offer should have a priceCurrency." ;
+            sh:path schema:offers ;
+            sh:property [ sh:message "Each Offer should have a priceCurrency." ;
+                    sh:minCount 1 ;
+                    sh:path schema:priceCurrency ;
+                    sh:severity sh:Warning ] ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:BroadcastEvent,
+        schema:BusinessEvent,
+        schema:ChildrensEvent,
+        schema:ComedyEvent,
+        schema:ConferenceEvent,
+        schema:CourseInstance,
+        schema:DanceEvent,
+        schema:DeliveryEvent,
+        schema:EducationEvent,
+        schema:Event,
+        schema:EventSeries,
+        schema:ExhibitionEvent,
+        schema:Festival,
+        schema:FoodEvent,
+        schema:Hackathon,
+        schema:LiteraryEvent,
+        schema:MusicEvent,
+        schema:OnDemandEvent,
+        schema:PerformingArtsEvent,
+        schema:PublicationEvent,
+        schema:SaleEvent,
+        schema:ScreeningEvent,
+        schema:SocialEvent,
+        schema:SportsEvent,
+        schema:TheaterEvent,
+        schema:UserBlocks,
+        schema:UserCheckins,
+        schema:UserComments,
+        schema:UserDownloads,
+        schema:UserInteraction,
+        schema:UserLikes,
+        schema:UserPageVisits,
+        schema:UserPlays,
+        schema:UserPlusOnes,
+        schema:UserTweets,
+        schema:VisualArtsEvent .
+
+<https://wordlift.io/shacl/google/event/event-offers-recommended> a sh:NodeShape ;
+    sh:message "An Event should have offers." ;
+    sh:or ( [ sh:class schema:BroadcastEvent ] [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:item ] ] ] [ sh:property [ sh:maxCount 0 ;
+                        sh:path schema:startDate ],
+                    [ sh:maxCount 0 ;
+                        sh:path schema:location ],
+                    [ sh:maxCount 0 ;
+                        sh:path schema:eventStatus ],
+                    [ sh:maxCount 0 ;
+                        sh:path schema:offers ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:offers ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BroadcastEvent,
+        schema:BusinessEvent,
+        schema:ChildrensEvent,
+        schema:ComedyEvent,
+        schema:ConferenceEvent,
+        schema:CourseInstance,
+        schema:DanceEvent,
+        schema:DeliveryEvent,
+        schema:EducationEvent,
+        schema:Event,
+        schema:EventSeries,
+        schema:ExhibitionEvent,
+        schema:Festival,
+        schema:FoodEvent,
+        schema:Hackathon,
+        schema:LiteraryEvent,
+        schema:MusicEvent,
+        schema:OnDemandEvent,
+        schema:PerformingArtsEvent,
+        schema:PublicationEvent,
+        schema:SaleEvent,
+        schema:ScreeningEvent,
+        schema:SocialEvent,
+        schema:SportsEvent,
+        schema:TheaterEvent,
+        schema:UserBlocks,
+        schema:UserCheckins,
+        schema:UserComments,
+        schema:UserDownloads,
+        schema:UserInteraction,
+        schema:UserLikes,
+        schema:UserPageVisits,
+        schema:UserPlays,
+        schema:UserPlusOnes,
+        schema:UserTweets,
+        schema:VisualArtsEvent .
+
+<https://wordlift.io/shacl/google/event/event-offers-url-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "Each Offer should have a url." ;
+            sh:path schema:offers ;
+            sh:property [ sh:message "Each Offer should have a url." ;
+                    sh:minCount 1 ;
+                    sh:path schema:url ;
+                    sh:severity sh:Warning ] ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:BroadcastEvent,
+        schema:BusinessEvent,
+        schema:ChildrensEvent,
+        schema:ComedyEvent,
+        schema:ConferenceEvent,
+        schema:CourseInstance,
+        schema:DanceEvent,
+        schema:DeliveryEvent,
+        schema:EducationEvent,
+        schema:Event,
+        schema:EventSeries,
+        schema:ExhibitionEvent,
+        schema:Festival,
+        schema:FoodEvent,
+        schema:Hackathon,
+        schema:LiteraryEvent,
+        schema:MusicEvent,
+        schema:OnDemandEvent,
+        schema:PerformingArtsEvent,
+        schema:PublicationEvent,
+        schema:SaleEvent,
+        schema:ScreeningEvent,
+        schema:SocialEvent,
+        schema:SportsEvent,
+        schema:TheaterEvent,
+        schema:UserBlocks,
+        schema:UserCheckins,
+        schema:UserComments,
+        schema:UserDownloads,
+        schema:UserInteraction,
+        schema:UserLikes,
+        schema:UserPageVisits,
+        schema:UserPlays,
+        schema:UserPlusOnes,
+        schema:UserTweets,
+        schema:VisualArtsEvent .
+
+<https://wordlift.io/shacl/google/event/event-offers-validfrom-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "Each Offer should have a validFrom." ;
+            sh:path schema:offers ;
+            sh:property [ sh:message "Each Offer should have a validFrom." ;
+                    sh:minCount 1 ;
+                    sh:path schema:validFrom ;
+                    sh:severity sh:Warning ] ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:BroadcastEvent,
+        schema:BusinessEvent,
+        schema:ChildrensEvent,
+        schema:ComedyEvent,
+        schema:ConferenceEvent,
+        schema:CourseInstance,
+        schema:DanceEvent,
+        schema:DeliveryEvent,
+        schema:EducationEvent,
+        schema:Event,
+        schema:EventSeries,
+        schema:ExhibitionEvent,
+        schema:Festival,
+        schema:FoodEvent,
+        schema:Hackathon,
+        schema:LiteraryEvent,
+        schema:MusicEvent,
+        schema:OnDemandEvent,
+        schema:PerformingArtsEvent,
+        schema:PublicationEvent,
+        schema:SaleEvent,
+        schema:ScreeningEvent,
+        schema:SocialEvent,
+        schema:SportsEvent,
+        schema:TheaterEvent,
+        schema:UserBlocks,
+        schema:UserCheckins,
+        schema:UserComments,
+        schema:UserDownloads,
+        schema:UserInteraction,
+        schema:UserLikes,
+        schema:UserPageVisits,
+        schema:UserPlays,
+        schema:UserPlusOnes,
+        schema:UserTweets,
+        schema:VisualArtsEvent .
+
+<https://wordlift.io/shacl/google/event/event-organizer-name-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "The organizer of an Event should have a name." ;
+            sh:path schema:organizer ;
+            sh:property [ sh:message "The organizer of an Event should have a name." ;
+                    sh:minCount 1 ;
+                    sh:path schema:name ;
+                    sh:severity sh:Warning ] ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:BroadcastEvent,
+        schema:BusinessEvent,
+        schema:ChildrensEvent,
+        schema:ComedyEvent,
+        schema:ConferenceEvent,
+        schema:CourseInstance,
+        schema:DanceEvent,
+        schema:DeliveryEvent,
+        schema:EducationEvent,
+        schema:Event,
+        schema:EventSeries,
+        schema:ExhibitionEvent,
+        schema:Festival,
+        schema:FoodEvent,
+        schema:Hackathon,
+        schema:LiteraryEvent,
+        schema:MusicEvent,
+        schema:OnDemandEvent,
+        schema:PerformingArtsEvent,
+        schema:PublicationEvent,
+        schema:SaleEvent,
+        schema:ScreeningEvent,
+        schema:SocialEvent,
+        schema:SportsEvent,
+        schema:TheaterEvent,
+        schema:UserBlocks,
+        schema:UserCheckins,
+        schema:UserComments,
+        schema:UserDownloads,
+        schema:UserInteraction,
+        schema:UserLikes,
+        schema:UserPageVisits,
+        schema:UserPlays,
+        schema:UserPlusOnes,
+        schema:UserTweets,
+        schema:VisualArtsEvent .
+
+<https://wordlift.io/shacl/google/event/event-organizer-recommended> a sh:NodeShape ;
+    sh:message "An Event should have an organizer." ;
+    sh:or ( [ sh:class schema:BroadcastEvent ] [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:item ] ] ] [ sh:property [ sh:maxCount 0 ;
+                        sh:path schema:startDate ],
+                    [ sh:maxCount 0 ;
+                        sh:path schema:location ],
+                    [ sh:maxCount 0 ;
+                        sh:path schema:eventStatus ],
+                    [ sh:maxCount 0 ;
+                        sh:path schema:offers ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:organizer ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BroadcastEvent,
+        schema:BusinessEvent,
+        schema:ChildrensEvent,
+        schema:ComedyEvent,
+        schema:ConferenceEvent,
+        schema:CourseInstance,
+        schema:DanceEvent,
+        schema:DeliveryEvent,
+        schema:EducationEvent,
+        schema:Event,
+        schema:EventSeries,
+        schema:ExhibitionEvent,
+        schema:Festival,
+        schema:FoodEvent,
+        schema:Hackathon,
+        schema:LiteraryEvent,
+        schema:MusicEvent,
+        schema:OnDemandEvent,
+        schema:PerformingArtsEvent,
+        schema:PublicationEvent,
+        schema:SaleEvent,
+        schema:ScreeningEvent,
+        schema:SocialEvent,
+        schema:SportsEvent,
+        schema:TheaterEvent,
+        schema:UserBlocks,
+        schema:UserCheckins,
+        schema:UserComments,
+        schema:UserDownloads,
+        schema:UserInteraction,
+        schema:UserLikes,
+        schema:UserPageVisits,
+        schema:UserPlays,
+        schema:UserPlusOnes,
+        schema:UserTweets,
+        schema:VisualArtsEvent .
+
+<https://wordlift.io/shacl/google/event/event-organizer-url-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "The organizer of an Event should have a url." ;
+            sh:path schema:organizer ;
+            sh:property [ sh:message "The organizer of an Event should have a url." ;
+                    sh:minCount 1 ;
+                    sh:path schema:url ;
+                    sh:severity sh:Warning ] ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:BroadcastEvent,
+        schema:BusinessEvent,
+        schema:ChildrensEvent,
+        schema:ComedyEvent,
+        schema:ConferenceEvent,
+        schema:CourseInstance,
+        schema:DanceEvent,
+        schema:DeliveryEvent,
+        schema:EducationEvent,
+        schema:Event,
+        schema:EventSeries,
+        schema:ExhibitionEvent,
+        schema:Festival,
+        schema:FoodEvent,
+        schema:Hackathon,
+        schema:LiteraryEvent,
+        schema:MusicEvent,
+        schema:OnDemandEvent,
+        schema:PerformingArtsEvent,
+        schema:PublicationEvent,
+        schema:SaleEvent,
+        schema:ScreeningEvent,
+        schema:SocialEvent,
+        schema:SportsEvent,
+        schema:TheaterEvent,
+        schema:UserBlocks,
+        schema:UserCheckins,
+        schema:UserComments,
+        schema:UserDownloads,
+        schema:UserInteraction,
+        schema:UserLikes,
+        schema:UserPageVisits,
+        schema:UserPlays,
+        schema:UserPlusOnes,
+        schema:UserTweets,
+        schema:VisualArtsEvent .
+
+<https://wordlift.io/shacl/google/event/event-performer-name-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "Each performer of an Event should have a name." ;
+            sh:path schema:performer ;
+            sh:property [ sh:message "Each performer of an Event should have a name." ;
+                    sh:minCount 1 ;
+                    sh:path schema:name ;
+                    sh:severity sh:Warning ] ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:BroadcastEvent,
+        schema:BusinessEvent,
+        schema:ChildrensEvent,
+        schema:ComedyEvent,
+        schema:ConferenceEvent,
+        schema:CourseInstance,
+        schema:DanceEvent,
+        schema:DeliveryEvent,
+        schema:EducationEvent,
+        schema:Event,
+        schema:EventSeries,
+        schema:ExhibitionEvent,
+        schema:Festival,
+        schema:FoodEvent,
+        schema:Hackathon,
+        schema:LiteraryEvent,
+        schema:MusicEvent,
+        schema:OnDemandEvent,
+        schema:PerformingArtsEvent,
+        schema:PublicationEvent,
+        schema:SaleEvent,
+        schema:ScreeningEvent,
+        schema:SocialEvent,
+        schema:SportsEvent,
+        schema:TheaterEvent,
+        schema:UserBlocks,
+        schema:UserCheckins,
+        schema:UserComments,
+        schema:UserDownloads,
+        schema:UserInteraction,
+        schema:UserLikes,
+        schema:UserPageVisits,
+        schema:UserPlays,
+        schema:UserPlusOnes,
+        schema:UserTweets,
+        schema:VisualArtsEvent .
+
+<https://wordlift.io/shacl/google/event/event-performer-recommended> a sh:NodeShape ;
+    sh:message "An Event should have a performer." ;
+    sh:or ( [ sh:class schema:BroadcastEvent ] [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:item ] ] ] [ sh:property [ sh:maxCount 0 ;
+                        sh:path schema:startDate ],
+                    [ sh:maxCount 0 ;
+                        sh:path schema:location ],
+                    [ sh:maxCount 0 ;
+                        sh:path schema:eventStatus ],
+                    [ sh:maxCount 0 ;
+                        sh:path schema:offers ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:performer ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BroadcastEvent,
+        schema:BusinessEvent,
+        schema:ChildrensEvent,
+        schema:ComedyEvent,
+        schema:ConferenceEvent,
+        schema:CourseInstance,
+        schema:DanceEvent,
+        schema:DeliveryEvent,
+        schema:EducationEvent,
+        schema:Event,
+        schema:EventSeries,
+        schema:ExhibitionEvent,
+        schema:Festival,
+        schema:FoodEvent,
+        schema:Hackathon,
+        schema:LiteraryEvent,
+        schema:MusicEvent,
+        schema:OnDemandEvent,
+        schema:PerformingArtsEvent,
+        schema:PublicationEvent,
+        schema:SaleEvent,
+        schema:ScreeningEvent,
+        schema:SocialEvent,
+        schema:SportsEvent,
+        schema:TheaterEvent,
+        schema:UserBlocks,
+        schema:UserCheckins,
+        schema:UserComments,
+        schema:UserDownloads,
+        schema:UserInteraction,
+        schema:UserLikes,
+        schema:UserPageVisits,
+        schema:UserPlays,
+        schema:UserPlusOnes,
+        schema:UserTweets,
+        schema:VisualArtsEvent .
+
+<https://wordlift.io/shacl/google/event/event-previousstartdate-requires-rescheduled> a sh:NodeShape ;
+    sh:message "An Event with previousStartDate must have eventStatus EventRescheduled." ;
+    sh:or ( [ sh:class schema:BroadcastEvent ] [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:item ] ] ] [ sh:property [ sh:maxCount 0 ;
+                        sh:path schema:startDate ],
+                    [ sh:maxCount 0 ;
+                        sh:path schema:location ],
+                    [ sh:maxCount 0 ;
+                        sh:path schema:eventStatus ],
+                    [ sh:maxCount 0 ;
+                        sh:path schema:offers ] ] [ sh:property [ sh:maxCount 0 ;
+                        sh:path schema:previousStartDate ] ] [ sh:property [ sh:path schema:eventStatus ;
+                        sh:qualifiedMinCount 1 ;
+                        sh:qualifiedValueShape [ sh:pattern "^https?://schema\\.org/EventRescheduled$" ] ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BroadcastEvent,
+        schema:BusinessEvent,
+        schema:ChildrensEvent,
+        schema:ComedyEvent,
+        schema:ConferenceEvent,
+        schema:CourseInstance,
+        schema:DanceEvent,
+        schema:DeliveryEvent,
+        schema:EducationEvent,
+        schema:Event,
+        schema:EventSeries,
+        schema:ExhibitionEvent,
+        schema:Festival,
+        schema:FoodEvent,
+        schema:Hackathon,
+        schema:LiteraryEvent,
+        schema:MusicEvent,
+        schema:OnDemandEvent,
+        schema:PerformingArtsEvent,
+        schema:PublicationEvent,
+        schema:SaleEvent,
+        schema:ScreeningEvent,
+        schema:SocialEvent,
+        schema:SportsEvent,
+        schema:TheaterEvent,
+        schema:UserBlocks,
+        schema:UserCheckins,
+        schema:UserComments,
+        schema:UserDownloads,
+        schema:UserInteraction,
+        schema:UserLikes,
+        schema:UserPageVisits,
+        schema:UserPlays,
+        schema:UserPlusOnes,
+        schema:UserTweets,
+        schema:VisualArtsEvent .
+
+<https://wordlift.io/shacl/google/event/event-startdate-required> a sh:NodeShape ;
+    sh:message "An Event must have a startDate." ;
+    sh:or ( [ sh:class schema:BroadcastEvent ] [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:item ] ] ] [ sh:property [ sh:maxCount 0 ;
+                        sh:path schema:startDate ],
+                    [ sh:maxCount 0 ;
+                        sh:path schema:location ],
+                    [ sh:maxCount 0 ;
+                        sh:path schema:eventStatus ],
+                    [ sh:maxCount 0 ;
+                        sh:path schema:offers ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:startDate ] ] ) ;
+    sh:targetClass schema:BroadcastEvent,
+        schema:BusinessEvent,
+        schema:ChildrensEvent,
+        schema:ComedyEvent,
+        schema:ConferenceEvent,
+        schema:CourseInstance,
+        schema:DanceEvent,
+        schema:DeliveryEvent,
+        schema:EducationEvent,
+        schema:Event,
+        schema:EventSeries,
+        schema:ExhibitionEvent,
+        schema:Festival,
+        schema:FoodEvent,
+        schema:Hackathon,
+        schema:LiteraryEvent,
+        schema:MusicEvent,
+        schema:OnDemandEvent,
+        schema:PerformingArtsEvent,
+        schema:PublicationEvent,
+        schema:SaleEvent,
+        schema:ScreeningEvent,
+        schema:SocialEvent,
+        schema:SportsEvent,
+        schema:TheaterEvent,
+        schema:UserBlocks,
+        schema:UserCheckins,
+        schema:UserComments,
+        schema:UserDownloads,
+        schema:UserInteraction,
+        schema:UserLikes,
+        schema:UserPageVisits,
+        schema:UserPlays,
+        schema:UserPlusOnes,
+        schema:UserTweets,
+        schema:VisualArtsEvent .
+

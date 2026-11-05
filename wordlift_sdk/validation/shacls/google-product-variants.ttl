@@ -1,70 +1,140 @@
-@prefix : <https://wordlift.io/shacl/google/google-product-variants/> .
-@prefix sh: <http://www.w3.org/ns/shacl#> .
-@prefix schema: <http://schema.org/> .
-
 # Source: https://developers.google.com/search/docs/appearance/structured-data/product-variants
-# Generated: 2026-02-26T15:42:11Z
+# Generated: 2026-11-05T14:35:24Z
 # Notes: required properties => errors; recommended properties => warnings.
+# google-product-variants: 16 rules generated from the Google Search Central doc by the tdd-mvp-3 pipeline.
+# Bundled from per-rule files by harness/bundle.py, schema.org subtypes expanded (targetClass 0, class 1, in 0). Do not edit by hand.
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-:google_ProductGroupShape
-  a sh:NodeShape ;
-  sh:targetClass schema:ProductGroup ;
-  sh:property [
-    sh:path schema:name ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:aggregateRating ;
-    sh:minCount 1 ;
+<https://wordlift.io/shacl/google/product-variants/product-variant-description-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "product-variant-description-recommended: each variant should have its own description." ;
+            sh:path [ sh:alternativePath ( schema:hasVariant [ sh:inversePath schema:isVariantOf ] ) ] ;
+            sh:qualifiedMaxCount 0 ;
+            sh:qualifiedValueShape [ sh:not [ sh:closed true ;
+                            sh:ignoredProperties ( rdf:type schema:url schema:name ) ] ;
+                    sh:property [ sh:maxCount 0 ;
+                            sh:path schema:description ] ] ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:ProductGroup .
+
+<https://wordlift.io/shacl/google/product-variants/product-variant-id-required> a sh:NodeShape ;
+    sh:property [ sh:message "product-variant-id-required: each variant must have a sku or a gtin (gtin, gtin8, gtin12, gtin13, gtin14)." ;
+            sh:path [ sh:alternativePath ( schema:hasVariant [ sh:inversePath schema:isVariantOf ] ) ] ;
+            sh:qualifiedMaxCount 0 ;
+            sh:qualifiedValueShape [ sh:not [ sh:closed true ;
+                            sh:ignoredProperties ( rdf:type schema:url schema:name ) ] ;
+                    sh:property [ sh:maxCount 0 ;
+                            sh:path [ sh:alternativePath ( schema:sku schema:gtin schema:gtin8 schema:gtin12 schema:gtin13 schema:gtin14 ) ] ] ] ] ;
+    sh:targetClass schema:ProductGroup .
+
+<https://wordlift.io/shacl/google/product-variants/productgroup-aggregaterating-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "productgroup-aggregaterating-recommended: a ProductGroup should have an aggregateRating." ;
+            sh:minCount 1 ;
+            sh:path schema:aggregateRating ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:ProductGroup .
+
+<https://wordlift.io/shacl/google/product-variants/productgroup-brand-name-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "productgroup-brand-name-recommended: a brand node of a ProductGroup should have a name." ;
+            sh:path schema:brand ;
+            sh:qualifiedMaxCount 0 ;
+            sh:qualifiedValueShape [ sh:nodeKind sh:BlankNodeOrIRI ;
+                    sh:property [ sh:maxCount 0 ;
+                            sh:path schema:name ] ] ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:ProductGroup .
+
+<https://wordlift.io/shacl/google/product-variants/productgroup-brand-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "productgroup-brand-recommended: a ProductGroup should have a brand." ;
+            sh:minCount 1 ;
+            sh:path schema:brand ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:ProductGroup .
+
+<https://wordlift.io/shacl/google/product-variants/productgroup-description-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "productgroup-description-recommended: a ProductGroup should have a description." ;
+            sh:minCount 1 ;
+            sh:path schema:description ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:ProductGroup .
+
+<https://wordlift.io/shacl/google/product-variants/productgroup-hasadultconsideration-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "productgroup-hasadultconsideration-recommended: a ProductGroup should have hasAdultConsideration." ;
+            sh:minCount 1 ;
+            sh:path schema:hasAdultConsideration ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:ProductGroup .
+
+<https://wordlift.io/shacl/google/product-variants/productgroup-hasadultconsideration-value> a sh:NodeShape ;
+    sh:property [ sh:in ( schema:SexualContentConsideration <https://schema.org/SexualContentConsideration> "https://schema.org/SexualContentConsideration" "http://schema.org/SexualContentConsideration" ) ;
+            sh:message "productgroup-hasadultconsideration-value: hasAdultConsideration must be https://schema.org/SexualContentConsideration." ;
+            sh:path schema:hasAdultConsideration ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:ProductGroup .
+
+<https://wordlift.io/shacl/google/product-variants/productgroup-hasvariant-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "productgroup-hasvariant-recommended: a ProductGroup should have at least one variant (hasVariant or isVariantOf)." ;
+            sh:minCount 1 ;
+            sh:path [ sh:alternativePath ( schema:hasVariant [ sh:inversePath schema:isVariantOf ] ) ] ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:ProductGroup .
+
+<https://wordlift.io/shacl/google/product-variants/productgroup-name-required> a sh:NodeShape ;
+    sh:property [ sh:message "productgroup-name-required: a ProductGroup must have a name." ;
+            sh:minCount 1 ;
+            sh:path schema:name ] ;
+    sh:targetClass schema:ProductGroup .
+
+<https://wordlift.io/shacl/google/product-variants/productgroup-productgroupid-matches-variants> a sh:NodeShape ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: aggregateRating." ;
-  ] ;
-  sh:property [
-    sh:path schema:brand ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: brand." ;
-  ] ;
-  sh:property [
-    sh:path ( schema:brand schema:name ) ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: brand.name." ;
-  ] ;
-  sh:property [
-    sh:path schema:description ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: description." ;
-  ] ;
-  sh:property [
-    sh:path schema:hasVariant ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: hasVariant." ;
-  ] ;
-  sh:property [
-    sh:path schema:productGroupID ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: productGroupID." ;
-  ] ;
-  sh:property [
-    sh:path schema:review ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: review." ;
-  ] ;
-  sh:property [
-    sh:path schema:url ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: url." ;
-  ] ;
-  sh:property [
-    sh:path schema:variesBy ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: variesBy." ;
-  ] ;
-.
+    sh:sparql [ a sh:SPARQLConstraint ;
+            sh:message "productgroup-productgroupid-matches-variants: a variant inProductGroupWithID must equal the ProductGroup productGroupID." ;
+            sh:select """
+SELECT $this ?v WHERE {
+  $this <http://schema.org/productGroupID> ?p .
+  { $this <http://schema.org/hasVariant> ?v } UNION { ?v <http://schema.org/isVariantOf> $this }
+  ?v <http://schema.org/inProductGroupWithID> ?w .
+  FILTER (?w != ?p)
+}
+""" ] ;
+    sh:targetClass schema:ProductGroup .
+
+<https://wordlift.io/shacl/google/product-variants/productgroup-productgroupid-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "productgroup-productgroupid-recommended: a ProductGroup should have productGroupID, or a variant should carry inProductGroupWithID." ;
+            sh:minCount 1 ;
+            sh:path [ sh:alternativePath ( schema:productGroupID ( [ sh:alternativePath ( schema:hasVariant [ sh:inversePath schema:isVariantOf ] ) ] schema:inProductGroupWithID ) ) ] ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:ProductGroup .
+
+<https://wordlift.io/shacl/google/product-variants/productgroup-review-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "productgroup-review-recommended: a ProductGroup should have a review." ;
+            sh:minCount 1 ;
+            sh:path schema:review ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:ProductGroup .
+
+<https://wordlift.io/shacl/google/product-variants/productgroup-url-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "productgroup-url-recommended: a ProductGroup should have a url." ;
+            sh:minCount 1 ;
+            sh:path schema:url ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:ProductGroup .
+
+<https://wordlift.io/shacl/google/product-variants/productgroup-variesby-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "productgroup-variesby-recommended: a ProductGroup should have variesBy." ;
+            sh:minCount 1 ;
+            sh:path schema:variesBy ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:ProductGroup .
+
+<https://wordlift.io/shacl/google/product-variants/productgroup-variesby-supported-values> a sh:NodeShape ;
+    sh:property [ sh:message "productgroup-variesby-supported-values: variesBy must use color, size, suggestedAge, suggestedGender, material or pattern." ;
+            sh:path schema:variesBy ;
+            sh:qualifiedMaxCount 0 ;
+            sh:qualifiedValueShape [ sh:not [ sh:or ( [ sh:class schema:DefinedTerm ] [ sh:class schema:CategoryCode ] [ sh:class schema:MedicalCode ] ) ],
+                        [ sh:in ( schema:color schema:size schema:suggestedAge schema:suggestedGender schema:material schema:pattern <https://schema.org/color> <https://schema.org/size> <https://schema.org/suggestedAge> <https://schema.org/suggestedGender> <https://schema.org/material> <https://schema.org/pattern> "https://schema.org/color" "https://schema.org/size" "https://schema.org/suggestedAge" "https://schema.org/suggestedGender" "https://schema.org/material" "https://schema.org/pattern" "http://schema.org/color" "http://schema.org/size" "http://schema.org/suggestedAge" "http://schema.org/suggestedGender" "http://schema.org/material" "http://schema.org/pattern" ) ] ] ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:ProductGroup .
+

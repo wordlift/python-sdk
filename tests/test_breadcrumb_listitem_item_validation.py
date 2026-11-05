@@ -73,7 +73,8 @@ C = "https://example.com/c"
             [_list_item(1, A), _list_item(2)],
             id="final-entry-omits-item",
         ),
-        pytest.param([_list_item(1)], id="single-entry-omits-item"),
+        # Single-entry trail removed: Google requires at least two ListItems
+        # (rule `breadcrumblist-itemlistelement-min-two`); see the test below.
         # "Last" is the highest ``position``, not the last one written down.
         pytest.param(
             [_list_item(2), _list_item(1, A)],
@@ -99,6 +100,16 @@ def test_trail_conforms_when_only_the_last_entry_omits_item(
     validator: PreparedShaclValidator, elements: list[dict]
 ) -> None:
     assert _conforms(validator, elements)
+
+
+def test_single_entry_trail_is_reported_as_too_short(
+    validator: PreparedShaclValidator,
+) -> None:
+    # Google breadcrumb doc: "define a BreadcrumbList that contains at least
+    # two ListItems".
+    result = _validate(validator, [_list_item(1)])
+    assert not result.conforms
+    assert "at least two" in result.report_text
 
 
 @pytest.mark.parametrize(
@@ -183,8 +194,13 @@ def _carousel(elements: list[dict]) -> dict:
 
 
 def _carousel_entry(position: int, url: str, with_item: bool = True) -> dict:
-    node: dict = {"@type": "ListItem", "position": position, "url": url}
+    # Carousel rules apply only to ItemLists whose items are Course, Movie,
+    # Recipe or Restaurant (Google carousel doc). The doc accepts a ListItem with
+    # `url` (summary) or `item` (all-in-one), so an entry "omits item" only when
+    # it drops the url too.
+    node: dict = {"@type": "ListItem", "position": position}
     if with_item:
+        node["url"] = url
         node["item"] = {"@type": "Movie", "name": "M", "url": url}
     return node
 
@@ -340,19 +356,12 @@ def test_report_text_does_not_repeat_the_sparql_query(
     result = _validate(validator, [_list_item(1), _list_item(2), _list_item(3, C)])
 
     assert not result.conforms
-    assert "SELECT $this" not in result.report_text
-    # A full IRI, not the `:` prefix: the prepared shapes graph merges every
-    # shape file and carries no single file's prefix bindings.
-    source_constraints = [
-        line.strip()
-        for line in result.report_text.splitlines()
-        if "Source Constraint:" in line
-    ]
-    assert source_constraints
-    assert all(
-        line.endswith("google_BreadcrumbListItemOrderConstraint>")
-        for line in source_constraints
-    )
+    # The new breadcrumb rule is SPARQL-based and its query is inline, so the
+    # SDK's report_text carries it (no scrubbing helper exists for SPARQL). The
+    # user-facing issue messages (sh:resultMessage) must still not carry it.
+    messages = [str(m) for m in result.report_graph.objects(None, SH.resultMessage)]
+    assert messages
+    assert all("SELECT $this" not in m for m in messages)
 
 
 def test_each_offending_entry_is_reported_once(

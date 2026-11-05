@@ -1,182 +1,659 @@
-@prefix : <https://wordlift.io/shacl/google/google-product-snippet/> .
-@prefix sh: <http://www.w3.org/ns/shacl#> .
-@prefix schema: <http://schema.org/> .
-
 # Source: https://developers.google.com/search/docs/appearance/structured-data/product-snippet
-# Generated: 2026-02-26T15:42:10Z
+# Generated: 2026-11-05T14:35:24Z
 # Notes: required properties => errors; recommended properties => warnings.
+# google-product-snippet: 22 rules generated from the Google Search Central doc by the tdd-mvp-3 pipeline.
+# Bundled from per-rule files by harness/bundle.py, schema.org subtypes expanded (targetClass 22, class 0, in 0). Do not edit by hand.
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-:google_OfferRecommendedOneOf1Shape
-  a sh:NodeShape ;
-  sh:targetClass schema:Offer ;
-  sh:severity sh:Warning ;
-  sh:message "Recommended by Google: choose either priceCurrency or priceSpecification.priceCurrency." ;
-  sh:or (
-    [
-      sh:property [
-        sh:path schema:priceCurrency ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-    [
-      sh:property [
-        sh:path ( schema:priceSpecification schema:priceCurrency ) ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-  ) ;
-.
-
-:google_ProductShape
-  a sh:NodeShape ;
-  sh:targetClass schema:Product ;
-  sh:property [
-    sh:path schema:name ;
-    sh:minCount 1 ;
-  ] ;
-  sh:or (
-    [
-      sh:property [
-        sh:path schema:aggregateRating ;
-        sh:minCount 1 ;
-      ] ;
-    ]
-    [
-      sh:property [
-        sh:path schema:offers ;
-        sh:minCount 1 ;
-          sh:or (
-            [
-              a sh:NodeShape ;
-              sh:class schema:Offer ;
-              sh:property [
-                sh:path schema:availability ;
-                sh:minCount 1 ;
-                sh:severity sh:Warning ;
-                sh:message "Recommended by Google: availability." ;
-              ] ;
-              sh:property [
-                sh:path schema:priceValidUntil ;
-                sh:minCount 1 ;
-                sh:severity sh:Warning ;
-                sh:message "Recommended by Google: priceValidUntil." ;
-              ] ;
-              sh:or (
-                [
-                  sh:property [
-                    sh:path schema:price ;
-                    sh:minCount 1 ;
-                  ] ;
-                ]
-                [
-                  sh:property [
-                    sh:path ( schema:priceSpecification schema:price ) ;
-                    sh:minCount 1 ;
-                  ] ;
-                ]
-              ) ;
-            ]
-            [
-              a sh:NodeShape ;
-              sh:class schema:AggregateOffer ;
-              sh:property [
-                sh:path schema:lowPrice ;
-                sh:minCount 1 ;
-              ] ;
-              sh:property [
-                sh:path schema:priceCurrency ;
-                sh:minCount 1 ;
-              ] ;
-              sh:property [
-                sh:path schema:highPrice ;
-                sh:minCount 1 ;
-                sh:severity sh:Warning ;
-                sh:message "Recommended by Google: highPrice." ;
-              ] ;
-              sh:property [
-                sh:path schema:offerCount ;
-                sh:minCount 1 ;
-                sh:severity sh:Warning ;
-                sh:message "Recommended by Google: offerCount." ;
-              ] ;
-            ]
-          ) ;
-      ] ;
-    ]
-    [
-      sh:property [
-        sh:path schema:review ;
-        sh:minCount 1 ;
-          sh:node [
-            a sh:NodeShape ;
-            sh:class schema:Review ;
-            sh:or (
-              [
-                sh:property [
-                  sh:path schema:negativeNotes ;
-                  sh:minCount 1 ;
-                    sh:node [
-                      a sh:NodeShape ;
-                      sh:class schema:ItemList ;
-                      sh:property [
-                        sh:path schema:itemListElement ;
-                        sh:minCount 1 ;
-                      ] ;
-                      sh:property [
-                        sh:path ( schema:itemListElement schema:name ) ;
-                        sh:minCount 1 ;
-                      ] ;
-                      sh:property [
-                        sh:path ( schema:itemListElement schema:position ) ;
-                        sh:minCount 1 ;
-                        sh:severity sh:Warning ;
-                        sh:message "Recommended by Google: itemListElement.position." ;
-                      ] ;
-                    ] ;
-                ] ;
-              ]
-              [
-                sh:property [
-                  sh:path schema:positiveNotes ;
-                  sh:minCount 1 ;
-                    sh:node [
-                      a sh:NodeShape ;
-                      sh:class schema:ItemList ;
-                      sh:property [
-                        sh:path schema:itemListElement ;
-                        sh:minCount 1 ;
-                      ] ;
-                      sh:property [
-                        sh:path ( schema:itemListElement schema:name ) ;
-                        sh:minCount 1 ;
-                      ] ;
-                      sh:property [
-                        sh:path ( schema:itemListElement schema:position ) ;
-                        sh:minCount 1 ;
-                        sh:severity sh:Warning ;
-                        sh:message "Recommended by Google: itemListElement.position." ;
-                      ] ;
-                    ] ;
-                ] ;
-              ]
-            ) ;
-          ] ;
-      ] ;
-    ]
-  ) ;
-.
-
-:google_UnitPriceSpecificationShape
-  a sh:NodeShape ;
-  sh:targetClass schema:UnitPriceSpecification ;
-  sh:property [
-    sh:path schema:price ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:priceCurrency ;
-    sh:minCount 1 ;
+<https://wordlift.io/shacl/google/product-snippet/aggregateoffer-highprice-recommended> a sh:NodeShape ;
+    sh:message "The AggregateOffer of the page's Product should have highPrice." ;
+    sh:or ( [ sh:property [ sh:path schema:offers ;
+                        sh:qualifiedMaxCount 0 ;
+                        sh:qualifiedValueShape [ sh:and ( [ sh:class schema:AggregateOffer ] [ sh:not [ sh:property [ sh:minCount 1 ;
+                                                            sh:path schema:highPrice ] ] ] ) ] ] ] [ sh:class schema:ProductGroup ] [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:itemReviewed ] ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:item ] ] ] [ sh:and ( [ sh:or ( [ sh:property [ sh:path [ sh:inversePath schema:hasVariant ] ;
+                                                sh:qualifiedMinCount 1 ;
+                                                sh:qualifiedValueShape [ sh:class schema:ProductGroup ] ] ] [ sh:property [ sh:minCount 1 ;
+                                                sh:path schema:isVariantOf ] ] ) ] [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:offers ] ] [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:review ] ] [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:aggregateRating ] ] ) ] ) ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: priceCurrency." ;
-  ] ;
-.
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/product-snippet/aggregateoffer-lowprice-required> a sh:NodeShape ;
+    sh:message "The AggregateOffer of the page's Product must have lowPrice." ;
+    sh:or ( [ sh:property [ sh:path schema:offers ;
+                        sh:qualifiedMaxCount 0 ;
+                        sh:qualifiedValueShape [ sh:and ( [ sh:class schema:AggregateOffer ] [ sh:not [ sh:property [ sh:minCount 1 ;
+                                                            sh:path schema:lowPrice ] ] ] ) ] ] ] [ sh:class schema:ProductGroup ] [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:itemReviewed ] ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:item ] ] ] [ sh:and ( [ sh:or ( [ sh:property [ sh:path [ sh:inversePath schema:hasVariant ] ;
+                                                sh:qualifiedMinCount 1 ;
+                                                sh:qualifiedValueShape [ sh:class schema:ProductGroup ] ] ] [ sh:property [ sh:minCount 1 ;
+                                                sh:path schema:isVariantOf ] ] ) ] [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:offers ] ] [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:review ] ] [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:aggregateRating ] ] ) ] ) ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/product-snippet/aggregateoffer-offercount-recommended> a sh:NodeShape ;
+    sh:message "The AggregateOffer of the page's Product should have offerCount." ;
+    sh:or ( [ sh:property [ sh:path schema:offers ;
+                        sh:qualifiedMaxCount 0 ;
+                        sh:qualifiedValueShape [ sh:and ( [ sh:class schema:AggregateOffer ] [ sh:not [ sh:property [ sh:minCount 1 ;
+                                                            sh:path schema:offerCount ] ] ] ) ] ] ] [ sh:class schema:ProductGroup ] [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:itemReviewed ] ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:item ] ] ] [ sh:and ( [ sh:or ( [ sh:property [ sh:path [ sh:inversePath schema:hasVariant ] ;
+                                                sh:qualifiedMinCount 1 ;
+                                                sh:qualifiedValueShape [ sh:class schema:ProductGroup ] ] ] [ sh:property [ sh:minCount 1 ;
+                                                sh:path schema:isVariantOf ] ] ) ] [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:offers ] ] [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:review ] ] [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:aggregateRating ] ] ) ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/product-snippet/aggregateoffer-pricecurrency-required> a sh:NodeShape ;
+    sh:message "The AggregateOffer of the page's Product must have priceCurrency." ;
+    sh:or ( [ sh:property [ sh:path schema:offers ;
+                        sh:qualifiedMaxCount 0 ;
+                        sh:qualifiedValueShape [ sh:and ( [ sh:class schema:AggregateOffer ] [ sh:not [ sh:property [ sh:minCount 1 ;
+                                                            sh:path schema:priceCurrency ] ] ] ) ] ] ] [ sh:class schema:ProductGroup ] [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:itemReviewed ] ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:item ] ] ] [ sh:and ( [ sh:or ( [ sh:property [ sh:path [ sh:inversePath schema:hasVariant ] ;
+                                                sh:qualifiedMinCount 1 ;
+                                                sh:qualifiedValueShape [ sh:class schema:ProductGroup ] ] ] [ sh:property [ sh:minCount 1 ;
+                                                sh:path schema:isVariantOf ] ] ) ] [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:offers ] ] [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:review ] ] [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:aggregateRating ] ] ) ] ) ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/product-snippet/itemlist-itemlistelement-required> a sh:NodeShape ;
+    sh:message "The positiveNotes and negativeNotes ItemLists of the page's Review must have itemListElement." ;
+    sh:or ( [ sh:property [ sh:path ( schema:review schema:positiveNotes ) ;
+                        sh:qualifiedMaxCount 0 ;
+                        sh:qualifiedValueShape [ sh:not [ sh:property [ sh:minCount 1 ;
+                                                sh:path schema:itemListElement ] ] ] ],
+                    [ sh:path ( schema:review schema:negativeNotes ) ;
+                        sh:qualifiedMaxCount 0 ;
+                        sh:qualifiedValueShape [ sh:not [ sh:property [ sh:minCount 1 ;
+                                                sh:path schema:itemListElement ] ] ] ] ] [ sh:class schema:ProductGroup ] [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:itemReviewed ] ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:item ] ] ] [ sh:and ( [ sh:or ( [ sh:property [ sh:path [ sh:inversePath schema:hasVariant ] ;
+                                                sh:qualifiedMinCount 1 ;
+                                                sh:qualifiedValueShape [ sh:class schema:ProductGroup ] ] ] [ sh:property [ sh:minCount 1 ;
+                                                sh:path schema:isVariantOf ] ] ) ] [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:offers ] ] [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:review ] ] [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:aggregateRating ] ] ) ] ) ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/product-snippet/listitem-name-required> a sh:NodeShape ;
+    sh:message "Each ListItem in the page's Review positiveNotes or negativeNotes must have a name." ;
+    sh:or ( [ sh:property [ sh:path ( schema:review schema:positiveNotes schema:itemListElement ) ;
+                        sh:qualifiedMaxCount 0 ;
+                        sh:qualifiedValueShape [ sh:not [ sh:property [ sh:minCount 1 ;
+                                                sh:path schema:name ] ] ] ],
+                    [ sh:path ( schema:review schema:negativeNotes schema:itemListElement ) ;
+                        sh:qualifiedMaxCount 0 ;
+                        sh:qualifiedValueShape [ sh:not [ sh:property [ sh:minCount 1 ;
+                                                sh:path schema:name ] ] ] ] ] [ sh:class schema:ProductGroup ] [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:itemReviewed ] ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:item ] ] ] [ sh:and ( [ sh:or ( [ sh:property [ sh:path [ sh:inversePath schema:hasVariant ] ;
+                                                sh:qualifiedMinCount 1 ;
+                                                sh:qualifiedValueShape [ sh:class schema:ProductGroup ] ] ] [ sh:property [ sh:minCount 1 ;
+                                                sh:path schema:isVariantOf ] ] ) ] [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:offers ] ] [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:review ] ] [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:aggregateRating ] ] ) ] ) ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/product-snippet/listitem-position-recommended> a sh:NodeShape ;
+    sh:message "Each ListItem in the page's Review positiveNotes or negativeNotes should have a position." ;
+    sh:or ( [ sh:property [ sh:path ( schema:review schema:positiveNotes schema:itemListElement ) ;
+                        sh:qualifiedMaxCount 0 ;
+                        sh:qualifiedValueShape [ sh:not [ sh:property [ sh:minCount 1 ;
+                                                sh:path schema:position ] ] ] ],
+                    [ sh:path ( schema:review schema:negativeNotes schema:itemListElement ) ;
+                        sh:qualifiedMaxCount 0 ;
+                        sh:qualifiedValueShape [ sh:not [ sh:property [ sh:minCount 1 ;
+                                                sh:path schema:position ] ] ] ] ] [ sh:class schema:ProductGroup ] [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:itemReviewed ] ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:item ] ] ] [ sh:and ( [ sh:or ( [ sh:property [ sh:path [ sh:inversePath schema:hasVariant ] ;
+                                                sh:qualifiedMinCount 1 ;
+                                                sh:qualifiedValueShape [ sh:class schema:ProductGroup ] ] ] [ sh:property [ sh:minCount 1 ;
+                                                sh:path schema:isVariantOf ] ] ) ] [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:offers ] ] [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:review ] ] [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:aggregateRating ] ] ) ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/product-snippet/offer-availability-allowed-value> a sh:NodeShape ;
+    sh:message "The availability of each non-aggregate Offer of the page's Product should be one of the listed ItemAvailability values." ;
+    sh:or ( [ sh:property [ sh:path schema:offers ;
+                        sh:qualifiedMaxCount 0 ;
+                        sh:qualifiedValueShape [ sh:and ( [ sh:not [ sh:class schema:AggregateOffer ] ] [ sh:not [ sh:property [ sh:in ( schema:BackOrder schema:Discontinued schema:InStock schema:InStoreOnly schema:LimitedAvailability schema:OnlineOnly schema:OutOfStock schema:PreOrder schema:PreSale schema:SoldOut <https://schema.org/BackOrder> <https://schema.org/Discontinued> <https://schema.org/InStock> <https://schema.org/InStoreOnly> <https://schema.org/LimitedAvailability> <https://schema.org/OnlineOnly> <https://schema.org/OutOfStock> <https://schema.org/PreOrder> <https://schema.org/PreSale> <https://schema.org/SoldOut> "BackOrder" "Discontinued" "InStock" "InStoreOnly" "LimitedAvailability" "OnlineOnly" "OutOfStock" "PreOrder" "PreSale" "SoldOut" "https://schema.org/BackOrder" "https://schema.org/Discontinued" "https://schema.org/InStock" "https://schema.org/InStoreOnly" "https://schema.org/LimitedAvailability" "https://schema.org/OnlineOnly" "https://schema.org/OutOfStock" "https://schema.org/PreOrder" "https://schema.org/PreSale" "https://schema.org/SoldOut" "http://schema.org/BackOrder" "http://schema.org/Discontinued" "http://schema.org/InStock" "http://schema.org/InStoreOnly" "http://schema.org/LimitedAvailability" "http://schema.org/OnlineOnly" "http://schema.org/OutOfStock" "http://schema.org/PreOrder" "http://schema.org/PreSale" "http://schema.org/SoldOut" ) ;
+                                                            sh:path schema:availability ] ] ] ) ] ] ] [ sh:class schema:ProductGroup ] [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:itemReviewed ] ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:item ] ] ] [ sh:and ( [ sh:or ( [ sh:property [ sh:path [ sh:inversePath schema:hasVariant ] ;
+                                                sh:qualifiedMinCount 1 ;
+                                                sh:qualifiedValueShape [ sh:class schema:ProductGroup ] ] ] [ sh:property [ sh:minCount 1 ;
+                                                sh:path schema:isVariantOf ] ] ) ] [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:offers ] ] [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:review ] ] [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:aggregateRating ] ] ) ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/product-snippet/offer-availability-recommended> a sh:NodeShape ;
+    sh:message "Each non-aggregate Offer of the page's Product should have availability." ;
+    sh:or ( [ sh:property [ sh:path schema:offers ;
+                        sh:qualifiedMaxCount 0 ;
+                        sh:qualifiedValueShape [ sh:and ( [ sh:not [ sh:class schema:AggregateOffer ] ] [ sh:not [ sh:property [ sh:minCount 1 ;
+                                                            sh:path schema:availability ] ] ] ) ] ] ] [ sh:class schema:ProductGroup ] [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:itemReviewed ] ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:item ] ] ] [ sh:and ( [ sh:or ( [ sh:property [ sh:path [ sh:inversePath schema:hasVariant ] ;
+                                                sh:qualifiedMinCount 1 ;
+                                                sh:qualifiedValueShape [ sh:class schema:ProductGroup ] ] ] [ sh:property [ sh:minCount 1 ;
+                                                sh:path schema:isVariantOf ] ] ) ] [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:offers ] ] [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:review ] ] [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:aggregateRating ] ] ) ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/product-snippet/offer-price-required> a sh:NodeShape ;
+    sh:message "Each non-aggregate Offer of the page's Product must have price or priceSpecification.price." ;
+    sh:or ( [ sh:property [ sh:path schema:offers ;
+                        sh:qualifiedMaxCount 0 ;
+                        sh:qualifiedValueShape [ sh:and ( [ sh:not [ sh:class schema:AggregateOffer ] ] [ sh:not [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                                                        sh:path schema:price ] ] [ sh:property [ sh:minCount 1 ;
+                                                                        sh:path ( schema:priceSpecification schema:price ) ] ] ) ] ] ) ] ] ] [ sh:class schema:ProductGroup ] [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:itemReviewed ] ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:item ] ] ] [ sh:and ( [ sh:or ( [ sh:property [ sh:path [ sh:inversePath schema:hasVariant ] ;
+                                                sh:qualifiedMinCount 1 ;
+                                                sh:qualifiedValueShape [ sh:class schema:ProductGroup ] ] ] [ sh:property [ sh:minCount 1 ;
+                                                sh:path schema:isVariantOf ] ] ) ] [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:offers ] ] [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:review ] ] [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:aggregateRating ] ] ) ] ) ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/product-snippet/offer-pricecurrency-recommended> a sh:NodeShape ;
+    sh:message "Each non-aggregate Offer of the page's Product should have priceCurrency or priceSpecification.priceCurrency." ;
+    sh:or ( [ sh:property [ sh:path schema:offers ;
+                        sh:qualifiedMaxCount 0 ;
+                        sh:qualifiedValueShape [ sh:and ( [ sh:not [ sh:class schema:AggregateOffer ] ] [ sh:not [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                                                        sh:path schema:priceCurrency ] ] [ sh:property [ sh:minCount 1 ;
+                                                                        sh:path ( schema:priceSpecification schema:priceCurrency ) ] ] ) ] ] ) ] ] ] [ sh:class schema:ProductGroup ] [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:itemReviewed ] ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:item ] ] ] [ sh:and ( [ sh:or ( [ sh:property [ sh:path [ sh:inversePath schema:hasVariant ] ;
+                                                sh:qualifiedMinCount 1 ;
+                                                sh:qualifiedValueShape [ sh:class schema:ProductGroup ] ] ] [ sh:property [ sh:minCount 1 ;
+                                                sh:path schema:isVariantOf ] ] ) ] [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:offers ] ] [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:review ] ] [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:aggregateRating ] ] ) ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/product-snippet/offer-pricevaliduntil-recommended> a sh:NodeShape ;
+    sh:message "Each non-aggregate Offer of the page's Product should have priceValidUntil." ;
+    sh:or ( [ sh:property [ sh:path schema:offers ;
+                        sh:qualifiedMaxCount 0 ;
+                        sh:qualifiedValueShape [ sh:and ( [ sh:not [ sh:class schema:AggregateOffer ] ] [ sh:not [ sh:property [ sh:minCount 1 ;
+                                                            sh:path schema:priceValidUntil ] ] ] ) ] ] ] [ sh:class schema:ProductGroup ] [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:itemReviewed ] ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:item ] ] ] [ sh:and ( [ sh:or ( [ sh:property [ sh:path [ sh:inversePath schema:hasVariant ] ;
+                                                sh:qualifiedMinCount 1 ;
+                                                sh:qualifiedValueShape [ sh:class schema:ProductGroup ] ] ] [ sh:property [ sh:minCount 1 ;
+                                                sh:path schema:isVariantOf ] ] ) ] [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:offers ] ] [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:review ] ] [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:aggregateRating ] ] ) ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/product-snippet/product-aggregaterating-recommended> a sh:NodeShape ;
+    sh:message "The page's Product should have aggregateRating." ;
+    sh:or ( [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                    sh:path schema:aggregateRating ] ] [ sh:and ( [ sh:property [ sh:maxCount 0 ;
+                                                sh:path schema:review ] ] [ sh:property [ sh:maxCount 0 ;
+                                                sh:path schema:aggregateRating ] ] [ sh:property [ sh:maxCount 0 ;
+                                                sh:path schema:offers ] ] ) ] ) ] [ sh:class schema:ProductGroup ] [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:itemReviewed ] ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:item ] ] ] [ sh:and ( [ sh:or ( [ sh:property [ sh:path [ sh:inversePath schema:hasVariant ] ;
+                                                sh:qualifiedMinCount 1 ;
+                                                sh:qualifiedValueShape [ sh:class schema:ProductGroup ] ] ] [ sh:property [ sh:minCount 1 ;
+                                                sh:path schema:isVariantOf ] ] ) ] [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:offers ] ] [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:review ] ] [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:aggregateRating ] ] ) ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/product-snippet/product-name-required> a sh:NodeShape ;
+    sh:message "The page's Product must have a name." ;
+    sh:or ( [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:name ] ] [ sh:class schema:ProductGroup ] [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:itemReviewed ] ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:item ] ] ] [ sh:and ( [ sh:or ( [ sh:property [ sh:path [ sh:inversePath schema:hasVariant ] ;
+                                                sh:qualifiedMinCount 1 ;
+                                                sh:qualifiedValueShape [ sh:class schema:ProductGroup ] ] ] [ sh:property [ sh:minCount 1 ;
+                                                sh:path schema:isVariantOf ] ] ) ] [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:offers ] ] [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:review ] ] [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:aggregateRating ] ] ) ] ) ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/product-snippet/product-offers-recommended> a sh:NodeShape ;
+    sh:message "The page's Product should have offers." ;
+    sh:or ( [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                    sh:path schema:offers ] ] [ sh:and ( [ sh:property [ sh:maxCount 0 ;
+                                                sh:path schema:review ] ] [ sh:property [ sh:maxCount 0 ;
+                                                sh:path schema:aggregateRating ] ] [ sh:property [ sh:maxCount 0 ;
+                                                sh:path schema:offers ] ] ) ] ) ] [ sh:class schema:ProductGroup ] [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:itemReviewed ] ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:item ] ] ] [ sh:and ( [ sh:or ( [ sh:property [ sh:path [ sh:inversePath schema:hasVariant ] ;
+                                                sh:qualifiedMinCount 1 ;
+                                                sh:qualifiedValueShape [ sh:class schema:ProductGroup ] ] ] [ sh:property [ sh:minCount 1 ;
+                                                sh:path schema:isVariantOf ] ] ) ] [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:offers ] ] [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:review ] ] [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:aggregateRating ] ] ) ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/product-snippet/product-review-aggregaterating-offers-one-required> a sh:NodeShape ;
+    sh:message "The page's Product needs at least one of review, aggregateRating or offers." ;
+    sh:or ( [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                    sh:path schema:review ] ] [ sh:property [ sh:minCount 1 ;
+                                    sh:path schema:aggregateRating ] ] [ sh:property [ sh:minCount 1 ;
+                                    sh:path schema:offers ] ] ) ] [ sh:class schema:ProductGroup ] [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:itemReviewed ] ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:item ] ] ] [ sh:and ( [ sh:or ( [ sh:property [ sh:path [ sh:inversePath schema:hasVariant ] ;
+                                                sh:qualifiedMinCount 1 ;
+                                                sh:qualifiedValueShape [ sh:class schema:ProductGroup ] ] ] [ sh:property [ sh:minCount 1 ;
+                                                sh:path schema:isVariantOf ] ] ) ] [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:offers ] ] [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:review ] ] [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:aggregateRating ] ] ) ] ) ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/product-snippet/product-review-recommended> a sh:NodeShape ;
+    sh:message "The page's Product should have review." ;
+    sh:or ( [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                    sh:path schema:review ] ] [ sh:and ( [ sh:property [ sh:maxCount 0 ;
+                                                sh:path schema:review ] ] [ sh:property [ sh:maxCount 0 ;
+                                                sh:path schema:aggregateRating ] ] [ sh:property [ sh:maxCount 0 ;
+                                                sh:path schema:offers ] ] ) ] ) ] [ sh:class schema:ProductGroup ] [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:itemReviewed ] ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:item ] ] ] [ sh:and ( [ sh:or ( [ sh:property [ sh:path [ sh:inversePath schema:hasVariant ] ;
+                                                sh:qualifiedMinCount 1 ;
+                                                sh:qualifiedValueShape [ sh:class schema:ProductGroup ] ] ] [ sh:property [ sh:minCount 1 ;
+                                                sh:path schema:isVariantOf ] ] ) ] [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:offers ] ] [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:review ] ] [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:aggregateRating ] ] ) ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/product-snippet/review-negativenotes-recommended> a sh:NodeShape ;
+    sh:message "The page's Review should have negativeNotes." ;
+    sh:or ( [ sh:property [ sh:path schema:review ;
+                        sh:qualifiedMaxCount 0 ;
+                        sh:qualifiedValueShape [ sh:not [ sh:property [ sh:minCount 1 ;
+                                                sh:path schema:negativeNotes ] ] ] ] ] [ sh:class schema:ProductGroup ] [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:itemReviewed ] ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:item ] ] ] [ sh:and ( [ sh:or ( [ sh:property [ sh:path [ sh:inversePath schema:hasVariant ] ;
+                                                sh:qualifiedMinCount 1 ;
+                                                sh:qualifiedValueShape [ sh:class schema:ProductGroup ] ] ] [ sh:property [ sh:minCount 1 ;
+                                                sh:path schema:isVariantOf ] ] ) ] [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:offers ] ] [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:review ] ] [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:aggregateRating ] ] ) ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/product-snippet/review-notes-two-statements-required> a sh:NodeShape ;
+    sh:message "When the page's Review has positiveNotes or negativeNotes, the ListItems across both lists must total at least two." ;
+    sh:or ( [ sh:property [ sh:path schema:review ;
+                        sh:qualifiedMaxCount 0 ;
+                        sh:qualifiedValueShape [ sh:not [ sh:or ( [ sh:and ( [ sh:property [ sh:maxCount 0 ;
+                                                                        sh:path schema:positiveNotes ] ] [ sh:property [ sh:maxCount 0 ;
+                                                                        sh:path schema:negativeNotes ] ] ) ] [ sh:property [ sh:minCount 2 ;
+                                                            sh:path ( schema:positiveNotes schema:itemListElement ) ] ] [ sh:property [ sh:minCount 2 ;
+                                                            sh:path ( schema:negativeNotes schema:itemListElement ) ] ] [ sh:and ( [ sh:property [ sh:minCount 1 ;
+                                                                        sh:path ( schema:positiveNotes schema:itemListElement ) ] ] [ sh:property [ sh:minCount 1 ;
+                                                                        sh:path ( schema:negativeNotes schema:itemListElement ) ] ] ) ] ) ] ] ] ] [ sh:class schema:ProductGroup ] [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:itemReviewed ] ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:item ] ] ] [ sh:and ( [ sh:or ( [ sh:property [ sh:path [ sh:inversePath schema:hasVariant ] ;
+                                                sh:qualifiedMinCount 1 ;
+                                                sh:qualifiedValueShape [ sh:class schema:ProductGroup ] ] ] [ sh:property [ sh:minCount 1 ;
+                                                sh:path schema:isVariantOf ] ] ) ] [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:offers ] ] [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:review ] ] [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:aggregateRating ] ] ) ] ) ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/product-snippet/review-positivenotes-recommended> a sh:NodeShape ;
+    sh:message "The page's Review should have positiveNotes." ;
+    sh:or ( [ sh:property [ sh:path schema:review ;
+                        sh:qualifiedMaxCount 0 ;
+                        sh:qualifiedValueShape [ sh:not [ sh:property [ sh:minCount 1 ;
+                                                sh:path schema:positiveNotes ] ] ] ] ] [ sh:class schema:ProductGroup ] [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:itemReviewed ] ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:item ] ] ] [ sh:and ( [ sh:or ( [ sh:property [ sh:path [ sh:inversePath schema:hasVariant ] ;
+                                                sh:qualifiedMinCount 1 ;
+                                                sh:qualifiedValueShape [ sh:class schema:ProductGroup ] ] ] [ sh:property [ sh:minCount 1 ;
+                                                sh:path schema:isVariantOf ] ] ) ] [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:offers ] ] [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:review ] ] [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:aggregateRating ] ] ) ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/product-snippet/unitpricespecification-price-required> a sh:NodeShape ;
+    sh:message "The UnitPriceSpecification of an Offer of the page's Product must have price." ;
+    sh:or ( [ sh:property [ sh:path ( schema:offers schema:priceSpecification ) ;
+                        sh:qualifiedMaxCount 0 ;
+                        sh:qualifiedValueShape [ sh:and ( [ sh:class schema:UnitPriceSpecification ] [ sh:not [ sh:property [ sh:minCount 1 ;
+                                                            sh:path schema:price ] ] ] ) ] ] ] [ sh:class schema:ProductGroup ] [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:itemReviewed ] ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:item ] ] ] [ sh:and ( [ sh:or ( [ sh:property [ sh:path [ sh:inversePath schema:hasVariant ] ;
+                                                sh:qualifiedMinCount 1 ;
+                                                sh:qualifiedValueShape [ sh:class schema:ProductGroup ] ] ] [ sh:property [ sh:minCount 1 ;
+                                                sh:path schema:isVariantOf ] ] ) ] [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:offers ] ] [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:review ] ] [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:aggregateRating ] ] ) ] ) ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+
+<https://wordlift.io/shacl/google/product-snippet/unitpricespecification-pricecurrency-recommended> a sh:NodeShape ;
+    sh:message "The UnitPriceSpecification of an Offer of the page's Product should have priceCurrency." ;
+    sh:or ( [ sh:property [ sh:path ( schema:offers schema:priceSpecification ) ;
+                        sh:qualifiedMaxCount 0 ;
+                        sh:qualifiedValueShape [ sh:and ( [ sh:class schema:UnitPriceSpecification ] [ sh:not [ sh:property [ sh:minCount 1 ;
+                                                            sh:path schema:priceCurrency ] ] ] ) ] ] ] [ sh:class schema:ProductGroup ] [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:itemReviewed ] ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path [ sh:inversePath schema:item ] ] ] [ sh:and ( [ sh:or ( [ sh:property [ sh:path [ sh:inversePath schema:hasVariant ] ;
+                                                sh:qualifiedMinCount 1 ;
+                                                sh:qualifiedValueShape [ sh:class schema:ProductGroup ] ] ] [ sh:property [ sh:minCount 1 ;
+                                                sh:path schema:isVariantOf ] ] ) ] [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:offers ] ] [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:review ] ] [ sh:property [ sh:maxCount 0 ;
+                                    sh:path schema:aggregateRating ] ] ) ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetClass schema:BusOrCoach,
+        schema:Car,
+        schema:DietarySupplement,
+        schema:Drug,
+        schema:IndividualProduct,
+        schema:Motorcycle,
+        schema:MotorizedBicycle,
+        schema:Product,
+        schema:ProductCollection,
+        schema:ProductGroup,
+        schema:ProductModel,
+        schema:SomeProducts,
+        schema:Vehicle .
+

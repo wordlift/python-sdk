@@ -1,194 +1,185 @@
-@prefix : <https://wordlift.io/shacl/google/google-recipe/> .
-@prefix sh: <http://www.w3.org/ns/shacl#> .
-@prefix schema: <http://schema.org/> .
-
 # Source: https://developers.google.com/search/docs/appearance/structured-data/recipe
-# Generated: 2026-02-26T15:42:16Z
+# Generated: 2026-11-05T14:35:24Z
 # Notes: required properties => errors; recommended properties => warnings.
+# google-recipe: 23 rules generated from the Google Search Central doc by the tdd-mvp-3 pipeline.
+# Bundled from per-rule files by harness/bundle.py, schema.org subtypes expanded (targetClass 0, class 2, in 0). Do not edit by hand.
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-:google_HowToDirectionShape
-  a sh:NodeShape ;
-  sh:targetClass schema:HowToDirection ;
-  sh:property [
-    sh:path schema:text ;
-    sh:minCount 1 ;
-  ] ;
-.
+<https://wordlift.io/shacl/google/recipe/howtodirection-text-missing> a sh:NodeShape ;
+    sh:property [ sh:message "HowToDirection or HowToTip is missing text." ;
+            sh:minCount 1 ;
+            sh:path schema:text ] ;
+    sh:targetClass schema:HowToDirection,
+        schema:HowToTip .
 
-:google_HowToSectionShape
-  a sh:NodeShape ;
-  sh:targetClass schema:HowToSection ;
-  sh:property [
-    sh:path schema:itemListElement ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:name ;
-    sh:minCount 1 ;
-  ] ;
-.
+<https://wordlift.io/shacl/google/recipe/howtosection-itemlistelement-missing> a sh:NodeShape ;
+    sh:property [ sh:message "HowToSection is missing itemListElement (its steps)." ;
+            sh:minCount 1 ;
+            sh:path schema:itemListElement ] ;
+    sh:targetClass schema:HowToSection .
 
-:google_HowToTipShape
-  a sh:NodeShape ;
-  sh:targetClass schema:HowToTip ;
-  sh:property [
-    sh:path schema:text ;
-    sh:minCount 1 ;
-  ] ;
-.
+<https://wordlift.io/shacl/google/recipe/howtosection-name-missing> a sh:NodeShape ;
+    sh:property [ sh:message "HowToSection is missing a name." ;
+            sh:minCount 1 ;
+            sh:path schema:name ] ;
+    sh:targetClass schema:HowToSection .
 
-:google_ItemListShape
-  a sh:NodeShape ;
-  sh:targetClass schema:ItemList ;
-  sh:property [
-    sh:path schema:itemListElement ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:position ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:url ;
-    sh:minCount 1 ;
-  ] ;
-.
+<https://wordlift.io/shacl/google/recipe/howtostep-text-or-itemlistelement-missing> a sh:NodeShape ;
+    sh:message "HowToStep needs text or itemListElement." ;
+    sh:or ( [ sh:not [ sh:class schema:HowToStep ] ] [ sh:not [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                            sh:path [ sh:inversePath schema:recipeInstructions ] ] ] [ sh:property [ sh:minCount 1 ;
+                                            sh:path [ sh:inversePath schema:step ] ] ] [ sh:property [ sh:path [ sh:inversePath schema:itemListElement ] ;
+                                            sh:qualifiedMinCount 1 ;
+                                            sh:qualifiedValueShape [ sh:class schema:HowToSection ] ] ] ) ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:text ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:itemListElement ] ] ) ;
+    sh:targetObjectsOf schema:itemListElement,
+        schema:recipeInstructions,
+        schema:step .
 
-:google_RecipeShape
-  a sh:NodeShape ;
-  sh:targetClass schema:Recipe ;
-  sh:property [
-    sh:path schema:image ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:name ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:aggregateRating ;
-    sh:minCount 1 ;
+<https://wordlift.io/shacl/google/recipe/listitem-position-missing> a sh:NodeShape ;
+    sh:message "ListItem in a recipe list is missing position." ;
+    sh:or ( [ sh:not [ sh:or ( [ sh:class schema:ListItem ] [ sh:class schema:HowToDirection ] [ sh:class schema:HowToItem ] [ sh:class schema:HowToSection ] [ sh:class schema:HowToStep ] [ sh:class schema:HowToSupply ] [ sh:class schema:HowToTip ] [ sh:class schema:HowToTool ] ) ] ] [ sh:not [ sh:property [ sh:path ( [ sh:inversePath schema:itemListElement ] schema:itemListElement schema:item ) ;
+                                sh:qualifiedMinCount 1 ;
+                                sh:qualifiedValueShape [ sh:class schema:Recipe ] ] ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:position ] ] ) ;
+    sh:targetObjectsOf schema:itemListElement .
+
+<https://wordlift.io/shacl/google/recipe/listitem-url-duplicate> a sh:NodeShape ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+            sh:message "Two ListItems in a recipe list share the same url." ;
+            sh:select """
+SELECT $this WHERE {
+  ?li1 <http://schema.org/item> $this ; <http://schema.org/url> ?u .
+  ?list <http://schema.org/itemListElement> ?li1 , ?li2 .
+  ?li2 <http://schema.org/url> ?u .
+  FILTER(?li1 != ?li2)
+}
+""" ] ;
+    sh:targetClass schema:Recipe .
+
+<https://wordlift.io/shacl/google/recipe/listitem-url-missing> a sh:NodeShape ;
+    sh:message "ListItem in a recipe list is missing url." ;
+    sh:or ( [ sh:not [ sh:or ( [ sh:class schema:ListItem ] [ sh:class schema:HowToDirection ] [ sh:class schema:HowToItem ] [ sh:class schema:HowToSection ] [ sh:class schema:HowToStep ] [ sh:class schema:HowToSupply ] [ sh:class schema:HowToTip ] [ sh:class schema:HowToTool ] ) ] ] [ sh:not [ sh:property [ sh:path ( [ sh:inversePath schema:itemListElement ] schema:itemListElement schema:item ) ;
+                                sh:qualifiedMinCount 1 ;
+                                sh:qualifiedValueShape [ sh:class schema:Recipe ] ] ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:url ] ] ) ;
+    sh:targetObjectsOf schema:itemListElement .
+
+<https://wordlift.io/shacl/google/recipe/recipe-aggregaterating-missing> a sh:NodeShape ;
+    sh:property [ sh:message "Recipe is missing aggregateRating." ;
+            sh:minCount 1 ;
+            sh:path schema:aggregateRating ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:Recipe .
+
+<https://wordlift.io/shacl/google/recipe/recipe-author-missing> a sh:NodeShape ;
+    sh:property [ sh:message "Recipe is missing author." ;
+            sh:minCount 1 ;
+            sh:path schema:author ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:Recipe .
+
+<https://wordlift.io/shacl/google/recipe/recipe-datepublished-missing> a sh:NodeShape ;
+    sh:property [ sh:message "Recipe is missing datePublished." ;
+            sh:minCount 1 ;
+            sh:path schema:datePublished ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:Recipe .
+
+<https://wordlift.io/shacl/google/recipe/recipe-description-missing> a sh:NodeShape ;
+    sh:property [ sh:message "Recipe is missing description." ;
+            sh:minCount 1 ;
+            sh:path schema:description ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:Recipe .
+
+<https://wordlift.io/shacl/google/recipe/recipe-image-missing> a sh:NodeShape ;
+    sh:property [ sh:message "Recipe is missing an image." ;
+            sh:minCount 1 ;
+            sh:path schema:image ] ;
+    sh:targetClass schema:Recipe .
+
+<https://wordlift.io/shacl/google/recipe/recipe-keywords-missing> a sh:NodeShape ;
+    sh:property [ sh:message "Recipe is missing keywords." ;
+            sh:minCount 1 ;
+            sh:path schema:keywords ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:Recipe .
+
+<https://wordlift.io/shacl/google/recipe/recipe-name-missing> a sh:NodeShape ;
+    sh:property [ sh:message "Recipe is missing a name." ;
+            sh:minCount 1 ;
+            sh:path schema:name ] ;
+    sh:targetClass schema:Recipe .
+
+<https://wordlift.io/shacl/google/recipe/recipe-nutrition-calories-missing> a sh:NodeShape ;
+    sh:property [ sh:message "Recipe is missing nutrition with calories." ;
+            sh:minCount 1 ;
+            sh:path ( schema:nutrition schema:calories ) ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:Recipe .
+
+<https://wordlift.io/shacl/google/recipe/recipe-nutrition-calories-requires-recipeyield> a sh:NodeShape ;
+    sh:message "Recipe has nutrition calories but no recipeYield (number of servings)." ;
+    sh:or ( [ sh:property [ sh:maxCount 0 ;
+                        sh:path ( schema:nutrition schema:calories ) ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:recipeYield ] ] ) ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: aggregateRating." ;
-  ] ;
-  sh:property [
-    sh:path schema:author ;
-    sh:minCount 1 ;
+    sh:targetClass schema:Recipe .
+
+<https://wordlift.io/shacl/google/recipe/recipe-recipecategory-missing> a sh:NodeShape ;
+    sh:property [ sh:message "Recipe is missing recipeCategory." ;
+            sh:minCount 1 ;
+            sh:path schema:recipeCategory ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:Recipe .
+
+<https://wordlift.io/shacl/google/recipe/recipe-recipecuisine-missing> a sh:NodeShape ;
+    sh:property [ sh:message "Recipe is missing recipeCuisine." ;
+            sh:minCount 1 ;
+            sh:path schema:recipeCuisine ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:Recipe .
+
+<https://wordlift.io/shacl/google/recipe/recipe-recipeingredient-missing> a sh:NodeShape ;
+    sh:property [ sh:message "Recipe is missing recipeIngredient." ;
+            sh:minCount 1 ;
+            sh:path schema:recipeIngredient ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:Recipe .
+
+<https://wordlift.io/shacl/google/recipe/recipe-recipeinstructions-missing> a sh:NodeShape ;
+    sh:property [ sh:message "Recipe is missing recipeInstructions." ;
+            sh:minCount 1 ;
+            sh:path schema:recipeInstructions ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:Recipe .
+
+<https://wordlift.io/shacl/google/recipe/recipe-recipeyield-missing> a sh:NodeShape ;
+    sh:property [ sh:message "Recipe is missing recipeYield." ;
+            sh:minCount 1 ;
+            sh:path schema:recipeYield ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:Recipe .
+
+<https://wordlift.io/shacl/google/recipe/recipe-time-missing> a sh:NodeShape ;
+    sh:message "Recipe is missing totalTime, or cookTime and prepTime together." ;
+    sh:or ( [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:totalTime ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:cookTime ],
+                    [ sh:minCount 1 ;
+                        sh:path schema:prepTime ] ] ) ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: author." ;
-  ] ;
-  sh:property [
-    sh:path schema:cookTime ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: cookTime." ;
-  ] ;
-  sh:property [
-    sh:path schema:datePublished ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: datePublished." ;
-  ] ;
-  sh:property [
-    sh:path schema:description ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: description." ;
-  ] ;
-  sh:property [
-    sh:path schema:keywords ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: keywords." ;
-  ] ;
-  sh:property [
-    sh:path ( schema:nutrition schema:calories ) ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: nutrition.calories." ;
-  ] ;
-  sh:property [
-    sh:path schema:prepTime ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: prepTime." ;
-  ] ;
-  sh:property [
-    sh:path schema:recipeCategory ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: recipeCategory." ;
-  ] ;
-  sh:property [
-    sh:path schema:recipeCuisine ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: recipeCuisine." ;
-  ] ;
-  sh:property [
-    sh:path schema:recipeIngredient ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: recipeIngredient." ;
-  ] ;
-  sh:property [
-    sh:path schema:recipeInstructions ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: recipeInstructions." ;
-    sh:node [
-      a sh:NodeShape ;
-      sh:class schema:HowToStep ;
-      sh:property [
-        sh:path schema:itemListElement ;
-        sh:minCount 1 ;
-      ] ;
-      sh:property [
-        sh:path schema:text ;
-        sh:minCount 1 ;
-      ] ;
-      sh:property [
-        sh:path schema:image ;
-        sh:minCount 1 ;
-        sh:severity sh:Warning ;
-        sh:message "Recommended by Google: image." ;
-      ] ;
-      sh:property [
-        sh:path schema:name ;
-        sh:minCount 1 ;
-        sh:severity sh:Warning ;
-        sh:message "Recommended by Google: name." ;
-      ] ;
-      sh:property [
-        sh:path schema:url ;
-        sh:minCount 1 ;
-        sh:severity sh:Warning ;
-        sh:message "Recommended by Google: url." ;
-      ] ;
-      sh:property [
-        sh:path schema:video ;
-        sh:minCount 1 ;
-        sh:severity sh:Warning ;
-        sh:message "Recommended by Google: video." ;
-      ] ;
-    ] ;
-  ] ;
-  sh:property [
-    sh:path schema:recipeYield ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: recipeYield." ;
-  ] ;
-  sh:property [
-    sh:path schema:totalTime ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: totalTime." ;
-  ] ;
-  sh:property [
-    sh:path schema:video ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: video." ;
-  ] ;
-.
+    sh:targetClass schema:Recipe .
+
+<https://wordlift.io/shacl/google/recipe/recipe-video-missing> a sh:NodeShape ;
+    sh:property [ sh:message "Recipe is missing video." ;
+            sh:minCount 1 ;
+            sh:path schema:video ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:Recipe .
+

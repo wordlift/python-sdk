@@ -1,148 +1,192 @@
-@prefix : <https://wordlift.io/shacl/google/google-article/> .
-@prefix sh: <http://www.w3.org/ns/shacl#> .
-@prefix schema: <http://schema.org/> .
-
 # Source: https://developers.google.com/search/docs/appearance/structured-data/article
-# Generated: 2026-02-26T15:41:53Z
+# Generated: 2026-11-05T14:35:24Z
 # Notes: required properties => errors; recommended properties => warnings.
+# google-article: 7 rules generated from the Google Search Central doc by the tdd-mvp-3 pipeline.
+# Bundled from per-rule files by harness/bundle.py, schema.org subtypes expanded (targetClass 7, class 14, in 0). Do not edit by hand.
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-:google_ArticleShape
-  a sh:NodeShape ;
-  sh:targetClass schema:Article ;
-  sh:property [
-    sh:path schema:author ;
-    sh:minCount 1 ;
+<https://wordlift.io/shacl/google/article/article-author-missing> a sh:NodeShape ;
+    sh:message "Article is missing an author (rule article-author-missing)." ;
+    sh:or ( [ sh:and ( [ sh:or ( [ sh:class schema:SocialMediaPosting ] [ sh:class schema:BlogPosting ] [ sh:class schema:DiscussionForumPosting ] [ sh:class schema:LiveBlogPosting ] ) ] [ sh:not [ sh:or ( [ sh:class schema:BlogPosting ] [ sh:class schema:LiveBlogPosting ] ) ] ] ) ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:author ] ] ) ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: author." ;
-  ] ;
-  sh:property [
-    sh:path ( schema:author schema:name ) ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: author.name." ;
-  ] ;
-  sh:property [
-    sh:path ( schema:author schema:url ) ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: author.url." ;
-  ] ;
-  sh:property [
-    sh:path schema:dateModified ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: dateModified." ;
-  ] ;
-  sh:property [
-    sh:path schema:datePublished ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: datePublished." ;
-  ] ;
-  sh:property [
-    sh:path schema:headline ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: headline." ;
-  ] ;
-  sh:property [
-    sh:path schema:image ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: image." ;
-  ] ;
-.
+    sh:targetClass schema:APIReference,
+        schema:AdvertiserContentArticle,
+        schema:AnalysisNewsArticle,
+        schema:Article,
+        schema:AskPublicNewsArticle,
+        schema:BackgroundNewsArticle,
+        schema:BlogPosting,
+        schema:DiscussionForumPosting,
+        schema:LiveBlogPosting,
+        schema:MedicalScholarlyArticle,
+        schema:NewsArticle,
+        schema:OpinionNewsArticle,
+        schema:Report,
+        schema:ReportageNewsArticle,
+        schema:ReviewNewsArticle,
+        schema:SatiricalArticle,
+        schema:ScholarlyArticle,
+        schema:SocialMediaPosting,
+        schema:TechArticle .
 
-:google_BlogPostingShape
-  a sh:NodeShape ;
-  sh:targetClass schema:BlogPosting ;
-  sh:property [
-    sh:path schema:author ;
-    sh:minCount 1 ;
+<https://wordlift.io/shacl/google/article/article-author-name-missing> a sh:NodeShape ;
+    sh:message "An author of the article has no name (rule article-author-name-missing)." ;
+    sh:or ( [ sh:and ( [ sh:or ( [ sh:class schema:SocialMediaPosting ] [ sh:class schema:BlogPosting ] [ sh:class schema:DiscussionForumPosting ] [ sh:class schema:LiveBlogPosting ] ) ] [ sh:not [ sh:or ( [ sh:class schema:BlogPosting ] [ sh:class schema:LiveBlogPosting ] ) ] ] ) ] [ sh:property [ sh:path schema:author ;
+                        sh:qualifiedMaxCount 0 ;
+                        sh:qualifiedValueShape [ sh:nodeKind sh:BlankNodeOrIRI ;
+                                sh:not [ sh:property [ sh:minCount 1 ;
+                                                sh:path schema:name ] ] ] ] ] ) ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: author." ;
-  ] ;
-  sh:property [
-    sh:path ( schema:author schema:name ) ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: author.name." ;
-  ] ;
-  sh:property [
-    sh:path ( schema:author schema:url ) ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: author.url." ;
-  ] ;
-  sh:property [
-    sh:path schema:dateModified ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: dateModified." ;
-  ] ;
-  sh:property [
-    sh:path schema:datePublished ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: datePublished." ;
-  ] ;
-  sh:property [
-    sh:path schema:headline ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: headline." ;
-  ] ;
-  sh:property [
-    sh:path schema:image ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: image." ;
-  ] ;
-.
+    sh:targetClass schema:APIReference,
+        schema:AdvertiserContentArticle,
+        schema:AnalysisNewsArticle,
+        schema:Article,
+        schema:AskPublicNewsArticle,
+        schema:BackgroundNewsArticle,
+        schema:BlogPosting,
+        schema:DiscussionForumPosting,
+        schema:LiveBlogPosting,
+        schema:MedicalScholarlyArticle,
+        schema:NewsArticle,
+        schema:OpinionNewsArticle,
+        schema:Report,
+        schema:ReportageNewsArticle,
+        schema:ReviewNewsArticle,
+        schema:SatiricalArticle,
+        schema:ScholarlyArticle,
+        schema:SocialMediaPosting,
+        schema:TechArticle .
 
-:google_NewsArticleShape
-  a sh:NodeShape ;
-  sh:targetClass schema:NewsArticle ;
-  sh:property [
-    sh:path schema:author ;
-    sh:minCount 1 ;
+<https://wordlift.io/shacl/google/article/article-author-url-or-sameas-missing> a sh:NodeShape ;
+    sh:message "An author of the article has neither url nor sameAs (rule article-author-url-or-sameas-missing)." ;
+    sh:or ( [ sh:and ( [ sh:or ( [ sh:class schema:SocialMediaPosting ] [ sh:class schema:BlogPosting ] [ sh:class schema:DiscussionForumPosting ] [ sh:class schema:LiveBlogPosting ] ) ] [ sh:not [ sh:or ( [ sh:class schema:BlogPosting ] [ sh:class schema:LiveBlogPosting ] ) ] ] ) ] [ sh:property [ sh:path schema:author ;
+                        sh:qualifiedMaxCount 0 ;
+                        sh:qualifiedValueShape [ sh:nodeKind sh:BlankNodeOrIRI ;
+                                sh:not [ sh:or ( [ sh:property [ sh:minCount 1 ;
+                                                            sh:path schema:url ] ] [ sh:property [ sh:minCount 1 ;
+                                                            sh:path schema:sameAs ] ] ) ] ] ] ] ) ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: author." ;
-  ] ;
-  sh:property [
-    sh:path ( schema:author schema:name ) ;
-    sh:minCount 1 ;
+    sh:targetClass schema:APIReference,
+        schema:AdvertiserContentArticle,
+        schema:AnalysisNewsArticle,
+        schema:Article,
+        schema:AskPublicNewsArticle,
+        schema:BackgroundNewsArticle,
+        schema:BlogPosting,
+        schema:DiscussionForumPosting,
+        schema:LiveBlogPosting,
+        schema:MedicalScholarlyArticle,
+        schema:NewsArticle,
+        schema:OpinionNewsArticle,
+        schema:Report,
+        schema:ReportageNewsArticle,
+        schema:ReviewNewsArticle,
+        schema:SatiricalArticle,
+        schema:ScholarlyArticle,
+        schema:SocialMediaPosting,
+        schema:TechArticle .
+
+<https://wordlift.io/shacl/google/article/article-datemodified-missing> a sh:NodeShape ;
+    sh:message "Article is missing dateModified (rule article-datemodified-missing)." ;
+    sh:or ( [ sh:and ( [ sh:or ( [ sh:class schema:SocialMediaPosting ] [ sh:class schema:BlogPosting ] [ sh:class schema:DiscussionForumPosting ] [ sh:class schema:LiveBlogPosting ] ) ] [ sh:not [ sh:or ( [ sh:class schema:BlogPosting ] [ sh:class schema:LiveBlogPosting ] ) ] ] ) ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:dateModified ] ] ) ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: author.name." ;
-  ] ;
-  sh:property [
-    sh:path ( schema:author schema:url ) ;
-    sh:minCount 1 ;
+    sh:targetClass schema:APIReference,
+        schema:AdvertiserContentArticle,
+        schema:AnalysisNewsArticle,
+        schema:Article,
+        schema:AskPublicNewsArticle,
+        schema:BackgroundNewsArticle,
+        schema:BlogPosting,
+        schema:DiscussionForumPosting,
+        schema:LiveBlogPosting,
+        schema:MedicalScholarlyArticle,
+        schema:NewsArticle,
+        schema:OpinionNewsArticle,
+        schema:Report,
+        schema:ReportageNewsArticle,
+        schema:ReviewNewsArticle,
+        schema:SatiricalArticle,
+        schema:ScholarlyArticle,
+        schema:SocialMediaPosting,
+        schema:TechArticle .
+
+<https://wordlift.io/shacl/google/article/article-datepublished-missing> a sh:NodeShape ;
+    sh:message "Article is missing datePublished (rule article-datepublished-missing)." ;
+    sh:or ( [ sh:and ( [ sh:or ( [ sh:class schema:SocialMediaPosting ] [ sh:class schema:BlogPosting ] [ sh:class schema:DiscussionForumPosting ] [ sh:class schema:LiveBlogPosting ] ) ] [ sh:not [ sh:or ( [ sh:class schema:BlogPosting ] [ sh:class schema:LiveBlogPosting ] ) ] ] ) ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:datePublished ] ] ) ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: author.url." ;
-  ] ;
-  sh:property [
-    sh:path schema:dateModified ;
-    sh:minCount 1 ;
+    sh:targetClass schema:APIReference,
+        schema:AdvertiserContentArticle,
+        schema:AnalysisNewsArticle,
+        schema:Article,
+        schema:AskPublicNewsArticle,
+        schema:BackgroundNewsArticle,
+        schema:BlogPosting,
+        schema:DiscussionForumPosting,
+        schema:LiveBlogPosting,
+        schema:MedicalScholarlyArticle,
+        schema:NewsArticle,
+        schema:OpinionNewsArticle,
+        schema:Report,
+        schema:ReportageNewsArticle,
+        schema:ReviewNewsArticle,
+        schema:SatiricalArticle,
+        schema:ScholarlyArticle,
+        schema:SocialMediaPosting,
+        schema:TechArticle .
+
+<https://wordlift.io/shacl/google/article/article-headline-missing> a sh:NodeShape ;
+    sh:message "Article is missing headline (rule article-headline-missing)." ;
+    sh:or ( [ sh:and ( [ sh:or ( [ sh:class schema:SocialMediaPosting ] [ sh:class schema:BlogPosting ] [ sh:class schema:DiscussionForumPosting ] [ sh:class schema:LiveBlogPosting ] ) ] [ sh:not [ sh:or ( [ sh:class schema:BlogPosting ] [ sh:class schema:LiveBlogPosting ] ) ] ] ) ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:headline ] ] ) ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: dateModified." ;
-  ] ;
-  sh:property [
-    sh:path schema:datePublished ;
-    sh:minCount 1 ;
+    sh:targetClass schema:APIReference,
+        schema:AdvertiserContentArticle,
+        schema:AnalysisNewsArticle,
+        schema:Article,
+        schema:AskPublicNewsArticle,
+        schema:BackgroundNewsArticle,
+        schema:BlogPosting,
+        schema:DiscussionForumPosting,
+        schema:LiveBlogPosting,
+        schema:MedicalScholarlyArticle,
+        schema:NewsArticle,
+        schema:OpinionNewsArticle,
+        schema:Report,
+        schema:ReportageNewsArticle,
+        schema:ReviewNewsArticle,
+        schema:SatiricalArticle,
+        schema:ScholarlyArticle,
+        schema:SocialMediaPosting,
+        schema:TechArticle .
+
+<https://wordlift.io/shacl/google/article/article-image-missing> a sh:NodeShape ;
+    sh:message "Article is missing image (rule article-image-missing)." ;
+    sh:or ( [ sh:and ( [ sh:or ( [ sh:class schema:SocialMediaPosting ] [ sh:class schema:BlogPosting ] [ sh:class schema:DiscussionForumPosting ] [ sh:class schema:LiveBlogPosting ] ) ] [ sh:not [ sh:or ( [ sh:class schema:BlogPosting ] [ sh:class schema:LiveBlogPosting ] ) ] ] ) ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:image ] ] ) ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: datePublished." ;
-  ] ;
-  sh:property [
-    sh:path schema:headline ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: headline." ;
-  ] ;
-  sh:property [
-    sh:path schema:image ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: image." ;
-  ] ;
-.
+    sh:targetClass schema:APIReference,
+        schema:AdvertiserContentArticle,
+        schema:AnalysisNewsArticle,
+        schema:Article,
+        schema:AskPublicNewsArticle,
+        schema:BackgroundNewsArticle,
+        schema:BlogPosting,
+        schema:DiscussionForumPosting,
+        schema:LiveBlogPosting,
+        schema:MedicalScholarlyArticle,
+        schema:NewsArticle,
+        schema:OpinionNewsArticle,
+        schema:Report,
+        schema:ReportageNewsArticle,
+        schema:ReviewNewsArticle,
+        schema:SatiricalArticle,
+        schema:ScholarlyArticle,
+        schema:SocialMediaPosting,
+        schema:TechArticle .
+

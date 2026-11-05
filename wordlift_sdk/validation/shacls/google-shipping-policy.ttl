@@ -1,371 +1,660 @@
-@prefix : <https://wordlift.io/shacl/google/google-shipping-policy/> .
-@prefix sh: <http://www.w3.org/ns/shacl#> .
-@prefix schema: <http://schema.org/> .
-
 # Source: https://developers.google.com/search/docs/appearance/structured-data/shipping-policy
-# Generated: 2026-02-26T15:42:14Z
+# Generated: 2026-11-05T14:35:24Z
 # Notes: required properties => errors; recommended properties => warnings.
+# google-shipping-policy: 53 rules generated from the Google Search Central doc by the tdd-mvp-3 pipeline.
+# Bundled from per-rule files by harness/bundle.py, schema.org subtypes expanded (targetClass 1, class 0, in 0). Do not edit by hand.
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-:google_ConditionsShape
-  a sh:NodeShape ;
-  sh:targetClass schema:Conditions ;
-  sh:property [
-    sh:path schema:doesNotShip ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: doesNotShip." ;
-  ] ;
-  sh:property [
-    sh:path schema:numItems ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: numItems." ;
-  ] ;
-  sh:property [
-    sh:path schema:orderValue ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: orderValue." ;
-  ] ;
-  sh:property [
-    sh:path schema:seasonalOverride ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: seasonalOverride." ;
-  ] ;
-  sh:property [
-    sh:path schema:shippingDestination ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: shippingDestination." ;
-  ] ;
-  sh:property [
-    sh:path schema:shippingOrigin ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: shippingOrigin." ;
-  ] ;
-  sh:property [
-    sh:path schema:shippingRate ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: shippingRate." ;
-  ] ;
-  sh:property [
-    sh:path schema:transitTime ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: transitTime." ;
-  ] ;
-  sh:property [
-    sh:path schema:weight ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: weight." ;
-  ] ;
-.
+<https://wordlift.io/shacl/google/shipping-policy/definedregion-addresscountry-required> a sh:NodeShape ;
+    sh:property [ sh:path schema:shippingDestination ;
+            sh:property [ sh:message "A DefinedRegion in shippingDestination must have addressCountry." ;
+                    sh:minCount 1 ;
+                    sh:path schema:addressCountry ] ],
+        [ sh:path schema:shippingOrigin ;
+            sh:property [ sh:message "A DefinedRegion in shippingOrigin must have addressCountry." ;
+                    sh:minCount 1 ;
+                    sh:path schema:addressCountry ] ] ;
+    sh:targetObjectsOf schema:shippingConditions .
 
-:google_DefinedRegionShape
-  a sh:NodeShape ;
-  sh:targetClass schema:DefinedRegion ;
-  sh:property [
-    sh:path schema:addressCountry ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:addressRegion ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: addressRegion." ;
-  ] ;
-  sh:property [
-    sh:path schema:postalCode ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: postalCode." ;
-  ] ;
-.
+<https://wordlift.io/shacl/google/shipping-policy/definedregion-addressregion-length> a sh:NodeShape ;
+    sh:property [ sh:maxLength 3 ;
+            sh:message "addressRegion in shippingDestination must be a 2- or 3-character code." ;
+            sh:minLength 2 ;
+            sh:path ( schema:shippingDestination schema:addressRegion ) ;
+            sh:severity sh:Warning ],
+        [ sh:maxLength 3 ;
+            sh:message "addressRegion in shippingOrigin must be a 2- or 3-character code." ;
+            sh:minLength 2 ;
+            sh:path ( schema:shippingOrigin schema:addressRegion ) ;
+            sh:severity sh:Warning ] ;
+    sh:targetObjectsOf schema:shippingConditions .
 
-:google_MonetaryAmountShape
-  a sh:NodeShape ;
-  sh:targetClass schema:MonetaryAmount ;
-  sh:property [
-    sh:path schema:currency ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:maxValue ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:minValue ;
-    sh:minCount 1 ;
-  ] ;
-  sh:property [
-    sh:path schema:value ;
-    sh:minCount 1 ;
-  ] ;
-.
+<https://wordlift.io/shacl/google/shipping-policy/definedregion-addressregion-recommended> a sh:NodeShape ;
+    sh:message "A DefinedRegion for US, AU or JP should have addressRegion." ;
+    sh:or ( [ sh:not [ sh:property [ sh:in ( "US" "AU" "JP" ) ;
+                                sh:minCount 1 ;
+                                sh:path schema:addressCountry ] ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:addressRegion ] ] ) ;
+    sh:severity sh:Warning ;
+    sh:targetObjectsOf schema:shippingDestination,
+        schema:shippingOrigin .
 
-:google_OpeningHoursSpecificationShape
-  a sh:NodeShape ;
-  sh:targetClass schema:OpeningHoursSpecification ;
-  sh:property [
-    sh:path schema:validFrom ;
-    sh:minCount 1 ;
+<https://wordlift.io/shacl/google/shipping-policy/definedregion-postalcode-recommended> a sh:NodeShape ;
+    sh:message "A DefinedRegion for US, AU or CA should have postalCode." ;
+    sh:or ( [ sh:not [ sh:property [ sh:in ( "US" "AU" "CA" ) ;
+                                sh:minCount 1 ;
+                                sh:path schema:addressCountry ] ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:postalCode ] ] ) ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: validFrom." ;
-  ] ;
-  sh:property [
-    sh:path schema:validThrough ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: validThrough." ;
-  ] ;
-.
+    sh:targetObjectsOf schema:shippingDestination,
+        schema:shippingOrigin .
 
-:google_OrganizationShape
-  a sh:NodeShape ;
-  sh:targetClass schema:Organization ;
-  sh:property [
-    sh:path schema:description ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: description." ;
-  ] ;
-  sh:property [
-    sh:path schema:fulfillmentType ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: fulfillmentType." ;
-  ] ;
-  sh:property [
-    sh:path schema:handlingTime ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: handlingTime." ;
-  ] ;
-  sh:property [
-    sh:path schema:name ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: name." ;
-  ] ;
-  sh:property [
-    sh:path schema:validForMemberTier ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: validForMemberTier." ;
-  ] ;
-.
+<https://wordlift.io/shacl/google/shipping-policy/definedregion-region-postalcode-exclusive> a sh:NodeShape ;
+    sh:property [ sh:message "A DefinedRegion should not have both addressRegion and postalCode (shippingDestination)." ;
+            sh:or ( [ sh:property [ sh:maxCount 0 ;
+                                sh:path schema:addressRegion ] ] [ sh:property [ sh:maxCount 0 ;
+                                sh:path schema:postalCode ] ] ) ;
+            sh:path schema:shippingDestination ;
+            sh:severity sh:Warning ],
+        [ sh:message "A DefinedRegion should not have both addressRegion and postalCode (shippingOrigin)." ;
+            sh:or ( [ sh:property [ sh:maxCount 0 ;
+                                sh:path schema:addressRegion ] ] [ sh:property [ sh:maxCount 0 ;
+                                sh:path schema:postalCode ] ] ) ;
+            sh:path schema:shippingOrigin ;
+            sh:severity sh:Warning ] ;
+    sh:targetObjectsOf schema:shippingConditions .
 
-:google_QuantitativeValueShape
-  a sh:NodeShape ;
-  sh:targetClass schema:QuantitativeValue ;
-  sh:property [
-    sh:path schema:maxValue ;
-    sh:minCount 1 ;
+<https://wordlift.io/shacl/google/shipping-policy/handlingduration-minvalue-recommended> a sh:NodeShape ;
+    sh:message "The handling time duration should have minValue (unless it uses value)." ;
+    sh:or ( [ sh:property [ sh:maxCount 0 ;
+                        sh:path ( schema:handlingTime schema:duration ) ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path ( schema:handlingTime schema:duration schema:value ) ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path ( schema:handlingTime schema:duration schema:minValue ) ] ] ) ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: maxValue." ;
-  ] ;
-  sh:property [
-    sh:path schema:minValue ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: minValue." ;
-  ] ;
-  sh:property [
-    sh:path schema:unitCode ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: unitCode." ;
-  ] ;
-  sh:property [
-    sh:path schema:value ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: value." ;
-  ] ;
-.
+    sh:targetClass schema:ShippingService .
 
-:google_ServicePeriodShape
-  a sh:NodeShape ;
-  sh:targetClass schema:ServicePeriod ;
-  sh:property [
-    sh:path schema:businessDays ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: businessDays." ;
-  ] ;
-  sh:property [
-    sh:path schema:duration ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: duration." ;
-  ] ;
-.
+<https://wordlift.io/shacl/google/shipping-policy/handlingduration-nonnegative-integer> a sh:NodeShape ;
+    sh:property [ sh:message "The handling time duration minValue should be a non-negative whole number." ;
+            sh:path ( schema:handlingTime schema:duration schema:minValue ) ;
+            sh:pattern "^[0-9]+$" ;
+            sh:severity sh:Warning ],
+        [ sh:message "The handling time duration maxValue should be a non-negative whole number." ;
+            sh:path ( schema:handlingTime schema:duration schema:maxValue ) ;
+            sh:pattern "^[0-9]+$" ;
+            sh:severity sh:Warning ],
+        [ sh:message "The handling time duration value should be a non-negative whole number." ;
+            sh:path ( schema:handlingTime schema:duration schema:value ) ;
+            sh:pattern "^[0-9]+$" ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:ShippingService .
 
-:google_ShippingConditionsShape
-  a sh:NodeShape ;
-  sh:targetClass schema:ShippingConditions ;
-  sh:property [
-    sh:path schema:doesNotShip ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: doesNotShip." ;
-  ] ;
-  sh:property [
-    sh:path schema:numItems ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: numItems." ;
-  ] ;
-  sh:property [
-    sh:path schema:orderValue ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: orderValue." ;
-  ] ;
-  sh:property [
-    sh:path schema:seasonalOverride ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: seasonalOverride." ;
-  ] ;
-  sh:property [
-    sh:path schema:shippingDestination ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: shippingDestination." ;
-  ] ;
-  sh:property [
-    sh:path schema:shippingOrigin ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: shippingOrigin." ;
-  ] ;
-  sh:property [
-    sh:path schema:shippingRate ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: shippingRate." ;
-  ] ;
-  sh:property [
-    sh:path schema:transitTime ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: transitTime." ;
-  ] ;
-  sh:property [
-    sh:path schema:weight ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: weight." ;
-  ] ;
-.
+<https://wordlift.io/shacl/google/shipping-policy/handlingduration-unitcode-day> a sh:NodeShape ;
+    sh:property [ sh:in ( "DAY" "d" ) ;
+            sh:message "The handling time duration unitCode should be DAY or d." ;
+            sh:path ( schema:handlingTime schema:duration schema:unitCode ) ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:ShippingService .
 
-:google_ShippingRateSettingsShape
-  a sh:NodeShape ;
-  sh:targetClass schema:ShippingRateSettings ;
-  sh:property [
-    sh:path schema:orderPercentage ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: orderPercentage." ;
-  ] ;
-  sh:property [
-    sh:path schema:weightPercentage ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: weightPercentage." ;
-  ] ;
-.
+<https://wordlift.io/shacl/google/shipping-policy/handlingduration-unitcode-required> a sh:NodeShape ;
+    sh:property [ sh:path schema:handlingTime ;
+            sh:property [ sh:path schema:duration ;
+                    sh:property [ sh:message "The handling time duration should have unitCode." ;
+                            sh:minCount 1 ;
+                            sh:path schema:unitCode ;
+                            sh:severity sh:Warning ] ] ] ;
+    sh:targetClass schema:ShippingService .
 
-:google_ShippingServiceShape
-  a sh:NodeShape ;
-  sh:targetClass schema:ShippingService ;
-  sh:property [
-    sh:path schema:description ;
-    sh:minCount 1 ;
+<https://wordlift.io/shacl/google/shipping-policy/handlingduration-value-excludes-minmax> a sh:NodeShape ;
+    sh:property [ sh:message "When the handling time duration has value, minValue and maxValue must not be given." ;
+            sh:or ( [ sh:property [ sh:maxCount 0 ;
+                                sh:path schema:value ] ] [ sh:and ( [ sh:property [ sh:maxCount 0 ;
+                                            sh:path schema:minValue ] ] [ sh:property [ sh:maxCount 0 ;
+                                            sh:path schema:maxValue ] ] ) ] ) ;
+            sh:path ( schema:handlingTime schema:duration ) ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:ShippingService .
+
+<https://wordlift.io/shacl/google/shipping-policy/handlingduration-value-or-maxvalue> a sh:NodeShape ;
+    sh:property [ sh:message "The handling time duration should have value or maxValue." ;
+            sh:or ( [ sh:property [ sh:minCount 1 ;
+                                sh:path schema:value ] ] [ sh:property [ sh:minCount 1 ;
+                                sh:path schema:maxValue ] ] ) ;
+            sh:path ( schema:handlingTime schema:duration ) ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:ShippingService .
+
+<https://wordlift.io/shacl/google/shipping-policy/handlingtime-businessdays-recommended> a sh:NodeShape ;
+    sh:property [ sh:path schema:handlingTime ;
+            sh:property [ sh:message "The handling time of a ShippingService should have businessDays." ;
+                    sh:minCount 1 ;
+                    sh:path schema:businessDays ;
+                    sh:severity sh:Warning ] ] ;
+    sh:targetClass schema:ShippingService .
+
+<https://wordlift.io/shacl/google/shipping-policy/handlingtime-cutofftime-recommended> a sh:NodeShape ;
+    sh:property [ sh:path schema:handlingTime ;
+            sh:property [ sh:message "The handling time of a ShippingService should have cutoffTime." ;
+                    sh:minCount 1 ;
+                    sh:path schema:cutoffTime ;
+                    sh:severity sh:Warning ] ] ;
+    sh:targetClass schema:ShippingService .
+
+<https://wordlift.io/shacl/google/shipping-policy/handlingtime-duration-recommended> a sh:NodeShape ;
+    sh:property [ sh:path schema:handlingTime ;
+            sh:property [ sh:message "The handling time of a ShippingService should have duration." ;
+                    sh:minCount 1 ;
+                    sh:path schema:duration ;
+                    sh:severity sh:Warning ] ] ;
+    sh:targetClass schema:ShippingService .
+
+<https://wordlift.io/shacl/google/shipping-policy/ordervalue-currency-required> a sh:NodeShape ;
+    sh:property [ sh:path schema:orderValue ;
+            sh:property [ sh:message "The orderValue MonetaryAmount must have currency." ;
+                    sh:minCount 1 ;
+                    sh:path schema:currency ] ] ;
+    sh:targetObjectsOf schema:shippingConditions .
+
+<https://wordlift.io/shacl/google/shipping-policy/ordervalue-minvalue-or-maxvalue> a sh:NodeShape ;
+    sh:property [ sh:message "The orderValue MonetaryAmount must have minValue or maxValue." ;
+            sh:or ( [ sh:property [ sh:minCount 1 ;
+                                sh:path schema:minValue ] ] [ sh:property [ sh:minCount 1 ;
+                                sh:path schema:maxValue ] ] ) ;
+            sh:path schema:orderValue ] ;
+    sh:targetObjectsOf schema:shippingConditions .
+
+<https://wordlift.io/shacl/google/shipping-policy/seasonaloverride-validfrom-or-validthrough> a sh:NodeShape ;
+    sh:property [ sh:message "The seasonalOverride should have validFrom or validThrough." ;
+            sh:or ( [ sh:property [ sh:minCount 1 ;
+                                sh:path schema:validFrom ] ] [ sh:property [ sh:minCount 1 ;
+                                sh:path schema:validThrough ] ] ) ;
+            sh:path schema:seasonalOverride ;
+            sh:severity sh:Warning ] ;
+    sh:targetObjectsOf schema:shippingConditions .
+
+<https://wordlift.io/shacl/google/shipping-policy/shippingconditions-dimension-min-lessthan-max> a sh:NodeShape ;
+    sh:property [ sh:path schema:weight ;
+            sh:property [ sh:lessThan schema:maxValue ;
+                    sh:message "The weight minValue must be less than maxValue." ;
+                    sh:path schema:minValue ;
+                    sh:severity sh:Warning ] ],
+        [ sh:path schema:numItems ;
+            sh:property [ sh:lessThan schema:maxValue ;
+                    sh:message "The numItems minValue must be less than maxValue." ;
+                    sh:path schema:minValue ;
+                    sh:severity sh:Warning ] ] ;
+    sh:targetObjectsOf schema:shippingConditions .
+
+<https://wordlift.io/shacl/google/shipping-policy/shippingconditions-dimension-min-or-max> a sh:NodeShape ;
+    sh:property [ sh:message "The weight should have minValue or maxValue." ;
+            sh:or ( [ sh:property [ sh:minCount 1 ;
+                                sh:path schema:minValue ] ] [ sh:property [ sh:minCount 1 ;
+                                sh:path schema:maxValue ] ] ) ;
+            sh:path schema:weight ;
+            sh:severity sh:Warning ],
+        [ sh:message "The numItems should have minValue or maxValue." ;
+            sh:or ( [ sh:property [ sh:minCount 1 ;
+                                sh:path schema:minValue ] ] [ sh:property [ sh:minCount 1 ;
+                                sh:path schema:maxValue ] ] ) ;
+            sh:path schema:numItems ;
+            sh:severity sh:Warning ] ;
+    sh:targetObjectsOf schema:shippingConditions .
+
+<https://wordlift.io/shacl/google/shipping-policy/shippingconditions-doesnotship-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "ShippingConditions should have doesNotShip." ;
+            sh:minCount 1 ;
+            sh:path schema:doesNotShip ;
+            sh:severity sh:Warning ] ;
+    sh:targetObjectsOf schema:shippingConditions .
+
+<https://wordlift.io/shacl/google/shipping-policy/shippingconditions-numitems-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "ShippingConditions should have numItems." ;
+            sh:minCount 1 ;
+            sh:path schema:numItems ;
+            sh:severity sh:Warning ] ;
+    sh:targetObjectsOf schema:shippingConditions .
+
+<https://wordlift.io/shacl/google/shipping-policy/shippingconditions-numitems-unitcode-value> a sh:NodeShape ;
+    sh:property [ sh:in ( "H87" ) ;
+            sh:message "The numItems unitCode should be H87 when given." ;
+            sh:path ( schema:numItems schema:unitCode ) ;
+            sh:severity sh:Warning ] ;
+    sh:targetObjectsOf schema:shippingConditions .
+
+<https://wordlift.io/shacl/google/shipping-policy/shippingconditions-ordervalue-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "ShippingConditions should have orderValue." ;
+            sh:minCount 1 ;
+            sh:path schema:orderValue ;
+            sh:severity sh:Warning ] ;
+    sh:targetObjectsOf schema:shippingConditions .
+
+<https://wordlift.io/shacl/google/shipping-policy/shippingconditions-seasonaloverride-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "ShippingConditions should have seasonalOverride." ;
+            sh:minCount 1 ;
+            sh:path schema:seasonalOverride ;
+            sh:severity sh:Warning ] ;
+    sh:targetObjectsOf schema:shippingConditions .
+
+<https://wordlift.io/shacl/google/shipping-policy/shippingconditions-shippingdestination-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "ShippingConditions should have shippingDestination." ;
+            sh:minCount 1 ;
+            sh:path schema:shippingDestination ;
+            sh:severity sh:Warning ] ;
+    sh:targetObjectsOf schema:shippingConditions .
+
+<https://wordlift.io/shacl/google/shipping-policy/shippingconditions-shippingorigin-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "ShippingConditions should have shippingOrigin." ;
+            sh:minCount 1 ;
+            sh:path schema:shippingOrigin ;
+            sh:severity sh:Warning ] ;
+    sh:targetObjectsOf schema:shippingConditions .
+
+<https://wordlift.io/shacl/google/shipping-policy/shippingconditions-shippingrate-not-with-doesnotship> a sh:NodeShape ;
+    sh:message "ShippingConditions with doesNotShip true must not have shippingRate." ;
+    sh:or ( [ sh:not [ sh:property [ sh:hasValue true ;
+                                sh:path schema:doesNotShip ] ] ] [ sh:property [ sh:maxCount 0 ;
+                        sh:path schema:shippingRate ] ] ) ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: description." ;
-  ] ;
-  sh:property [
-    sh:path schema:doesNotShip ;
-    sh:minCount 1 ;
+    sh:targetObjectsOf schema:shippingConditions .
+
+<https://wordlift.io/shacl/google/shipping-policy/shippingconditions-shippingrate-recommended> a sh:NodeShape ;
+    sh:message "ShippingConditions should have shippingRate unless doesNotShip is true." ;
+    sh:or ( [ sh:property [ sh:hasValue true ;
+                        sh:path schema:doesNotShip ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:shippingRate ] ] ) ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: doesNotShip." ;
-  ] ;
-  sh:property [
-    sh:path schema:fulfillmentType ;
-    sh:minCount 1 ;
+    sh:targetObjectsOf schema:shippingConditions .
+
+<https://wordlift.io/shacl/google/shipping-policy/shippingconditions-transittime-not-with-doesnotship> a sh:NodeShape ;
+    sh:message "ShippingConditions with doesNotShip true must not have transitTime." ;
+    sh:or ( [ sh:not [ sh:property [ sh:hasValue true ;
+                                sh:path schema:doesNotShip ] ] ] [ sh:property [ sh:maxCount 0 ;
+                        sh:path schema:transitTime ] ] ) ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: fulfillmentType." ;
-  ] ;
-  sh:property [
-    sh:path schema:handlingTime ;
-    sh:minCount 1 ;
+    sh:targetObjectsOf schema:shippingConditions .
+
+<https://wordlift.io/shacl/google/shipping-policy/shippingconditions-transittime-recommended> a sh:NodeShape ;
+    sh:message "ShippingConditions should have transitTime unless doesNotShip is true." ;
+    sh:or ( [ sh:property [ sh:hasValue true ;
+                        sh:path schema:doesNotShip ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:transitTime ] ] ) ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: handlingTime." ;
-  ] ;
-  sh:property [
-    sh:path schema:name ;
-    sh:minCount 1 ;
+    sh:targetObjectsOf schema:shippingConditions .
+
+<https://wordlift.io/shacl/google/shipping-policy/shippingconditions-weight-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "ShippingConditions should have weight." ;
+            sh:minCount 1 ;
+            sh:path schema:weight ;
+            sh:severity sh:Warning ] ;
+    sh:targetObjectsOf schema:shippingConditions .
+
+<https://wordlift.io/shacl/google/shipping-policy/shippingconditions-weight-unitcode-recommended> a sh:NodeShape ;
+    sh:property [ sh:path schema:weight ;
+            sh:property [ sh:message "The weight should have unitCode." ;
+                    sh:minCount 1 ;
+                    sh:path schema:unitCode ;
+                    sh:severity sh:Warning ] ] ;
+    sh:targetObjectsOf schema:shippingConditions .
+
+<https://wordlift.io/shacl/google/shipping-policy/shippingconditions-weight-unitcode-value> a sh:NodeShape ;
+    sh:property [ sh:in ( "LBR" "KGM" ) ;
+            sh:message "The weight unitCode should be LBR or KGM." ;
+            sh:path ( schema:weight schema:unitCode ) ;
+            sh:severity sh:Warning ] ;
+    sh:targetObjectsOf schema:shippingConditions .
+
+<https://wordlift.io/shacl/google/shipping-policy/shippingratemoney-currency-required> a sh:NodeShape ;
+    sh:property [ sh:message "The shippingRate MonetaryAmount must have currency." ;
+            sh:or ( [ sh:not [ sh:class schema:MonetaryAmount ] ] [ sh:property [ sh:minCount 1 ;
+                                sh:path schema:currency ] ] ) ;
+            sh:path schema:shippingRate ] ;
+    sh:targetObjectsOf schema:shippingConditions .
+
+<https://wordlift.io/shacl/google/shipping-policy/shippingratemoney-maxvalue-excludes-value> a sh:NodeShape ;
+    sh:property [ sh:message "The shippingRate MonetaryAmount must not have both maxValue and value." ;
+            sh:or ( [ sh:not [ sh:class schema:MonetaryAmount ] ] [ sh:property [ sh:maxCount 0 ;
+                                sh:path schema:maxValue ] ] [ sh:property [ sh:maxCount 0 ;
+                                sh:path schema:value ] ] ) ;
+            sh:path schema:shippingRate ] ;
+    sh:targetObjectsOf schema:shippingConditions .
+
+<https://wordlift.io/shacl/google/shipping-policy/shippingratemoney-value-or-maxvalue> a sh:NodeShape ;
+    sh:property [ sh:message "The shippingRate MonetaryAmount must have value or maxValue." ;
+            sh:or ( [ sh:not [ sh:class schema:MonetaryAmount ] ] [ sh:property [ sh:minCount 1 ;
+                                sh:path schema:value ] ] [ sh:property [ sh:minCount 1 ;
+                                sh:path schema:maxValue ] ] ) ;
+            sh:path schema:shippingRate ] ;
+    sh:targetObjectsOf schema:shippingConditions .
+
+<https://wordlift.io/shacl/google/shipping-policy/shippingratesettings-orderpercentage-range> a sh:NodeShape ;
+    sh:property [ sh:maxInclusive 1 ;
+            sh:message "orderPercentage should be between 0 and 1." ;
+            sh:minInclusive 0 ;
+            sh:path schema:orderPercentage ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:ShippingRateSettings .
+
+<https://wordlift.io/shacl/google/shipping-policy/shippingratesettings-percentage-one-of> a sh:NodeShape ;
+    sh:message "A ShippingRateSettings should have orderPercentage or weightPercentage." ;
+    sh:or ( [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:orderPercentage ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path schema:weightPercentage ] ] ) ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: name." ;
-  ] ;
-  sh:property [
-    sh:path schema:numItems ;
-    sh:minCount 1 ;
+    sh:targetClass schema:ShippingRateSettings .
+
+<https://wordlift.io/shacl/google/shipping-policy/shippingratesettings-weightpercentage-range> a sh:NodeShape ;
+    sh:property [ sh:maxInclusive 1 ;
+            sh:message "weightPercentage should be between 0 and 1." ;
+            sh:minInclusive 0 ;
+            sh:path schema:weightPercentage ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:ShippingRateSettings .
+
+<https://wordlift.io/shacl/google/shipping-policy/shippingservice-description-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "A ShippingService should have a description." ;
+            sh:minCount 1 ;
+            sh:path schema:description ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:ShippingService .
+
+<https://wordlift.io/shacl/google/shipping-policy/shippingservice-fulfillmenttype-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "A ShippingService should have fulfillmentType." ;
+            sh:minCount 1 ;
+            sh:path schema:fulfillmentType ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:ShippingService .
+
+<https://wordlift.io/shacl/google/shipping-policy/shippingservice-handlingtime-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "A ShippingService should have handlingTime." ;
+            sh:minCount 1 ;
+            sh:path schema:handlingTime ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:ShippingService .
+
+<https://wordlift.io/shacl/google/shipping-policy/shippingservice-membertier-requires-regular-service> a sh:NodeShape ;
+    sh:message "An Organization with a member-tier shipping service must also have a regular shipping service without validForMemberTier." ;
+    sh:or ( [ sh:property [ sh:path schema:hasShippingService ;
+                        sh:qualifiedMaxCount 0 ;
+                        sh:qualifiedValueShape [ sh:property [ sh:minCount 1 ;
+                                        sh:path schema:validForMemberTier ] ] ] ] [ sh:property [ sh:path schema:hasShippingService ;
+                        sh:qualifiedMinCount 1 ;
+                        sh:qualifiedValueShape [ sh:not [ sh:property [ sh:minCount 1 ;
+                                                sh:path schema:validForMemberTier ] ] ] ] ] ) ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: numItems." ;
-  ] ;
-  sh:property [
-    sh:path schema:orderValue ;
-    sh:minCount 1 ;
+    sh:targetClass schema:AccountingService,
+        schema:AdultEntertainment,
+        schema:Airline,
+        schema:AmusementPark,
+        schema:AnimalShelter,
+        schema:ArchiveOrganization,
+        schema:ArtGallery,
+        schema:Attorney,
+        schema:AutoBodyShop,
+        schema:AutoDealer,
+        schema:AutoPartsStore,
+        schema:AutoRental,
+        schema:AutoRepair,
+        schema:AutoWash,
+        schema:AutomatedTeller,
+        schema:AutomotiveBusiness,
+        schema:Bakery,
+        schema:BankOrCreditUnion,
+        schema:BarOrPub,
+        schema:BeautySalon,
+        schema:BedAndBreakfast,
+        schema:BikeStore,
+        schema:BookStore,
+        schema:BowlingAlley,
+        schema:Brewery,
+        schema:CafeOrCoffeeShop,
+        schema:Campground,
+        schema:Casino,
+        schema:ChildCare,
+        schema:ClothingStore,
+        schema:CollegeOrUniversity,
+        schema:ComedyClub,
+        schema:CommunityHealth,
+        schema:ComputerStore,
+        schema:Consortium,
+        schema:ConvenienceStore,
+        schema:Cooperative,
+        schema:Corporation,
+        schema:CovidTestingFacility,
+        schema:DanceGroup,
+        schema:DaySpa,
+        schema:Dentist,
+        schema:DepartmentStore,
+        schema:Dermatology,
+        schema:DiagnosticLab,
+        schema:DietNutrition,
+        schema:Distillery,
+        schema:DryCleaningOrLaundry,
+        schema:EducationalOrganization,
+        schema:Electrician,
+        schema:ElectronicsStore,
+        schema:ElementarySchool,
+        schema:Emergency,
+        schema:EmergencyService,
+        schema:EmploymentAgency,
+        schema:EntertainmentBusiness,
+        schema:ExerciseGym,
+        schema:FastFoodRestaurant,
+        schema:FinancialService,
+        schema:FireStation,
+        schema:Florist,
+        schema:FoodEstablishment,
+        schema:FundingAgency,
+        schema:FundingScheme,
+        schema:FurnitureStore,
+        schema:GardenStore,
+        schema:GasStation,
+        schema:GeneralContractor,
+        schema:Geriatric,
+        schema:GolfCourse,
+        schema:GovernmentOffice,
+        schema:GovernmentOrganization,
+        schema:GroceryStore,
+        schema:Gynecologic,
+        schema:HVACBusiness,
+        schema:HairSalon,
+        schema:HardwareStore,
+        schema:HealthAndBeautyBusiness,
+        schema:HealthClub,
+        schema:HighSchool,
+        schema:HobbyShop,
+        schema:HomeAndConstructionBusiness,
+        schema:HomeGoodsStore,
+        schema:Hospital,
+        schema:Hostel,
+        schema:Hotel,
+        schema:HousePainter,
+        schema:IceCreamShop,
+        schema:IndividualPhysician,
+        schema:InsuranceAgency,
+        schema:InternetCafe,
+        schema:JewelryStore,
+        schema:LegalService,
+        schema:Library,
+        schema:LibrarySystem,
+        schema:LiquorStore,
+        schema:LocalBusiness,
+        schema:Locksmith,
+        schema:LodgingBusiness,
+        schema:MedicalBusiness,
+        schema:MedicalClinic,
+        schema:MedicalOrganization,
+        schema:MensClothingStore,
+        schema:MiddleSchool,
+        schema:Midwifery,
+        schema:MobilePhoneStore,
+        schema:Motel,
+        schema:MotorcycleDealer,
+        schema:MotorcycleRepair,
+        schema:MovieRentalStore,
+        schema:MovieTheater,
+        schema:MovingCompany,
+        schema:MusicGroup,
+        schema:MusicStore,
+        schema:NGO,
+        schema:NailSalon,
+        schema:NewsMediaOrganization,
+        schema:NightClub,
+        schema:Notary,
+        schema:Nursing,
+        schema:Obstetric,
+        schema:OfficeEquipmentStore,
+        schema:Oncologic,
+        schema:OnlineBusiness,
+        schema:OnlineMarketplace,
+        schema:OnlineStore,
+        schema:Optician,
+        schema:Optometric,
+        schema:Organization,
+        schema:Otolaryngologic,
+        schema:OutletStore,
+        schema:PawnShop,
+        schema:Pediatric,
+        schema:PerformingGroup,
+        schema:PetStore,
+        schema:Pharmacy,
+        schema:Physician,
+        schema:PhysiciansOffice,
+        schema:Physiotherapy,
+        schema:PlasticSurgery,
+        schema:Plumber,
+        schema:Podiatric,
+        schema:PoliceStation,
+        schema:PoliticalParty,
+        schema:PostOffice,
+        schema:Preschool,
+        schema:PrimaryCare,
+        schema:ProfessionalService,
+        schema:Project,
+        schema:Psychiatric,
+        schema:PublicHealth,
+        schema:PublicSwimmingPool,
+        schema:RadioStation,
+        schema:RealEstateAgent,
+        schema:RecyclingCenter,
+        schema:ResearchOrganization,
+        schema:ResearchProject,
+        schema:Resort,
+        schema:Restaurant,
+        schema:RoofingContractor,
+        schema:School,
+        schema:SearchRescueOrganization,
+        schema:SelfStorage,
+        schema:ShoeStore,
+        schema:ShoppingCenter,
+        schema:SkiResort,
+        schema:SportingGoodsStore,
+        schema:SportsActivityLocation,
+        schema:SportsClub,
+        schema:SportsOrganization,
+        schema:SportsTeam,
+        schema:StadiumOrArena,
+        schema:Store,
+        schema:TattooParlor,
+        schema:TelevisionStation,
+        schema:TennisComplex,
+        schema:TheaterGroup,
+        schema:TireShop,
+        schema:TouristInformationCenter,
+        schema:ToyStore,
+        schema:TravelAgency,
+        schema:VacationRental,
+        schema:VeterinaryCare,
+        schema:WholesaleStore,
+        schema:Winery,
+        schema:WorkersUnion .
+
+<https://wordlift.io/shacl/google/shipping-policy/shippingservice-name-recommended> a sh:NodeShape ;
+    sh:property [ sh:message "A ShippingService should have a name." ;
+            sh:minCount 1 ;
+            sh:path schema:name ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass schema:ShippingService .
+
+<https://wordlift.io/shacl/google/shipping-policy/shippingservice-shippingconditions-required> a sh:NodeShape ;
+    sh:property [ sh:message "A ShippingService must have shippingConditions." ;
+            sh:minCount 1 ;
+            sh:path schema:shippingConditions ] ;
+    sh:targetClass schema:ShippingService .
+
+<https://wordlift.io/shacl/google/shipping-policy/transitduration-minvalue-recommended> a sh:NodeShape ;
+    sh:message "The transit time duration should have minValue (unless it uses value)." ;
+    sh:or ( [ sh:property [ sh:maxCount 0 ;
+                        sh:path ( schema:transitTime schema:duration ) ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path ( schema:transitTime schema:duration schema:value ) ] ] [ sh:property [ sh:minCount 1 ;
+                        sh:path ( schema:transitTime schema:duration schema:minValue ) ] ] ) ;
     sh:severity sh:Warning ;
-    sh:message "Recommended by Google: orderValue." ;
-  ] ;
-  sh:property [
-    sh:path schema:seasonalOverride ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: seasonalOverride." ;
-  ] ;
-  sh:property [
-    sh:path schema:shippingDestination ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: shippingDestination." ;
-  ] ;
-  sh:property [
-    sh:path schema:shippingOrigin ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: shippingOrigin." ;
-  ] ;
-  sh:property [
-    sh:path schema:shippingRate ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: shippingRate." ;
-  ] ;
-  sh:property [
-    sh:path schema:transitTime ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: transitTime." ;
-  ] ;
-  sh:property [
-    sh:path schema:validForMemberTier ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: validForMemberTier." ;
-  ] ;
-  sh:property [
-    sh:path schema:weight ;
-    sh:minCount 1 ;
-    sh:severity sh:Warning ;
-    sh:message "Recommended by Google: weight." ;
-  ] ;
-.
+    sh:targetObjectsOf schema:shippingConditions .
+
+<https://wordlift.io/shacl/google/shipping-policy/transitduration-nonnegative-integer> a sh:NodeShape ;
+    sh:property [ sh:message "The transit time duration minValue should be a non-negative whole number." ;
+            sh:path ( schema:transitTime schema:duration schema:minValue ) ;
+            sh:pattern "^[0-9]+$" ;
+            sh:severity sh:Warning ],
+        [ sh:message "The transit time duration maxValue should be a non-negative whole number." ;
+            sh:path ( schema:transitTime schema:duration schema:maxValue ) ;
+            sh:pattern "^[0-9]+$" ;
+            sh:severity sh:Warning ],
+        [ sh:message "The transit time duration value should be a non-negative whole number." ;
+            sh:path ( schema:transitTime schema:duration schema:value ) ;
+            sh:pattern "^[0-9]+$" ;
+            sh:severity sh:Warning ] ;
+    sh:targetObjectsOf schema:shippingConditions .
+
+<https://wordlift.io/shacl/google/shipping-policy/transitduration-unitcode-day> a sh:NodeShape ;
+    sh:property [ sh:in ( "DAY" "d" ) ;
+            sh:message "The transit time duration unitCode should be DAY or d." ;
+            sh:path ( schema:transitTime schema:duration schema:unitCode ) ;
+            sh:severity sh:Warning ] ;
+    sh:targetObjectsOf schema:shippingConditions .
+
+<https://wordlift.io/shacl/google/shipping-policy/transitduration-unitcode-required> a sh:NodeShape ;
+    sh:property [ sh:path schema:transitTime ;
+            sh:property [ sh:path schema:duration ;
+                    sh:property [ sh:message "The transit time duration should have unitCode." ;
+                            sh:minCount 1 ;
+                            sh:path schema:unitCode ;
+                            sh:severity sh:Warning ] ] ] ;
+    sh:targetObjectsOf schema:shippingConditions .
+
+<https://wordlift.io/shacl/google/shipping-policy/transitduration-value-excludes-minmax> a sh:NodeShape ;
+    sh:property [ sh:message "When the transit time duration has value, minValue and maxValue must not be given." ;
+            sh:or ( [ sh:property [ sh:maxCount 0 ;
+                                sh:path schema:value ] ] [ sh:and ( [ sh:property [ sh:maxCount 0 ;
+                                            sh:path schema:minValue ] ] [ sh:property [ sh:maxCount 0 ;
+                                            sh:path schema:maxValue ] ] ) ] ) ;
+            sh:path ( schema:transitTime schema:duration ) ;
+            sh:severity sh:Warning ] ;
+    sh:targetObjectsOf schema:shippingConditions .
+
+<https://wordlift.io/shacl/google/shipping-policy/transitduration-value-or-maxvalue> a sh:NodeShape ;
+    sh:property [ sh:message "The transit time duration should have value or maxValue." ;
+            sh:or ( [ sh:property [ sh:minCount 1 ;
+                                sh:path schema:value ] ] [ sh:property [ sh:minCount 1 ;
+                                sh:path schema:maxValue ] ] ) ;
+            sh:path ( schema:transitTime schema:duration ) ;
+            sh:severity sh:Warning ] ;
+    sh:targetObjectsOf schema:shippingConditions .
+
+<https://wordlift.io/shacl/google/shipping-policy/transittime-businessdays-recommended> a sh:NodeShape ;
+    sh:property [ sh:path schema:transitTime ;
+            sh:property [ sh:message "The transit time should have businessDays." ;
+                    sh:minCount 1 ;
+                    sh:path schema:businessDays ;
+                    sh:severity sh:Warning ] ] ;
+    sh:targetObjectsOf schema:shippingConditions .
+
+<https://wordlift.io/shacl/google/shipping-policy/transittime-duration-recommended> a sh:NodeShape ;
+    sh:property [ sh:path schema:transitTime ;
+            sh:property [ sh:message "The transit time should have duration." ;
+                    sh:minCount 1 ;
+                    sh:path schema:duration ;
+                    sh:severity sh:Warning ] ] ;
+    sh:targetObjectsOf schema:shippingConditions .
+
