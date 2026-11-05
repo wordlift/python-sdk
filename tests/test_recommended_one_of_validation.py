@@ -64,9 +64,43 @@ def _product_with_shipping_rate(rate: dict) -> dict:
     quantity = {"@type": "QuantitativeValue", "minValue": 0, "maxValue": 1}
     return {
         "@context": {"@vocab": "http://schema.org/"},
-        "@type": "OfferShippingDetails",
-        "shippingRate": {"@type": "MonetaryAmount", "currency": "CAD", "value": "9.99"},
+        "@type": "Product",
+        "name": "Sample product",
+        "image": "https://example.com/p.jpg",
+        "offers": {
+            "@type": "Offer",
+            "price": "10.00",
+            "priceCurrency": "CAD",
+            "availability": "https://schema.org/InStock",
+            "shippingDetails": {
+                "@type": "OfferShippingDetails",
+                "shippingRate": rate,
+                "shippingDestination": {
+                    "@type": "DefinedRegion",
+                    "addressCountry": "CA",
+                    "addressRegion": "ON",
+                },
+                "deliveryTime": {
+                    "@type": "ShippingDeliveryTime",
+                    "handlingTime": {**quantity, "unitCode": "DAY"},
+                    "transitTime": {**quantity, "unitCode": "DAY"},
+                },
+            },
+        },
     }
+
+
+def test_offer_shipping_details_either_or_is_now_an_error(
+    tmp_path: Path,
+) -> None:
+    # Google's merchant doc requires shippingRate to carry value or maxValue; the
+    # new rule is an error, no longer a warning-only recommendation.
+    missing_payload = _product_with_shipping_rate(
+        {"@type": "MonetaryAmount", "currency": "CAD"}
+    )
+    with_value_payload = _product_with_shipping_rate(
+        {"@type": "MonetaryAmount", "currency": "CAD", "value": "9.99"}
+    )
 
     missing_path = _write_jsonld(
         tmp_path, "offer-shipping-details-missing.jsonld", missing_payload
@@ -86,9 +120,12 @@ def _product_with_shipping_rate(rate: dict) -> dict:
 
     missing_messages = _messages_for(missing_result)
     with_value_messages = _messages_for(with_value_result)
-    expected = "Recommended by Google: choose either shippingRate.maxValue or shippingRate.value."
+    expected = (
+        "the MonetaryAmount under an OfferShippingDetails' shippingRate "
+        "must have value or maxValue."
+    )
 
-    assert missing_result.conforms is True, missing_result.report_text
+    assert missing_result.conforms is False
     assert expected in missing_messages
     assert with_value_result.conforms is True, with_value_result.report_text
     assert expected not in with_value_messages
