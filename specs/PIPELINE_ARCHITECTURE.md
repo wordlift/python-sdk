@@ -123,7 +123,8 @@ Current implementation status:
   subject IRIs are rewritten to canonical dataset-rooted paths when they are not
   already under canonical root prefixes; static-template graph patching remains
   separate from callback graph emission.
-- callback graph canonicalization nests `schema:Action` dependent subjects under
+- callback graph canonicalization nests `schema:Action` dependent subjects
+  (and schema.org subtypes such as `schema:BuyAction`) under
   parent subject paths when linked through `schema:potentialAction` or
   `schema:action`.
 - manifest-based postprocessor execution (selected-manifest precedence, subprocess isolation, N-Quads exchange): implemented in `wordlift_sdk.kg_build.postprocessors`.

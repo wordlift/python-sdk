@@ -190,7 +190,10 @@
 - `wordlift_sdk.kg_build` canonical ID generation nests `schema:Action` subjects
   under canonical parent subject IRIs when linked via
   `schema:potentialAction`/`schema:action` (for example
-  `<parent>/actions/<slug>`).
+  `<parent>/actions/<slug>`). Every schema.org subtype of `Action` (for example
+  `BuyAction`, `SearchAction`) is nested the same way; the subtype set comes
+  from the bundled subclass ontology via
+  `wordlift_sdk.validation.shacl.schemaorg_subclasses`.
 - `wordlift_sdk.kg_build` canonical ID generation supports optional lookup-based
   root IRI reuse via `Context.extensions["kg_build.iri_lookup"]`
   (`IriLookup.iri_for_subject(graph, subject)`), with root-only application

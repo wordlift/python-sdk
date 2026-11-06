@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- Canonical ID generation nests every schema.org subtype of `schema:Action`
+  (for example `BuyAction`, `SearchAction`, `ReserveAction`) under its parent as
+  `<parent>/actions/<slug>`, as it already did for `schema:Action`. Subtypes
+  used to keep their source IRI, so they did not follow their parent and were
+  left behind when the parent changed. Both `canonical_id_strategy` values are
+  fixed (#57).
+
 ## 8.7.0 - 2026-11-04
 
 ### Added

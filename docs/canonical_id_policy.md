@@ -61,7 +61,8 @@ dataset-rooted paths when needed.
 - Subjects already under canonical dataset root prefixes are preserved.
 - Non-canonical dataset prefixes (for example `/smallpdf/articles/...`) are
   rewritten to canonical dataset container paths.
-- `schema:Action` dependent subjects linked from parents via
+- `schema:Action` dependent subjects (including every schema.org subtype, such
+  as `schema:BuyAction` or `schema:SearchAction`) linked from parents via
   `schema:potentialAction`/`schema:action` are nested under the canonical parent
   IRI path (`<parent>/actions/<slug>`).
 - Static template graphs are patched through a separate startup path and are not

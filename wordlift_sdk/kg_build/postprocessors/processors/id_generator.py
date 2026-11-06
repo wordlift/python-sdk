@@ -14,6 +14,15 @@ from .slug import identity_slug, normalize_slug as normalize_slug, source_digest
 SCHEMA = "http://schema.org/"
 
 
+def _action_types() -> frozenset[URIRef]:
+    """``schema:Action`` and all its schema.org subtypes (e.g. ``BuyAction``)."""
+    # Imported lazily so importing this module does not load the validation
+    # package; ``schemaorg_subclasses`` caches the result.
+    from wordlift_sdk.validation.shacl import schemaorg_subclasses
+
+    return schemaorg_subclasses(URIRef(f"{SCHEMA}Action"))
+
+
 class CanonicalIdGenerator:
     """Pure graph-ID canonicalization logic."""
 
@@ -378,10 +387,10 @@ class CanonicalIdGenerator:
     def _rewrite_actions_as_dependents(
         self, graph: Graph, *, language: str | None = None
     ) -> None:
-        action_type = URIRef(f"{SCHEMA}Action")
         actions = sorted(
             {
                 subject
+                for action_type in _action_types()
                 for subject in graph.subjects(RDF.type, action_type)
                 if isinstance(subject, URIRef)
             },
