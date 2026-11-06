@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from functools import lru_cache
 import hashlib
 import re
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
@@ -12,6 +13,15 @@ from ...iri_lookup import IriLookup
 from .slug import identity_slug, normalize_slug as normalize_slug, source_digest
 
 SCHEMA = "http://schema.org/"
+
+
+@lru_cache(maxsize=1)
+def _action_types() -> frozenset[URIRef]:
+    """``schema:Action`` and all its schema.org subtypes (e.g. ``BuyAction``)."""
+    # Imported lazily: the ontology is only needed when actions are rewritten.
+    from wordlift_sdk.validation.shacl import schemaorg_subclasses
+
+    return schemaorg_subclasses(URIRef(f"{SCHEMA}Action"))
 
 
 class CanonicalIdGenerator:
@@ -378,10 +388,10 @@ class CanonicalIdGenerator:
     def _rewrite_actions_as_dependents(
         self, graph: Graph, *, language: str | None = None
     ) -> None:
-        action_type = URIRef(f"{SCHEMA}Action")
         actions = sorted(
             {
                 subject
+                for action_type in _action_types()
                 for subject in graph.subjects(RDF.type, action_type)
                 if isinstance(subject, URIRef)
             },

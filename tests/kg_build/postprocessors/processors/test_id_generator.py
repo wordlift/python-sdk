@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import pytest
 from rdflib import Graph, Literal, RDF, URIRef
 from rdflib.namespace import XSD
 
@@ -790,3 +791,64 @@ def test_dependency_graph_strategy_default_is_legacy() -> None:
 
     ratings = list(out_default.subjects(RDF.type, URIRef(f"{SCHEMA}Rating")))
     assert str(ratings[0]).startswith(review_iri)
+
+
+_OFFER_WITH_ACTIONS_TTL = """
+@prefix schema: <http://schema.org/> .
+<https://example.com/offers/plan-1> a schema:Offer ;
+    schema:url "https://example.com/cart?plan=1" ;
+    schema:potentialAction <https://example.com/offers/plan-1/act-a>,
+                           <https://example.com/offers/plan-1/act-b>,
+                           <https://example.com/offers/plan-1/act-c>,
+                           <https://example.com/offers/plan-1/act-d> .
+<https://example.com/offers/plan-1/act-a> a schema:Action ; schema:name "Generic" .
+<https://example.com/offers/plan-1/act-b> a schema:BuyAction ; schema:name "Buy" .
+<https://example.com/offers/plan-1/act-c> a schema:ReserveAction ;
+    schema:name "Reserve" .
+<https://example.com/offers/plan-1/act-d> a schema:Action, schema:BuyAction ;
+    schema:name "Both" .
+"""
+
+
+def _subjects_by_name(graph: Graph) -> dict[str, URIRef]:
+    return {
+        str(name): subject
+        for subject, name in graph.subject_objects(URIRef(f"{SCHEMA}name"))
+    }
+
+
+@pytest.mark.parametrize("strategy", ["legacy", "dependency_graph"])
+def test_action_subtypes_are_nested_under_parent_actions_container(
+    strategy: str,
+) -> None:
+    graph = Graph().parse(data=_OFFER_WITH_ACTIONS_TTL, format="turtle")
+
+    CanonicalIdGenerator(strategy=strategy).apply(graph, DATASET)
+
+    offer = next(graph.subjects(RDF.type, URIRef(f"{SCHEMA}Offer")))
+    by_name = _subjects_by_name(graph)
+    # BuyAction ⊑ TradeAction ⊑ Action; ReserveAction ⊑ PlanAction ⊑
+    # OrganizeAction ⊑ Action.
+    assert by_name["Generic"] == URIRef(f"{offer}/actions/generic")
+    assert by_name["Buy"] == URIRef(f"{offer}/actions/buy")
+    assert by_name["Reserve"] == URIRef(f"{offer}/actions/reserve")
+    # Typed both Action and BuyAction: rewritten once, not twice.
+    assert by_name["Both"] == URIRef(f"{offer}/actions/both")
+    assert set(graph.objects(offer, URIRef(f"{SCHEMA}potentialAction"))) == {
+        by_name["Generic"],
+        by_name["Buy"],
+        by_name["Reserve"],
+        by_name["Both"],
+    }
+
+
+@pytest.mark.parametrize("strategy", ["legacy", "dependency_graph"])
+def test_action_subtype_rewrite_is_idempotent(strategy: str) -> None:
+    graph = Graph().parse(data=_OFFER_WITH_ACTIONS_TTL, format="turtle")
+    generator = CanonicalIdGenerator(strategy=strategy)
+
+    generator.apply(graph, DATASET)
+    first = set(graph)
+    generator.apply(graph, DATASET)
+
+    assert set(graph) == first

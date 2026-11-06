@@ -480,6 +480,18 @@ def _schemaorg_superclasses(class_iri: URIRef) -> frozenset[URIRef]:
     return frozenset(seen)
 
 
+@lru_cache(maxsize=None)
+def schemaorg_subclasses(class_iri: URIRef) -> frozenset[URIRef]:
+    """Return ``class_iri`` and every schema.org class that is
+    ``rdfs:subClassOf*`` it, per the bundled subclass ontology."""
+    class_iri = _normalize_schema_uri_ref(class_iri) or class_iri
+    return frozenset(
+        child
+        for child in _schemaorg_subclass_map()
+        if class_iri in _schemaorg_superclasses(child)
+    ) | {class_iri}
+
+
 def _schemaorg_domain_rules(shapes_graph: Graph) -> dict[URIRef, _SchemaOrgDomainRule]:
     rules: dict[URIRef, _SchemaOrgDomainRule] = {}
     for source_shape in shapes_graph.subjects(RDF.type, _DOMAIN_RULE_CLASS):
