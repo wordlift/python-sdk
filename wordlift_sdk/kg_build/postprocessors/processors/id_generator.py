@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from functools import lru_cache
 import hashlib
 import re
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
@@ -15,10 +14,10 @@ from .slug import identity_slug, normalize_slug as normalize_slug, source_digest
 SCHEMA = "http://schema.org/"
 
 
-@lru_cache(maxsize=1)
 def _action_types() -> frozenset[URIRef]:
     """``schema:Action`` and all its schema.org subtypes (e.g. ``BuyAction``)."""
-    # Imported lazily: the ontology is only needed when actions are rewritten.
+    # Imported lazily so importing this module does not load the validation
+    # package; ``schemaorg_subclasses`` caches the result.
     from wordlift_sdk.validation.shacl import schemaorg_subclasses
 
     return schemaorg_subclasses(URIRef(f"{SCHEMA}Action"))
