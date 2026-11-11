@@ -1,5 +1,23 @@
 # Changelog
 
+## 8.8.0 - 2026-11-11
+
+### Changed
+
+- The Google structured data SHACL rule sets (`google-*.ttl`) are replaced
+  with rules derived from Google's structured data documentation. Each rule is
+  tied to a quoted line of the docs: properties in the docs' Required tables
+  are errors, Recommended ones are warnings. Rules apply to subtypes of the
+  documented types (for example `WebApplication` and `MobileApplication` for
+  software apps, and LocalBusiness subtypes such as `Restaurant`), and
+  context types such as `Offer` or `QuantitativeValue` are checked only where
+  the docs place them, instead of everywhere. Expect far fewer errors and
+  warnings, and some new errors on subtypes the previous rules did not check.
+  `google-faqpage.ttl` is unchanged.
+- `wordlift_sdk.ingestion.type_classification` uses a fixed list of Google
+  types instead of reading `sh:targetClass` from the rule files. The list is
+  the same 69 types as before.
+
 ## 8.7.0 - 2026-11-04
 
 ### Added
