@@ -102,13 +102,15 @@ def test_trail_conforms_when_only_the_last_entry_omits_item(
     assert _conforms(validator, elements)
 
 
-def test_single_entry_trail_is_reported_as_too_short(
+def test_single_entry_trail_is_reported_as_a_warning(
     validator: PreparedShaclValidator,
 ) -> None:
     # Google breadcrumb doc: "define a BreadcrumbList that contains at least
-    # two ListItems".
+    # two ListItems". The Rich Results Test accepts a single entry, so it is a
+    # warning, not an error.
     result = _validate(validator, [_list_item(1)])
-    assert not result.conforms
+    assert result.conforms
+    assert result.warning_count == 1
     assert "at least two" in result.report_text
 
 
