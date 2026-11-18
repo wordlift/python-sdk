@@ -1,5 +1,16 @@
 # Changelog
 
+## 8.8.1 - 2026-11-18
+
+### Changed
+
+- Three Google structured data rules that Google's Rich Results Test treats
+  as optional are now warnings instead of errors: a `SoftwareApplication`
+  (including `WebApplication` and `MobileApplication`) without a price in its
+  offer, a `SoftwareApplication` with neither `aggregateRating` nor `review`,
+  and a `BreadcrumbList` with a single `ListItem`. They are still reported, so
+  pages with these gaps show warnings but no longer fail.
+
 ## 8.8.0 - 2026-11-11
 
 ### Changed
