@@ -74,3 +74,41 @@ async def test_overwrite_keeps_every_url_with_its_stored_hash() -> None:
     assert len(urls) == 4
     (older,) = [url for url in urls if url.value == "https://example.com/older"]
     assert (older.iri, older.import_hash) == ("https://example.com/older#iri", "h")
+
+
+@pytest.mark.asyncio
+async def test_url_with_two_iris_is_yielded_once_with_the_latest_import(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    url = "https://example.com/categories/shuttle-buses"
+    stored = [
+        {
+            "url": url,
+            "iri": "https://data/b",
+            "import_hash": "old",
+            "date_imported": "2026-10-01T00:00:00Z",
+        },
+        {
+            "url": url,
+            "iri": "https://data/c",
+            "import_hash": "new",
+            "date_imported": IMPORTED,
+        },
+        {
+            "url": url,
+            "iri": "https://data/a",
+            "import_hash": "tie",
+            "date_imported": IMPORTED,
+        },
+    ]
+    source = NewOrChangedUrlSource(
+        url_provider=_Urls(Url(value=url)),
+        graphql_client=AsyncMock(run=AsyncMock(return_value=stored)),
+        overwrite=True,
+    )
+
+    urls = [u async for u in source.urls()]
+
+    assert len(urls) == 1
+    assert (urls[0].iri, urls[0].import_hash) == ("https://data/a", "tie")
+    assert "1 URL(s) have more than one IRI" in caplog.text

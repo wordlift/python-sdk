@@ -45,7 +45,7 @@ async def test_ingestion_bridge_handler_calls_callback(
                 SimpleNamespace(
                     item_id="id",
                     url="https://example.com",
-                    final_url="https://example.com/final",
+                    final_url="https://example.com/#top",
                     status_code=200,
                     html="<html>ok</html>",
                     fetch_meta={"backend": "web_scrape_api"},
@@ -66,7 +66,7 @@ async def test_ingestion_bridge_handler_calls_callback(
     callback.callback.assert_awaited_once()
     args, kwargs = callback.callback.call_args
     response = args[0]
-    assert response.web_page.url == "https://example.com/final"
+    assert response.web_page.url == "https://example.com/#top"
     assert response.web_page.html == "<html>ok</html>"
     assert kwargs["existing_web_page_id"] == "https://example.com/id"
     assert kwargs["existing_import_hash"] == "abc123"

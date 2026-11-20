@@ -13,6 +13,7 @@ SLICE_TESTS: dict[str, list[str]] = {
         "tests/test_configuration_get_config_value.py",
         "tests/test_lazy_exports.py",
         "tests/utils/test_auto_concurrency.py",
+        "tests/utils/test_url_normalization.py",
     ],
     "google-sheets": [
         "tests/google_sheets/test_google_sheets_lookup.py",
