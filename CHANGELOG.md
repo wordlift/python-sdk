@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 8.8.2 - 2026-11-20
 
 ### Fixed
 
