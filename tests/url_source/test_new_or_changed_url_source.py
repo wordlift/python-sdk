@@ -74,3 +74,67 @@ async def test_overwrite_keeps_every_url_with_its_stored_hash() -> None:
     assert len(urls) == 4
     (older,) = [url for url in urls if url.value == "https://example.com/older"]
     assert (older.iri, older.import_hash) == ("https://example.com/older#iri", "h")
+
+
+@pytest.mark.asyncio
+async def test_url_with_two_iris_is_yielded_once_with_the_latest_import(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    url = "https://example.com/categories/shuttle-buses"
+    stored = [
+        {
+            "url": url,
+            "iri": "https://data/b",
+            "import_hash": "old",
+            "date_imported": "2026-10-01T00:00:00Z",
+        },
+        {
+            "url": url,
+            "iri": "https://data/c",
+            "import_hash": "new",
+            "date_imported": IMPORTED,
+        },
+        {
+            "url": url,
+            "iri": "https://data/a",
+            "import_hash": "tie",
+            "date_imported": IMPORTED,
+        },
+    ]
+    source = NewOrChangedUrlSource(
+        url_provider=_Urls(Url(value=url)),
+        graphql_client=AsyncMock(run=AsyncMock(return_value=stored)),
+        overwrite=True,
+    )
+
+    urls = [u async for u in source.urls()]
+
+    assert len(urls) == 1
+    assert (urls[0].iri, urls[0].import_hash) == ("https://data/a", "tie")
+    assert "1 URL(s) have more than one IRI" in caplog.text
+
+
+@pytest.mark.asyncio
+async def test_empty_graph_yields_every_url_without_iri() -> None:
+    urls = [u async for u in _source([]).urls()]
+
+    assert len(urls) == 4
+    assert all(u.iri is None and u.import_hash is None for u in urls)
+
+
+@pytest.mark.asyncio
+async def test_url_listed_twice_by_the_provider_is_yielded_once() -> None:
+    url = "https://example.com/listed-twice"
+    source = NewOrChangedUrlSource(
+        url_provider=_Urls(
+            Url(value=url, date_modified=datetime(2026, 10, 1, tzinfo=timezone.utc)),
+            Url(value=url),
+        ),
+        graphql_client=AsyncMock(run=AsyncMock(return_value=[])),
+        overwrite=True,
+    )
+
+    urls = [u async for u in source.urls()]
+
+    assert [u.value for u in urls] == [url]
+    assert urls[0].date_modified == datetime(2026, 10, 1, tzinfo=timezone.utc)

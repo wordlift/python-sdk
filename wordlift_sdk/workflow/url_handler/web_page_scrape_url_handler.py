@@ -11,6 +11,7 @@ from wordlift_client import (
 from ...protocol import Context, WebPageImportProtocolInterface
 from ...protocol.retry_policy import retry_transient
 from ...url_source import Url
+from .redirect_policy import FollowRedirects, resolve_import_target
 from .url_handler import UrlHandler
 
 logger = logging.getLogger(__name__)
@@ -26,10 +27,12 @@ class WebPageScrapeUrlHandler(UrlHandler):
         context: Context,
         web_page_scrape_callback: WebPageImportProtocolInterface,
         fetch_options: WebPageImportFetchOptions | None = None,
+        follow_redirects: FollowRedirects | str = FollowRedirects.SKIP,
     ):
         self._context = context
         self._web_page_scrape_callback = web_page_scrape_callback
         self._fetch_options = fetch_options
+        self._follow_redirects = FollowRedirects.parse(follow_redirects)
 
     @retry_transient(logger)
     async def _scrape(self, url: Url) -> WebPageScrapeResponse:
@@ -50,8 +53,14 @@ class WebPageScrapeUrlHandler(UrlHandler):
         # graph through queues that retry on their own, so retrying it again
         # would multiply the writes.
         response = await self._scrape(url)
+        web_page = getattr(response, "web_page", None)
+        target = resolve_import_target(
+            url, getattr(web_page, "url", None), self._follow_redirects
+        )
+        if target is None:
+            return
         await self._web_page_scrape_callback.callback(
             response,
-            existing_web_page_id=url.iri,
-            existing_import_hash=url.import_hash,
+            existing_web_page_id=target.existing_web_page_id,
+            existing_import_hash=target.existing_import_hash,
         )

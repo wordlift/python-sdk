@@ -1,5 +1,25 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- Redirected pages no longer overwrite the entity of the URL that was
+  requested. When the fetched page's final URL is a different page (compared
+  with a sorted query string and no fragment), the ingestion and web page
+  scrape URL handlers skip the import and log a warning
+  `redirect <requested> -> <final>`. Scheme and host case, default ports, path
+  percent-encoding, query order and fragments do not count as a redirect.
+  Set `FOLLOW_REDIRECTS = "import_final"` (or `follow_redirects=` on
+  `WebPageScrapeUrlHandler`) to import the final URL as its own page instead,
+  without the requested URL's IRI or import hash. The default is `skip`. An
+  IRI is never reused across URLs. `WebPageImportUrlHandler` is not covered.
+- `NewOrChangedUrlSource` yields each URL once per run, even when the URL
+  provider lists it more than once or several entities in the graph share its
+  `schema:url`. It keeps the entity with the
+  latest `date_imported` (ties: smallest IRI) and logs a warning with the
+  number of URLs that had more than one IRI.
+
 ## 8.8.1 - 2026-11-18
 
 ### Changed

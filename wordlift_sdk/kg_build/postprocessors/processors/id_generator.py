@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections import defaultdict
 import hashlib
 import re
-from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
+from ....utils.url_normalization import normalize_url
 
 from rdflib import Graph, Literal, RDF, URIRef
 
@@ -873,13 +873,7 @@ class CanonicalIdGenerator:
 
     @staticmethod
     def _url_hash(value: str) -> str:
-        try:
-            split = urlsplit(value)
-            query = urlencode(sorted(parse_qsl(split.query, keep_blank_values=True)))
-            normalized = urlunsplit((split.scheme, split.netloc, split.path, query, ""))
-        except Exception:
-            normalized = value
-        return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
+        return hashlib.sha256(normalize_url(value).encode("utf-8")).hexdigest()
 
     @staticmethod
     def _first_value(

@@ -5,7 +5,7 @@ import pytest
 
 from rdflib import Graph, Literal, RDF, URIRef
 
-import wordlift_sdk.kg_build.postprocessors.processors.id_allocator as id_allocator_module
+import wordlift_sdk.utils.url_normalization as url_normalization_module
 from wordlift_sdk.kg_build.postprocessors.processors.id_allocator import (
     IdAllocator,
     normalize_slug,
@@ -22,7 +22,7 @@ def _graph(subject: URIRef) -> Graph:
 def test_normalize_slug_and_hash_fallback(monkeypatch) -> None:
     assert normalize_slug("  Hello__World!! ") == "hello-world"
     monkeypatch.setattr(
-        id_allocator_module,
+        url_normalization_module,
         "urlsplit",
         lambda _v: (_ for _ in ()).throw(RuntimeError("x")),
     )

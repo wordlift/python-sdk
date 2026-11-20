@@ -15,6 +15,11 @@ from wordlift_sdk.ingestion import run_ingestion
 from ...configuration import ConfigurationProvider
 from ...protocol import Context, WebPageImportProtocolInterface
 from ...url_source import Url
+from .redirect_policy import (
+    FOLLOW_REDIRECTS_KEY,
+    FollowRedirects,
+    resolve_import_target,
+)
 from .url_handler import UrlHandler
 
 logger = logging.getLogger(__name__)
@@ -42,6 +47,9 @@ class IngestionWebPageScrapeUrlHandler(UrlHandler):
         self._context = context
         self._configuration_provider = configuration_provider
         self._web_page_scrape_callback = web_page_scrape_callback
+        self._follow_redirects = FollowRedirects.parse(
+            configuration_provider.get_value(FOLLOW_REDIRECTS_KEY, None)
+        )
 
     async def __call__(self, url: Url) -> None:
         settings = self._build_settings(url)
@@ -77,17 +85,22 @@ class IngestionWebPageScrapeUrlHandler(UrlHandler):
             logger.error(message)
             raise RuntimeError(message)
 
+        final_url = page.final_url or page.url
+        target = resolve_import_target(url, final_url, self._follow_redirects)
+        if target is None:
+            return
+
         response = WebPageScrapeResponse(
             web_page=WebPage(
-                url=page.final_url or page.url,
+                url=final_url,
                 html=page.html,
                 status_code=page.status_code,
             )
         )
         await self._web_page_scrape_callback.callback(
             response,
-            existing_web_page_id=url.iri,
-            existing_import_hash=url.import_hash,
+            existing_web_page_id=target.existing_web_page_id,
+            existing_import_hash=target.existing_import_hash,
         )
 
     def _build_settings(self, url: Url) -> dict[str, Any]:
