@@ -27,6 +27,7 @@ def test_normalize_url_returns_unparsable_value_unchanged() -> None:
         ("https://a.com/a b", "https://a.com/a%20b"),
         ("https://a.com/%c3%a9", "https://a.com/%C3%A9"),
         ("https://a.com/é", "https://a.com/%C3%A9"),
+        ("https://a.com/a%2fb", "https://a.com/a%2Fb"),
     ],
 )
 def test_same_page(left: str, right: str) -> None:
@@ -41,6 +42,7 @@ def test_same_page(left: str, right: str) -> None:
         ("https://a.com:8443/p", "https://a.com/p"),
         ("https://a.com/p/", "https://a.com/p"),
         ("https://a.com/p?a=1", "https://a.com/p?a=2"),
+        ("https://a.com/a%2Fb", "https://a.com/a/b"),
     ],
 )
 def test_different_page(left: str, right: str) -> None:

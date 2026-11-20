@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import re
 from urllib.parse import parse_qsl, quote, unquote, urlencode, urlsplit, urlunsplit
 
 _DEFAULT_PORTS = {"http": 80, "https": 443}
 _PATH_SAFE = "/:@!$&'()*+,;=-._~"
+_ENCODED_SLASH = re.compile("%2F", re.IGNORECASE)
 
 
 def normalize_url(value: str) -> str:
@@ -26,7 +28,7 @@ def is_same_url(left: str, right: str) -> bool:
     """Tell whether two URLs address the same page.
 
     On top of :func:`normalize_url`, scheme and host case, default ports,
-    percent-encoding of the path, and an empty path versus ``/`` are ignored.
+    percent-encoding of the path (except ``%2F``), and an empty path versus ``/`` are ignored.
     """
     return _comparable(left) == _comparable(right)
 
@@ -43,5 +45,10 @@ def _comparable(value: str) -> str:
     if not host:
         return normalized
     netloc = host if port in (None, _DEFAULT_PORTS.get(scheme)) else f"{host}:{port}"
-    path = quote(unquote(split.path), safe=_PATH_SAFE) or "/"
+    # An encoded slash is part of a segment, not a separator: keep it encoded.
+    path = "%2F".join(
+        quote(unquote(part), safe=_PATH_SAFE)
+        for part in _ENCODED_SLASH.split(split.path)
+    )
+    path = path or "/"
     return urlunsplit((scheme, netloc, path, split.query, ""))
