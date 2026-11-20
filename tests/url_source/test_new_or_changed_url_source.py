@@ -112,3 +112,11 @@ async def test_url_with_two_iris_is_yielded_once_with_the_latest_import(
     assert len(urls) == 1
     assert (urls[0].iri, urls[0].import_hash) == ("https://data/a", "tie")
     assert "1 URL(s) have more than one IRI" in caplog.text
+
+
+@pytest.mark.asyncio
+async def test_empty_graph_yields_every_url_without_iri() -> None:
+    urls = [u async for u in _source([]).urls()]
+
+    assert len(urls) == 4
+    assert all(u.iri is None and u.import_hash is None for u in urls)

@@ -91,7 +91,7 @@ Common options:
 - `SHEETS_URL`, `SHEETS_NAME`, `SHEETS_SERVICE_ACCOUNT`: use a Google Sheet as source; service account points to credentials file.
 - `URLS`: list of URLs (e.g., `["https://example.com/a", "https://example.com/b"]`).
 - `OVERWRITE`: re-import URLs even if already present (default `False`).
-- `FOLLOW_REDIRECTS`: what to do when a fetched page redirects to a different URL: `skip` (default) imports nothing and logs the redirect; `import_final` imports the final URL as a new page. The requested URL's IRI is never reused for another URL.
+- `FOLLOW_REDIRECTS`: what the KG build ingestion handler does when a fetched page redirects to a different URL: `skip` (default) imports nothing and logs a warning; `import_final` imports the final URL as a new page. The requested URL's IRI is never reused for another URL. `WebPageScrapeUrlHandler` takes the same choice as its `follow_redirects` argument; `WebPageImportUrlHandler` (server-side import) is not covered. With `import_final`, the final URL is imported without its own stored IRI, so it can be imported twice in a run if the source also lists it.
 - `WEB_PAGE_IMPORT_WRITE_STRATEGY`: WordLift write strategy (default `createOrUpdateModel`).
 - `EMBEDDING_PROPERTIES`: list of schema properties to embed.
 - `WEB_PAGE_TYPES`: output schema types, defaults to `["http://schema.org/Article"]`.

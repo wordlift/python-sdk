@@ -60,7 +60,7 @@ async def test_ingestion_handler_skips_redirected_page_by_default(
 ) -> None:
     handler, callback = _ingestion_handler(monkeypatch, FINAL, None)
 
-    with caplog.at_level(logging.INFO):
+    with caplog.at_level(logging.WARNING):
         await handler(REQUESTED)
 
     callback.callback.assert_not_awaited()
