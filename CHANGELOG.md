@@ -14,8 +14,9 @@
   `WebPageScrapeUrlHandler`) to import the final URL as its own page instead,
   without the requested URL's IRI or import hash. The default is `skip`. An
   IRI is never reused across URLs. `WebPageImportUrlHandler` is not covered.
-- `NewOrChangedUrlSource` yields each URL once per run even when several
-  entities in the graph share its `schema:url`. It keeps the entity with the
+- `NewOrChangedUrlSource` yields each URL once per run, even when the URL
+  provider lists it more than once or several entities in the graph share its
+  `schema:url`. It keeps the entity with the
   latest `date_imported` (ties: smallest IRI) and logs a warning with the
   number of URLs that had more than one IRI.
 

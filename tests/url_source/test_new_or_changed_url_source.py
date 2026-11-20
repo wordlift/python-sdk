@@ -120,3 +120,21 @@ async def test_empty_graph_yields_every_url_without_iri() -> None:
 
     assert len(urls) == 4
     assert all(u.iri is None and u.import_hash is None for u in urls)
+
+
+@pytest.mark.asyncio
+async def test_url_listed_twice_by_the_provider_is_yielded_once() -> None:
+    url = "https://example.com/listed-twice"
+    source = NewOrChangedUrlSource(
+        url_provider=_Urls(
+            Url(value=url, date_modified=datetime(2026, 10, 1, tzinfo=timezone.utc)),
+            Url(value=url),
+        ),
+        graphql_client=AsyncMock(run=AsyncMock(return_value=[])),
+        overwrite=True,
+    )
+
+    urls = [u async for u in source.urls()]
+
+    assert [u.value for u in urls] == [url]
+    assert urls[0].date_modified == datetime(2026, 10, 1, tzinfo=timezone.utc)

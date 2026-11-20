@@ -25,6 +25,9 @@ class NewOrChangedUrlSource(UrlSource):
     async def urls(self) -> AsyncGenerator[Url, None]:
         # Get the list of URLs from the underlying provider.
         url_df = pd.DataFrame([asdict(url) async for url in self.url_provider.urls()])
+        if "value" in url_df.columns:
+            # A provider can list a URL more than once (e.g. in two sitemaps).
+            url_df = url_df.drop_duplicates(subset="value", keep="first")
         # Get the list of URLs from GraphQL.
         list_records = await self.graphql_client.run(
             "entities_url_iri_with_source_equal_to_web_page_import",
