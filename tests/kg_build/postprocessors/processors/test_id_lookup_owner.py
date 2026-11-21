@@ -1,8 +1,6 @@
-"""Lookup IRI ownership: the page root keeps its existing IRI (#62)."""
+"""Lookup IRI ownership: a linked page root keeps its existing IRI (#62)."""
 
 from __future__ import annotations
-
-import re
 
 import pandas as pd
 import pytest
@@ -13,7 +11,7 @@ from wordlift_sdk.kg_build.postprocessors.processors.id_generator import (
     CanonicalIdGenerator,
 )
 from wordlift_sdk.kg_build.postprocessors.processors.lookup_ownership import (
-    resolve_lookup_ownership,
+    resolve_lookup_owners,
 )
 
 SCHEMA = "http://schema.org/"
@@ -33,10 +31,10 @@ def _lookup() -> DataFrameUrlIriLookup:
     )
 
 
-def _page(root_type: str) -> Graph:
+def _page(root_type: str, root: URIRef = URIRef("urn:tmp:root")) -> Graph:
     """Root <-> FAQPage cycle: every subject is linked to."""
     graph = Graph()
-    root, faq = URIRef("urn:tmp:root"), URIRef("urn:tmp:faq")
+    faq = URIRef("urn:tmp:faq")
     graph.add((root, RDF.type, _s(root_type)))
     graph.add((root, _s("name"), Literal("Acme review")))
     graph.add((root, _s("url"), Literal(PAGE_URL)))
@@ -46,18 +44,18 @@ def _page(root_type: str) -> Graph:
     return graph
 
 
-def _add_unlinked(graph: Graph, type_name: str, *, url: str | None = None) -> None:
-    node = URIRef(f"urn:tmp:{type_name.lower()}")
+def _add(graph: Graph, name: str, type_name: str, *, url: str | None = None) -> URIRef:
+    node = URIRef(f"urn:tmp:{name}")
     graph.add((node, RDF.type, _s(type_name)))
-    graph.add((node, _s("name"), Literal(f"Stray {type_name}")))
+    graph.add((node, _s("name"), Literal(f"Acme {name}")))
     if url:
         graph.add((node, _s("url"), Literal(url)))
+    return node
 
 
-def _root(graph: Graph, root_type: str) -> URIRef:
-    [root] = list(graph.subjects(_s("name"), Literal("Acme review")))
-    assert (root, RDF.type, _s(root_type)) in graph
-    return root
+def _named(graph: Graph, name: str) -> URIRef:
+    [subject] = list(graph.subjects(_s("name"), Literal(name)))
+    return subject
 
 
 def _apply(graph: Graph, strategy: str) -> Graph:
@@ -70,94 +68,130 @@ def _apply(graph: Graph, strategy: str) -> Graph:
 @pytest.mark.parametrize("root_type", ["WebPage", "Review"])
 def test_linked_root_keeps_iri_with_an_unlinked_node(strategy, root_type) -> None:
     graph = _page(root_type)
-    _add_unlinked(graph, "VideoObject")
+    _add(graph, "video", "VideoObject")
 
     output = _apply(graph, strategy)
 
-    assert _root(output, root_type) == EXISTING
+    assert _named(output, "Acme review") == EXISTING
     [faq] = list(output.subjects(RDF.type, _s("FAQPage")))
     assert str(faq).startswith(f"{EXISTING}/")
 
 
 @pytest.mark.parametrize("strategy", STRATEGIES)
-@pytest.mark.parametrize("root_type", ["WebPage", "Review"])
-def test_other_node_with_the_page_url_is_nested_and_reported(
-    strategy, root_type, caplog
+def test_reimport_on_the_existing_iri_is_stable(strategy) -> None:
+    """Re-import via ``__ID__``: the root already sits on the looked-up IRI."""
+    graph = _page("Review", root=EXISTING)
+    _add(graph, "video", "VideoObject")
+
+    first = _apply(graph, strategy)
+    second = _apply(Graph() + first, strategy)
+
+    assert _named(first, "Acme review") == EXISTING
+    assert set(second.subjects()) == set(first.subjects())
+
+
+@pytest.mark.parametrize("strategy", STRATEGIES)
+def test_unlinked_match_keeps_the_iri_as_before_and_is_reported(
+    strategy, caplog
 ) -> None:
-    graph = _page(root_type)
-    _add_unlinked(graph, "BreadcrumbList", url=PAGE_URL)
+    graph = _page("Review")
+    _add(graph, "crumbs", "BreadcrumbList", url=PAGE_URL)
 
     output = _apply(graph, strategy)
 
-    assert _root(output, root_type) == EXISTING
-    [breadcrumb] = list(output.subjects(RDF.type, _s("BreadcrumbList")))
-    assert breadcrumb == URIRef(f"{EXISTING}/breadcrumb-lists/breadcrumb-list")
+    assert _named(output, "Acme crumbs") == EXISTING
     assert "2 subjects match lookup IRI" in caplog.text
 
 
 @pytest.mark.parametrize("strategy", STRATEGIES)
-def test_root_type_wins_over_a_more_linked_subject(strategy) -> None:
+def test_webpage_with_a_main_entity_article_is_unchanged(strategy, caplog) -> None:
     graph = Graph()
-    page, article = URIRef("urn:tmp:page"), URIRef("urn:tmp:article")
-    graph.add((page, RDF.type, _s("WebPage")))
-    graph.add((page, _s("url"), Literal(PAGE_URL)))
-    graph.add((article, RDF.type, _s("Article")))
-    graph.add((article, _s("url"), Literal(PAGE_URL)))
-    graph.add((article, _s("name"), Literal("Acme")))
-    graph.add((article, _s("headline"), Literal("Acme")))
+    page = _add(graph, "page", "WebPage", url=PAGE_URL)
+    article = _add(graph, "article", "Article", url=PAGE_URL)
+    graph.add((page, _s("mainEntity"), article))
 
     output = _apply(graph, strategy)
 
-    assert (EXISTING, RDF.type, _s("WebPage")) in output
-    assert (URIRef(f"{EXISTING}/articles/article"), RDF.type, _s("Article")) in output
+    assert _named(output, "Acme page") == EXISTING
+    article_iri = _named(output, "Acme article")
+    assert str(article_iri).startswith(f"{DATASET}/articles/")
+    assert article_iri != EXISTING
+    assert "2 subjects match lookup IRI" in caplog.text
 
 
 @pytest.mark.parametrize("strategy", STRATEGIES)
-def test_article_and_review_sharing_the_url_stay_put_across_syncs(strategy) -> None:
-    """Re-syncing the output must not move any IRI (the URL keeps one entity)."""
-    graph = _page("Review")
-    _add_unlinked(graph, "Article", url=PAGE_URL)
-
-    first = _apply(graph, strategy)
-    first_subjects = set(first.subjects())
-    second = _apply(Graph() + first, strategy)
-
-    assert _root(first, "Review") == EXISTING
-    assert URIRef(f"{EXISTING}/articles/article") in first_subjects
-    assert set(second.subjects()) == first_subjects
-    top_level = re.compile(rf"^{re.escape(DATASET)}/[^/]+/[^/]+$")
-    url_owners = second.subjects(_s("url"), Literal(PAGE_URL))
-    assert {s for s in url_owners if top_level.match(str(s))} == {EXISTING}
-
-
-def test_equally_ranked_subjects_resolve_to_the_smallest_iri() -> None:
+def test_webpage_with_a_main_entity_product_keeps_gtin_identity(strategy) -> None:
     graph = Graph()
-    for name in ("b", "a"):
-        node = URIRef(f"urn:tmp:{name}")
-        graph.add((node, RDF.type, _s("Article")))
-        graph.add((node, _s("url"), Literal(PAGE_URL)))
+    page = _add(graph, "page", "WebPage", url=PAGE_URL)
+    product = _add(graph, "product", "Product", url=PAGE_URL)
+    offer = URIRef("urn:tmp:offer")
+    graph.add((product, _s("gtin"), Literal("123")))
+    graph.add((product, _s("offers"), offer))
+    graph.add((offer, RDF.type, _s("Offer")))
+    graph.add((page, _s("mainEntity"), product))
 
-    ownership = resolve_lookup_ownership(
-        graph, _lookup(), is_candidate=lambda s: True, rank=str
+    output = _apply(graph, strategy)
+
+    assert _named(output, "Acme page") == EXISTING
+    product_iri = _named(output, "Acme product")
+    assert product_iri == URIRef(f"{DATASET}/01/123")
+    [offer_iri] = list(output.objects(product_iri, _s("offers")))
+    assert str(offer_iri).startswith(f"{product_iri}/")
+
+
+def _owners(graph: Graph, *, roots: set[URIRef]) -> dict[URIRef, URIRef]:
+    generator = CanonicalIdGenerator()
+    return resolve_lookup_owners(
+        graph,
+        _lookup(),
+        roots=roots,
+        is_candidate=lambda s: True,
+        rank=lambda s, iri: generator._lookup_owner_rank(graph, s, iri),
     )
 
-    assert ownership.owners == {URIRef("urn:tmp:a"): EXISTING}
-    assert ownership.losers == {URIRef("urn:tmp:b"): EXISTING}
+
+@pytest.mark.parametrize(
+    ("types", "winner"),
+    [
+        ({"a": "Article", "b": "Review"}, "a"),
+        ({"a": "Article", "b": "Product"}, "b"),
+        ({"a": "Product", "b": "WebPage"}, "b"),
+    ],
+)
+def test_without_matching_roots_the_best_ranked_match_wins(types, winner) -> None:
+    graph = Graph()
+    for name, type_name in types.items():
+        _add(graph, name, type_name, url=PAGE_URL)
+
+    owners = _owners(graph, roots=set())
+
+    assert owners == {URIRef(f"urn:tmp:{winner}"): EXISTING}
 
 
-def test_non_candidates_never_own_a_lookup_iri() -> None:
+def test_a_match_already_on_the_iri_wins() -> None:
+    graph = Graph()
+    _add(graph, "page", "WebPage", url=PAGE_URL)
+    graph.add((EXISTING, RDF.type, _s("Article")))
+    graph.add((EXISTING, _s("url"), Literal(PAGE_URL)))
+
+    assert _owners(graph, roots=set()) == {EXISTING: EXISTING}
+
+
+def test_every_matching_root_keeps_the_iri() -> None:
+    graph = Graph()
+    a = _add(graph, "a", "Article", url=PAGE_URL)
+    b = _add(graph, "b", "Article", url=PAGE_URL)
+
+    assert _owners(graph, roots={a, b}) == {a: EXISTING, b: EXISTING}
+
+
+def test_non_candidates_and_missing_lookup_own_nothing() -> None:
     graph = _page("WebPage")
-
-    ownership = resolve_lookup_ownership(
-        graph, _lookup(), is_candidate=lambda s: False, rank=str
+    no_candidates = resolve_lookup_owners(
+        graph, _lookup(), roots=set(), is_candidate=lambda s: False, rank=str
+    )
+    no_lookup = resolve_lookup_owners(
+        graph, None, roots=set(), is_candidate=lambda s: True, rank=str
     )
 
-    assert ownership.owners == {} and ownership.losers == {}
-
-
-def test_no_lookup_means_no_owners() -> None:
-    ownership = resolve_lookup_ownership(
-        _page("WebPage"), None, is_candidate=lambda s: True, rank=str
-    )
-
-    assert ownership.owners == {} and ownership.losers == {}
+    assert no_candidates == {} and no_lookup == {}

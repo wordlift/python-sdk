@@ -9,7 +9,7 @@ from rdflib import Graph, Literal, RDF, URIRef
 
 from ...id_policy import DEFAULT_ID_POLICY, IdPolicy
 from ...iri_lookup import IriLookup
-from .lookup_ownership import resolve_lookup_ownership
+from .lookup_ownership import resolve_lookup_owners
 from .slug import identity_slug, normalize_slug as normalize_slug, source_digest
 
 SCHEMA = "http://schema.org/"
@@ -45,11 +45,9 @@ class CanonicalIdGenerator:
 
         # Lookup-mapped IRIs are treated as authoritative and must not be
         # rewritten again in subsequent canonicalization passes.
+        lookup_owners = self._lookup_owners(graph, iri_lookup)
         locked_subjects: set[URIRef] = set()
         rewritten_subjects: dict[URIRef, URIRef] = {}
-        lookup_owners = self._prepare_lookups(
-            graph, iri_lookup, locked_subjects, rewritten_subjects
-        )
         self._rewrite_pages_and_children(
             graph,
             dataset_uri,
@@ -91,19 +89,15 @@ class CanonicalIdGenerator:
     ) -> Graph:
         """Rewrite root IRIs first, then reparent dependents generically via
         IdPolicy.dependent_rules — no hard-coded root-type branches."""
+        lookup_owners = self._lookup_owners(graph, iri_lookup)
         locked_subjects: set[URIRef] = set()
         rewritten_subjects: dict[URIRef, URIRef] = {}
-        lookup_owners = self._prepare_lookups(
-            graph, iri_lookup, locked_subjects, rewritten_subjects
-        )
 
         # Phase 1: rewrite page root IRIs (no inline child reparenting)
         for old_page in sorted(
             {s for s in graph.subjects() if self._has_page_root_type(graph, s)},
             key=str,
         ):
-            if old_page in locked_subjects:
-                continue
             lookup_iri = self._lookup_iri(old_page, lookup_owners, locked_subjects)
             if lookup_iri is not None:
                 new_page = lookup_iri
@@ -130,8 +124,6 @@ class CanonicalIdGenerator:
             {s for s in graph.subjects() if self._has_entity_root_type(graph, s)},
             key=str,
         ):
-            if entity in locked_subjects:
-                continue
             lookup_iri = self._lookup_iri(entity, lookup_owners, locked_subjects)
             if lookup_iri is not None:
                 entity_iri = lookup_iri
@@ -486,8 +478,6 @@ class CanonicalIdGenerator:
         }
 
         for old_page in sorted(page_nodes, key=str):
-            if old_page in locked_subjects:
-                continue
             lookup_iri = self._lookup_iri(old_page, lookup_owners, locked_subjects)
             if lookup_iri is not None:
                 new_page = lookup_iri
@@ -738,8 +728,6 @@ class CanonicalIdGenerator:
         }
         seen: defaultdict[str, int] = defaultdict(int)
         for product in sorted(products, key=str):
-            if product in locked_subjects:
-                continue
             lookup_iri = self._lookup_iri(product, lookup_owners, locked_subjects)
             if lookup_iri is not None:
                 product_iri = lookup_iri
@@ -971,53 +959,41 @@ class CanonicalIdGenerator:
             locked_subjects.add(iri)
         return iri
 
-    def _prepare_lookups(
-        self,
-        graph: Graph,
-        iri_lookup: IriLookup | None,
-        locked_subjects: set[URIRef],
-        rewritten_subjects: dict[URIRef, URIRef],
+    def _lookup_owners(
+        self, graph: Graph, iri_lookup: IriLookup | None
     ) -> dict[URIRef, URIRef]:
-        """Return the owner of each looked-up IRI; nest the other matches.
+        """Subjects that take a looked-up IRI (see ``lookup_ownership``).
 
-        Ownership is decided on the input graph, from every non-dependent
-        subject the lookup matches, not from link topology: a page root that
-        another node links to (for example ``FAQPage.about``) keeps its IRI
-        even when an unlinked node is also on the page. Any other subject the
-        same lookup matches is nested under the looked-up IRI and locked, so
-        each page URL keeps a single top-level entity across syncs.
+        Unlinked subjects that match keep it, as before. When none matches
+        (the page root is linked, e.g. from ``FAQPage.about``), the best-ranked
+        non-dependent match takes it instead of the root being re-minted.
         """
-        ownership = resolve_lookup_ownership(
+        return resolve_lookup_owners(
             graph,
             iri_lookup,
+            roots=self._root_subjects(graph),
             is_candidate=lambda s: not self._is_dependent_subject(graph, s),
-            rank=lambda s: self._lookup_owner_rank(graph, s),
+            rank=lambda s, iri: self._lookup_owner_rank(graph, s, iri),
         )
-        for loser, iri in sorted(ownership.losers.items(), key=lambda i: str(i[0])):
-            type_name = self._policy.normalize_type_name(
-                self._preferred_type_name(graph, loser)
-            )
-            nested = self._ensure_unique_subject_iri(
-                graph,
-                loser,
-                URIRef(
-                    f"{iri}/{self._policy.container_for_type(type_name)}"
-                    f"/{self._dashed_type_name(type_name)}"
-                ),
-            )
-            self._swap_iri(graph, loser, nested)
-            self._record_rewrite(rewritten_subjects, loser, nested)
-            locked_subjects.add(nested)
-        return ownership.owners
 
     def _lookup_owner_rank(
-        self, graph: Graph, subject: URIRef
-    ) -> tuple[bool, int, str]:
-        """Page/entity root types first, then the most connected subject."""
-        is_root_type = self._has_page_root_type(
-            graph, subject
-        ) or self._has_entity_root_type(graph, subject)
-        degree = len(list(graph.predicate_objects(subject))) + len(
-            list(graph.subject_predicates(subject))
+        self, graph: Graph, subject: URIRef, iri: URIRef
+    ) -> tuple[bool, bool, bool, str]:
+        """Already on the IRI, then page root, then entity root, then IRI."""
+        return (
+            subject != iri,
+            not self._has_page_root_type(graph, subject),
+            not self._has_entity_root_type(graph, subject),
+            str(subject),
         )
-        return (not is_root_type, -degree, str(subject))
+
+    @staticmethod
+    def _root_subjects(graph: Graph) -> set[URIRef]:
+        subjects = {s for s in graph.subjects() if isinstance(s, URIRef)}
+        referenced = {
+            o
+            for _, _, o in graph.triples((None, None, None))
+            if isinstance(o, URIRef) and o in subjects
+        }
+        roots = subjects - referenced
+        return roots or subjects

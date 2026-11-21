@@ -4,19 +4,16 @@
 
 ### Fixed
 
-- Canonical IDs no longer re-mint a page's existing KG IRI when the page has a
-  node nothing links to (#62). The lookup IRI used to go only to unlinked
-  subjects, so a page root that another node links to (for example
-  `FAQPage.about`) lost it as soon as any unlinked node (a video, a
-  breadcrumb) was on the page, and the sync wrote a duplicate entity. Each
-  looked-up IRI now has one owner, chosen from every non-dependent subject the
-  lookup matches: page/entity root types first, then the most linked subject,
-  then the smallest IRI. A page URL belongs on its main entity only: when
-  other subjects match the same lookup (for example an `Article` next to a
-  `Review`), the SDK logs a `canonical_ids: N subjects match lookup IRI`
-  warning and nests them under the owner (`<owner>/articles/article`), so
-  the URL keeps a single top-level entity and the page IRI stays stable
-  across syncs. Applies to both `legacy` and `dependency_graph` strategies.
+- Canonical IDs no longer re-mint a page's existing KG IRI when the page root
+  is linked from another node (for example `FAQPage.about`) and the page also
+  has a node nothing links to (#62). The lookup IRI used to go only to
+  unlinked subjects, so the root got a new IRI and the sync wrote a duplicate
+  entity. Unlinked subjects that match the lookup still keep the IRI exactly
+  as before; when none matches, the best-ranked non-dependent match takes it
+  (already on the IRI, then page root type, then entity root type, then the
+  smallest IRI). Several subjects carrying the same page URL now log a
+  `canonical_ids: N subjects match lookup IRI` warning: the page URL belongs
+  on the main entity only. Applies to both `legacy` and `dependency_graph`.
 
 ## 8.8.2 - 2026-11-20
 
