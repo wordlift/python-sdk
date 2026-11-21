@@ -193,8 +193,15 @@
   `<parent>/actions/<slug>`).
 - `wordlift_sdk.kg_build` canonical ID generation supports optional lookup-based
   root IRI reuse via `Context.extensions["kg_build.iri_lookup"]`
-  (`IriLookup.iri_for_subject(graph, subject)`), with root-only application
-  so dependent nodes still follow canonical parent-nesting rules.
+  (`IriLookup.iri_for_subject(graph, subject)`). Unlinked subjects that match
+  the lookup keep the IRI; when none matches (the page root is linked, e.g.
+  from `FAQPage.about`), the best-ranked match takes it instead of the root
+  being re-minted (#62, `lookup_ownership.py`); dependents and nested
+  `schema:Action`s never take it, and the fallback is skipped when another
+  subject already holds the IRI. Several subjects
+  matching one lookup log a warning, since a page URL belongs on its main
+  entity only. Dependent nodes never take a lookup IRI and still follow
+  canonical parent-nesting rules.
 - `wordlift_sdk.kg_build` tracks run-level graph-sync KPIs from dataset-scoped
   entities actually patched in callback/static graphs (`total_entities`,
   `type_assertions_total`, `property_assertions_total`, `entities_by_type`,

@@ -1,5 +1,22 @@
 # Changelog
 
+## 8.8.3 - 2026-11-21
+
+### Fixed
+
+- Canonical IDs no longer re-mint a page's existing KG IRI when the page root
+  is linked from another node (for example `FAQPage.about`) and the page also
+  has a node nothing links to (#62). The lookup IRI used to go only to
+  unlinked subjects, so the root got a new IRI and the sync wrote a duplicate
+  entity. Unlinked subjects that match the lookup still keep the IRI exactly
+  as before; when none matches, the best-ranked match takes it (already on
+  the IRI, then page root type, then entity root type, then the smallest
+  IRI). Dependents and nested actions never take it, and the fallback is
+  skipped when another subject already holds the IRI, so entities are never
+  merged. Several subjects carrying the same page URL now log a
+  `canonical_ids: N subjects match lookup IRI` warning: the page URL belongs
+  on the main entity only. Applies to both `legacy` and `dependency_graph`.
+
 ## 8.8.2 - 2026-11-20
 
 ### Fixed
