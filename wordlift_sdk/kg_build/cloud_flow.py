@@ -237,17 +237,19 @@ def _build_settings_lines(
 
 
 def _handle_failures(result: KgImportResult, tolerance: FailureTolerance) -> None:
-    # A URL fails once per failing handler; limits and counts are per URL.
+    # A URL can repeat in the source and fail once per failing handler;
+    # limits and counts are per distinct URL.
     failed_url_count = len({failure.url.value for failure in result.failures})
+    url_count = result.distinct_url_count
     summary = (
-        f"Total URLs: {result.url_count}, "
-        f"Successes: {max(result.url_count - failed_url_count, 0)}, "
+        f"Total URLs: {url_count}, "
+        f"Successes: {max(url_count - failed_url_count, 0)}, "
         f"Failures: {failed_url_count}"
     )
     failed_urls = "\n".join(
         f"  - {failure.url.value}: {failure.message}" for failure in result.failures
     )
-    if not tolerance.tolerates(failed_url_count, result.url_count):
+    if not tolerance.tolerates(failed_url_count, url_count):
         logger.error("Graph sync failed URLs:\n%s", failed_urls)
         raise SystemExit(summary)
     logger.warning(

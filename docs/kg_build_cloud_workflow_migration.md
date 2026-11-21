@@ -67,7 +67,7 @@ optional settings let a large run tolerate a few failures; they are read from
 
 - `MAX_FAILED_URLS`: int, default `0`.
 - `MAX_FAILED_URLS_RATIO`: float in `[0, 1]`, default `0`; compared with
-  `failures / total URLs`.
+  `failed URLs / distinct URLs` (a URL listed twice counts once).
 
 Failures are counted per distinct URL (a URL that fails in two handlers counts
 once). The run fails only when the failed URLs exceed both limits. With the

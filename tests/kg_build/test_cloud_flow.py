@@ -31,6 +31,7 @@ class _WorkflowWithFailures:
     async def run(self):
         return SimpleNamespace(
             url_count=len(self._failures),
+            distinct_url_count=len(self._failures),
             failures=self._failures,
             ok=False,
             elapsed_seconds=0.0,
@@ -194,6 +195,7 @@ class _WorkflowWithCounts:
     async def run(self):
         return SimpleNamespace(
             url_count=self._url_count,
+            distinct_url_count=self._url_count,
             failures=self._failures,
             ok=not self._failures,
             elapsed_seconds=0.0,
@@ -261,6 +263,14 @@ async def test_cloud_flow_counts_each_failed_url_once(
     assert "Successes: 9, Failures: 1; tolerated" in caplog.text
     assert "https://example.com/a: fetch" in caplog.text
     assert "https://example.com/a: boom" in caplog.text
+
+
+@pytest.mark.asyncio
+async def test_cloud_flow_ratio_uses_distinct_url_count() -> None:
+    # 100 copies of one failing URL: every distinct URL failed.
+    workflow = _WorkflowWithCounts(1, [_failed("https://example.com/a")] * 100)
+    with pytest.raises(SystemExit, match="Total URLs: 1, Successes: 0, Failures: 1"):
+        await _run_with_tolerance(workflow, {"MAX_FAILED_URLS_RATIO": 0.01})
 
 
 @pytest.mark.asyncio

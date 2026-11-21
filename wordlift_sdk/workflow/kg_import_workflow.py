@@ -23,6 +23,8 @@ class KgImportResult:
     url_count: int
     failures: list[FailedUrl] = field(default_factory=list)
     elapsed_seconds: float = 0.0
+    # URLs the source yielded, each counted once (``url_count`` counts repeats).
+    distinct_url_count: int = 0
 
     @property
     def ok(self) -> bool:
@@ -68,6 +70,7 @@ class KgImportWorkflow:
         failures: list[FailedUrl] = getattr(self._url_handler, "failures", None) or []
         return KgImportResult(
             url_count=len(url_list),
+            distinct_url_count=len({url.value for url in url_list}),
             failures=failures,
             elapsed_seconds=elapsed,
         )

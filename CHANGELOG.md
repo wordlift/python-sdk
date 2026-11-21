@@ -6,7 +6,7 @@
 
 - `run_cloud_workflow` can tolerate a few failed URLs instead of exiting 1 on
   the first one. Set `MAX_FAILED_URLS` (count) and/or `MAX_FAILED_URLS_RATIO`
-  (share of the run's URLs, `0`–`1`) in the settings, for example
+  (share of the run's distinct URLs, `0`–`1`) in the settings, for example
   `max_failed_urls_ratio = 0.005` in a worai profile. Failures are counted
   per distinct URL, and the run fails only when they exceed both limits.
   The defaults (`0`) keep today's behavior. Failed URLs are logged with their
