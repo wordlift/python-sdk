@@ -11,6 +11,7 @@ from wordlift_sdk.kg_build.cloud_flow import (
     CloudWorkflowConfig,
     CloudWorkflowConfigError,
     _build_settings_lines,
+    _resolved_failure_tolerance,
     _report_execution,
     get_debug_output_dir,
     get_output_dir,
@@ -172,6 +173,143 @@ async def test_cloud_flow_raises_when_url_handler_failures_present() -> None:
             container_factory=lambda _: _Container(_WorkflowWithFailures(failures)),
             protocol_factory=lambda *_args, **_kwargs: protocol,
         )
+
+
+def _failed(url: str, message: str = "boom") -> SimpleNamespace:
+    from datetime import datetime, timezone
+
+    return SimpleNamespace(
+        timestamp=datetime(2026, 11, 21, tzinfo=timezone.utc),
+        url=SimpleNamespace(value=url),
+        handler_name="Handler",
+        message=message,
+    )
+
+
+class _WorkflowWithCounts:
+    def __init__(self, url_count: int, failures: list):
+        self._url_count = url_count
+        self._failures = failures
+
+    async def run(self):
+        return SimpleNamespace(
+            url_count=self._url_count,
+            failures=self._failures,
+            ok=not self._failures,
+            elapsed_seconds=0.0,
+        )
+
+
+async def _run_with_tolerance(workflow, extra_settings) -> _Protocol:
+    protocol = _Protocol()
+    await run_cloud_workflow(
+        config=CloudWorkflowConfig(
+            wordlift_key="key",
+            urls=["https://example.com"],
+            extra_settings=extra_settings,
+        ),
+        configuration_provider_create=lambda _: object(),
+        container_factory=lambda _: _Container(workflow),
+        protocol_factory=lambda *_args, **_kwargs: protocol,
+    )
+    return protocol
+
+
+@pytest.mark.asyncio
+async def test_cloud_flow_tolerates_failures_within_ratio(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    workflow = _WorkflowWithCounts(
+        1000, [_failed("https://example.com/bus", "HTTP 403 Forbidden")]
+    )
+    with caplog.at_level(logging.WARNING, logger="wordlift_sdk.kg_build.cloud_flow"):
+        protocol = await _run_with_tolerance(workflow, {"MAX_FAILED_URLS_RATIO": 0.005})
+
+    assert protocol.closed is True
+    assert "Total URLs: 1000, Successes: 999, Failures: 1" in caplog.text
+    assert "tolerated (MAX_FAILED_URLS=0, MAX_FAILED_URLS_RATIO=0.005)" in caplog.text
+    assert "https://example.com/bus: HTTP 403 Forbidden" in caplog.text
+
+
+@pytest.mark.asyncio
+async def test_cloud_flow_fails_and_logs_urls_above_tolerance(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    workflow = _WorkflowWithCounts(
+        10, [_failed("https://example.com/a"), _failed("https://example.com/b")]
+    )
+    with caplog.at_level(logging.ERROR, logger="wordlift_sdk.kg_build.cloud_flow"):
+        with pytest.raises(SystemExit, match="Failures: 2"):
+            await _run_with_tolerance(workflow, {"MAX_FAILED_URLS": 1})
+
+    assert "https://example.com/a: boom" in caplog.text
+    assert "https://example.com/b: boom" in caplog.text
+
+
+@pytest.mark.asyncio
+async def test_cloud_flow_counts_each_failed_url_once(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    # Two handlers failing on the same URL count as one failed URL.
+    workflow = _WorkflowWithCounts(
+        10,
+        [_failed("https://example.com/a", "fetch"), _failed("https://example.com/a")],
+    )
+    with caplog.at_level(logging.WARNING, logger="wordlift_sdk.kg_build.cloud_flow"):
+        await _run_with_tolerance(workflow, {"MAX_FAILED_URLS": 1})
+
+    assert "Successes: 9, Failures: 1; tolerated" in caplog.text
+    assert "https://example.com/a: fetch" in caplog.text
+    assert "https://example.com/a: boom" in caplog.text
+
+
+@pytest.mark.asyncio
+async def test_cloud_flow_rejects_invalid_tolerance_before_running() -> None:
+    workflow = _WorkflowWithCounts(1, [])
+    with pytest.raises(CloudWorkflowConfigError, match="MAX_FAILED_URLS_RATIO"):
+        await _run_with_tolerance(workflow, {"MAX_FAILED_URLS_RATIO": 2})
+
+
+def _tolerance_config(extra_settings) -> CloudWorkflowConfig:
+    return CloudWorkflowConfig(
+        wordlift_key="key", urls=["https://example.com"], extra_settings=extra_settings
+    )
+
+
+@pytest.mark.parametrize(
+    "settings",
+    [
+        {"MAX_FAILED_URLS": "3", "MAX_FAILED_URLS_RATIO": "0.005"},
+        {"max_failed_urls": 3.0, "max_failed_urls_ratio": 0.005},
+    ],
+)
+def test_resolved_failure_tolerance_reads_upper_and_lower_case_keys(
+    settings: dict,
+) -> None:
+    tolerance = _resolved_failure_tolerance(_tolerance_config(settings))
+    assert (tolerance.max_failed_urls, tolerance.max_failed_urls_ratio) == (3, 0.005)
+
+
+def test_resolved_failure_tolerance_defaults_to_zero() -> None:
+    tolerance = _resolved_failure_tolerance(_tolerance_config(None))
+    assert (tolerance.max_failed_urls, tolerance.max_failed_urls_ratio) == (0, 0.0)
+
+
+@pytest.mark.parametrize(
+    ("settings", "message"),
+    [
+        ({"MAX_FAILED_URLS": 2.9}, "MAX_FAILED_URLS must be an integer, got 2.9."),
+        ({"MAX_FAILED_URLS": "0.5"}, "MAX_FAILED_URLS must be an integer"),
+        ({"MAX_FAILED_URLS": True}, "MAX_FAILED_URLS must be an integer"),
+        ({"MAX_FAILED_URLS_RATIO": "abc"}, "MAX_FAILED_URLS_RATIO must be a number"),
+        ({"MAX_FAILED_URLS": -1}, "MAX_FAILED_URLS must be >= 0"),
+    ],
+)
+def test_resolved_failure_tolerance_names_the_invalid_key(
+    settings: dict, message: str
+) -> None:
+    with pytest.raises(CloudWorkflowConfigError, match=message):
+        _resolved_failure_tolerance(_tolerance_config(settings))
 
 
 @pytest.mark.asyncio

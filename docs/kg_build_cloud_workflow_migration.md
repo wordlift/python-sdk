@@ -58,6 +58,30 @@ These callbacks can be used together in a single run.
 - `shacl_validate_mode = warn`: include validation payloads and continue.
 - `shacl_validate_mode = fail`: emit failing progress payload, then raise and stop the failing graph/static-template sync path.
 
+## Failed URL Tolerance
+
+`run_cloud_workflow` raises `SystemExit("Total URLs: N, Successes: S, Failures: F")`
+when the run has failed URLs, and logs each failed URL with its error. Two
+optional settings let a large run tolerate a few failures; they are read from
+`extra_settings`, where worai puts unknown `worai.toml` keys (upper-cased):
+
+- `MAX_FAILED_URLS`: int, default `0`.
+- `MAX_FAILED_URLS_RATIO`: float in `[0, 1]`, default `0`; compared with
+  `failures / total URLs`.
+
+Failures are counted per distinct URL (a URL that fails in two handlers counts
+once). The run fails only when the failed URLs exceed both limits. With the
+defaults (both `0`) any failure fails the run, as before. A tolerated run logs
+a warning with the summary, the limits and the failed URLs, and returns
+normally, so a following KPI step still runs. Invalid or out-of-range values
+raise `CloudWorkflowConfigError` before the workflow starts.
+
+Example (`worai.toml` profile):
+
+```toml
+max_failed_urls_ratio = 0.005  # tolerate up to 0.5% failed URLs
+```
+
 ## Runtime Semantics
 
 `postprocessor_runtime` precedence remains:

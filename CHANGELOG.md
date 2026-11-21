@@ -1,5 +1,26 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- `run_cloud_workflow` can tolerate a few failed URLs instead of exiting 1 on
+  the first one. Set `MAX_FAILED_URLS` (count) and/or `MAX_FAILED_URLS_RATIO`
+  (share of the run's URLs, `0`–`1`) in the settings, for example
+  `max_failed_urls_ratio = 0.005` in a worai profile. Failures are counted
+  per distinct URL, and the run fails only when they exceed both limits.
+  The defaults (`0`) keep today's behavior. Failed URLs are logged with their
+  errors either way.
+
+### Changed
+
+- The `simple` loader's `INGEST_LOAD_NETWORK_ERROR` now says why the request
+  failed (`HTTP 403 Forbidden`, `timed out`, ...) and adds `status_code`,
+  `cf_mitigated` (Cloudflare challenge header), `root_exception_type`,
+  `root_exception_message` and `timeout_ms` to the failure diagnostics, which
+  the ingestion URL handler includes in its error log. Read timeouts and
+  connection resets carry the same diagnostics.
+
 ## 8.8.3 - 2026-11-21
 
 ### Fixed

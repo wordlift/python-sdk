@@ -183,7 +183,89 @@ def test_simple_loader_adapter_wraps_url_errors(
             _config(retry_attempts=1),
         )
     assert exc.value.code == "INGEST_LOAD_NETWORK_ERROR"
+    assert str(exc.value).endswith("https://example.com: down")
     assert exc.value.details["url"] == "https://example.com"
+    assert exc.value.details["root_exception_type"] == "URLError"
+    assert exc.value.details["root_exception_message"] == "down"
+    assert "status_code" not in exc.value.details
+
+
+def _raise(exc: BaseException):
+    def _urlopen(request, timeout):
+        raise exc
+
+    return _urlopen
+
+
+def test_simple_loader_reports_http_status_and_cloudflare_challenge(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from email.message import Message
+
+    headers = Message()
+    headers["cf-mitigated"] = "challenge"
+    error = urllib.error.HTTPError(
+        "https://example.com", 403, "Forbidden", headers, None
+    )
+    monkeypatch.setattr("urllib.request.urlopen", _raise(error))
+
+    with pytest.raises(LoaderRuntimeError) as exc:
+        SimpleLoaderAdapter().load(
+            SourceItem(id="1", url="https://example.com"),
+            _config(timeout_ms=10000),
+        )
+
+    assert str(exc.value) == (
+        "Simple loader request failed for https://example.com: HTTP 403 Forbidden"
+    )
+    assert exc.value.details == {
+        "url": "https://example.com",
+        "timeout_ms": 10000,
+        "status_code": 403,
+        "cf_mitigated": "challenge",
+        "root_exception_type": "HTTPError",
+        "root_exception_message": "Forbidden",
+    }
+
+
+def test_simple_loader_omits_cf_mitigated_without_header(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    error = urllib.error.HTTPError(
+        "https://example.com", 502, "Bad Gateway", None, None
+    )
+    monkeypatch.setattr("urllib.request.urlopen", _raise(error))
+
+    with pytest.raises(LoaderRuntimeError) as exc:
+        SimpleLoaderAdapter().load(
+            SourceItem(id="1", url="https://example.com"), _config()
+        )
+
+    assert exc.value.details["status_code"] == 502
+    assert "cf_mitigated" not in exc.value.details
+
+
+def test_simple_loader_wraps_read_timeouts_and_retries(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls = []
+
+    def _urlopen(request, timeout):
+        calls.append(1)
+        raise TimeoutError()
+
+    monkeypatch.setattr("urllib.request.urlopen", _urlopen)
+    monkeypatch.setattr(loaders_module.time, "sleep", lambda _s: None)
+
+    with pytest.raises(LoaderRuntimeError) as exc:
+        SimpleLoaderAdapter().load(
+            SourceItem(id="1", url="https://example.com"), _config(retry_attempts=3)
+        )
+
+    assert len(calls) == 3
+    assert exc.value.code == "INGEST_LOAD_NETWORK_ERROR"
+    assert exc.value.details["root_exception_type"] == "TimeoutError"
+    assert exc.value.details["root_exception_message"] == "TimeoutError()"
 
 
 def test_playwright_loader_raises_typed_error_when_unavailable(

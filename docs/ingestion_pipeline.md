@@ -76,6 +76,18 @@ Managed API loader mode. SDK treats it as a single loader mode and does not add 
 - `request_id` (if available)
 - `provider_status` / `provider_details` (if available)
 
+### `simple`
+
+`urllib` GET with browser-like headers. Any request error (HTTP 4xx/5xx,
+`URLError`, timeouts, connection resets) raises `INGEST_LOAD_NETWORK_ERROR`
+with the cause in the message (for example
+`Simple loader request failed for <url>: HTTP 403 Forbidden`) and in
+`details` / `ingest.item_failed.meta`: `url`, `timeout_ms`,
+`root_exception_type`, `root_exception_message`, plus `status_code` for HTTP
+errors and `cf_mitigated` when Cloudflare sent that header (for example
+`challenge`). Attempts and backoff follow `INGEST_RETRY_ATTEMPTS` and
+`INGEST_RETRY_BACKOFF_MS`.
+
 ### Sitemap source request headers
 
 Sitemap discovery (`INGEST_SOURCE=sitemap`) uses `advertools` with an explicit

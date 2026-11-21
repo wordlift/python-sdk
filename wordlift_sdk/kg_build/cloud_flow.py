@@ -11,6 +11,11 @@ from typing import TYPE_CHECKING, Any, Awaitable, Callable, Mapping, Sequence
 if TYPE_CHECKING:
     from wordlift_sdk.workflow.kg_import_workflow import KgImportResult
 
+from wordlift_sdk.kg_build.failure_tolerance import (
+    MAX_FAILED_URLS_KEY,
+    MAX_FAILED_URLS_RATIO_KEY,
+    FailureTolerance,
+)
 from wordlift_sdk.kg_build.report_util import (
     render_as_csv,
     render_as_markdown,
@@ -101,6 +106,31 @@ def _resolved_playwright_wait_until(config: CloudWorkflowConfig) -> str:
     if value is None:
         return DEFAULT_PLAYWRIGHT_WAIT_UNTIL
     return str(value)
+
+
+def _numeric_setting(config: CloudWorkflowConfig, key: str, cast: type) -> Any:
+    value = _extra_setting(config.extra_settings, key, key.lower())
+    if value is None:
+        return cast(0)
+    try:
+        number = cast(value)
+        # Reject bools and lossy casts such as int(2.9).
+        valid = not isinstance(value, bool) and number == float(value)
+    except (TypeError, ValueError, OverflowError):
+        valid = False
+    if not valid:
+        expected = "an integer" if cast is int else "a number"
+        raise CloudWorkflowConfigError(f"{key} must be {expected}, got {value!r}.")
+    return number
+
+
+def _resolved_failure_tolerance(config: CloudWorkflowConfig) -> FailureTolerance:
+    max_failed_urls = _numeric_setting(config, MAX_FAILED_URLS_KEY, int)
+    max_failed_urls_ratio = _numeric_setting(config, MAX_FAILED_URLS_RATIO_KEY, float)
+    try:
+        return FailureTolerance(max_failed_urls, max_failed_urls_ratio)
+    except ValueError as exc:
+        raise CloudWorkflowConfigError(str(exc)) from exc
 
 
 def _report_execution(result: KgImportResult, output_dir: Path) -> None:
@@ -206,6 +236,28 @@ def _build_settings_lines(
     return lines
 
 
+def _handle_failures(result: KgImportResult, tolerance: FailureTolerance) -> None:
+    # A URL fails once per failing handler; limits and counts are per URL.
+    failed_url_count = len({failure.url.value for failure in result.failures})
+    summary = (
+        f"Total URLs: {result.url_count}, "
+        f"Successes: {max(result.url_count - failed_url_count, 0)}, "
+        f"Failures: {failed_url_count}"
+    )
+    failed_urls = "\n".join(
+        f"  - {failure.url.value}: {failure.message}" for failure in result.failures
+    )
+    if not tolerance.tolerates(failed_url_count, result.url_count):
+        logger.error("Graph sync failed URLs:\n%s", failed_urls)
+        raise SystemExit(summary)
+    logger.warning(
+        "%s; tolerated (%s). Failed URLs:\n%s",
+        summary,
+        tolerance.describe(),
+        failed_urls,
+    )
+
+
 async def run_cloud_workflow(
     *,
     config: CloudWorkflowConfig,
@@ -221,6 +273,7 @@ async def run_cloud_workflow(
     protocol = None
 
     try:
+        failure_tolerance = _resolved_failure_tolerance(config)
         debug_dir = get_debug_output_dir(config)
         if debug_dir:
             debug_dir.mkdir(parents=True, exist_ok=True)
@@ -281,12 +334,7 @@ async def run_cloud_workflow(
             _report_execution(result, config.output_dir)
 
         if not result.ok:
-            summary = (
-                f"Total URLs: {result.url_count}, "
-                f"Successes: {max(result.url_count - len(result.failures), 0)}, "
-                f"Failures: {len(result.failures)}"
-            )
-            raise SystemExit(summary)
+            _handle_failures(result, failure_tolerance)
 
     finally:
         if protocol is not None and on_kpi is not None:
