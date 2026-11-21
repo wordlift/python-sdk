@@ -214,3 +214,17 @@ def test_fallback_never_merges_into_another_subject_on_the_iri(strategy) -> None
     assert review != page_iri
     assert (review, RDF.type, _s("WebPage")) not in output
     assert (page_iri, RDF.type, _s("Review")) not in output
+
+
+@pytest.mark.parametrize("strategy", STRATEGIES)
+def test_an_action_with_the_page_url_never_takes_the_iri(strategy) -> None:
+    graph = _page("Article")
+    action = _add(graph, "action", "Action", url=PAGE_URL)
+    graph.add((URIRef("urn:tmp:root"), _s("potentialAction"), action))
+    _add(graph, "video", "VideoObject")
+
+    output = _apply(graph, strategy)
+
+    article = _named(output, "Acme review")
+    assert article == EXISTING
+    assert str(_named(output, "Acme action")).startswith(f"{EXISTING}/actions/")

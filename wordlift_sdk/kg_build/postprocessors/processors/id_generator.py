@@ -966,13 +966,19 @@ class CanonicalIdGenerator:
 
         Unlinked subjects that match keep it, as before. When none matches
         (the page root is linked, e.g. from ``FAQPage.about``), the best-ranked
-        non-dependent match takes it instead of the root being re-minted.
+        match takes it instead of the root being re-minted. Dependents and
+        actions never take it: they are nested under their parent later.
         """
         return resolve_lookup_owners(
             graph,
             iri_lookup,
             roots=self._root_subjects(graph),
-            is_candidate=lambda s: not self._is_dependent_subject(graph, s),
+            is_candidate=lambda s: (
+                not (
+                    self._is_dependent_subject(graph, s)
+                    or self._action_parents(graph, s)
+                )
+            ),
             rank=lambda s, iri: self._lookup_owner_rank(graph, s, iri),
         )
 
