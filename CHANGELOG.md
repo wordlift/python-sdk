@@ -1,5 +1,20 @@
 # Changelog
 
+## 8.8.3 - 2026-11-21
+
+### Fixed
+
+- Canonical IDs no longer re-mint a page's existing KG IRI when the page has a
+  node nothing links to (#62). The lookup IRI used to go only to unlinked
+  subjects, so a page root that another node links to (for example
+  `FAQPage.about`) lost it as soon as any unlinked node (a video, a
+  breadcrumb) was on the page, and the sync wrote a duplicate entity. Each
+  looked-up IRI now has one owner, chosen from every non-dependent subject the
+  lookup matches: page/entity root types first, then the most linked subject,
+  then the smallest IRI. An unlinked node that also carries the page URL no
+  longer takes the page's IRI. Applies to both `legacy` and
+  `dependency_graph` strategies.
+
 ## 8.8.2 - 2026-11-20
 
 ### Fixed
