@@ -11,9 +11,12 @@
   breadcrumb) was on the page, and the sync wrote a duplicate entity. Each
   looked-up IRI now has one owner, chosen from every non-dependent subject the
   lookup matches: page/entity root types first, then the most linked subject,
-  then the smallest IRI. An unlinked node that also carries the page URL no
-  longer takes the page's IRI. Applies to both `legacy` and
-  `dependency_graph` strategies.
+  then the smallest IRI. A page URL belongs on its main entity only: when
+  other subjects match the same lookup (for example an `Article` next to a
+  `Review`), the SDK logs a `canonical_ids: N subjects match lookup IRI`
+  warning and nests them under the owner (`<owner>/articles/article`), so
+  the URL keeps a single top-level entity and the page IRI stays stable
+  across syncs. Applies to both `legacy` and `dependency_graph` strategies.
 
 ## 8.8.2 - 2026-11-20
 

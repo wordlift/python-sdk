@@ -197,8 +197,10 @@
   owner, chosen from every non-dependent subject the lookup matches (page/entity
   root types first, then the most linked subject, then the smallest IRI), not
   from link topology, so a linked page root keeps its IRI next to unlinked
-  nodes (#62). Dependent nodes never own a lookup IRI and still follow
-  canonical parent-nesting rules.
+  nodes (#62). Other subjects matching the same lookup are logged as a
+  warning and nested under the owner (`<owner>/<container>/<type-slug>`), so
+  each page URL keeps one top-level entity across syncs. Dependent nodes never
+  own a lookup IRI and still follow canonical parent-nesting rules.
 - `wordlift_sdk.kg_build` tracks run-level graph-sync KPIs from dataset-scoped
   entities actually patched in callback/static graphs (`total_entities`,
   `type_assertions_total`, `property_assertions_total`, `entities_by_type`,
