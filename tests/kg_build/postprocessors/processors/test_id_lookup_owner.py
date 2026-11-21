@@ -195,3 +195,22 @@ def test_non_candidates_and_missing_lookup_own_nothing() -> None:
     )
 
     assert no_candidates == {} and no_lookup == {}
+
+
+@pytest.mark.parametrize("strategy", STRATEGIES)
+def test_fallback_never_merges_into_another_subject_on_the_iri(strategy) -> None:
+    """Re-import: the Review sits on the IRI without the URL; the linked WebPage has it."""
+    graph = Graph()
+    graph.add((EXISTING, RDF.type, _s("Review")))
+    graph.add((EXISTING, _s("name"), Literal("Acme review")))
+    page = _add(graph, "page", "WebPage", url=PAGE_URL)
+    graph.add((EXISTING, _s("mainEntityOfPage"), page))
+    graph.add((page, _s("about"), EXISTING))
+    _add(graph, "video", "VideoObject")
+
+    output = _apply(graph, strategy)
+
+    review, page_iri = _named(output, "Acme review"), _named(output, "Acme page")
+    assert review != page_iri
+    assert (review, RDF.type, _s("WebPage")) not in output
+    assert (page_iri, RDF.type, _s("Review")) not in output

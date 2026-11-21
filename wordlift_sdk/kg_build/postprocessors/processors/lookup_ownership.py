@@ -40,10 +40,9 @@ def resolve_lookup_owners(
     """
     if iri_lookup is None:
         return {}
+    all_subjects = {s for s in graph.subjects() if isinstance(s, URIRef)}
     matches: defaultdict[URIRef, list[URIRef]] = defaultdict(list)
-    for subject in sorted(
-        {s for s in graph.subjects() if isinstance(s, URIRef)}, key=str
-    ):
+    for subject in sorted(all_subjects, key=str):
         if not is_candidate(subject):
             continue
         value = str(iri_lookup.iri_for_subject(graph, subject) or "").strip()
@@ -52,9 +51,12 @@ def resolve_lookup_owners(
 
     owners: dict[URIRef, URIRef] = {}
     for iri, subjects in matches.items():
-        chosen = [subject for subject in subjects if subject in roots] or [
-            min(subjects, key=lambda subject: rank(subject, iri))
-        ]
+        chosen = [subject for subject in subjects if subject in roots]
+        if not chosen:
+            if iri in all_subjects and iri not in subjects:
+                # Another entity already sits on the IRI: never merge into it.
+                continue
+            chosen = [min(subjects, key=lambda subject: rank(subject, iri))]
         owners.update(dict.fromkeys(chosen, iri))
         if len(subjects) > 1:
             logger.warning(
