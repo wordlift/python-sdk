@@ -195,8 +195,10 @@
   root IRI reuse via `Context.extensions["kg_build.iri_lookup"]`
   (`IriLookup.iri_for_subject(graph, subject)`). Unlinked subjects that match
   the lookup keep the IRI; when none matches (the page root is linked, e.g.
-  from `FAQPage.about`), the best-ranked non-dependent match takes it instead
-  of the root being re-minted (#62, `lookup_ownership.py`). Several subjects
+  from `FAQPage.about`), the best-ranked match takes it instead of the root
+  being re-minted (#62, `lookup_ownership.py`); dependents and nested
+  `schema:Action`s never take it, and the fallback is skipped when another
+  subject already holds the IRI. Several subjects
   matching one lookup log a warning, since a page URL belongs on its main
   entity only. Dependent nodes never take a lookup IRI and still follow
   canonical parent-nesting rules.

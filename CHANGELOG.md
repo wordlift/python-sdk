@@ -9,9 +9,11 @@
   has a node nothing links to (#62). The lookup IRI used to go only to
   unlinked subjects, so the root got a new IRI and the sync wrote a duplicate
   entity. Unlinked subjects that match the lookup still keep the IRI exactly
-  as before; when none matches, the best-ranked non-dependent match takes it
-  (already on the IRI, then page root type, then entity root type, then the
-  smallest IRI). Several subjects carrying the same page URL now log a
+  as before; when none matches, the best-ranked match takes it (already on
+  the IRI, then page root type, then entity root type, then the smallest
+  IRI). Dependents and nested actions never take it, and the fallback is
+  skipped when another subject already holds the IRI, so entities are never
+  merged. Several subjects carrying the same page URL now log a
   `canonical_ids: N subjects match lookup IRI` warning: the page URL belongs
   on the main entity only. Applies to both `legacy` and `dependency_graph`.
 

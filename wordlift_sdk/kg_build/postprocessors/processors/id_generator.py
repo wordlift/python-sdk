@@ -367,21 +367,17 @@ class CanonicalIdGenerator:
     def _rewrite_actions_as_dependents(
         self, graph: Graph, *, language: str | None = None
     ) -> None:
-        action_type = URIRef(f"{SCHEMA}Action")
         actions = sorted(
             {
                 subject
-                for subject in graph.subjects(RDF.type, action_type)
+                for subject in graph.subjects(RDF.type, URIRef(f"{SCHEMA}Action"))
                 if isinstance(subject, URIRef)
+                and self._is_nested_action(graph, subject)
             },
             key=str,
         )
         for action in actions:
-            parents = self._action_parents(graph, action)
-            if not parents:
-                continue
-
-            parent = parents[0]
+            parent = self._action_parents(graph, action)[0]
             prefix = f"{parent}/{self._policy.container_for_type('Action')}/"
             if str(action).startswith(prefix):
                 continue
@@ -396,6 +392,12 @@ class CanonicalIdGenerator:
             candidate = URIRef(f"{prefix}{slug}")
             new_iri = self._ensure_unique_subject_iri(graph, action, candidate)
             self._swap_iri(graph, action, new_iri)
+
+    def _is_nested_action(self, graph: Graph, subject: URIRef) -> bool:
+        """A ``schema:Action`` that ``_rewrite_actions_as_dependents`` nests."""
+        return (subject, RDF.type, URIRef(f"{SCHEMA}Action")) in graph and bool(
+            self._action_parents(graph, subject)
+        )
 
     @staticmethod
     def _action_parents(graph: Graph, action: URIRef) -> list[URIRef]:
@@ -976,7 +978,7 @@ class CanonicalIdGenerator:
             is_candidate=lambda s: (
                 not (
                     self._is_dependent_subject(graph, s)
-                    or self._action_parents(graph, s)
+                    or self._is_nested_action(graph, s)
                 )
             ),
             rank=lambda s, iri: self._lookup_owner_rank(graph, s, iri),
