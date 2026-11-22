@@ -60,30 +60,6 @@ async def test_kg_import_workflow_fails_after_urls_when_handlers_error(monkeypat
 
 
 @pytest.mark.asyncio
-async def test_kg_import_workflow_counts_distinct_urls(monkeypatch):
-    async def _noop_graphs(self):
-        return None
-
-    monkeypatch.setattr(
-        "wordlift_sdk.workflow.kg_import_workflow.TtlLiquidGraphFactory.graphs",
-        _noop_graphs,
-    )
-    urls = [Url(value="https://example.com/a")] * 3 + [
-        Url(value="https://example.com/b")
-    ]
-    workflow = KgImportWorkflow(
-        context=SimpleNamespace(),
-        url_source=_ListUrlSource(urls),
-        url_handler=DefaultUrlHandler([_OkHandler()]),
-        concurrency=1,
-    )
-
-    result = await workflow.run()
-
-    assert (result.url_count, result.distinct_url_count) == (4, 2)
-
-
-@pytest.mark.asyncio
 async def test_kg_import_workflow_fails_when_liquid_template_write_fails(
     monkeypatch, tmp_path
 ):

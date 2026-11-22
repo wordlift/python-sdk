@@ -294,9 +294,8 @@
 - Playwright ingestion default `wait_until` is `domcontentloaded` (override with
   `PLAYWRIGHT_WAIT_UNTIL`), and navigation timeout now falls back to partial DOM
   extraction instead of immediate loader failure.
-- `run_cloud_workflow` failed-URL tolerance (`kg_build.failure_tolerance`,
-  `MAX_FAILED_URLS` / `MAX_FAILED_URLS_RATIO`, default `0`) counts distinct
-  URLs; the `simple` loader adds `status_code`/`cf_mitigated` diagnostics.
+- The `simple` loader adds `status_code`/`cf_mitigated` and root-exception
+  diagnostics to `INGEST_LOAD_NETWORK_ERROR`.
 - `IngestionWebPageScrapeUrlHandler` now surfaces first failure diagnostics from
   `ingest.item_failed.meta` in raised/logged errors as parseable JSON
   (`diagnostics=<json>`), with whitelisted keys and truncation/sanitization.
