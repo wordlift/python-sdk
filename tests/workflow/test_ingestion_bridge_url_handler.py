@@ -442,3 +442,10 @@ def test_diagnostic_helpers_cover_fallback_paths() -> None:
     }
     diag = _format_failure_diagnostics(big_meta)
     assert diag is not None and len(diag) <= 3072
+
+
+def test_format_failure_diagnostics_keeps_simple_loader_http_fields() -> None:
+    diag = _format_failure_diagnostics(
+        {"status_code": 403, "cf_mitigated": "challenge"}
+    )
+    assert diag == '{"cf_mitigated":"challenge","status_code":403}'

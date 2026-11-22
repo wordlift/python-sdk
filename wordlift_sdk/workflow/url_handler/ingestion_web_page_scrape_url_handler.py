@@ -31,6 +31,8 @@ _DIAG_KEYS = (
     "wait_until",
     "timeout_ms",
     "headless",
+    "status_code",
+    "cf_mitigated",
 )
 _MAX_ROOT_MESSAGE_LEN = 2048
 _MAX_DIAGNOSTICS_LEN = 3072

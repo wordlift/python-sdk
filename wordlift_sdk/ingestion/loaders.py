@@ -107,12 +107,16 @@ class SimpleLoaderAdapter(BaseLoaderAdapter):
                         html=html,
                         fetch_meta={"backend": "simple"},
                     )
-            except urllib.error.URLError as exc:
+            except OSError as exc:  # URLError/HTTPError, timeouts, resets
+                details = _build_simple_error_details(
+                    item_url=item.url, timeout_ms=config.timeout_ms, exc=exc
+                )
                 raise LoaderRuntimeError(
-                    f"Simple loader request failed for {item.url}",
+                    f"Simple loader request failed for {item.url}: "
+                    f"{_describe_simple_error(details)}",
                     code="INGEST_LOAD_NETWORK_ERROR",
                     retryable=True,
-                    details={"url": item.url},
+                    details=details,
                 ) from exc
 
         return self._with_retry(
@@ -212,6 +216,36 @@ def _build_playwright_error_details(
         "timeout_ms": options.timeout_ms,
         "headless": options.headless,
     }
+
+
+def _build_simple_error_details(
+    *, item_url: str, timeout_ms: int, exc: OSError
+) -> dict[str, Any]:
+    """Diagnostics for a failed urllib request: HTTP status, reason and,
+    for Cloudflare, the ``cf-mitigated`` header that marks a bot challenge."""
+    # URLError/HTTPError carry the cause in ``reason`` (a string or an exception).
+    reason = getattr(exc, "reason", exc)
+    root = reason if isinstance(reason, BaseException) else exc
+    details: dict[str, Any] = {
+        "url": item_url,
+        "timeout_ms": timeout_ms,
+        "root_exception_type": root.__class__.__name__,
+        "root_exception_message": _truncate(
+            str(reason) or repr(reason), _MAX_ROOT_EXCEPTION_MESSAGE_LEN
+        ),
+    }
+    if isinstance(exc, urllib.error.HTTPError):
+        details["status_code"] = exc.code
+        cf_mitigated = exc.headers.get("cf-mitigated") if exc.headers else None
+        if cf_mitigated:
+            details["cf_mitigated"] = cf_mitigated
+    return details
+
+
+def _describe_simple_error(details: dict[str, Any]) -> str:
+    status = details.get("status_code")
+    reason = details["root_exception_message"]
+    return f"HTTP {status} {reason}" if status is not None else reason
 
 
 def _root_exception(exc: Exception) -> Exception:

@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- The `simple` loader's `INGEST_LOAD_NETWORK_ERROR` now says why the request
+  failed (`HTTP 403 Forbidden`, `timed out`, ...) and adds `status_code`,
+  `cf_mitigated` (Cloudflare challenge header), `root_exception_type`,
+  `root_exception_message` and `timeout_ms` to the failure diagnostics, which
+  the ingestion URL handler includes in its error log. Read timeouts and
+  connection resets carry the same diagnostics.
+
 ## 8.8.3 - 2026-11-21
 
 ### Fixed
