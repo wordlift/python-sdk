@@ -144,7 +144,12 @@ class HtmlConverter:
     def _remove_problem_nodes(self, doc: Any) -> None:
         if not hasattr(doc, "xpath"):
             return
-        for query in ("//comment()", "//processing-instruction()"):
+        for query in (
+            "//comment()",
+            "//processing-instruction()",
+            "//script",
+            "//style",
+        ):
             for node in doc.xpath(query):
                 parent = node.getparent()
                 if parent is not None:
