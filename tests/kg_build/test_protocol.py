@@ -1,4 +1,5 @@
 import asyncio
+import csv
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock
@@ -32,7 +33,10 @@ from wordlift_sdk.kg_build.protocol import (
     _resolve_postprocessor_runtime,
 )
 from wordlift_sdk.kg_build.rml_mapping import MappingResult
-from wordlift_sdk.validation.shacl_validation_service import ValidationOutcome
+from wordlift_sdk.validation.shacl_validation_service import (
+    ValidationErrorDetail,
+    ValidationOutcome,
+)
 
 
 def _make_profile() -> ProfileDefinition:
@@ -1592,6 +1596,110 @@ async def test_profile_protocol_emits_null_validation_when_disabled() -> None:
     assert events[0]["validation"] is None
     summary = protocol.get_kpi_summary()
     assert summary["validation"] is None
+
+
+def _error_detail(rule: str) -> ValidationErrorDetail:
+    return ValidationErrorDetail(
+        rule_set="google-product-snippet",
+        rule_id=f"https://wordlift.io/shacl/google/product-snippet/{rule}",
+        path="offers.price",
+        focus_node="https://data.example.com/dataset/entities/x",
+        value=None,
+        message=f"{rule} message",
+    )
+
+
+def _read_csv(path: Path) -> list[dict[str, str]]:
+    with path.open(newline="", encoding="utf-8") as fh:
+        return list(csv.DictReader(fh))
+
+
+@pytest.mark.asyncio
+async def test_profile_protocol_streams_validation_errors_to_report(
+    tmp_path: Path,
+) -> None:
+    protocol = ProfileImportProtocol(
+        context=_make_context(),
+        profile=_make_profile_with_overrides(settings={"shacl_validate_mode": "warn"}),
+        root_dir=Path.cwd(),
+    )
+    report_path = tmp_path / "graph_sync_validation.csv"
+    writer = protocol.enable_validation_report(report_path)
+    assert writer is not None
+    protocol._patch_static_templates_once = AsyncMock()
+    protocol._resolve_mapping_path = MagicMock(return_value=Path("mapping.yarrrml"))
+    protocol._get_mapping_content = MagicMock(return_value="mapping")
+    protocol._run_mapping_stage = AsyncMock(
+        return_value=_make_mapping_result(_make_dataset_scoped_graph())
+    )
+    protocol._run_postprocessing_stage = _passthrough_pp()
+    protocol.patcher.patch_all = AsyncMock()
+    outcome = _make_validation_outcome(
+        passed=False, error_sources={"google-product-snippet": 1}
+    )
+    outcome.errors = [_error_detail("offer-price-required")]
+    protocol._shacl_validator.validate = AsyncMock(return_value=outcome)
+
+    await protocol.callback(
+        WebPageScrapeResponse(
+            web_page=WebPage(url="https://example.com/page", html="<html></html>")
+        )
+    )
+
+    rows = _read_csv(report_path)
+    assert [(r["url"], r["severity"], r["path"]) for r in rows] == [
+        ("https://example.com/page", "error", "offers.price")
+    ]
+    # In warn mode a page with errors is still written.
+    protocol.patcher.patch_all.assert_called()
+    assert "| Pages with errors | **1** |" in writer.render_markdown()
+
+
+def test_profile_protocol_skips_validation_report_when_validation_off(
+    tmp_path: Path,
+) -> None:
+    protocol = ProfileImportProtocol(
+        context=_make_context(),
+        profile=_make_profile_with_overrides(settings={"shacl_validate_mode": "off"}),
+        root_dir=Path.cwd(),
+    )
+    report_path = tmp_path / "graph_sync_validation.csv"
+
+    assert protocol.enable_validation_report(report_path) is None
+    assert not report_path.exists()
+
+
+@pytest.mark.asyncio
+async def test_static_template_validation_errors_are_reported(tmp_path: Path) -> None:
+    protocol = ProfileImportProtocol(
+        context=_make_context(),
+        profile=_make_profile_with_overrides(settings={"shacl_validate_mode": "fail"}),
+        root_dir=Path.cwd(),
+    )
+    report_path = tmp_path / "graph_sync_validation.csv"
+    protocol.enable_validation_report(report_path)
+    graph = Graph()
+    graph.add(
+        (
+            URIRef("https://data.example.com/dataset/entities/x"),
+            RDF.type,
+            URIRef("https://schema.org/Thing"),
+        )
+    )
+    protocol._template_graph = graph
+    protocol._template_exports = {}
+    protocol.patcher.patch_all = AsyncMock()
+    outcome = _make_validation_outcome(
+        passed=False, error_sources={"google-product-snippet": 1}
+    )
+    outcome.errors = [_error_detail("name-required")]
+    protocol._shacl_validator.validate = AsyncMock(return_value=outcome)
+
+    with pytest.raises(RuntimeError, match="static templates"):
+        await protocol._patch_static_templates_once()
+
+    # Recorded before fail mode stops the run, so the report explains the stop.
+    assert [r["url"] for r in _read_csv(report_path)] == ["static_templates"]
 
 
 @pytest.mark.asyncio

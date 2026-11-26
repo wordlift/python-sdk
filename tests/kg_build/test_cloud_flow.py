@@ -16,6 +16,11 @@ from wordlift_sdk.kg_build.cloud_flow import (
     get_output_dir,
     run_cloud_workflow,
 )
+from wordlift_sdk.kg_build.validation_report import ValidationReportWriter
+from wordlift_sdk.validation.shacl_validation_service import (
+    ValidationErrorDetail,
+    ValidationOutcome,
+)
 
 
 class _Workflow:
@@ -223,6 +228,97 @@ async def test_cloud_flow_writes_both_reports_on_failure(tmp_path) -> None:
 
     assert (tmp_path / "graph_sync_report.md").exists()
     assert (tmp_path / "graph_sync_failures.csv").exists()
+
+
+class _ReportingProtocol(_Protocol):
+    """Protocol that records one page with a SHACL error during the run."""
+
+    def __init__(self, enabled: bool = True):
+        super().__init__()
+        self._enabled = enabled
+        self.report_paths: list[Path] = []
+
+    def enable_validation_report(self, path: Path):
+        self.report_paths.append(path)
+        if not self._enabled:
+            return None
+        writer = ValidationReportWriter(path)
+        writer.record(
+            "https://example.com/page",
+            ValidationOutcome(
+                passed=False,
+                warning_sources={},
+                error_sources={"google-product-snippet": 1},
+                queue_wait_ms=0,
+                validation_ms=0,
+                errors=[
+                    ValidationErrorDetail(
+                        rule_set="google-product-snippet",
+                        rule_id="https://wordlift.io/shacl/google/product-snippet/offer-price-required",
+                        path="offers.price",
+                        focus_node="https://data.example.com/p",
+                        value=None,
+                        message="An offer must have a price.",
+                    )
+                ],
+            ),
+        )
+        return writer
+
+
+async def _run_with_output_dir(protocol, output_dir: Path | None) -> None:
+    await run_cloud_workflow(
+        config=CloudWorkflowConfig(
+            wordlift_key="key",
+            sheets_service_account_json="{}",
+            urls=["https://example.com"],
+            output_dir=output_dir,
+        ),
+        configuration_provider_create=lambda _: object(),
+        container_factory=lambda _: _Container(_Workflow()),
+        protocol_factory=lambda *_args, **_kwargs: protocol,
+    )
+
+
+@pytest.mark.asyncio
+async def test_cloud_flow_adds_validation_errors_to_report(tmp_path: Path) -> None:
+    protocol = _ReportingProtocol()
+
+    await _run_with_output_dir(protocol, tmp_path)
+
+    assert protocol.report_paths == [tmp_path / "graph_sync_validation.csv"]
+    report = (tmp_path / "graph_sync_report.md").read_text(encoding="utf-8")
+    assert report.startswith("# Graph Sync Report")
+    assert "## Structured Data Errors" in report
+    assert "| Pages with errors | **1** |" in report
+    assert "`offer-price-required`" in report
+    csv_text = (tmp_path / "graph_sync_validation.csv").read_text(encoding="utf-8")
+    assert "https://example.com/page,error,google-product-snippet" in csv_text
+
+
+@pytest.mark.asyncio
+async def test_cloud_flow_report_has_no_validation_section_when_disabled(
+    tmp_path: Path,
+) -> None:
+    protocol = _ReportingProtocol(enabled=False)
+
+    await _run_with_output_dir(protocol, tmp_path)
+
+    report = (tmp_path / "graph_sync_report.md").read_text(encoding="utf-8")
+    assert "Structured Data Errors" not in report
+
+
+@pytest.mark.asyncio
+async def test_cloud_flow_skips_validation_report_without_output_dir(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    protocol = _ReportingProtocol()
+
+    await _run_with_output_dir(protocol, None)
+
+    assert protocol.report_paths == []
+    assert list(tmp_path.iterdir()) == []
 
 
 def test_get_debug_output_dir_requires_profile_name() -> None:

@@ -12,7 +12,7 @@ Release sync: see `CHANGELOG.md` for the current version.
 - `docs/search_gallery_shacl_review.md`: Current page-by-page SHACL change review for Search Gallery pages with extracted sample conformance metrics.
 - `docs/render.md`: Page rendering and XHTML cleanup options.
 - `docs/web_page_import.md`: Web page import handler behavior and fetch options.
-- `docs/kg_build_kpi_and_validation.md`: Client contract for `kg_build` in-run progress (`on_progress`) and final KPI (`on_kpi`) payloads, including SHACL validation fields.
+- `docs/kg_build_kpi_and_validation.md`: Client contract for `kg_build` in-run progress (`on_progress`) and final KPI (`on_kpi`) payloads, including SHACL validation fields, and the run report files (`graph_sync_report.md`, `graph_sync_validation.csv`).
 - `docs/kg_build_cloud_workflow_migration.md`: Migration guide to canonical `run_cloud_workflow`, source-mode selection, and runtime defaults.
 - `docs/worai_sdk_integration_contract_v6.md`: Worai-facing integration contract for SDK v6 (canonical path, explicit source/loader, callbacks, and conformance matrix).
 - `docs/google_sheets_lookup.md`: Google Sheets lookup utility.

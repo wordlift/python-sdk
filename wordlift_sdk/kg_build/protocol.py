@@ -51,6 +51,7 @@ from .postprocessors.processors.id_postprocessor import (
 from .postprocessors.service import PostprocessorService
 from .rml_mapping import MappingResult, RmlMappingService
 from .templates import JinjaRdfTemplateReifier, TemplateTextRenderer
+from .validation_report import STATIC_TEMPLATES_LABEL, ValidationReportWriter
 from wordlift_sdk.structured_data.engine import init_materialization_pool
 
 logger = logging.getLogger(__name__)
@@ -196,6 +197,7 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
             dataset_uri=getattr(self.context.account, "dataset_uri", None),
             validation_enabled=self._shacl_validator.mode != ValidationMode.OFF,
         )
+        self._validation_report: ValidationReportWriter | None = None
         logger.debug(
             "Resolved mappings for profile '%s': effective_dir=%s (origin=%s), routes=%s (origin=%s), overlay_dirs=%s",
             self.profile.name,
@@ -410,6 +412,8 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
                 outcome.error_count,
             )
             self._kpi.record_validation(outcome)
+            if self._validation_report is not None:
+                self._validation_report.record(url, outcome)
         self._kpi.record_graph(pp_result.graph)
         self._emit_progress(
             {
@@ -447,6 +451,16 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
 
     def get_kpi_summary(self) -> dict[str, object]:
         return self._kpi.summary(self.profile.name)
+
+    def enable_validation_report(self, path: Path) -> ValidationReportWriter | None:
+        """Stream this run's SHACL errors to a CSV at *path*.
+
+        Returns ``None`` when SHACL validation is off, as there is nothing to report.
+        """
+        if self._shacl_validator.mode == ValidationMode.OFF:
+            return None
+        self._validation_report = ValidationReportWriter(path)
+        return self._validation_report
 
     @property
     def _dataset_uri(self) -> str:
@@ -592,6 +606,8 @@ class ProfileImportProtocol(WebPageImportProtocolInterface):
                     outcome.error_count,
                 )
                 self._kpi.record_validation(outcome)
+                if self._validation_report is not None:
+                    self._validation_report.record(STATIC_TEMPLATES_LABEL, outcome)
             self._emit_progress(
                 {
                     "kind": "static_templates",

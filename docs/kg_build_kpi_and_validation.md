@@ -128,3 +128,39 @@ Notes:
 ```
 
 When `validation` is present: `validation.total == validation.pass + validation.fail`.
+
+## Run Report Files (`output_dir`)
+
+When `CloudWorkflowConfig.output_dir` is set, `run_cloud_workflow` writes:
+
+- `graph_sync_report.md`: run totals and top processing errors. When SHACL
+  validation is on (`warn`/`fail`), it adds a **Structured Data Errors**
+  section: pages validated, pages with errors, total errors, and the 10 rules
+  affecting the most pages, each with an example URL and message.
+- `graph_sync_failures.csv`: pages that failed to process (only when there are
+  failures).
+- `graph_sync_validation.csv`: one row per SHACL error (severity
+  `sh:Violation`; warnings are not listed). Written only when validation is on.
+  The header is always written, so a file with only a header means every page
+  passed.
+
+`graph_sync_validation.csv` columns:
+
+| Column | Content |
+| --- | --- |
+| `url` | Page URL, or `static_templates` for the static template graph |
+| `severity` | Always `error` |
+| `rule_set` | Shape set (bundled shape name or extra shape file stem), for example `google-product-snippet` |
+| `rule_id` | IRI of the named shape that failed. An anonymous property shape takes the IRI of the named shape holding it. |
+| `path` | Property path, dotted for sequence paths (for example `offers.price`) |
+| `focus_node` | Node that failed the rule |
+| `value` | Offending value, when SHACL reports one |
+| `message` | SHACL result message |
+
+Rows are appended as each page is validated, so memory does not grow with the
+number of pages; only per-rule totals for the markdown section are kept in
+memory. At most 100 errors are listed per page (`MAX_ERROR_DETAILS_PER_GRAPH`);
+error counts stay exact and the markdown notes pages with omitted rows.
+
+Protocols opt in by exposing `enable_validation_report(path)`; the bundled
+`ProfileImportProtocol` does, and returns `None` when validation is `off`.
