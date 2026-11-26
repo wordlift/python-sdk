@@ -208,6 +208,14 @@
   `properties_by_predicate`) plus optional SHACL validation aggregates
   (`validation.total/pass/fail`, warnings/errors count+sources), exposed via
   protocol `get_kpi_summary()` and cloud-flow `on_kpi` callback.
+- `wordlift_sdk.kg_build` run reports (`output_dir`) list SHACL errors per
+  page: `ValidationReportWriter` streams one `graph_sync_validation.csv` row per
+  `sh:Violation` as each page (and the static template graph, as
+  `static_templates`) is validated, and adds a "Structured Data Errors" section
+  to `graph_sync_report.md` from per-rule totals only. `cloud_flow` attaches it
+  through the protocol's optional `enable_validation_report(path)`, so host
+  protocol factories (worai) need no change. Warnings are counted, not listed;
+  details are capped at `MAX_ERROR_DETAILS_PER_GRAPH` per page.
 - `wordlift_sdk.kg_build` can stream in-run per-graph progress payloads
   (graph metrics and optional validation summary) via cloud-flow
   `on_progress` callback.

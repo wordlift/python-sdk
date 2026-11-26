@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Graph sync runs with an `output_dir` now report the structured data errors
+  found by SHACL validation. `graph_sync_report.md` gains a "Structured Data
+  Errors" section (pages validated, pages with errors, top rules by pages
+  affected), and `graph_sync_validation.csv` lists one row per error: URL,
+  shape set, rule, property path, focus node, value and message. Rows are
+  streamed to disk as pages are validated; at most 100 errors are listed per
+  page, counts stay exact. Warnings are not listed. `ValidationOutcome` now
+  carries `errors` (`ValidationErrorDetail`) alongside the per-source counts.
+
 ## 8.8.4 - 2026-11-22
 
 ### Changed

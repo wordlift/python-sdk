@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Awaitable, Callable, Mapping, Sequence
 
 if TYPE_CHECKING:
+    from wordlift_sdk.kg_build.validation_report import ValidationReportWriter
     from wordlift_sdk.workflow.kg_import_workflow import KgImportResult
 
 from wordlift_sdk.kg_build.report_util import (
@@ -16,6 +17,7 @@ from wordlift_sdk.kg_build.report_util import (
     render_as_markdown,
     write_report,
 )
+from wordlift_sdk.kg_build.validation_report import VALIDATION_CSV_NAME
 from wordlift_sdk.render.render_options import (
     DEFAULT_PLAYWRIGHT_TIMEOUT_MS,
     DEFAULT_PLAYWRIGHT_WAIT_UNTIL,
@@ -103,12 +105,31 @@ def _resolved_playwright_wait_until(config: CloudWorkflowConfig) -> str:
     return str(value)
 
 
-def _report_execution(result: KgImportResult, output_dir: Path) -> None:
-    write_report(render_as_markdown(result), output_dir / "graph_sync_report.md")
+def _report_execution(
+    result: KgImportResult,
+    output_dir: Path,
+    validation_report: ValidationReportWriter | None = None,
+) -> None:
+    markdown = render_as_markdown(result)
+    if validation_report is not None:
+        markdown += "\n" + validation_report.render_markdown()
+    write_report(markdown, output_dir / "graph_sync_report.md")
     if not result.ok:
         write_report(
             render_as_csv(result.failures), output_dir / "graph_sync_failures.csv"
         )
+
+
+def _enable_validation_report(
+    protocol: Any, output_dir: Path | None
+) -> ValidationReportWriter | None:
+    # Protocols built by hosts may predate the report, so it is opt-in by method.
+    if output_dir is None:
+        return None
+    enable = getattr(protocol, "enable_validation_report", None)
+    if not callable(enable):
+        return None
+    return enable(output_dir / VALIDATION_CSV_NAME)
 
 
 def get_output_dir(config: CloudWorkflowConfig) -> Path:
@@ -267,6 +288,8 @@ async def run_cloud_workflow(
 
         container.set_protocol(protocol)
 
+        validation_report = _enable_validation_report(protocol, config.output_dir)
+
         if on_info:
             on_info("Creating Cloud Import Workflow...")
 
@@ -278,7 +301,7 @@ async def run_cloud_workflow(
         result = await workflow.run()
 
         if config.output_dir is not None:
-            _report_execution(result, config.output_dir)
+            _report_execution(result, config.output_dir, validation_report)
 
         if not result.ok:
             summary = (
